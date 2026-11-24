@@ -1,4 +1,4 @@
-"""Measure one serial Geant4 configuration and save its particle and hit output."""
+"""Measure Geant4 transport, optionally followed by ODD track reconstruction."""
 
 import argparse
 import json
@@ -13,6 +13,9 @@ from acts.examples.simulation import (
     EtaConfig,
     MomentumConfig,
     ParticleConfig,
+    ParticleSelectorConfig,
+    addDigiParticleSelection,
+    addDigitization,
     addGeant4,
     addParticleGun,
     addSimWriters,
@@ -37,6 +40,55 @@ class RunTiming(acts.examples.IAlgorithm):
         return acts.examples.ProcessCode.SUCCESS
 
 
+def add_reconstruction(sequencer, geometry, field, rng):
+    from acts.examples.reconstruction import (
+        CkfConfig,
+        TrackSelectorConfig,
+        addCKFTracks,
+        addSeeding,
+    )
+
+    configs = Path(__file__).resolve().parents[2] / "Configs"
+    u = acts.UnitConstants
+    addDigitization(
+        sequencer,
+        geometry,
+        field,
+        digiConfigFile=configs / "odd-digi-smearing-config.json",
+        rnd=rng,
+    )
+    addDigiParticleSelection(
+        sequencer,
+        ParticleSelectorConfig(
+            pt=(1 * u.GeV, None), measurements=(9, None), removeNeutral=True
+        ),
+    )
+    addSeeding(
+        sequencer,
+        geometry,
+        field,
+        geoSelectionConfigFile=configs / "odd-seeding-config.json",
+        initialSigmas=[u.mm, u.mm, u.degree, u.degree, 0.0, u.ns],
+        initialSigmaQoverPt=0.1 * u.e / u.GeV,
+        initialSigmaPtRel=0.1,
+        initialVarInflation=[1.0] * 6,
+        particleHypothesis=acts.ParticleHypothesis.muon,
+    )
+    addCKFTracks(
+        sequencer,
+        geometry,
+        field,
+        TrackSelectorConfig(nMeasurementsMin=7, maxHoles=2, maxOutliers=2),
+        CkfConfig(
+            chi2CutOffMeasurement=15.0,
+            chi2CutOffOutlier=25.0,
+            numMeasurementsCutOff=2,
+            seedDeduplication=True,
+            stayOnSeed=True,
+        ),
+    )
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("output", type=Path)
@@ -46,11 +98,31 @@ def main():
     parser.add_argument("--particles", type=int, default=1)
     parser.add_argument("--skip", type=int, default=0)
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--acts-threads", type=int, default=1)
+    parser.add_argument(
+        "--g4-workers",
+        type=int,
+        default=0,
+        help="Use native Geant4 workers (0 selects serial transport)",
+    )
+    parser.add_argument(
+        "--reconstruct",
+        action="store_true",
+        help="Run ODD digitization, seeding, CKF and track truth matching",
+    )
     args = parser.parse_args()
     if min(args.events, args.particles) < 1 or args.skip < 0:
         parser.error(
             "events and particles must be positive and skip must be nonnegative"
         )
+    if args.acts_threads < 1 or args.g4_workers < 0:
+        parser.error(
+            "ACTS threads must be positive and Geant4 workers must be nonnegative"
+        )
+    if args.acts_threads != 1 and args.g4_workers == 0:
+        parser.error("Concurrent ACTS events require native Geant4 workers")
+    if args.reconstruct and args.geometry != "odd":
+        parser.error("Track reconstruction requires the ODD geometry")
     args.output.mkdir(parents=True, exist_ok=False)
 
     setup_start = perf_counter()
@@ -84,7 +156,7 @@ def main():
     sequencer = acts.examples.Sequencer(
         events=args.events,
         skip=args.skip,
-        numThreads=1,
+        numThreads=args.acts_threads,
         trackFpes=False,
         outputDir=str(args.output),
         logLevel=level,
@@ -105,13 +177,21 @@ def main():
         rnd=rng,
         physicsList="FTFP_BERT",
         propagatorLargestAcceptableStep=1 * u.m,
+        **({"numGeant4Workers": args.g4_workers} if args.g4_workers else {}),
     )
-    # Initialization runs in registration order. At this point Geant4 is ready
-    # and no output writer has been initialized. Finalization runs in the same
-    # order, so this interval includes end-run but excludes closing output files.
+    if args.reconstruct:
+        add_reconstruction(sequencer, detector.trackingGeometry(), field, rng)
+    # Initialization and finalization run in registration order. This marker
+    # brackets event processing and end-run before the ROOT files are closed.
     timing = RunTiming()
     sequencer.addAlgorithm(timing)
     addSimWriters(sequencer, field=field, outputDirRoot=args.output)
+    if args.reconstruct:
+        from acts.examples.reconstruction import addTrackWriters
+
+        addTrackWriters(
+            sequencer, name="ckf", outputDirRoot=args.output, writeCovMat=True
+        )
     run_start = perf_counter()
     sequencer.run()
     run_end = perf_counter()
@@ -120,6 +200,9 @@ def main():
         "geometry": args.geometry,
         "field": args.field,
         "events": args.events,
+        "acts_threads": args.acts_threads,
+        "g4_workers": args.g4_workers,
+        "reconstruct": args.reconstruct,
         "particles_per_event": args.particles,
         "skip": args.skip,
         "seed": args.seed,

@@ -28,39 +28,26 @@ head changes, rebase the follow-up work onto the updated head. Once it merges,
 rebase only the follow-up commits onto upstream main so the PR's commits are not
 duplicated, particularly if it is squash-merged.
 
-The scope is the Examples simulation adapter, its input conversion, and truth
-and hit output. Existing geometry conversion and detector construction remain
-building blocks. Native Geant4 multithreading, a wholesale simulation rewrite,
-and a general external-decayer interface are deferred. The proposed interfaces
-below describe responsibilities; their final C++ APIs remain to be designed.
+The Examples adapter supports a persistent serial run and an opt-in Geant4
+master with native transport workers. Both accept generator-prescribed decay
+trees alongside the flat particle collection. See the input contract and
+worked configuration below, and the ODD reconstruction measurements at the end
+of this page. Material recording continues to use the serial session.
 
-## Integration at the persistent-run baseline
+## Changes from the persistent-run baseline
 
-`Geant4Simulation` converts a flat `SimParticleContainer` into G4 primaries,
-executes transport, and publishes simulated particles and hits. One ACTS input
-event supplies one G4 event containing its particles. The process-wide manager
-provides a single serial session. A mutex serializes transport access; it does
-not turn the serial run manager into a multithreaded simulation.
+At #6375, `Geant4Simulation` took a flat particle collection and supplied one
+Geant4 event per ACTS event. Run initialization, transport and finalization
+belonged to the same thread. The run held geometry, materials, regions, cuts
+and physics fixed. Random seeds came from the ACTS event and algorithm IDs.
 
-On this base, `RunManager` keeps the run open across events. Initialization,
-event processing, and finalization must use the same thread. Geometry,
-materials, regions, cuts, and physics remain fixed during the run. Per-event
-seeds are assigned before transport. These constraints are part of the session
-contract and must survive refactoring.
+The serial session on this branch preserves those contracts. Both serial and
+native sessions now bind the ACTS input to a worker-local event context and
+return owned output collections. This keeps the WhiteBoard on the submitting
+ACTS thread through output publication. Both modes use the same primary,
+tracking, stepping and sensitive-volume mapping code.
 
-Useful extension points already exist: detector construction, a physics-list
-factory registry, an ACTS field adapter, surface mapping, and an internal
-stepping-action list. Tracking records parent barcodes and creation processes
-for G4 secondaries. However, the simulation constructor installs concrete
-primary-generation, tracking, and stepping actions, and these share mutable
-event state containing framework data handles and a WhiteBoard pointer.
-
-Output extraction currently occurs after the base execute method releases its
-mutex. The supported single-thread contract prevents concurrent event use;
-future execution models must make ownership cover output extraction as well as
-transport, rather than relying on that mutex alone.
-
-The main implementation entry points are:
+The main implementation entry points are listed below.
 
 - [Simulation and action assembly](../../../Examples/Algorithms/Geant4/src/Geant4Simulation.cpp)
 - [Persistent run lifecycle](../../../Examples/Algorithms/Geant4/src/RunManager.cpp)
@@ -71,73 +58,93 @@ The main implementation entry points are:
 
 ## Quasi-stable particle handling
 
-Geant4 can already decay transported particles through its configured physics.
-The missing capability is preserving a generator-prescribed decay while
-transporting the parent before that decay.
+### Configuring a generator-prescribed decay
 
-The current HepMC converter traverses particles with end vertices but retains
-only their final-state descendants as simulation particles. It can retain
-displaced daughter production vertices, but the parent does not traverse the
-intervening detector. The G4 translator then inserts each input particle as an
-independent primary, without daughter relationships or prescribed decay times.
+Use the same HepMC3 conversion for live generators and files. This example
+hands charged pion and muon decays to a two-worker Geant4 session. The input
+file supplies the decay channels, daughter four-vectors and vertices. Configure
+the sequencer with enough ACTS event threads to use the requested workers.
 
-Geant4 provides the required transport mechanism: `G4PrimaryParticle` can carry
-daughter particles and a prescribed proper decay time through `SetProperTime()`.
-Geant4 transports the parent and transforms the prescribed daughters according
-to its frame at decay. See the
-[event-generator interface](https://geant4.web.cern.ch/documentation/dev/bfad_html/ForApplicationDevelopers/Fundamentals/eventGenerator.html)
-and the
-[preassigned decay documentation](https://geant4.web.cern.ch/documentation/pipelines/master/bfad_html/ForApplicationDevelopers/TrackingAndPhysics/physicsProcess.html).
+```python
+from acts.examples.hepmc3 import HepMC3InputConverter, HepMC3Reader
+from acts.examples.simulation import addGeant4
+
+s.addReader(HepMC3Reader(level=level, inputPath=path, outputEvent="gen"))
+s.addAlgorithm(HepMC3InputConverter(
+    level=level, inputEvent="gen", outputParticles="roots",
+    outputVertices="vertices", outputDecayGraph="decays",
+    decayPdgCodes=[211, -211, 13, -13],
+))
+addGeant4(
+    s, detector, detector.trackingGeometry(), field, rnd,
+    inputParticles="roots", inputDecayGraph="decays", numGeant4Workers=2,
+    outputDirRoot=output,
+)
+```
+
+With `addPythia8`, pass the same `decayPdgCodes` and `outputDecayGraph`
+arguments. The generator must be configured to perform the selected decays.
+A zero worker count selects serial transport. Omitting both converter options
+selects the original flat final-state conversion.
 
 ### Input and decay contract
 
-Introduce an optional decay-graph collection alongside the existing particle
-collection. Preserve flat inputs for particle guns and existing workflows. The
-graph should describe selected transportable parents and their decay trees,
-stable generator identities, production information, daughter kinematics, and
-prescribed proper decay times. Preserve this information before vertex merging
-or final-state selection removes it.
+The converter emits selected status-2 parents and the usual unclaimed final
+particles in `outputParticles`. The separate `SimParticleDecayGraph` maps a
+parent barcode to its proper time, generator endpoint and daughter particles
+with their laboratory momenta. All quantities in the graph use ACTS units.
+The signed PDG list selects entire decay trees. Each internal species in a
+selected subtree must be listed, each vertex must have a single incoming
+particle and at least two daughters, and each terminal daughter must have
+status 1. Ancestors outside these trees follow the usual HepMC traversal.
+Applying a particle selector to the resulting roots removes the whole tree
+for each root it rejects. Geant4 requires roots to start inside the
+world, or on an inward-facing boundary. An invalid start reports the barcode,
+PDG code and position to the submitting event.
 
-Define selection at the graph boundary: identify which ancestors are
-transported, which prompt ancestors are collapsed, and which descendants are
-attached to those transported ancestors. An end vertex alone does not establish
-a transportable decay; generator records also contain interactions and other
-bookkeeping vertices. Validate particle definitions and decay-process support
-for every selected species. Exotic particle registration is a separate policy,
-not an assumption that every PDG code is supported.
+For on-shell parents the converter computes proper flight length as
+`cΔτ = Δ(ct) m/E`. It checks the generator displacement against
+`Δx = Δ(ct) p/E`, checks charge and four-momentum conservation, and rejects
+unsupported or inconsistent selected records. Particles need a known PDG
+mass and charge, with neutrinos treated as massless. For massive particles,
+the converter retains the generator mass when it agrees with the nominal mass
+within 5 keV plus 10 parts per million of the nominal mass. This accommodates
+differences between particle tables, including the Pythia8 neutral pion.
+Off-shell resonances and multi-parent vertices fall outside this contract.
+File merging converts each event's space-time coordinates, momenta and
+generated masses into the output event's declared units before conversion.
 
-Inject each transport root once. Attach prescribed descendants to their parent;
-do not also inject them as independent primaries. Support nested decay chains.
-Use proper decay time rather than a fixed laboratory endpoint: energy loss,
-scattering, and field bending can change the actual decay position. Define and
-validate units, time derivation, rest-frame transformations, and treatment of
-inconsistent or incomplete generator records. Keep prescribed decay time
-distinct from the particle state's accumulated proper time.
+The handover carries decay kinematics. Spin-density matrices and polarization
+evolution are outside its scope. The translator attaches the daughters through
+`G4PrimaryParticle` and sets the proper decay time. The selected physics
+list must supply an active Geant4 decay process for the parent. Transport
+determines where decay actually takes
+place and boosts daughter momenta using the parent's state at decay. A parent
+can bend, lose energy, leave the world, or be removed before decaying.
+Daughters enter transport only when Geant4 creates them. Nested prescribed
+decays are restored when Geant4 starts tracking the daughter.
 
-If an interaction destroys a parent before its scheduled decay, its prescribed
-daughters must not appear independently later. Preserve original generator
-vertices separately from the actual simulated decay vertices.
+### Truth, hits and persistence
 
-### Truth and hit contract
+A tracked generator daughter carries its original HepMC particle index, an
+ACTS barcode reserved for it at conversion, the direct parent barcode and
+the Geant4 creation process. The simulated particle starts at the actual
+transport vertex. Other Geant4 secondaries use separate barcodes. The merged
+HepMC event is the scope of the generator index. Persist the HepMC event
+alongside the simulation to keep the original generator vertices.
 
-Carry generator identity through G4 primary and track information and map actual
-G4 track IDs when tracks are created. Preserve identity for prescribed daughters
-while allocating separate identities for G4-created particles. Audit the current
-translator's preassigned track-ID mapping before extending it to decay trees.
+Hit recording and secondary-killing policies use the Geant4 parent track ID.
+A decay inside silicon can produce two distinct hits on that sensor, one for
+the incoming parent and one for the outgoing daughter. With
+`keepParticlesWithoutHits=False`, transported prescribed parents are retained
+so the ancestry of retained daughters can still be followed. The
+`addGeant4` ROOT output writes all five components of each direct parent
+barcode when a decay graph is supplied. Set
+`RootParticleWriter.Config.writeParentBarcodes` explicitly when constructing a writer
+by hand. `RootParticleReader` also reads older files, which carry an unknown
+direct parent. CSV particle output does not carry these direct-parent fields.
 
-Distinguish generator origin, transport parentage, and creation process. The
-current primary/secondary classification uses the presence of a G4 primary
-particle pointer, which prescribed daughters can also carry. Use explicit
-semantics for secondary killing and hit selection, and retain enough ancestry
-when output filters discard particles without hits.
-
-Flush partial sensitive-volume hits when a parent decays or otherwise stops.
-The current tracking action warns and clears leftover buffered hits for some
-unhandled stop cases. Cover decay, destructive interaction, user termination,
-and daughters born inside a sensor; define how each contributes to truth and
-hit output.
-
-## Proposed architecture
+## Adapter responsibilities
 
 Keep the ACTS algorithm as a thin adapter with three separable responsibilities.
 
@@ -179,7 +186,7 @@ targets.
 Use the [serial benchmark](../../../Examples/Scripts/Python/geant4_persistent_run_benchmark.py)
 with the ACTS Python bindings, Geant4 datasets and ROOT writers available.
 The `odd` geometry also requires the OpenDataDetector and DD4hep bindings.
-Start each sample in a fresh process and use separate output directories:
+Start each sample in a fresh process and give it a separate output directory.
 
 ```sh
 python Examples/Scripts/Python/geant4_persistent_run_benchmark.py build/sample \
@@ -251,8 +258,8 @@ same session and publishes its material tracks.
 For a C++ stepping diagnostic, append a factory to
 `Geant4Simulation::Config::steppingActionFactories`. Each factory receives
 read-only access to the active event during callbacks and creates one action
-per simulation instance. The built-in kill and hit actions run first, followed
-by the configured actions in order. The
+per serial session or native worker. The built-in kill and hit actions run
+first, followed by the configured actions in order. The
 [telescope test](../../../Tests/UnitTests/Examples/Algorithms/Geant4/Geant4SimulationActionsTests.cpp)
 exercises this interface over two events.
 
@@ -264,28 +271,40 @@ test reproduced all 60 material tracks both across builds and across event
 partitions. The lifecycle, event-context, session-reuse, ordered-action and
 sensitive-surface-mapping C++ tests passed on Linux.
 
-### Implement one complete quasi-stable workflow
+### Validate the complete quasi-stable workflow
 
-Start with HepMC input and a controlled parent that crosses sensitive material,
-bends and loses energy, decays into prescribed daughters, and leaves connected
-truth and hit records. Agree on the decay-graph schema and filtering semantics
-before changing the converter. Extend the G4 translator and truth mapping, then
-exercise the entire input-to-output path.
+The [HepMC3 conversion tests](../../../Tests/UnitTests/Examples/Io/HepMC3/HepMC3DecayConversionTests.cpp)
+exercise a neutral kaon with two decaying daughters, mixed root and final-state
+inputs, alternate units, neutrinos and malformed decay records.
+The [end-to-end telescope test](../../../Python/Examples/tests/test_geant4_hepmc_decays.py)
+checks nested pion and muon decays across three silicon planes. It compares
+serial and native ROOT particle and hit records by event and reads the direct
+parent barcodes back through the ACTS reader. Cases include decay inside a
+plane, escape before decay, a neutral kaon at rest, and nuclear capture of a
+stopped negative pion. A transverse 5 T run checks the daughter vertices,
+proper flight times and daughter momentum sums against the bent parent.
 
-Acceptance requires:
+A separate 30-event Pythia8 sample used hadronic Z decays at 91.2 GeV,
+selected `K_S → π⁺π⁻`, and a 100 mm radial and longitudinal production-vertex
+cut in the telescope. Live Pythia and HepMC-file replay both transported 35
+selected kaons and realized 29 prescribed decays with the same generator
+parent and daughter identities. Serial and two-worker transport of the same
+file reproduced all 36 particle and 25 hit branches bit for bit for 1,293
+particles and 696 hits. ACTS seeds include the algorithm index, so compare
+transport with the same collection and algorithm ordering when changing
+worker counts.
 
-- Exactly one transported copy of each intended particle and no duplicate daughters.
-- Parent hits before decay and daughter hits after decay, including decay inside a sensor.
-- Correct proper decay time and energy-momentum consistency at the simulated decay.
-- Preserved identities and ancestry through nested decays and output serialization.
-- Neutral parents, decay at rest, and parents leaving the world before decay.
-- No prescribed daughters after a destructive interaction removes the parent.
-- Defined behavior for missing definitions, invalid decay records, selection, and kill policies.
-- Unchanged flat-input behavior and reproducibility across event partitioning.
+In a live Pythia8 top-pair event with the full ODD geometry, Geant4
+transported 60 selected neutral pions and produced 120 generator daughters
+with direct parent links. The event produced 2,653 hits. A two-event
+`K_S` file replay through the full ODD reconstruction chain yielded 12,124
+particles, 705 hits and 26 tracks. Serial and two-worker results agreed bit
+for bit across all 160 ROOT fields.
 
-Reconcile the detailed ATLAS quasi-stable implementation with these contracts
-during design review, especially selection, proper-time derivation, and truth
-identity. The implementation should use stock Geant4's decay support.
+```sh
+ctest --test-dir build --output-on-failure -R 'Geant4|HepMC3Decay'
+python -m pytest -q Python/Examples/tests/test_geant4_hepmc_decays.py
+```
 
 ### Improve measured overhead and event throughput
 
@@ -299,53 +318,116 @@ surface lookups. These are optimization candidates, not established dominant
 costs. Reuse caches and storage only with explicit context and lifetime rules;
 replace mapping or hit-dispatch mechanisms only when profiles justify it.
 
-### Reassess native multithreading
+### Native Geant4 workers and ACTS reconstruction
 
-Consider a G4 master/worker backend if multiprocessing's geometry memory or
-startup cost becomes limiting. It needs worker-local actions and event state,
-deterministic event assignment, and coordination with ACTS scheduling. Compare
-throughput, memory, and reproducibility against multiprocessing before adopting
-it. Quasi-stable support must not depend on this decision.
+Set `numGeant4Workers=N` in `addGeant4` or use `--geant4-workers N` in
+`full_chain_odd.py` to run Geant4 transport on N native workers. The default
+of zero uses the serial session. Native transport requires a multithreaded
+Geant4 build. Start a fresh process to create a second native pool, switch
+backends or change the physics list. Compatible serial algorithms can reuse
+the same run-manager handle sequentially on its owner thread. The ACTS
+sequencer thread count controls how many events can run concurrently.
 
-#### Native worker handover experiment
-
-The [native worker test](../../../Tests/UnitTests/Examples/Algorithms/Geant4/NativeWorkerTests.cpp)
-connects the ACTS TBB sequencer to a stock `G4MTRunManager`. Each ACTS event
-submits its ID, seed and input to an exchange and waits for its own future.
-The exchange admits at most two queued or running requests. Each Geant4 worker
-takes the next ready request in `GeneratePrimaries`, keeps the ACTS identity
-in the Geant4 event, and returns owned silicon crossing positions in
-`EndOfEventAction`. Reconstruction fits a straight line through those two
-positions on the originating event's WhiteBoard.
-
-The two-worker case holds event 17 inside its first silicon step until ACTS
-has reconstructed another event. The one- and two-worker runs check the
-same per-event random draws and track parameters. A separate run requests
-64 Geant4 events and submits four ACTS events. A stepping failure reaches
-the originating caller, which skips reconstruction for that event. Closing
-the input wakes waiting workers. Each one soft-aborts its own run after at
-most one empty terminal event. With Geant4 11.4.3, three ACTS events were
-reconstructed and Geant4 counted six slots, including two empty ones.
-
-The following commands run the experiment in a Geant4 MT build with the
-example unit tests enabled.
+For an input file containing generator-prescribed `K0S` decays, run the
+full ODD chain with two native workers and write the parent barcodes to ROOT.
+The same signed PDG selection is available with `--ttbar` for decays present
+in the Pythia8 event record.
 
 ```sh
-cmake --build build --target ActsUnitTestGeant4NativeWorkers
-ctest --test-dir build --output-on-failure -R '^Geant4NativeWorker'
+python Examples/Scripts/Python/full_chain_odd.py --hepmc3 events.hepmc3 \
+  --decay-pdg-codes 310 --geant4 --geant4-workers 2 -j 4 -n 2 --output-root -o build/odd-ks
 ```
 
-The fixture uses geantinos in a field-free telescope. A production backend
-would also need worker-local fields and sensitive actions, validation with
-full physics and detector conditions, and a policy for run-size estimates
-and failures. The synchronous wait occupies an ACTS event-processing thread.
-A full-chain throughput measurement would quantify that cost.
+The master constructs the detector and physics list and maps sensitive
+volumes once. Each native worker owns its actions, field wrapper and active
+event state. It obtains the ACTS event number and seed when Geant4 requests
+work in `SetUpAnEvent`. The originating ACTS task waits for its own particle
+and hit collections. While ACTS digitizes hits or fits tracks for a completed
+event, workers can transport other events. At most N requests are admitted
+from submission through delivery of the result. The synchronous wait occupies
+an ACTS thread, so the number of concurrent ACTS events also limits the
+available transport work. See the
+[native simulation session](../../../Examples/Algorithms/Geant4/src/NativeSimulationSession.cpp).
 
-## Decisions for the next design review
+Closing the input lets workers drain admitted events and finish the Geant4
+run, including when ACTS submitted zero events. The total number of ACTS
+events reaching transport can be unknown. Geant4's planned event count for
+this streaming run is the worker count used to start the run. Use ACTS event
+IDs for event identity. An ACTS action exception reaches the submitting task
+after the worker has released its references to the event. The
+[session tests](../../../Tests/UnitTests/Examples/Algorithms/Geant4/NativeSimulationSessionTests.cpp)
+cover an empty run, startup failure, overlapping events and shutdown. At
+shutdown the master joins the workers, detaches detector-region roots while
+their logical volumes are live, and releases the geometry on the master thread.
 
-Settle the supported initial particle species and generator conventions, the
-decay-graph schema, proper-time derivation, and invalid-input policy. Specify
-which truth relationships survive filtering and serialization. Choose action
-factory ownership and ordering rules that work for serial execution and allow
-independent workers later. Select generator and pileup samples to complement
-the particle-gun baseline before setting broader performance targets.
+The earlier [handover experiment](../../../Tests/UnitTests/Examples/Algorithms/Geant4/NativeWorkerTests.cpp)
+used geantinos in a two-plane telescope. It held one particle inside silicon
+until ACTS fitted a straight line for another event, and exercised worker
+shutdown with fewer inputs than requested. Its empty terminal slots were
+specific to that fixture's handover in `GeneratePrimaries`. The simulation
+session ends the worker loop at the event request boundary.
+
+```sh
+cmake --build build --target ActsUnitTestGeant4NativeWorkers ActsUnitTestGeant4NativeSimulationSession
+ctest --test-dir build --output-on-failure -R '^Geant4Native'
+```
+
+#### ODD simulation and reconstruction measurements
+
+The sample used the ODD v6.0.3 tracker, mapped 2 T solenoid field,
+`FTFP_BERT` and a 1 m step cap. Each of the 96 events (IDs 5–100) contained
+32 muons at 5 GeV with pseudorapidity between 1 and 1.5, using seed 42.
+ACTS digitized hits, seeded tracks from space-point triplets, ran the
+combinatorial Kalman filter (CKF) and matched tracks to truth. ROOT writers
+recorded particles, hits and track summaries including fitted covariances.
+A separate debugger snapshot caught the ACTS CKF executing while both native
+workers were stepping tracks in Geant4.
+
+| Transport | ACTS threads | Geant4 workers | Events/s | Peak RSS (MiB) | Setup + run (s) |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Serial baseline | 1 | 0 | 9.56 | 1073 | 21.28 |
+| Native | 4 | 1 | 10.63 | 1115 | 20.47 |
+| Native | 4 | 2 | 20.19 | 1136 | 11.84 |
+| Native | 4 | 4 | 30.35 | 1175 | 8.51 |
+
+The table gives medians over three fresh processes per configuration on a
+Ryzen 7 5800X with Geant4 11.4.3. Throughput covers event processing and
+end-run. Setup plus run also includes detector setup, run initialization and
+closing the ROOT files. The serial row used the frozen persistent-run build.
+Compared by event ID, every native run reproduced all 155 particle, hit
+and track-summary branches bit for bit, including within-event ordering, for
+772,019 particles, 48,929 hits and 4,520 tracks. These timings characterize
+this muon sample and detector configuration.
+
+From the repository root with the ACTS Python bindings, ODD, ROOT and Geant4
+datasets available, run the driver once per configuration in a fresh process.
+Set `threads=1` and `workers=0` for serial, or `threads=4` and `workers` to
+1, 2 or 4 for native transport. Each run requires a new output directory.
+
+```sh
+threads=4
+workers=2
+python Examples/Scripts/Python/geant4_persistent_run_benchmark.py "build/odd-ckf-${threads}-${workers}" \
+  --geometry odd --field mapped --reconstruct --particles 32 --events 96 --skip 5 --seed 42 \
+  --acts-threads "${threads}" --g4-workers "${workers}"
+```
+
+Use the ROOT content hasher to compare runs on the same build, allowing
+events to be written in a different order.
+
+```python
+from pathlib import Path
+from acts.examples.root import hashRootFile
+
+serial = Path("build/odd-ckf-1-0")
+native = Path("build/odd-ckf-4-4")
+for name in ("particles_simulation.root", "hits.root", "tracksummary_ckf.root"):
+    assert hashRootFile(serial / name) == hashRootFile(native / name), name
+```
+
+## Further validation
+
+Extend the generator sample to heavy flavour and high pileup before setting
+broader throughput targets. Additional generator conventions and off-shell
+parents require a definition of mass, proper time and reference kinematics
+for the handover.

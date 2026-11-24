@@ -63,6 +63,23 @@ parser.add_argument(
 )
 parser.add_argument("--edm4hep", help="Use edm4hep inputs", type=pathlib.Path)
 parser.add_argument(
+    "--hepmc3", type=pathlib.Path, help="Read generated events from a HepMC3 file"
+)
+parser.add_argument(
+    "--decay-pdg-codes",
+    metavar="PDG",
+    type=int,
+    nargs="+",
+    default=[],
+    help="Preserve generator decays for these signed PDG codes in Geant4",
+)
+parser.add_argument(
+    "--geant4-workers",
+    type=int,
+    default=0,
+    help="Number of native Geant4 workers (0 selects serial transport)",
+)
+parser.add_argument(
     "--geant4", help="Use Geant4 instead of fatras", action="store_true"
 )
 parser.add_argument(
@@ -180,6 +197,17 @@ parser.add_argument(
 )
 
 args = parser.parse_args()
+if args.hepmc3 and (args.edm4hep or args.ttbar):
+    parser.error("--hepmc3 cannot be combined with --edm4hep or --ttbar")
+if args.geant4_workers < 0:
+    parser.error("--geant4-workers must be nonnegative")
+if args.geant4_workers and (not args.geant4 or args.edm4hep):
+    parser.error("--geant4-workers requires --geant4 with generated input")
+if args.decay_pdg_codes and (
+    not args.geant4 or args.edm4hep or not (args.hepmc3 or args.ttbar)
+):
+    parser.error("--decay-pdg-codes requires --geant4 with --hepmc3 or --ttbar")
+decayGraph = "generator_decays" if args.decay_pdg_codes else ""
 
 outputDir = args.output
 ambi_ML = args.ambi_solver == "ML"
@@ -225,7 +253,11 @@ rnd = acts.examples.RandomNumbers(seed=42)
 s = acts.examples.Sequencer(
     events=args.events,
     skip=args.skip,
-    numThreads=args.jobs if args.jobs is not None else (1 if args.geant4 else -1),
+    numThreads=(
+        args.jobs
+        if args.jobs is not None
+        else (1 if args.geant4 and not args.geant4_workers else -1)
+    ),
     outputDir=str(outputDir),
 )
 
@@ -278,7 +310,30 @@ if args.edm4hep:
         ),
     )
 else:
-    if not args.ttbar:
+    if args.hepmc3:
+        from acts.examples.hepmc3 import HepMC3InputConverter, HepMC3Reader
+
+        s.addReader(
+            HepMC3Reader(
+                level=s.config.logLevel,
+                inputPath=args.hepmc3,
+                outputEvent="hepmc3_event",
+                checkEventNumber=False,  # Generators can number their events independently.
+            )
+        )
+        s.addAlgorithm(
+            HepMC3InputConverter(
+                level=s.config.logLevel,
+                inputEvent="hepmc3_event",
+                outputParticles="particles_generated",
+                outputVertices="vertices_generated",
+                decayPdgCodes=args.decay_pdg_codes,
+                outputDecayGraph=decayGraph,
+            )
+        )
+        s.addWhiteboardAlias("particles", "particles_generated")
+        s.addWhiteboardAlias("vertices_truth", "vertices_generated")
+    elif not args.ttbar:
         particleType = {
             "muon": acts.PdgParticle.eMuon,
             "electron": acts.PdgParticle.eElectron,
@@ -319,8 +374,11 @@ else:
             rnd=rnd,
             outputDirRoot=outputDir if args.output_root else None,
             outputDirCsv=outputDir if args.output_csv else None,
+            decayPdgCodes=args.decay_pdg_codes,
+            outputDecayGraph=decayGraph,
         )
 
+    if args.ttbar or args.hepmc3:
         addGenParticleSelection(
             s,
             ParticleSelectorConfig(
@@ -332,8 +390,10 @@ else:
         )
 
     if args.geant4:
-        if s.config.numThreads != 1:
-            raise ValueError("Geant 4 simulation does not support multi-threading")
+        if s.config.numThreads != 1 and not args.geant4_workers:
+            raise ValueError(
+                "Use --geant4-workers when running Geant4 with multiple ACTS threads"
+            )
 
         # Pythia can sometime simulate particles outside the world volume, a cut on the Z of the track help mitigate this effect
         # Older version of G4 might not work, this as has been tested on version `geant4-11-00-patch-03`
@@ -347,6 +407,8 @@ else:
             outputDirCsv=outputDir if args.output_csv else None,
             outputDirObj=outputDir if args.output_obj else None,
             rnd=rnd,
+            numGeant4Workers=args.geant4_workers,
+            inputDecayGraph=decayGraph,
             killVolume=trackingGeometry.highestTrackingVolume,
             killAfterTime=25 * u.ns,
         )
