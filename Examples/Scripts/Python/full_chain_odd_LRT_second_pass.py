@@ -16,6 +16,7 @@ import urllib.request
 
 import acts
 import acts.examples
+from acts.json import MaterialMapDecorator, TrackingGeometryMaterialJsonConverter
 from acts.examples.simulation import (
     addParticleGun,
     MomentumConfig,
@@ -182,7 +183,9 @@ oddStripSeedingSel = actsDir / "Examples/Configs/odd-strip-spacepoint-selection.
 oddShortStripSeedingSel = (
     actsDir / "Examples/Configs/odd-short-strip-spacepoint-selection.json"
 )
-oddMaterialDeco = acts.IMaterialDecorator.fromFile(oddMaterialMap)
+oddMaterialDeco = MaterialMapDecorator(
+    TrackingGeometryMaterialJsonConverter().fromFile(oddMaterialMap)
+)
 
 detector = getOpenDataDetector(odd_dir=geoDir, materialDecorator=oddMaterialDeco)
 trackingGeometry = detector.trackingGeometry()

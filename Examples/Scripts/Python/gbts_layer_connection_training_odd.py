@@ -7,6 +7,7 @@ import urllib.request
 
 import acts
 import acts.examples
+from acts.json import MaterialMapDecorator, TrackingGeometryMaterialJsonConverter
 from acts.examples.simulation import (
     MomentumConfig,
     EtaConfig,
@@ -70,7 +71,9 @@ oddMaterialMap = (
     pathlib.Path(tempfile.gettempdir()) / "odd-material-maps-gen3-provisional.json.zst"
 )
 urllib.request.urlretrieve(PROVISIONAL_GEN3_MATERIAL_MAP_URL, oddMaterialMap)
-oddMaterialDeco = acts.IMaterialDecorator.fromFile(oddMaterialMap)
+oddMaterialDeco = MaterialMapDecorator(
+    TrackingGeometryMaterialJsonConverter().fromFile(oddMaterialMap)
+)
 
 detector = getOpenDataDetector(materialDecorator=oddMaterialDeco)
 trackingGeometry = detector.trackingGeometry()

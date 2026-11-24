@@ -342,6 +342,7 @@ def full_chain(args):
         decorators = detector.contextDecorators()
     elif args.odd:
         import acts.examples.odd
+        import acts.json
         etaRange = (-3.0, 3.0)
         ptMin = 1.0 * u.GeV
         rhoMax = 24.0 * u.mm
@@ -369,7 +370,11 @@ def full_chain(args):
         args.bf_constant = True
         detector = acts.examples.odd.getOpenDataDetector(
             odd_dir=geoDir,
-            materialDecorator=acts.IMaterialDecorator.fromFile(args.material_config),
+            materialDecorator=acts.json.MaterialMapDecorator(
+                acts.json.TrackingGeometryMaterialJsonConverter().fromFile(
+                    args.material_config
+                )
+            ),
         )
         trackingGeometry = detector.trackingGeometry()
         # CKF volume lists derived by name: the Gen1 literal IDs do not exist in

@@ -9,6 +9,7 @@ import math
 
 import acts
 import acts.examples
+from acts.json import MaterialMapDecorator, TrackingGeometryMaterialJsonConverter
 from acts.examples.simulation import (
     addParticleGun,
     MomentumConfig,
@@ -204,7 +205,9 @@ oddDigiConfig = (
 )
 
 oddSeedingSel = actsDir / "Examples/Configs/odd-seeding-config.json"
-oddMaterialDeco = acts.IMaterialDecorator.fromFile(oddMaterialMap)
+oddMaterialDeco = MaterialMapDecorator(
+    TrackingGeometryMaterialJsonConverter().fromFile(oddMaterialMap)
+)
 
 detector = getOpenDataDetector(odd_dir=geoDir, materialDecorator=oddMaterialDeco)
 trackingGeometry = detector.trackingGeometry()

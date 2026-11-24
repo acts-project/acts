@@ -15,6 +15,7 @@ PROVISIONAL_GEN3_MATERIAL_MAP_URL = (
     "gen3-material-map-provisional-v1/odd_gen3_map.json.zst"
 )
 import acts.examples
+from acts.json import MaterialMapDecorator, TrackingGeometryMaterialJsonConverter
 from acts.examples.simulation import (
     addPythia8,
     ParticleSelectorConfig,
@@ -147,7 +148,9 @@ class Config:
             )
             oddDigiConfig = actsExamplesDir / "Configs/odd-digi-smearing-config.json"
             oddSeedingSel = actsExamplesDir / "Configs/odd-seeding-config.json"
-            oddMaterialDeco = acts.IMaterialDecorator.fromFile(oddMaterialMap)
+            oddMaterialDeco = MaterialMapDecorator(
+                TrackingGeometryMaterialJsonConverter().fromFile(oddMaterialMap)
+            )
 
             detector = getOpenDataDetector(
                 odd_dir=geoDir, materialDecorator=oddMaterialDeco, gen3=True

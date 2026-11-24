@@ -5,6 +5,7 @@ import urllib.request
 from pathlib import Path
 
 import acts
+from acts.json import MaterialMapDecorator, TrackingGeometryMaterialJsonConverter
 from acts.examples.odd import getOpenDataDetector
 
 # Provisional Gen3 map, produced locally and hosted as a release asset on a
@@ -46,7 +47,9 @@ def makeSetup() -> PhysmonSetup:
         Path(tempfile.gettempdir()) / "odd-material-maps-gen3-provisional.json.zst"
     )
     urllib.request.urlretrieve(PROVISIONAL_GEN3_MATERIAL_MAP_URL, matMapPath)
-    matDeco = acts.IMaterialDecorator.fromFile(matMapPath, level=acts.logging.INFO)
+    matDeco = MaterialMapDecorator(
+        TrackingGeometryMaterialJsonConverter().fromFile(matMapPath)
+    )
 
     detector = getOpenDataDetector(matDeco)
     trackingGeometry = detector.trackingGeometry()

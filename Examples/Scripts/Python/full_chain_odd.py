@@ -8,6 +8,8 @@ import urllib.request
 
 import acts
 import acts.examples
+import acts.root
+from acts.json import MaterialMapDecorator, TrackingGeometryMaterialJsonConverter
 from acts.examples.simulation import (
     MomentumConfig,
     EtaConfig,
@@ -256,7 +258,14 @@ oddGbtsConnectionTable = (
 )
 
 oddSeedingSel = actsDir / "Examples/Configs/odd-seeding-config.json"
-oddMaterialDeco = acts.IMaterialDecorator.fromFile(oddMaterialMap)
+if gen3:
+    oddMaterialDeco = MaterialMapDecorator(
+        TrackingGeometryMaterialJsonConverter().fromFile(oddMaterialMap)
+    )
+else:
+    oddMaterialDeco = acts.root.RootMaterialDecorator(
+        fileName=str(oddMaterialMap), level=acts.logging.INFO
+    )
 
 detector = getOpenDataDetector(
     odd_dir=geoDir, materialDecorator=oddMaterialDeco, gen3=gen3

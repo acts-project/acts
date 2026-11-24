@@ -12,6 +12,7 @@ import time
 
 import acts
 import acts.examples
+from acts.json import MaterialMapDecorator, TrackingGeometryMaterialJsonConverter
 
 actsDir = Path(__file__).parent.parent.parent.parent
 
@@ -280,7 +281,9 @@ def make_geometry():
     urllib.request.urlretrieve(PROVISIONAL_GEN3_MATERIAL_MAP_URL, oddMaterialMap)
     oddDigiConfig = actsDir / "Examples/Configs/odd-digi-smearing-config.json"
     oddSeedingSel = actsDir / "Examples/Configs/odd-seeding-config.json"
-    oddMaterialDeco = acts.IMaterialDecorator.fromFile(oddMaterialMap)
+    oddMaterialDeco = MaterialMapDecorator(
+        TrackingGeometryMaterialJsonConverter().fromFile(oddMaterialMap)
+    )
 
     detector = getOpenDataDetector(odd_dir=geoDir, materialDecorator=oddMaterialDeco)
     trackingGeometry = detector.trackingGeometry()

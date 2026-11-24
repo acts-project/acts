@@ -16,6 +16,7 @@ import urllib.request
 
 import acts
 import acts.examples
+from acts.json import MaterialMapDecorator, TrackingGeometryMaterialJsonConverter
 from acts.examples.simulation import (
     MomentumConfig,
     EtaConfig,
@@ -150,7 +151,9 @@ urllib.request.urlretrieve(PROVISIONAL_GEN3_MATERIAL_MAP_URL, oddMaterialMap)
 oddDigiConfig = actsDir / "Examples/Configs/odd-digi-smearing-config.json"
 oddSeedingSel = actsDir / "Examples/Configs/odd-seeding-config.json"
 
-oddMaterialDeco = acts.IMaterialDecorator.fromFile(oddMaterialMap)
+oddMaterialDeco = MaterialMapDecorator(
+    TrackingGeometryMaterialJsonConverter().fromFile(oddMaterialMap)
+)
 detector = getOpenDataDetector(odd_dir=geoDir, materialDecorator=oddMaterialDeco)
 trackingGeometry = detector.trackingGeometry()
 # CKF volume lists derived by name: the Gen1 literal IDs do not exist in
