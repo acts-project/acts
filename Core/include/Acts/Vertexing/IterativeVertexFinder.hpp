@@ -14,15 +14,15 @@
 #include "Acts/MagneticField/MagneticFieldQuery.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
-#include "Acts/Vertexing/FullBilloirVertexFitter.hpp"
-#include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
 #include "Acts/Vertexing/IVertexFinder.hpp"
+#include "Acts/Vertexing/IVertexFitter.hpp"
 #include "Acts/Vertexing/ImpactPointEstimator.hpp"
 #include "Acts/Vertexing/TrackLinearizer.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
 
 #include <functional>
+#include <memory>
 
 namespace Acts {
 
@@ -55,8 +55,6 @@ namespace Acts {
 /// 5. Add vertex to vertexCollection
 /// 6. Repeat until no seedTracks are left or max. number of vertices found
 class IterativeVertexFinder final : public IVertexFinder {
-  using VertexFitter = FullBilloirVertexFitter;
-
  public:
   /// Configuration struct
   struct Config {
@@ -65,14 +63,14 @@ class IterativeVertexFinder final : public IVertexFinder {
     /// @param fitter Vertex fitter
     /// @param sfinder The seed finder
     /// @param est ImpactPointEstimator
-    Config(VertexFitter fitter, std::shared_ptr<IVertexFinder> sfinder,
-           ImpactPointEstimator est)
+    Config(std::shared_ptr<const IVertexFitter> fitter,
+           std::shared_ptr<IVertexFinder> sfinder, ImpactPointEstimator est)
         : vertexFitter(std::move(fitter)),
           seedFinder(std::move(sfinder)),
           ipEst(std::move(est)) {}
 
-    /// Vertex fitter
-    VertexFitter vertexFitter;
+    /// Shared ownership of the single-vertex fitter; must not be null.
+    std::shared_ptr<const IVertexFitter> vertexFitter;
 
     /// Track linearizer using a reusable magnetic field query
     TrackLinearizer trackLinearizer;

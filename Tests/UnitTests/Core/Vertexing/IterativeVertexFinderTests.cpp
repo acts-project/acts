@@ -59,6 +59,32 @@ using Covariance = BoundMatrix;
 using Propagator = Acts::Propagator<EigenStepper<>>;
 using Linearizer = HelicalTrackLinearizer;
 
+namespace {
+
+class RecordingVertexFitter final : public IVertexFitter {
+ public:
+  explicit RecordingVertexFitter(const FullBilloirVertexFitter::Config& config)
+      : m_fitter(config) {}
+
+  Result<Vertex> fit(const VertexFitInput& input, const GeometryContext& gctx,
+                     MagneticFieldQuery& field) const override {
+    ++calls;
+    if (lastQuery != nullptr) {
+      BOOST_CHECK_EQUAL(lastQuery, &field);
+    }
+    lastQuery = &field;
+    return m_fitter.fit(input, gctx, field);
+  }
+
+  mutable unsigned int calls = 0;
+  mutable const MagneticFieldQuery* lastQuery = nullptr;
+
+ private:
+  FullBilloirVertexFitter m_fitter;
+};
+
+}  // namespace
+
 // Create a test context
 GeometryContext geoContext = GeometryContext::dangerouslyDefaultConstruct();
 MagneticFieldContext magFieldContext = MagneticFieldContext();
@@ -143,7 +169,8 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
     vertexFitterCfg.trackLinearizer.connect<&Linearizer::linearizeTrack>(
         &linearizer);
 
-    BilloirFitter bFitter(vertexFitterCfg);
+    auto bFitter = std::make_shared<RecordingVertexFitter>(vertexFitterCfg);
+    const auto recordingFitter = bFitter;
 
     ImpactPointEstimator::Config ipEstimatorCfg(bField, propagator);
     ImpactPointEstimator ipEstimator(ipEstimatorCfg);
@@ -165,10 +192,16 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
     cfg.reassignTracksAfterFirstFit = true;
     cfg.extractParameters.connect<&InputTrack::extractParameters>();
 
+    auto missingFitter = cfg;
+    missingFitter.vertexFitter.reset();
+    BOOST_CHECK_THROW(IterativeVertexFinder{std::move(missingFitter)},
+                      std::invalid_argument);
+
     // A track linearizer is required.
     auto makeInvalidConfig = [&]() {
-      IterativeVertexFinder::Config result(BilloirFitter(vertexFitterCfg),
-                                           cfg.seedFinder, ipEstimator);
+      IterativeVertexFinder::Config result(
+          std::make_shared<BilloirFitter>(vertexFitterCfg), cfg.seedFinder,
+          ipEstimator);
       result.field = bField;
       result.extractParameters = cfg.extractParameters;
       return result;
@@ -267,6 +300,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
 
     // find vertices
     auto res = finder.find(inputTracks, vertexingOptions, state);
+    BOOST_CHECK_GT(recordingFitter->calls, 0u);
 
     if (!res.ok()) {
       BOOST_FAIL(res.error().message());
@@ -376,7 +410,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
     vertexFitterCfg.trackLinearizer.connect<&Linearizer::linearizeTrack>(
         &linearizer);
 
-    BilloirFitter bFitter(vertexFitterCfg);
+    auto bFitter = std::make_shared<BilloirFitter>(vertexFitterCfg);
 
     ImpactPointEstimator::Config ipEstimatorCfg(bField, propagator);
     ImpactPointEstimator ipEstimator(ipEstimatorCfg);
@@ -578,7 +612,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_athena_reference) {
   vertexFitterCfg.trackLinearizer.connect<&Linearizer::linearizeTrack>(
       &linearizer);
 
-  BilloirFitter bFitter(vertexFitterCfg);
+  auto bFitter = std::make_shared<BilloirFitter>(vertexFitterCfg);
 
   ImpactPointEstimator::Config ipEstimatorCfg(bField, propagator);
   ImpactPointEstimator ipEstimator(ipEstimatorCfg);
