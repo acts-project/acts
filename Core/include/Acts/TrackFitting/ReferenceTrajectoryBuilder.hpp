@@ -283,6 +283,7 @@ class ReferenceTrajectoryBuilder {
       const Result<detail::PointwiseMaterialEffects> materialInteractionPreRes =
           detail::performMaterialInteraction(
               state, stepper, surface,
+              surface.boundParametrization(state.options.geoContext),
               detail::determineMaterialUpdateMode(
                   state, navigator, MaterialUpdateMode::PreUpdate),
               NoiseUpdateMode::addNoise, multipleScattering, energyLoss,
@@ -325,6 +326,7 @@ class ReferenceTrajectoryBuilder {
       const Result<detail::PointwiseMaterialEffects>
           materialInteractionPostRes = detail::performMaterialInteraction(
               state, stepper, surface,
+              surface.boundParametrization(state.options.geoContext),
               detail::determineMaterialUpdateMode(
                   state, navigator, MaterialUpdateMode::PostUpdate),
               NoiseUpdateMode::addNoise, multipleScattering, energyLoss,
@@ -504,13 +506,16 @@ class ReferenceTrajectoryBuilder {
           const detail::PointwiseMaterialEffects materialEffects =
               detail::computeMaterialEffects(
                   materialSlab, trackProxy.particleHypothesis(),
-                  freeParams.segment<3>(eFreeDir0), freeParams[eFreeQOverP],
-                  true, true, true);
+                  freeParams[eFreeQOverP], true, true, true);
 
-          predictedCovariance(eBoundDir0, eBoundDir0) +=
-              materialEffects.variancePhi;
-          predictedCovariance(eBoundDir1, eBoundDir1) +=
-              materialEffects.varianceTheta;
+          const auto noise = detail::scatteringNoise(
+              trackState.referenceSurface().boundParametrization(geoContext),
+              freeParams.segment<3>(eFreeDir0),
+              materialEffects.scatteringVariance);
+          if (!noise.ok()) {
+            return noise.error();
+          }
+          predictedCovariance.block<2, 2>(eBoundDir0, eBoundDir0) += *noise;
           predictedCovariance(eBoundQOverP, eBoundQOverP) +=
               materialEffects.varianceQoverP;
         }
@@ -556,13 +561,16 @@ class ReferenceTrajectoryBuilder {
         const detail::PointwiseMaterialEffects materialEffects =
             detail::computeMaterialEffects(
                 materialSlab, trackProxy.particleHypothesis(),
-                freeParams.segment<3>(eFreeDir0), freeParams[eFreeQOverP], true,
-                true, true);
+                freeParams[eFreeQOverP], true, true, true);
 
-        predictedCovariance(eBoundDir0, eBoundDir0) +=
-            materialEffects.variancePhi;
-        predictedCovariance(eBoundDir1, eBoundDir1) +=
-            materialEffects.varianceTheta;
+        const auto noise = detail::scatteringNoise(
+            trackState.referenceSurface().boundParametrization(geoContext),
+            freeParams.segment<3>(eFreeDir0),
+            materialEffects.scatteringVariance);
+        if (!noise.ok()) {
+          return noise.error();
+        }
+        predictedCovariance.block<2, 2>(eBoundDir0, eBoundDir0) += *noise;
         predictedCovariance(eBoundQOverP, eBoundQOverP) +=
             materialEffects.varianceQoverP;
       }

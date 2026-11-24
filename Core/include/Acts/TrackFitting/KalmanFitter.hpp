@@ -456,6 +456,10 @@ class KalmanFitter {
         // Screen output message
         ACTS_VERBOSE("Measurement surface " << surface.geometryId()
                                             << " detected.");
+        // Interpretation of the bound coordinates on this surface, resolved
+        // once for the material effects.
+        const BoundParametrization parametrization =
+            surface.boundParametrization(state.options.geoContext);
         // Transport the covariance to the surface
         auto transportRes = stepper.transportToBound(state.stepping, surface,
                                                      freeToBoundCorrection);
@@ -466,7 +470,7 @@ class KalmanFitter {
         // Update state and stepper with pre material effects
         const Result<detail::PointwiseMaterialEffects>
             materialInteractionPreRes = detail::performMaterialInteraction(
-                state, stepper, surface,
+                state, stepper, surface, parametrization,
                 detail::determineMaterialUpdateMode(
                     state, navigator, MaterialUpdateMode::PreUpdate),
                 NoiseUpdateMode::addNoise, multipleScattering, energyLoss,
@@ -571,7 +575,7 @@ class KalmanFitter {
         // Update state and stepper with post material effects
         const Result<detail::PointwiseMaterialEffects>
             materialInteractionPostRes = detail::performMaterialInteraction(
-                state, stepper, surface,
+                state, stepper, surface, parametrization,
                 detail::determineMaterialUpdateMode(
                     state, navigator, MaterialUpdateMode::PostUpdate),
                 NoiseUpdateMode::addNoise, multipleScattering, energyLoss,
@@ -663,6 +667,7 @@ class KalmanFitter {
         const Result<detail::PointwiseMaterialEffects> materialInteractionRes =
             detail::performMaterialInteraction(
                 state, stepper, surface,
+                surface.boundParametrization(state.options.geoContext),
                 detail::determineMaterialUpdateMode(
                     state, navigator, MaterialUpdateMode::FullUpdate),
                 NoiseUpdateMode::addNoise, multipleScattering, energyLoss,
