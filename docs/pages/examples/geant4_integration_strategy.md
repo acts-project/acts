@@ -261,7 +261,9 @@ read-only access to the active event during callbacks and creates one action
 per serial session or native worker. The built-in kill and hit actions run
 first, followed by the configured actions in order. The
 [telescope test](../../../Tests/UnitTests/Examples/Algorithms/Geant4/Geant4SimulationActionsTests.cpp)
-exercises this interface over two events.
+exercises this interface over two events. It suspends a track before the
+first sensor and verifies that its final position and hit count include
+the rest of its flight after Geant4 resumes tracking.
 
 The refactor was checked against `e0e07d517d` across the eight benchmark
 configurations above. All particle and hit ROOT branches matched bit for bit
@@ -296,7 +298,7 @@ worker counts.
 
 In a live Pythia8 top-pair event with the full ODD geometry, Geant4
 transported 60 selected neutral pions and produced 120 generator daughters
-with direct parent links. The event produced 2,653 hits. A two-event
+with direct parent links. The event produced 2,653 hits and 64 CKF tracks. A two-event
 `K_S` file replay through the full ODD reconstruction chain yielded 12,124
 particles, 705 hits and 26 tracks. Serial and two-worker results agreed bit
 for bit across all 160 ROOT fields.
@@ -330,12 +332,14 @@ sequencer thread count controls how many events can run concurrently.
 
 For an input file containing generator-prescribed `K0S` decays, run the
 full ODD chain with two native workers and write the parent barcodes to ROOT.
-The same signed PDG selection is available with `--ttbar` for decays present
-in the Pythia8 event record.
+The second command runs the same chain with a live Pythia8 top-pair event,
+zero pileup and prescribed neutral pion decays.
 
 ```sh
 python Examples/Scripts/Python/full_chain_odd.py --hepmc3 events.hepmc3 \
   --decay-pdg-codes 310 --geant4 --geant4-workers 2 -j 4 -n 2 --output-root -o build/odd-ks
+python Examples/Scripts/Python/full_chain_odd.py --ttbar --ttbar-pu 0 \
+  --decay-pdg-codes 111 --geant4 --geant4-workers 2 -j 4 -n 1 --output-root -o build/odd-pi0
 ```
 
 The master constructs the detector and physics list and maps sensitive

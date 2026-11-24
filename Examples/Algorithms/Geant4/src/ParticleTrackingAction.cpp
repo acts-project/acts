@@ -148,6 +148,14 @@ void ParticleTrackingAction::PostUserTrackingAction(const G4Track* trackPtr) {
   assert(trackPtr != nullptr);
   const G4Track& track = *trackPtr;
 
+  // A suspended track will resume in this event. Publish its final state and
+  // hit count only when Geant4 kills it or postpones it to another event.
+  const auto status = track.GetTrackStatus();
+  if (status != fStopAndKill && status != fKillTrackAndSecondaries &&
+      status != fPostponeToNextEvent) {
+    return;
+  }
+
   // The initial particle maybe was not registered because of a particle ID
   // collision
   if (!eventStore().trackIdMapping.contains(track.GetTrackID())) {

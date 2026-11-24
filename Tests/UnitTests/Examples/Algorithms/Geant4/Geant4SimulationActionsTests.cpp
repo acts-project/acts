@@ -10,6 +10,7 @@
 
 #include "ActsExamples/Geant4/EventStore.hpp"
 #include "ActsExamples/Geant4/Geant4Simulation.hpp"
+#include "ActsExamples/Geant4/UnitConversion.hpp"
 #include "ActsExamples/TelescopeDetector/TelescopeDetector.hpp"
 #include "ActsTests/CommonHelpers/WhiteBoardUtilities.hpp"
 
@@ -24,17 +25,23 @@ using namespace ActsExamples;
 
 namespace {
 
+struct Observations {
+  std::vector<int> calls;
+  bool suspended = false;
+  double worldExitZ = 0.;
+};
+
 class DiagnosticAction final : public G4UserSteppingAction {
  public:
   DiagnosticAction(std::shared_ptr<const Geant4::EventContext> context,
-                   int index, std::vector<int>& calls)
-      : m_context(std::move(context)), m_index(index), m_calls(calls) {}
+                   int index, Observations& observed)
+      : m_context(std::move(context)), m_index(index), m_observed(observed) {}
 
   void UserSteppingAction(const G4Step* step) override {
-    m_calls.push_back(m_index);
+    m_observed.calls.push_back(m_index);
     BOOST_REQUIRE(fpSteppingManager != nullptr);
     const auto& event = m_context->current();
-    const auto& track = *step->GetTrack();
+    auto& track = *step->GetTrack();
     BOOST_CHECK(event.trackIdMapping.contains(track.GetTrackID()));
     // Each geantino crosses a whole sensor in a single step. Its hit must
     // already be recorded when the diagnostic receives that same step.
@@ -42,13 +49,21 @@ class DiagnosticAction final : public G4UserSteppingAction {
             Geant4::SensitiveSurfaceMapper::mappingPrefix)) {
       ++m_sensorSteps;
       BOOST_CHECK_EQUAL(event.result.hits.size(), m_sensorSteps);
+    } else if (!m_observed.suspended && track.GetTrackStatus() == fAlive) {
+      // Geant4 re-stacks this same track and calls the tracking actions again.
+      track.SetTrackStatus(fSuspend);
+      m_observed.suspended = true;
+    }
+    if (step->GetPostStepPoint()->GetStepStatus() == fWorldBoundary) {
+      m_observed.worldExitZ =
+          track.GetPosition().z() * Geant4::convertLengthToActs;
     }
   }
 
  private:
   std::shared_ptr<const Geant4::EventContext> m_context;
   int m_index;
-  std::vector<int>& m_calls;
+  Observations& m_observed;
   std::size_t m_sensorSteps = 0;
 };
 
@@ -81,7 +96,7 @@ BOOST_AUTO_TEST_CASE(OrderedDiagnosticsAndIndependentEventOutputs) {
   BOOST_CHECK_THROW(Geant4Simulation{invalid}, std::invalid_argument);
 
   std::vector<int> constructed;
-  std::vector<int> calls;
+  Observations observed;
   int attempts = 0;
   for (int i : {1, 2}) {
     cfg.steppingActionFactories.emplace_back(
@@ -99,7 +114,7 @@ BOOST_AUTO_TEST_CASE(OrderedDiagnosticsAndIndependentEventOutputs) {
             }
           }
           return std::make_unique<DiagnosticAction>(std::move(context), i,
-                                                    calls);
+                                                    observed);
         });
   }
   Geant4Simulation simulation(cfg);
@@ -117,6 +132,7 @@ BOOST_AUTO_TEST_CASE(OrderedDiagnosticsAndIndependentEventOutputs) {
   ActsTests::addToWhiteBoard(cfg.inputParticles, SimParticleContainer{particle},
                              first);
   BOOST_REQUIRE(simulation.execute({0, 0, first, 0}) == ProcessCode::SUCCESS);
+  const auto& calls = observed.calls;
   BOOST_REQUIRE(!calls.empty());
   BOOST_REQUIRE_EQUAL(calls.size() % 2, 0u);
   for (std::size_t i = 0; i < calls.size(); i += 2) {
@@ -137,6 +153,12 @@ BOOST_AUTO_TEST_CASE(OrderedDiagnosticsAndIndependentEventOutputs) {
       cfg.outputParticles, first);
   BOOST_REQUIRE_EQUAL(particles.size(), 1u);
   BOOST_CHECK(particles.begin()->particleId() == barcode);
+  BOOST_REQUIRE(observed.suspended);
+  BOOST_REQUIRE_GT(observed.worldExitZ, telescope.positions.back());
+  BOOST_CHECK_EQUAL(particles.begin()->finalState().fourPosition().z(),
+                    observed.worldExitZ);
+  BOOST_CHECK_EQUAL(particles.begin()->numberOfHits(),
+                    telescope.positions.size());
   const auto hits =
       ActsTests::getFromWhiteBoard<SimHitContainer>(cfg.outputSimHits, first);
   BOOST_REQUIRE_EQUAL(hits.size(), telescope.positions.size());
