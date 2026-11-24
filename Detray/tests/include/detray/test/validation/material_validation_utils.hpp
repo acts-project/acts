@@ -32,7 +32,11 @@
 #include <vecmem/memory/memory_resource.hpp>
 
 // System include(s)
+#include <array>
 #include <filesystem>
+#include <sstream>
+#include <stdexcept>
+#include <string>
 
 namespace detray::material_validator {
 
@@ -431,6 +435,55 @@ inline auto write_material(const std::string &mat_file_name,
     *outfile << rec.eta << "," << rec.phi << "," << rec.sX0 << "," << rec.sL0
              << "," << rec.tX0 << "," << rec.tL0 << std::endl;
   }
+}
+
+/// Read the accumulated material per track from a csv file that was written
+/// by @c write_material
+///
+/// @param mat_file_name the path to the csv file
+///
+/// @returns the accumulated material of every track in the file
+inline auto read_material(const std::string &mat_file_name) {
+  if (!io::file_exists(mat_file_name)) {
+    throw std::invalid_argument("Material file not found: " + mat_file_name);
+  }
+
+  detray::io::file_handle infile{mat_file_name, std::ios::in};
+
+  dvector<track_material> mat_records{};
+
+  // Skip the header
+  std::string line{};
+  std::getline(*infile, line);
+
+  while (std::getline(*infile, line)) {
+    if (line.empty()) {
+      continue;
+    }
+
+    std::istringstream line_stream{line};
+    std::array<double, 6u> values{};
+    for (std::size_t i = 0u; i < values.size(); ++i) {
+      std::string value{};
+      if (!std::getline(line_stream, value, ',')) {
+        throw std::invalid_argument("Invalid line in material file " +
+                                    mat_file_name + ": " + line);
+      }
+      values[i] = std::stod(value);
+    }
+
+    track_material rec{};
+    rec.eta = values[0];
+    rec.phi = values[1];
+    rec.sX0 = values[2];
+    rec.sL0 = values[3];
+    rec.tX0 = values[4];
+    rec.tL0 = values[5];
+
+    mat_records.push_back(rec);
+  }
+
+  return mat_records;
 }
 
 }  // namespace detray::material_validator

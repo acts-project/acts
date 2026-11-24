@@ -35,7 +35,6 @@ import detray.tests
 
 # python includes
 import argparse
-import json
 import os
 import subprocess
 import sys
@@ -51,6 +50,7 @@ def run_cpu_material_validation(args, datadir, logging):
     fill_track_generator_config(args, scan_cfg.track_generator)
     scan_cfg.track_generator.uniform_eta = True
     scan_cfg.overlaps_tol = args.overlaps_tol
+    scan_cfg.truth_from_file = args.truth_from_file
     scan_cfg.material_file = os.path.join(datadir, "material_scan")
     logging.info("Material scan config\n\n" + str(scan_cfg))
 
@@ -66,7 +66,10 @@ def run_cpu_material_validation(args, datadir, logging):
         detray.core.HostMemoryResource(), reader_cfg
     )
 
-    detray.tests.run_material_validation(det, names, scan_cfg, val_cfg)
+    result = detray.tests.run_material_validation(det, names, scan_cfg, val_cfg)
+    logging.info(str(result))
+
+    return result.passed
 
 
 def __main__():
@@ -115,6 +118,15 @@ def __main__():
         type=float,
     )
     parser.add_argument(
+        "--truth_from_file",
+        help=(
+            "Read the truth material of a previous material scan from the data "
+            "directory instead of running the ray scan again."
+        ),
+        action="store_true",
+        default=False,
+    )
+    parser.add_argument(
         "--cuda",
         help=("Run the CUDA material validation."),
         action="store_true",
@@ -144,7 +156,7 @@ def __main__():
 
     # Run the host validation and produce the truth data
     logging.debug("Running CPU material validation")
-    run_cpu_material_validation(args, datadir, logging)
+    passed = run_cpu_material_validation(args, datadir, logging)
 
     # Pass on the options for the CUDA validation tool
     args_list = [
@@ -155,6 +167,8 @@ def __main__():
         "--overlaps_tol",
         str(args.overlaps_tol),
     ]
+    if args.truth_from_file:
+        args_list.append("--truth_from_file")
 
     # Add parsed options to argument list
     add_detector_io_args(args_list, args)
@@ -166,7 +180,7 @@ def __main__():
     # Run the device validation (if it has been built)
     if args.cuda and os.path.isfile(cuda_validation):
         logging.debug("Running CUDA material validation")
-        subprocess.run([cuda_validation] + args_list)
+        passed &= subprocess.run([cuda_validation] + args_list).returncode == 0
 
     elif args.cuda:
         logging.error("Could not find CUDA material validation executable")
@@ -235,6 +249,10 @@ def __main__():
         mat_plotter.compare_mat(
             df_scan, df_cuda, "cuda_material", det_name, plot_factory, out_format
         )
+
+    if not passed:
+        logging.error("Material validation failed")
+        sys.exit(1)
 
 
 # ------------------------------------------------------------------------------

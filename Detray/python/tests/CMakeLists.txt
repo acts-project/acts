@@ -27,8 +27,7 @@ target_link_libraries(
         detray::core_array
         detray::io
         detray::test_common
-        detray::svgtools
-        GTest::gtest
+        detray::validation_utils
         vecmem::core
         covfie::core
 )

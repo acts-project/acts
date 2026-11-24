@@ -27,7 +27,7 @@ if(DETRAY_BUILD_TESTING)
     # Build the material cuda validation executable.
     detray_add_executable(material_validation_cuda
                         "material_validation_cuda.cpp"
-                        LINK_LIBRARIES GTest::gtest GTest::gtest_main
+                        LINK_LIBRARIES
                         Boost::program_options detray::test_cuda detray::tools
     )
 endif()

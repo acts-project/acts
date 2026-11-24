@@ -15,17 +15,13 @@
 // Detray test include(s)
 #include "detray/test/common/build_toy_detector.hpp"
 #include "detray/test/common/event_generator/uniform_track_generator_config.hpp"
-#include "detray/test/cpu/material_scan.hpp"
-#include "detray/test/cpu/material_validation.hpp"
-#include "detray/test/framework/register_checks.hpp"
 #include "detray/test/framework/test_configuration.hpp"
-#include "detray/test/framework/whiteboard.hpp"
+#include "detray/test/framework/types.hpp"
+#include "detray/test/validation/material_validation.hpp"
 #include "detray/test/validation/material_validation_config.hpp"
 
-// GTest include(s)
-#include <gtest/gtest.h>
-
 // Vecmem include(s)
+#include <vecmem/memory/host_memory_resource.hpp>
 #include <vecmem/memory/memory_resource.hpp>
 
 // Pybind11 include(s)
@@ -35,10 +31,8 @@
 // System include(s)
 #include <cstddef>
 #include <cstdint>
-#include <functional>
 #include <memory>
 #include <sstream>
-#include <stdexcept>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -55,7 +49,9 @@ using toy_det_config_t = detray::toy_det_config<scalar_t>;
 using test_config_t = detray::test::configuration<scalar_t>;
 using uniform_track_generator_config_t =
     detray::uniform_track_generator_config<scalar_t>;
-using material_scan_config_t = detray::test::material_scan<detector_t>::config;
+using material_scan_config_t = detray::test::material_scan_config<algebra_t>;
+using material_validation_result_t =
+    detray::material_validator::material_validation_result;
 using material_validation_config_t =
     detray::test::material_validation_config<algebra_t>;
 
@@ -66,35 +62,22 @@ std::string to_string(const T &obj) {
   return os.str();
 }
 
-/// Run gtest for checks registered in @p register_checks_fn
-///
-/// Since the gtest state is global, this implementation can be run only once.
-int run_gtest(const std::function<void()> &register_checks_fn) {
-  static bool already_run = false;
-  if (already_run) {
-    throw std::runtime_error("gtest can only be run once per process");
-  }
-  already_run = true;
-
-  ::testing::InitGoogleTest();
-  register_checks_fn();
-  return RUN_ALL_TESTS();
-}
-
 /// Run the CPU material validation for the given detector.
-int run_material_validation(const detector_t &det,
-                            const detray::name_map &names,
-                            const material_scan_config_t &scan_cfg,
-                            const material_validation_config_t &val_cfg) {
-  detector_t::geometry_context ctx{};
-  auto wb = std::make_shared<detray::test::whiteboard>();
+///
+/// Same sequence as the material scan and material validation test fixtures.
+material_validation_result_t run_material_validation(
+    const detector_t &det, const detray::name_map &names,
+    const material_scan_config_t &scan_cfg,
+    const material_validation_config_t &val_cfg) {
+  detector_t::geometry_context gctx{};
+  vecmem::host_memory_resource host_mr{};
 
-  return run_gtest([&] {
-    detray::test::register_checks<detray::test::material_scan>(
-        det, names, scan_cfg, ctx, wb);
-    detray::test::register_checks<detray::test::material_validation>(
-        det, names, val_cfg, ctx, wb);
-  });
+  const auto scan_data =
+      detray::material_validator::material_scan(gctx, det, names, scan_cfg);
+
+  return detray::material_validator::material_validation<
+      detray::test::run_material_validation>(&host_mr, det, names, scan_data,
+                                             val_cfg);
 }
 
 /// Build a toy detector using @p mr as configured by @p cfg .
@@ -328,6 +311,16 @@ PYBIND11_MODULE(detray_tests_python_bindings, m) {
             c.relative_error(re);
           },
           "Allowed relative discrepancy between truth and navigation material")
+      .def_property(
+          "step_contingency",
+          [](const material_validation_config_t &c) {
+            return c.step_contingency();
+          },
+          [](material_validation_config_t &c, std::size_t n) {
+            c.step_contingency(n);
+          },
+          "Additional material steps per track on top of the steps found by "
+          "the material scan (device buffer capacity)")
       .def("__repr__", &to_string<material_validation_config_t>);
 
   py::class_<material_scan_config_t, test_config_t>(m, "MaterialScanConfig")
@@ -354,6 +347,12 @@ PYBIND11_MODULE(detray_tests_python_bindings, m) {
           [](material_scan_config_t &c, scalar_t t) { c.overlaps_tol(t); },
           "Tolerance for considering surfaces to be overlapping")
       .def_property(
+          "truth_from_file",
+          [](const material_scan_config_t &c) { return c.truth_from_file(); },
+          [](material_scan_config_t &c, bool b) { c.truth_from_file(b); },
+          "Read the truth material from the material file instead of "
+          "running the ray scan")
+      .def_property(
           "track_generator",
           [](material_scan_config_t &c) -> uniform_track_generator_config_t & {
             return c.track_generator();
@@ -366,8 +365,26 @@ PYBIND11_MODULE(detray_tests_python_bindings, m) {
           "Track generator configuration")
       .def("__repr__", &to_string<material_scan_config_t>);
 
+  py::class_<material_validation_result_t>(m, "MaterialValidationResult")
+      .def_readonly("n_tracks", &material_validation_result_t::n_tracks,
+                    "Number of tracks that were compared")
+      .def_readonly("n_failed", &material_validation_result_t::n_failed,
+                    "Number of tracks with a material discrepancy")
+      .def_property_readonly("passed", &material_validation_result_t::passed,
+                             "No material discrepancy was found")
+      .def("__bool__", &material_validation_result_t::passed)
+      .def("__repr__", [](const material_validation_result_t &r) {
+        return "MaterialValidationResult(n_tracks=" +
+               std::to_string(r.n_tracks) +
+               ", n_failed=" + std::to_string(r.n_failed) + ")";
+      });
+
   m.def("run_material_validation", &run_material_validation,
         py::arg("detector"), py::arg("names"), py::arg("scan_config"),
         py::arg("validation_config"),
-        "Run the CPU material validation for the given detector.");
+        "Run the CPU material validation for the given detector: Run the "
+        "material scan (or read the truth material from file, if configured), "
+        "then trace the material during navigation and compare it to the "
+        "truth. The truth and the navigation material are written to csv "
+        "files.");
 }
