@@ -1,0 +1,24 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+#include "Acts/EventData/AnyTrackProxy.hpp"
+
+namespace Acts {
+
+template <bool read_only>
+AnyTrackProxy<read_only>::AnyTrackProxy(ContainerPointer container,
+                                        TrackIndexType index,
+                                        HandlerPointer handler)
+    : m_container(container), m_index(index), m_handler(handler) {}
+
+template AnyTrackProxy<false>::AnyTrackProxy(ContainerPointer, TrackIndexType,
+                                             HandlerPointer);
+template AnyTrackProxy<true>::AnyTrackProxy(ContainerPointer, TrackIndexType,
+                                            HandlerPointer);
+
+}  // namespace Acts

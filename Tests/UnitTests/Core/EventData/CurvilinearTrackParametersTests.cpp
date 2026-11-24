@@ -61,12 +61,12 @@ void checkParameters(const BoundTrackParameters& params, double phi,
   CHECK_CLOSE_OR_SMALL(params.fourPosition(geoCtx), pos4, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.position(geoCtx), pos, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.time(), pos4[eTime], eps, eps);
-  CHECK_CLOSE_OR_SMALL(params.direction(), unitDir, eps, eps);
+  CHECK_CLOSE_OR_SMALL(params.direction(geoCtx), unitDir, eps, eps);
   if (q != 0) {
     CHECK_CLOSE_OR_SMALL(params.absoluteMomentum(), p, eps, eps);
-    CHECK_CLOSE_OR_SMALL(params.transverseMomentum(), p * std::sin(theta), eps,
-                         eps);
-    CHECK_CLOSE_OR_SMALL(params.momentum(), p * unitDir, eps, eps);
+    CHECK_CLOSE_OR_SMALL(params.transverseMomentum(geoCtx), p * std::sin(theta),
+                         eps, eps);
+    CHECK_CLOSE_OR_SMALL(params.momentum(geoCtx), p * unitDir, eps, eps);
   }
   // curvilinear reference surface
   CHECK_CLOSE_OR_SMALL(referenceSurface->center(geoCtx), pos, eps, eps);

@@ -1,6 +1,7 @@
 target_sources(
     ActsCore
     PRIVATE
+        AnyTrackProxy.cpp
         BoundParametrizationError.cpp
         PrintParameters.cpp
         TransformationHelpers.cpp

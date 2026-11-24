@@ -1,4 +1,5 @@
 import gc
+import math
 import pytest
 import acts
 
@@ -330,3 +331,33 @@ def test_bound_track_parameters_particle_hypothesis():
     params.particleHypothesis = electron
     assert str(params.particleHypothesis) == str(electron)
     assert list(params.parameters) == list(copy.parameters)
+
+
+def test_bound_track_parameters_physical_accessors():
+    gctx = acts.GeometryContext.dangerouslyDefaultConstruct()
+    phi = 0.3
+    theta = 1.2
+    qOverP = 0.5
+    params = acts.BoundTrackParameters.createCurvilinear(
+        acts.Vector4(1, 2, 3, 4),
+        phi,
+        theta,
+        qOverP,
+        None,
+        acts.ParticleHypothesis.pion,
+    )
+
+    assert params.phi(gctx) == pytest.approx(phi)
+    assert params.theta(gctx) == pytest.approx(theta)
+    p = 1 / qOverP
+    assert params.transverseMomentum(gctx) == pytest.approx(p * math.sin(theta))
+    expected = [
+        math.cos(phi) * math.sin(theta),
+        math.sin(phi) * math.sin(theta),
+        math.cos(theta),
+    ]
+    direction = params.direction(gctx)
+    momentum = params.momentum(gctx)
+    for i in range(3):
+        assert direction[i] == pytest.approx(expected[i])
+        assert momentum[i] == pytest.approx(p * expected[i])
