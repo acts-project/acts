@@ -18,6 +18,7 @@
 #include "Acts/Utilities/VectorHelpers.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsExamples/Io/Root/RootUtility.hpp"
 
 #include <cstdint>
 #include <ios>
@@ -75,6 +76,12 @@ RootParticleWriter::RootParticleWriter(const RootParticleWriter::Config& cfg,
   m_outputTree->Branch("particle", &m_particle);
   m_outputTree->Branch("generation", &m_generation);
   m_outputTree->Branch("sub_particle", &m_subParticle);
+  if (m_cfg.writeParentBarcodes) {
+    for (std::size_t i = 0; i < m_parentBarcode.size(); ++i) {
+      m_outputTree->Branch(RootUtility::kParentBarcodeBranches[i],
+                           &m_parentBarcode[i]);
+    }
+  }
   m_outputTree->Branch("orig_part_idx", &m_origParticleIdx);
   m_outputTree->Branch("hf_origin", &m_hfOrigin);
 
@@ -116,6 +123,15 @@ ProcessCode RootParticleWriter::finalize() {
   return ProcessCode::SUCCESS;
 }
 
+void RootParticleWriter::fillInvalidHelixParameters() {
+  for (auto* component :
+       {&m_perigeeD0, &m_perigeeZ0, &m_perigeePhi, &m_perigeeTheta,
+        &m_perigeeQop, &m_perigeeP, &m_perigeePx, &m_perigeePy, &m_perigeePz,
+        &m_perigeeEta, &m_perigeePt}) {
+    component->push_back(NaNfloat);
+  }
+}
+
 ProcessCode RootParticleWriter::writeT(const AlgorithmContext& ctx,
                                        const SimParticleContainer& particles) {
   // ensure exclusive access to tree/file while writing
@@ -155,6 +171,13 @@ ProcessCode RootParticleWriter::writeT(const AlgorithmContext& ctx,
     m_generation.push_back(particle.particleId().generation());
     m_subParticle.push_back(particle.particleId().subParticle());
 
+    if (m_cfg.writeParentBarcodes) {
+      const auto parent = particle.parentParticleId().asArray();
+      for (std::size_t i = 0; i < parent.size(); ++i) {
+        m_parentBarcode[i].push_back(parent[i]);
+      }
+    }
+
     m_eLoss.push_back(Acts::clampValue<float>(particle.energyLoss() /
                                               Acts::UnitConstants::GeV));
     m_pathInX0.push_back(
@@ -170,20 +193,32 @@ ProcessCode RootParticleWriter::writeT(const AlgorithmContext& ctx,
     m_px.push_back(Acts::clampValue<float>(p * particle.direction().x()));
     m_py.push_back(Acts::clampValue<float>(p * particle.direction().y()));
     m_pz.push_back(Acts::clampValue<float>(p * particle.direction().z()));
-    // derived kinematic quantities
-    m_eta.push_back(Acts::clampValue<float>(
-        Acts::VectorHelpers::eta(particle.direction())));
     m_pt.push_back(Acts::clampValue<float>(
         p * Acts::VectorHelpers::perp(particle.direction())));
+    if (p == 0.) {
+      m_eta.push_back(NaNfloat);
+      m_phi.push_back(NaNfloat);
+      m_theta.push_back(NaNfloat);
+      m_qop.push_back(
+          particle.charge() == 0.
+              ? NaNfloat
+              : std::copysign(std::numeric_limits<float>::infinity(),
+                              particle.charge()));
+      if (m_cfg.writeHelixParameters) {
+        fillInvalidHelixParameters();
+      }
+      continue;
+    }
+    m_eta.push_back(Acts::clampValue<float>(
+        Acts::VectorHelpers::eta(particle.direction())));
     m_phi.push_back(Acts::clampValue<float>(
         Acts::VectorHelpers::phi(particle.direction())));
     m_theta.push_back(Acts::clampValue<float>(
         Acts::VectorHelpers::theta(particle.direction())));
-    m_qop.push_back(Acts::clampValue<float>(
-        particle.qOverP() * Acts::UnitConstants::GeV / Acts::UnitConstants::e));
-
+    const double qOverP = particle.qOverP();
+    m_qop.push_back(Acts::clampValue<float>(qOverP * Acts::UnitConstants::GeV /
+                                            Acts::UnitConstants::e));
     if (!m_cfg.writeHelixParameters) {
-      // done with this particle
       continue;
     }
 
@@ -193,7 +228,7 @@ ProcessCode RootParticleWriter::writeT(const AlgorithmContext& ctx,
 
     // Start from truth curvilinear parameters (direction, q/p)
     const Acts::Vector3 startDir = particle.direction();  // unit vector
-    const auto qOverP = particle.qOverP();                // ACTS units
+
     // The perigee surface is not aligned, so either context works
     auto intersection =
         pSurface
@@ -268,17 +303,7 @@ ProcessCode RootParticleWriter::writeT(const AlgorithmContext& ctx,
     auto propRes = propagator->propagate(startParams, *pSurface, pOptions);
     if (!propRes.ok() || !propRes->endParameters.has_value()) {
       ACTS_ERROR("Propagation to perigee surface failed.");
-      m_perigeePhi.push_back(NaNfloat);
-      m_perigeeTheta.push_back(NaNfloat);
-      m_perigeeQop.push_back(NaNfloat);
-      m_perigeeD0.push_back(NaNfloat);
-      m_perigeeZ0.push_back(NaNfloat);
-      m_perigeeP.push_back(NaNfloat);
-      m_perigeePx.push_back(NaNfloat);
-      m_perigeePy.push_back(NaNfloat);
-      m_perigeePz.push_back(NaNfloat);
-      m_perigeeEta.push_back(NaNfloat);
-      m_perigeePt.push_back(NaNfloat);
+      fillInvalidHelixParameters();
       continue;
     }
     const Acts::BoundTrackParameters& atPerigee = *propRes->endParameters;
@@ -344,6 +369,9 @@ ProcessCode RootParticleWriter::writeT(const AlgorithmContext& ctx,
   m_particle.clear();
   m_generation.clear();
   m_subParticle.clear();
+  for (auto& component : m_parentBarcode) {
+    component.clear();
+  }
   m_eLoss.clear();
   m_numberOfHits.clear();
   m_outcome.clear();

@@ -15,6 +15,7 @@
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsPlugins/Root/detail/RootBranchPtr.hpp"
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <memory>
@@ -114,6 +115,9 @@ class RootParticleReader : public IReader {
   BranchVector<std::uint32_t> m_particle;
   BranchVector<std::uint32_t> m_generation;
   BranchVector<std::uint32_t> m_subParticle;
+  std::array<BranchVector<std::uint32_t>, 5> m_parentBarcode;
+  int m_parentTreeNumber = -1;
+  bool m_hasParentBarcodes = false;
   BranchVector<std::uint32_t> m_origParticleIdx;
   BranchVector<std::uint8_t> m_hfOrigin;
 

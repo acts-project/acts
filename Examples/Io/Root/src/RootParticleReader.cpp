@@ -41,6 +41,12 @@ RootParticleReader::RootParticleReader(const RootParticleReader::Config& config,
 
   m_outputParticles.initialize(m_cfg.outputParticles);
 
+  auto path = m_cfg.filePath;
+
+  // add file to the input chain
+  m_inputChain->Add(path.c_str());
+  ACTS_DEBUG("Adding File " << path << " to tree '" << m_cfg.treeName << "'.");
+
   // Set the branches
   m_inputChain->SetBranchAddress("event_id", &m_eventId);
   m_inputChain->SetBranchAddress("particle_hash", &m_particleHash.get());
@@ -72,12 +78,6 @@ RootParticleReader::RootParticleReader(const RootParticleReader::Config& config,
   m_inputChain->SetBranchAddress("total_l0", &m_pathInL0.get());
   m_inputChain->SetBranchAddress("number_of_hits", &m_numberOfHits.get());
   m_inputChain->SetBranchAddress("outcome", &m_outcome.get());
-
-  auto path = m_cfg.filePath;
-
-  // add file to the input chain
-  m_inputChain->Add(path.c_str());
-  ACTS_DEBUG("Adding File " << path << " to tree '" << m_cfg.treeName << "'.");
 
   m_events = m_inputChain->GetEntries();
   ACTS_DEBUG("The full chain has " << m_events << " entries.");
@@ -116,6 +116,30 @@ ProcessCode RootParticleReader::read(const AlgorithmContext& context) {
 
   // Read the correct entry
   auto entry = m_entryNumbers.at(context.eventNumber);
+  if (m_inputChain->LoadTree(entry) < 0) {
+    throw std::runtime_error("Cannot load particle tree entry");
+  }
+  // A chain can contain files from either version of the particle writer.
+  if (m_inputChain->GetTreeNumber() != m_parentTreeNumber) {
+    auto& tree = *m_inputChain->GetTree();
+    std::size_t branches = 0;
+    for (std::size_t i = 0; i < m_parentBarcode.size(); ++i) {
+      const char* name = RootUtility::kParentBarcodeBranches[i];
+      if (tree.GetBranch(name) != nullptr) {
+        m_parentBarcode[i].allocate();
+        if (tree.SetBranchAddress(name, &m_parentBarcode[i].get()) < 0) {
+          throw std::runtime_error(
+              std::string("Invalid parent barcode branch ") + name);
+        }
+        ++branches;
+      }
+    }
+    if (branches != 0 && branches != m_parentBarcode.size()) {
+      throw std::runtime_error("Incomplete set of parent barcode branches");
+    }
+    m_hasParentBarcodes = branches != 0;
+    m_parentTreeNumber = m_inputChain->GetTreeNumber();
+  }
   m_inputChain->GetEntry(entry);
   ACTS_DEBUG("Reading event: " << context.eventNumber
                                << " stored as entry: " << entry);
@@ -137,6 +161,15 @@ ProcessCode RootParticleReader::read(const AlgorithmContext& context) {
                         .withGeneration((*m_generation).at(i))
                         .withSubParticle((*m_subParticle).at(i)));
 
+    if (m_hasParentBarcodes) {
+      p.setParentParticleId(SimBarcode()
+                                .withVertexPrimary(m_parentBarcode[0]->at(i))
+                                .withVertexSecondary(m_parentBarcode[1]->at(i))
+                                .withParticle(m_parentBarcode[2]->at(i))
+                                .withGeneration(m_parentBarcode[3]->at(i))
+                                .withSubParticle(m_parentBarcode[4]->at(i)));
+    }
+
     p.setOrigParticleIdx((*m_origParticleIdx).at(i));
     p.setHeavyFlavourOrigin(
         static_cast<HeavyFlavourOrigin>((*m_hfOrigin).at(i)));
@@ -148,7 +181,9 @@ ProcessCode RootParticleReader::read(const AlgorithmContext& context) {
                               (*m_vz).at(i) * Acts::UnitConstants::mm,
                               (*m_vt).at(i) * Acts::UnitConstants::mm);
     // NOTE: direction is normalized inside `setDirection`
-    initialState.setDirection((*m_px).at(i), (*m_py).at(i), (*m_pz).at(i));
+    if ((*m_p).at(i) != 0.) {
+      initialState.setDirection((*m_px).at(i), (*m_py).at(i), (*m_pz).at(i));
+    }
     initialState.setAbsoluteMomentum((*m_p).at(i) * Acts::UnitConstants::GeV);
 
     SimParticleState& finalState = p.finalState();

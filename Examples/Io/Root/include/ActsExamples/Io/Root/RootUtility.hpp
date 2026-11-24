@@ -9,10 +9,16 @@
 #pragma once
 
 #include <algorithm>
+#include <array>
 
 #include <TMathBase.h>
 
 namespace ActsExamples::RootUtility {
+
+/// Direct parent barcode branches in the order of SimBarcode::asArray().
+inline constexpr std::array kParentBarcodeBranches = {
+    "parent_vertex_primary", "parent_vertex_secondary", "parent_particle",
+    "parent_generation", "parent_sub_particle"};
 
 /// @brief Sorts an array of elements and outputs the indices of the sorted elements.
 ///
