@@ -142,9 +142,6 @@ def run_ckf_tracking(label, seeding):
             layerMappingConfigFile=setup.gbtsLayerMap,  # only used by SeedingAlgorithm.Gbts
             connectorInputConfigFile=setup.gbtsConnectionTable,  # only used by SeedingAlgorithm.Gbts
             gbtsConfigArg=GbtsConfigArg(  # only used by SeedingAlgorithm.Gbts
-                seederConfig=acts.examples.GraphBasedSeedingConfig(
-                    minSeedLevel=2,
-                ),
                 graphConfig=acts.examples.GbtsGraphBuilderConfig(
                     minPt=0.9 * u.GeV,
                     z0HistogramMaxBarrelOrder=-1,

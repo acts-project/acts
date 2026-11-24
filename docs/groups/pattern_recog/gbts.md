@@ -91,6 +91,11 @@ configured from.
 > Open Data Detector. `ActsExamples::GraphBasedSeedingAlgorithm` reads the
 > resulting table, from a JSON file, and hands the pairs it
 > lists to the geometry.
+>
+> Each connection also carries `minSeedLevel`, the chain length a seed
+> candidate whose innermost edge is on it must reach; an entry of the table
+> without it gets 3, a triplet plus one confirmation. The graph builder copies
+> the level onto every edge of the connection.
 
 ## Graph nodes {#gbts-nodes}
 
@@ -204,21 +209,13 @@ of the inner layer, and a negative limit switches the cut off:
   rejects candidates whose @f$z_0@f$ falls in an empty bin, and nodes with no
   connections at all are skipped outright.
 
-Edges of an inner bin that no connection leads into, in practice the innermost
-pixel barrel layer, are never extended inwards. With `dropDeadEnds` (on by
-default) such an edge is kept only if it links to an outer edge, and outer
-nodes without edges are not tried for it. Neither could be part of a seed, so
-the seeds are unchanged while the graph and the edge array shrink.
-
-With `pruneShortChains` the graph builder also leaves out the
-edges that cannot be on a chain long enough for a seed. The seeder hands it the
-level a seed needs: `minSeedLevel`, less one with `addTriplets`. An edge of a
-bin from which a chain can still go @f$k@f$ connection steps further in needs
-@f$k@f$ less. Edges are linked to the edges further out as they are created, and
-those are built first, so an edge's level is known right away: one below its
-bin's minimum is dropped, and outer nodes whose highest edge level cannot reach
-it are not tried. On the bins `dropDeadEnds` acts on, this drops at least the
-same edges.
+The graph builder leaves out the edges that cannot be on a chain long enough
+for a seed. A chain needs the `minSeedLevel` of the connection its innermost
+edge is on. An edge of a bin needs the lowest of the connections leaving the
+bin outwards, and of every bin a chain can still reach @f$k@f$ connection steps
+further in, @f$k@f$ less, and at most one more than the connections of the bins
+it links to. An edge below its bin's minimum is dropped when it is created, and
+outer nodes whose highest edge level cannot reach it are not tried.
 
 ## Chain levels {#gbts-levels}
 
@@ -240,8 +237,8 @@ inwards to a root, each step going to an edge one level up, i.e. along the
 longest chain outwards of that root. The paths are found by a depth first
 search from every edge, fitted on the way by
 @ref Acts::Experimental::GbtsTrackingFilter, and edges and branches that cannot
-reach a root far enough in are skipped. Nothing depends on the order the edges
-are visited in. This is the seed extraction of the traccc GPU GBTS.
+reach a root far enough in are skipped. A path is complete when it has the
+`minSeedLevel` of the connection of its root edge.
 
 The filter is a small Kalman filter over the chain. It carries a state of two
 independent parts — a quadratic in the bending plane and a linear @f$z@f$ versus
@@ -307,19 +304,15 @@ The cuts that build and link the doublets live on
 | `tauRatioCut` | @ref gbts-graph | @f$\tau@f$ scale of the `validateTriplets` high-pT check. The linking cut comes from @ref Acts::Experimental::GbtsLayerConnection |
 | `validateTriplets`, `d0Max` | @ref gbts-graph | circle fit on pixel-barrel triplets |
 | `maxEdgesPerSP` | @ref gbts-graph | cap on the edge array per space point (30 by default); exceeding it costs efficiency |
-| `dropDeadEnds` | @ref gbts-graph | leave out the innermost edges that cannot join a chain (on by default); the seeds are unchanged |
 | `matchBeforeCreate`, `tauRatioPrecut`, `matchBeforeCreateMaxBarrelOrder` | @ref gbts-graph | require a compatible incoming edge before creating one, down to that depth in the pixel barrel |
 | `z0HistogramMaxBarrelOrder`, `z0Resolution` | @ref gbts-graph | @f$z_0@f$ histogram cut, down to that depth in the pixel barrel |
-| `pruneShortChains` | @ref gbts-graph | leave out edges too short for a seed while the graph is built |
 The rest are on @ref Acts::Experimental::GraphBasedTrackSeeder "GraphBasedTrackSeeder::Config":
 
 | Option | Stage | Effect |
 | --- | --- | --- |
 | `nMaxPhiSlice` | @ref gbts-nodes | sets the @f$\phi@f$ slice width, and with it the base sliding-window width the graph uses |
 | `maxChainLength` | @ref gbts-levels | longest chain of edges taken into account |
-| `minSeedLevel` | @ref gbts-extraction | chain length a candidate must reach |
 | `postFitCurvatureFactor` | @ref gbts-extraction | tighter curvature bound on the fitted chain, as a factor on the filter's `maxCurvature`; values below 1 does nothing |
-| `addTriplets`, `maxAbsEtaAddTriplets` | @ref gbts-extraction | allow shorter chains within an @f$\eta@f$ range |
 | `hitShareThreshold` | @ref gbts-extraction | fraction of shared hits above which a candidate is a clone |
 | `maxSeedSplitEta`, `maxInvRadDiff` | @ref gbts-extraction | seed splitting |
 | `useClusterWidthCuts`, `tauLookupTable` | @ref gbts-ml | cluster-width based @f$\tau@f$ windows |

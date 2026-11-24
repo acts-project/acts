@@ -10,6 +10,7 @@
 
 #include "Acts/Seeding/GbtsLayerDescription.hpp"
 
+#include <cstdint>
 #include <span>
 
 namespace Acts::Experimental {
@@ -29,6 +30,9 @@ struct GbtsLayerConnection {
   float tauRatioCutInner = 0.007f;
   /// Largest |tau ratio| if this is the outer pair of a triplet.
   float tauRatioCutOuter = 0.007f;
+  /// Chain length, in edges, a seed candidate whose innermost edge joins this
+  /// pair must reach: a triplet plus one confirmation by default.
+  std::uint8_t minSeedLevel = 3;
 };
 
 /// Tau ratio tolerances for `assignAdaptiveTauRatioCuts`.

@@ -403,9 +403,6 @@ void GraphBasedSeedingAlgorithm::printConfig() const {
   ACTS_DEBUG("maxSeedSplitEta: " << cfg1.maxSeedSplitEta);
   ACTS_DEBUG("maxInvRadDiff: " << cfg1.maxInvRadDiff);
   ACTS_DEBUG("maxChainLength: " << cfg1.maxChainLength);
-  ACTS_DEBUG("minSeedLevel: " << static_cast<std::uint32_t>(cfg1.minSeedLevel));
-  ACTS_DEBUG("addTriplets: " << cfg1.addTriplets);
-  ACTS_DEBUG("maxAbsEtaAddTriplets: " << cfg1.maxAbsEtaAddTriplets);
   ACTS_DEBUG("=====GbtsGraphBuilder=====");
   const auto &cfg2 = m_cfg.graphConfig;
   ACTS_DEBUG("matchBeforeCreate: " << cfg2.matchBeforeCreate);

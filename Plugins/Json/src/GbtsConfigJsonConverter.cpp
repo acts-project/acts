@@ -14,12 +14,15 @@ void Acts::Experimental::to_json(nlohmann::json& j,
                                  const GbtsLayerConnection& connection) {
   j["outer"] = connection.src;
   j["inner"] = connection.dst;
+  j["minSeedLevel"] = connection.minSeedLevel;
 }
 
 void Acts::Experimental::from_json(const nlohmann::json& j,
                                    GbtsLayerConnection& connection) {
   connection.src = j.at("outer").get<GbtsExperimentLayerId>();
   connection.dst = j.at("inner").get<GbtsExperimentLayerId>();
+  connection.minSeedLevel =
+      j.value("minSeedLevel", GbtsLayerConnection{}.minSeedLevel);
 }
 
 void Acts::Experimental::to_json(nlohmann::json& j,

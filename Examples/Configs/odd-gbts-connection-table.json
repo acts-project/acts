@@ -2,71 +2,88 @@
     "connections": [
         {
             "outer": 4,
-            "inner": 3
+            "inner": 3,
+            "minSeedLevel": 2
         },
         {
             "outer": 3,
-            "inner": 2
+            "inner": 2,
+            "minSeedLevel": 2
         },
         {
             "outer": 2,
-            "inner": 1
+            "inner": 1,
+            "minSeedLevel": 2
         },
         {
             "outer": 1,
-            "inner": 8
+            "inner": 8,
+            "minSeedLevel": 2
         },
         {
             "outer": 9,
-            "inner": 8
+            "inner": 8,
+            "minSeedLevel": 2
         },
         {
             "outer": 10,
-            "inner": 8
+            "inner": 8,
+            "minSeedLevel": 2
         },
         {
             "outer": 12,
-            "inner": 8
+            "inner": 8,
+            "minSeedLevel": 2
         },
         {
             "outer": 1,
-            "inner": 9
+            "inner": 9,
+            "minSeedLevel": 2
         },
         {
             "outer": 10,
-            "inner": 9
+            "inner": 9,
+            "minSeedLevel": 2
         },
         {
             "outer": 11,
-            "inner": 9
+            "inner": 9,
+            "minSeedLevel": 2
         },
         {
             "outer": 12,
-            "inner": 9
+            "inner": 9,
+            "minSeedLevel": 2
         },
         {
             "outer": 1,
-            "inner": 10
+            "inner": 10,
+            "minSeedLevel": 2
         },
         {
             "outer": 11,
-            "inner": 10
+            "inner": 10,
+            "minSeedLevel": 2
         },
         {
             "outer": 12,
-            "inner": 10
+            "inner": 10,
+            "minSeedLevel": 2
         },
         {
             "outer": 13,
-            "inner": 12
+            "inner": 12,
+            "minSeedLevel": 2
         },
         {
             "outer": 14,
-            "inner": 13
+            "inner": 13,
+            "minSeedLevel": 2
         },
         {
             "outer": 15,
-            "inner": 14
+            "inner": 14,
+            "minSeedLevel": 2
         }
     ]
 }

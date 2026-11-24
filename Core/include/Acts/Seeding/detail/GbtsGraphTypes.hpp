@@ -175,14 +175,17 @@ struct GbtsEdge final {
   /// @param n2_ Outer node index
   /// @param tauRatioCut_ Tau ratio cut of this doublet as an outer pair
   /// @param n2PixelBarrel_ Whether the outer node is on the pixel barrel
+  /// @param minSeedLevel_ Level a chain needs that has this edge innermost
   /// @param p1_ First fit parameter
   /// @param p2_ Second fit parameter
   /// @param p3_ Third fit parameter
   GbtsEdge(SpacePointIndex n1_, SpacePointIndex n2_, float tauRatioCut_,
-           bool n2PixelBarrel_, float p1_, float p2_, float p3_)
+           bool n2PixelBarrel_, std::uint8_t minSeedLevel_, float p1_,
+           float p2_, float p3_)
       : n1{n1_},
         n2{n2_},
         n2PixelBarrel{n2PixelBarrel_},
+        minSeedLevel{minSeedLevel_},
         p{p1_, p2_, p3_},
         tauRatioCut{tauRatioCut_} {}
 
@@ -193,6 +196,9 @@ struct GbtsEdge final {
 
   /// Whether the outer node is on the pixel barrel.
   bool n2PixelBarrel{};
+
+  /// The level a chain needs that has this edge innermost.
+  std::uint8_t minSeedLevel{};
 
   std::array<float, 3> p{};
 

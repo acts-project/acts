@@ -708,6 +708,7 @@ def addGbtsTraining(
     outputConnectionTable: str = "layer_connection_table.json",
     probThreshold: float = -1.0,
     doSymmetrization: bool = False,
+    minSeedLevel: Optional[int] = None,
     logLevel: acts.logging.Level = None,
 ):
     logLevel = acts.examples.defaultLogging(s, logLevel)()
@@ -728,6 +729,7 @@ def addGbtsTraining(
         geometryFileDir=str(geometryFile),
         trackingGeometry=trackingGeometry,
         outputFileDir=str(outputConnectionTable),
+        **acts.examples.defaultKWArgs(minSeedLevel=minSeedLevel),
     )
 
     s.addAlgorithm(alg)

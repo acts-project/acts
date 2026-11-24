@@ -8,6 +8,7 @@
 
 #include "Acts/Seeding/GbtsGeometry.hpp"
 
+#include "Acts/Seeding/GraphBasedTrackSeeder.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 
 #include <algorithm>
@@ -18,6 +19,7 @@
 #include <limits>
 #include <optional>
 #include <stdexcept>
+#include <string>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -287,6 +289,12 @@ GbtsGeometry::GbtsGeometry(
       throw std::invalid_argument(
           "GbtsGeometry: layer connection with a negative tau ratio cut");
     }
+    if (connection.minSeedLevel <
+        GraphBasedTrackSeeder::kSmallestMinSeedLevel) {
+      throw std::invalid_argument(
+          "GbtsGeometry: layer connection with a minimum seed level below " +
+          std::to_string(GraphBasedTrackSeeder::kSmallestMinSeedLevel));
+    }
 
     const detail::GbtsLayer* pL1 = layerById(connection.dst);  // n1
     const detail::GbtsLayer* pL2 = layerById(connection.src);  // n2
@@ -317,7 +325,8 @@ GbtsGeometry::GbtsGeometry(
         binLayerMap[bin2Idx] = pL2;
 
         const GbtsBinLink link{bin2Idx, connection.tauRatioCutInner,
-                               connection.tauRatioCutOuter};
+                               connection.tauRatioCutOuter,
+                               connection.minSeedLevel};
 
         if (bin1Idx != lastBin1) {
           // adding a new group

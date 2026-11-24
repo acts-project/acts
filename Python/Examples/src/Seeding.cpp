@@ -75,8 +75,7 @@ void addSeeding(py::module& mex) {
     using Config = Acts::Experimental::GraphBasedTrackSeeder::Config;
     auto c =
         py::class_<Config>(mex, "GraphBasedSeedingConfig").def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, nMaxPhiSlice, minSeedLevel, addTriplets,
-                       maxAbsEtaAddTriplets, maxSeedSplitEta,
+    ACTS_PYTHON_STRUCT(c, nMaxPhiSlice, maxSeedSplitEta,
                        postFitCurvatureFactor);
     patchKwargsConstructor(c);
   }
@@ -85,10 +84,9 @@ void addSeeding(py::module& mex) {
     using Config = Acts::Experimental::GbtsGraphBuilder::Config;
     auto c =
         py::class_<Config>(mex, "GbtsGraphBuilderConfig").def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, minPt, maxEdgesPerSP, dropDeadEnds, minDeltaRadius,
-                       doubletFilterRZ, matchBeforeCreate, validateTriplets,
-                       calibrateStrips, maxOuterRadius,
-                       z0HistogramMaxBarrelOrder, pruneShortChains,
+    ACTS_PYTHON_STRUCT(c, minPt, maxEdgesPerSP, minDeltaRadius, doubletFilterRZ,
+                       matchBeforeCreate, validateTriplets, calibrateStrips,
+                       maxOuterRadius, z0HistogramMaxBarrelOrder,
                        useSumRatioCut, sumRatioCutMax);
     patchKwargsConstructor(c);
   }
