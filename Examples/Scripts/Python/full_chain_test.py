@@ -1,6 +1,15 @@
 #!/usr/bin/env python3
 
 import sys, os, argparse, pathlib
+import tempfile, urllib.request
+
+# Provisional Gen3 map, produced locally and hosted as a release asset on a
+# personal fork; not yet the ODD repo's official map (which is still
+# Gen1-keyed and incompatible with Gen3 surfaces).
+PROVISIONAL_GEN3_MATERIAL_MAP_URL = (
+    "https://github.com/LeaBaumann/acts/releases/download/"
+    "gen3-material-map-provisional-v1/odd_gen3_map.json.zst"
+)
 
 
 def parse_args():
@@ -327,7 +336,16 @@ def full_chain(args):
         if args.gbts_connection_table is None:
             args.gbts_connection_table = actsDir / "Examples/Configs/odd-gbts-connection-table.json"
         if args.material_config is None:
-            args.material_config = geoDir / "data/odd-material-maps.root"
+            # Gen3's default: the shipped ODD map (data/odd-material-maps.root)
+            # is Gen1-keyed and incompatible with Gen3 surfaces, so fall back
+            # to the provisional Gen3 map instead (same one physmon uses).
+            args.material_config = (
+                pathlib.Path(tempfile.gettempdir())
+                / "odd-material-maps-gen3-provisional.json.zst"
+            )
+            urllib.request.urlretrieve(
+                PROVISIONAL_GEN3_MATERIAL_MAP_URL, args.material_config
+            )
         args.bf_constant = True
         detector = acts.examples.odd.getOpenDataDetector(
             odd_dir=geoDir,

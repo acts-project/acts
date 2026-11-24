@@ -3,6 +3,8 @@
 import os
 import argparse
 import pathlib
+import tempfile
+import urllib.request
 import math
 
 import acts
@@ -40,6 +42,14 @@ from acts.examples.reconstruction import (
     SeedFilterMLDBScanConfig,
 )
 from acts.examples.odd import getOpenDataDetector, getOpenDataDetectorDirectory
+
+# Provisional Gen3 map, produced locally and hosted as a release asset on a
+# personal fork; not yet the ODD repo's official map (which is still
+# Gen1-keyed and incompatible with Gen3 surfaces).
+PROVISIONAL_GEN3_MATERIAL_MAP_URL = (
+    "https://github.com/LeaBaumann/acts/releases/download/"
+    "gen3-material-map-provisional-v1/odd_gen3_map.json.zst"
+)
 
 u = acts.UnitConstants
 
@@ -156,11 +166,17 @@ geoDir = getOpenDataDetectorDirectory()
 actsDir = pathlib.Path(__file__).parent.parent.parent.parent
 # acts.examples.dump_args_calls()  # show python binding calls
 
-oddMaterialMap = (
-    args.material_config
-    if args.material_config
-    else geoDir / "data/odd-material-maps.root"
-)
+if args.material_config:
+    oddMaterialMap = args.material_config
+else:
+    # Gen3's default: the shipped ODD map (data/odd-material-maps.root) is
+    # Gen1-keyed and incompatible with Gen3 surfaces, so fall back to the
+    # provisional Gen3 map instead (same one physmon uses).
+    oddMaterialMap = (
+        pathlib.Path(tempfile.gettempdir())
+        / "odd-material-maps-gen3-provisional.json.zst"
+    )
+    urllib.request.urlretrieve(PROVISIONAL_GEN3_MATERIAL_MAP_URL, oddMaterialMap)
 
 oddDigiConfig = (
     args.digi_config
