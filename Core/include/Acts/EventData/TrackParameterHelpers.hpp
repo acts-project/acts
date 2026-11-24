@@ -9,11 +9,26 @@
 #pragma once
 
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/Utilities/detail/periodic.hpp"
+#include "Acts/EventData/BoundParametrization.hpp"
 
 #include <limits>
 
 namespace Acts {
+
+/// Decode the direction of canonical global-spherical bound coordinates.
+/// Accepts vectors, Eigen maps and expressions without copying the full state.
+/// @tparam Derived Eigen expression type
+/// @param parameters Raw bound coordinates
+/// @return Global unit direction vector
+/// @pre Direction coordinates are finite (asserted).
+/// @note This helper assumes the canonical global-spherical parametrization.
+/// @deprecated Use BoundParametrization::direction instead.
+template <typename Derived>
+[[deprecated("Use BoundParametrization::direction instead")]]
+Vector3 directionFromBoundParameters(
+    const Eigen::MatrixBase<Derived>& parameters) {
+  return BoundParametrization::globalSpherical().direction(parameters);
+}
 
 /// Check if a bound vector is valid. This checks the following:
 /// - All values are finite
@@ -26,6 +41,8 @@ namespace Acts {
 /// @param maxAbsEta The maximum allowed eta value
 ///
 /// @return True if the bound vector is valid
+/// @deprecated Use BoundParametrization::isValid instead.
+[[deprecated("Use BoundParametrization::isValid instead")]]
 bool isBoundVectorValid(
     const BoundVector& v, bool validateAngleRange, double epsilon = 1e-6,
     double maxAbsEta = std::numeric_limits<double>::infinity());
@@ -43,43 +60,46 @@ bool isFreeVectorValid(
     const FreeVector& v, double epsilon = 1e-6,
     double maxAbsEta = std::numeric_limits<double>::infinity());
 
-/// Normalize the bound parameter angles
+/// Normalize the canonical global-spherical bound parameter angles
 ///
 /// @param boundParams The bound parameters to normalize
 ///
 /// @return The normalized bound parameters
+/// @pre Inputs and arithmetic results are finite (asserted).
+/// @deprecated Use BoundParametrization::canonicalize instead.
+[[deprecated("Use BoundParametrization::canonicalize instead")]]
 inline BoundVector normalizeBoundParameters(const BoundVector& boundParams) {
-  BoundVector result = boundParams;
-  std::tie(result[eBoundDir0], result[eBoundDir1]) =
-      detail::normalizePhiTheta(result[eBoundDir0], result[eBoundDir1]);
-  return result;
+  return BoundParametrization::globalSpherical().canonicalize(boundParams);
 }
 
-/// Add bound parameters and take care of angle periodicity for phi and theta.
-/// This is intended for small differences only i.e. KF updates.
+/// Add canonical global-spherical bound parameters, respecting angle
+/// periodicity. This is intended for small differences only i.e. KF updates.
 ///
 /// @param lhs The left hand side bound parameters
 /// @param rhs The right hand side bound parameters
 ///
 /// @return The sum of the bound parameters
+/// @pre Inputs and arithmetic results are finite (asserted).
+/// @deprecated Use BoundParametrization::update instead.
+[[deprecated("Use BoundParametrization::update instead")]]
 inline BoundVector addBoundParameters(const BoundVector& lhs,
                                       const BoundVector& rhs) {
-  return normalizeBoundParameters(lhs + rhs);
+  return BoundParametrization::globalSpherical().update(lhs, rhs);
 }
 
-/// Subtract bound parameters and take care of angle periodicity for phi and
-/// theta. This is intended for small differences only i.e. KF updates.
+/// Subtract canonical global-spherical bound parameters, respecting angle
+/// periodicity. This is intended for small differences only i.e. KF updates.
 ///
 /// @param lhs The left hand side bound parameters
 /// @param rhs The right hand side bound parameters
 ///
 /// @return The difference of the bound parameters
+/// @pre Inputs and arithmetic results are finite (asserted).
+/// @deprecated Use BoundParametrization::difference instead.
+[[deprecated("Use BoundParametrization::difference instead")]]
 inline BoundVector subtractBoundParameters(const BoundVector& lhs,
                                            const BoundVector& rhs) {
-  BoundVector result = lhs - rhs;
-  result[eBoundDir0] = detail::radian_sym(result[eBoundDir0]);
-  result[eBoundDir1] = detail::radian_sym(result[eBoundDir1]);
-  return result;
+  return BoundParametrization::globalSpherical().difference(lhs, rhs);
 }
 
 }  // namespace Acts
