@@ -307,6 +307,40 @@ deterministic event assignment, and coordination with ACTS scheduling. Compare
 throughput, memory, and reproducibility against multiprocessing before adopting
 it. Quasi-stable support must not depend on this decision.
 
+#### Native worker handover experiment
+
+The [native worker test](../../../Tests/UnitTests/Examples/Algorithms/Geant4/NativeWorkerTests.cpp)
+connects the ACTS TBB sequencer to a stock `G4MTRunManager`. Each ACTS event
+submits its ID, seed and input to an exchange and waits for its own future.
+The exchange admits at most two queued or running requests. Each Geant4 worker
+takes the next ready request in `GeneratePrimaries`, keeps the ACTS identity
+in the Geant4 event, and returns owned silicon crossing positions in
+`EndOfEventAction`. Reconstruction fits a straight line through those two
+positions on the originating event's WhiteBoard.
+
+The two-worker case holds event 17 inside its first silicon step until ACTS
+has reconstructed another event. The one- and two-worker runs check the
+same per-event random draws and track parameters. A separate run requests
+64 Geant4 events and submits four ACTS events. A stepping failure reaches
+the originating caller, which skips reconstruction for that event. Closing
+the input wakes waiting workers. Each one soft-aborts its own run after at
+most one empty terminal event. With Geant4 11.4.3, three ACTS events were
+reconstructed and Geant4 counted six slots, including two empty ones.
+
+The following commands run the experiment in a Geant4 MT build with the
+example unit tests enabled.
+
+```sh
+cmake --build build --target ActsUnitTestGeant4NativeWorkers
+ctest --test-dir build --output-on-failure -R '^Geant4NativeWorker'
+```
+
+The fixture uses geantinos in a field-free telescope. A production backend
+would also need worker-local fields and sensitive actions, validation with
+full physics and detector conditions, and a policy for run-size estimates
+and failures. The synchronous wait occupies an ACTS event-processing thread.
+A full-chain throughput measurement would quantify that cost.
+
 ## Decisions for the next design review
 
 Settle the supported initial particle species and generator conventions, the
