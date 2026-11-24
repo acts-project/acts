@@ -87,9 +87,11 @@ class ResPlotTool {
 
   /// Fill from truth parameters on the same surface as the fitted ones.
   ///
+  /// @param gctx the geometry context of the parameters
   /// @param truthParameters the truth bound parameters
   /// @param fittedParameters the fitted parameters
-  void fill(const Acts::BoundTrackParameters& truthParameters,
+  void fill(const Acts::GeometryContext& gctx,
+            const Acts::BoundTrackParameters& truthParameters,
             const Acts::BoundTrackParameters& fittedParameters);
 
   /// Fill the residual and pull of a subset of the bound parameters.

@@ -491,7 +491,8 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
     }
     Acts::calculateTrackQuantities(track);
 
-    if (m_trackSelector.has_value() && !m_trackSelector->isValidTrack(track)) {
+    if (m_trackSelector.has_value() &&
+        !m_trackSelector->isValidTrack(track, ctx.recoGeoContext)) {
       return;
     }
 

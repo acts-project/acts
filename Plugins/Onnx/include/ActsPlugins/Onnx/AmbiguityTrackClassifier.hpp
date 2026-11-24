@@ -12,6 +12,7 @@
 #include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/TrackContainerFrontendConcept.hpp"
 #include "Acts/EventData/TrackProxyConcept.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/TrackFinding/detail/AmbiguityTrackClustering.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 #include "ActsPlugins/Onnx/OnnxRuntimeBase.hpp"
@@ -40,11 +41,14 @@ class AmbiguityTrackClassifier {
   ///
   /// @param clusters is a map of clusters, each cluster correspond to a vector of track ID
   /// @param tracks is the input track container
+  /// @param gctx geometry context for track momenta
   /// @return a vector of vector of track score. Due to the architecture of the network each track only have a size 1 score vector.
   template <Acts::TrackContainerFrontend track_container_t>
   std::vector<std::vector<float>> inferScores(
       std::unordered_map<std::size_t, std::vector<std::size_t>>& clusters,
-      const track_container_t& tracks) const {
+      const track_container_t& tracks,
+      const Acts::GeometryContext& gctx =
+          Acts::GeometryContext::dangerouslyDefaultConstruct()) const {
     // Compute the number of entry (since it is smaller than the number of
     // track)
     int trackNb = 0;
@@ -67,8 +71,10 @@ class AmbiguityTrackClassifier {
         networkInput(inputID, 4) = trajState.NDF;
         networkInput(inputID, 5) = (trajState.chi2Sum * 1.0) /
                                    (trajState.NDF != 0 ? trajState.NDF : 1);
-        networkInput(inputID, 6) = Acts::VectorHelpers::eta(track.momentum());
-        networkInput(inputID, 7) = Acts::VectorHelpers::phi(track.momentum());
+        networkInput(inputID, 6) =
+            Acts::VectorHelpers::eta(track.momentum(gctx));
+        networkInput(inputID, 7) =
+            Acts::VectorHelpers::phi(track.momentum(gctx));
         inputID++;
       }
     }

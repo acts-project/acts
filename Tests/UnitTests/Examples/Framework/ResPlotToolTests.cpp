@@ -76,7 +76,8 @@ BOOST_AUTO_TEST_CASE(PhiResidualWrapsAround) {
 
   const auto surface = Surface::makeShared<PerigeeSurface>(Vector3::Zero());
   const double delta = 0.00105;
-  tool.fill(makeParameters(surface, std::numbers::pi - delta),
+  tool.fill(GeometryContext::dangerouslyDefaultConstruct(),
+            makeParameters(surface, std::numbers::pi - delta),
             makeParameters(surface, -std::numbers::pi + delta));
 
   // without the wrap the residual is `-2 pi + 2 delta` and lands in underflow
@@ -93,7 +94,8 @@ BOOST_AUTO_TEST_CASE(PhiResidualAwayFromTheWrap) {
 
   const auto surface = Surface::makeShared<PerigeeSurface>(Vector3::Zero());
   const double delta = 0.00105;
-  tool.fill(makeParameters(surface, 0.), makeParameters(surface, delta));
+  tool.fill(GeometryContext::dangerouslyDefaultConstruct(),
+            makeParameters(surface, 0.), makeParameters(surface, delta));
 
   const ResPlotTool::Histogram1& residual = tool.res().at("phi");
   const int bin = residual.histogram().axis(0).index(delta);

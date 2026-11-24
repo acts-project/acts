@@ -362,7 +362,7 @@ ProcessCode RootVertexNTupleWriter::writeT(const AlgorithmContext& ctx,
     m_covZT.push_back(vtx.fullCovariance()(Acts::CoordinateIndices::eZ,
                                            Acts::CoordinateIndices::eTime));
 
-    double sumPt2 = calcSumPt2(vtx, m_cfg.minTrkWeight);
+    double sumPt2 = calcSumPt2(ctx.recoGeoContext, vtx, m_cfg.minTrkWeight);
     m_sumPt2.push_back(sumPt2);
 
     double recoVertexTrackWeights = 0;

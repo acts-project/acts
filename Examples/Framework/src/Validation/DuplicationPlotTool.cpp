@@ -66,8 +66,9 @@ DuplicationPlotTool::DuplicationPlotTool(const DuplicationPlotTool::Config& cfg,
 }
 
 void DuplicationPlotTool::fill(
+    const Acts::GeometryContext& gctx,
     const Acts::BoundTrackParameters& fittedParameters, bool status) {
-  const auto momentum = fittedParameters.momentum();
+  const auto momentum = fittedParameters.momentum(gctx);
   const double fit_phi = phi(momentum);
   const double fit_eta = eta(momentum);
   const double fit_pT = perp(momentum);

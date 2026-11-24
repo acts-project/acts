@@ -193,7 +193,7 @@ ProcessCode RootTrackParameterPerformanceWriter::writeT(
     // Exclusive access to the histograms while filling
     std::lock_guard<std::mutex> lock(m_writeMutex);
 
-    m_collector.fill(tracks);
+    m_collector.fill(ctx.recoGeoContext, tracks);
 
     return ProcessCode::SUCCESS;
   }

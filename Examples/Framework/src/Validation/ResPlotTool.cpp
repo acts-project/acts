@@ -176,7 +176,8 @@ void ResPlotTool::fill(const Acts::GeometryContext& gctx,
        truthParticle.charge(), truthParticle.absoluteCharge(), fittedParamters);
 }
 
-void ResPlotTool::fill(const Acts::BoundTrackParameters& truthParameters,
+void ResPlotTool::fill(const Acts::GeometryContext& gctx,
+                       const Acts::BoundTrackParameters& truthParameters,
                        const Acts::BoundTrackParameters& fittedParameters) {
   using Acts::VectorHelpers::eta;
   using Acts::VectorHelpers::phi;
@@ -190,9 +191,9 @@ void ResPlotTool::fill(const Acts::BoundTrackParameters& truthParameters,
 
   const double truthCharge = truthParameters.charge();
   fill(truthParameters.parameters(),
-       Binning{eta(truthParameters.direction()),
-               phi(truthParameters.direction()),
-               truthParameters.transverseMomentum()},
+       Binning{eta(truthParameters.direction(gctx)),
+               phi(truthParameters.direction(gctx)),
+               truthParameters.transverseMomentum(gctx)},
        truthCharge, std::abs(truthCharge), fittedParameters);
 }
 
