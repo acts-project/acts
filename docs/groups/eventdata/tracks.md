@@ -137,6 +137,15 @@ legacy diagonal update and includes material-physics and noise-mapping work. Leg
 @ref Acts::MaterialInteraction::sigmaTheta2 remain global angular diagnostics;
 nonzero scattering at a global pole has infinite phi variance.
 
+@ref Acts::MbfSmoother also uses surface-resolved residuals and canonicalizes
+smoothed parameters and covariance together. Its backward information recursion
+includes the forward update's canonicalization Jacobian, since backward
+information is expressed in the filtered basis while measurement residuals and
+the transport Jacobian use the predicted basis. Singular canonicalization and
+nonfinite recursion results stop smoothing with an error. States already
+processed may retain their smoothed results; earlier states are not visited.
+The supported interpretation remains canonical global spherical coordinates.
+
 ## Conceptual {#edm_track_conceptual}
 
 ### Architecture
