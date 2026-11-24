@@ -29,6 +29,7 @@
 #include <algorithm>
 #include <memory>
 #include <ostream>
+#include <stdexcept>
 #include <string>
 #include <utility>
 
@@ -571,6 +572,51 @@ void TrackingVolume::addPortal(std::shared_ptr<Portal> portal) {
     throw std::invalid_argument("Portal is nullptr");
   }
   m_portals.push_back(std::move(portal));
+  m_portalFaces.clear();
+}
+
+const Surface* TrackingVolume::portalFace(const Portal& portal) const {
+  for (std::size_t i = 0; i < m_portalFaces.size(); ++i) {
+    if (m_portals[i].get() == &portal) {
+      return m_portalFaces[i].get();
+    }
+  }
+  return nullptr;
+}
+
+void TrackingVolume::findPortalFaces(const GeometryContext& gctx) {
+  m_portalFaces.clear();
+  if (m_portals.empty()) {
+    return;
+  }
+  if (isAlignable()) {
+    throw std::logic_error("TrackingVolume: portal faces of alignable volume " +
+                           volumeName() +
+                           " would depend on the geometry context");
+  }
+  std::vector<OrientedSurface> faces =
+      volumeBounds().orientedSurfaces(localToGlobalTransform(gctx));
+  std::vector<std::shared_ptr<const RegularSurface>> portalFaces(
+      m_portals.size());
+  bool clipped = false;
+  for (std::size_t i = 0; i < m_portals.size(); ++i) {
+    const RegularSurface& surface = m_portals[i]->surface();
+    if (surface.isAlignable()) {
+      continue;
+    }
+    for (const OrientedSurface& face : faces) {
+      // Faces with the bounds of the portal are the portal surface itself
+      if (face.surface->bounds() != surface.bounds() &&
+          surface.contains(gctx, *face.surface)) {
+        portalFaces[i] = face.surface;
+        clipped = true;
+        break;
+      }
+    }
+  }
+  if (clipped) {
+    m_portalFaces = std::move(portalFaces);
+  }
 }
 
 TrackingVolume::SurfaceRange TrackingVolume::surfaces() const {

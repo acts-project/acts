@@ -104,6 +104,24 @@ class NavigationTarget {
         m_surfaceRepresentation(&target.surface()),
         m_boundaryTolerance(boundaryTolerance) {}
 
+  /// Constructor for a portal target that is intersected through a different
+  /// surface than the portal surface, e.g. the portal clipped to a volume face
+  /// @param intersection is the intersection
+  /// @param intersectionIndex is the intersection index
+  /// @param target is the intersected portal
+  /// @param representation is the surface that is intersected
+  /// @param boundaryTolerance is the boundary tolerance used for this
+  /// intersection
+  NavigationTarget(const Intersection3D& intersection,
+                   IntersectionIndex intersectionIndex, const Portal& target,
+                   const Surface& representation,
+                   const BoundaryTolerance& boundaryTolerance) noexcept
+      : m_intersection(intersection),
+        m_intersectionIndex(intersectionIndex),
+        m_target(&target),
+        m_surfaceRepresentation(&representation),
+        m_boundaryTolerance(boundaryTolerance) {}
+
   /// Copy constructor
   constexpr NavigationTarget(const NavigationTarget&) noexcept = default;
 
