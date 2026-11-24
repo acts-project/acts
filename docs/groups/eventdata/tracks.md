@@ -235,6 +235,33 @@ corrected covariance basis is undefined, correction falls back to nominal
 transport through its existing optional-result interface. Broad distributions
 spanning direction singularities remain outside this local approximation.
 
+### Canonical support audit
+
+Only canonical global-spherical coordinates are selectable. The current
+implementation and remaining work are:
+
+| Path | Current status |
+| --- | --- |
+| Kalman update, RTS and MBF smoothing | Surface-selected residuals and covariance-aware canonicalization |
+| Reference-trajectory filtering | Surface-selected reference residuals and consistent prediction covariance/Jacobians |
+| Eigen, straight-line, helix and Sympy steppers | Surface conversions and shared/generated transport engines |
+| Multi-stepper transport | Delegates to component steppers; bound-direction domain errors propagate |
+| Ridders | Surface-selected numerical residuals; existing perturbation algorithm |
+| GSF and bremsstrahlung CKF merging | Context-aware entry points with explicit canonical-only checks |
+| GX2F | Surface-selected measurement residuals; explicitly canonical scattering model and raw fit updates |
+| AtlasStepper | Explicit canonical-only checks at bound entry points |
+| CKF measurement selection | Uses the surface parametrization for physical theta and periodic measurement residuals |
+| Optional nonlinear free-to-bound correction | Surface-selected local sigma-point residuals and covariance-aware canonicalization |
+
+The explicit unsupported-configuration exceptions from mixture merging, GX2F,
+and AtlasStepper escape the fitting and component-discard paths. The example
+framework logs the exception message and rethrows it. Existing numerical domain
+failures retain their `Result` handling; these are distinct from unsupported
+configurations. Tests with another parametrization are still needed to verify
+rejection at initial and subsequent states, harmless navigation-only encounters,
+and mixed-parametrization physical equivalence. Canonical regression tests alone
+do not establish those properties.
+
 Pointwise material physics computes a projected scattering variance independently
 of the direction coordinates. A separate mapping produces the direction-noise
 block, with a direct diagonal calculation for the canonical spherical convention.
@@ -296,6 +323,12 @@ the transport Jacobian use the predicted basis. Singular canonicalization and
 nonfinite recursion results stop smoothing with an error. States already
 processed may retain their smoothed results; earlier states are not visited.
 The supported interpretation remains canonical global spherical coordinates.
+
+Other fitting and mixture operations and specialized
+propagation algorithms still assume the canonical spherical coordinates.
+The neutral index names alone do not make those operations chart-independent.
+Custom coordinate ordering through `ACTS_PARAMETER_DEFINITIONS_HEADER` has been
+removed; the coordinate ordering is fixed.
 
 ## Conceptual {#edm_track_conceptual}
 
