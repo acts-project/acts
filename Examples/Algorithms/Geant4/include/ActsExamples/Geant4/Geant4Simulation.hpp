@@ -15,6 +15,7 @@
 #include "ActsExamples/EventData/PropagationSummary.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/EventData/SimParticleDecay.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -50,6 +51,7 @@ namespace Geant4 {
 class EventContext;
 struct EventResult;
 class SimulationSession;
+class NativeSimulationSession;
 }  // namespace Geant4
 
 /// Abstracts common Geant4 Acts algorithm behaviour.
@@ -86,7 +88,7 @@ class Geant4SimulationBase : public IAlgorithm {
   ~Geant4SimulationBase() override;
 
   /// Open one Geant4 run until finalize(). Geometry, materials, regions and
-  /// cuts must remain fixed. Execute and finalize on the initializing thread.
+  /// cuts must remain fixed. Serial transport requires the initializing thread.
   ProcessCode initialize() final;
 
   /// Close the Geant4 run and invoke the end-of-run action once.
@@ -105,11 +107,14 @@ class Geant4SimulationBase : public IAlgorithm {
   std::shared_ptr<Geant4::EventContext> eventContext() const;
 
   /// Transport the framework input and return collections owned by this event.
-  Geant4::EventResult simulateEvent(const AlgorithmContext& ctx) const;
+  Geant4::EventResult simulateEvent(
+      const AlgorithmContext& ctx,
+      const SimParticleDecayGraph* decays = nullptr) const;
 
   int m_geant4Level{};
 
   std::unique_ptr<Geant4::SimulationSession> m_session;
+  std::unique_ptr<Geant4::NativeSimulationSession> m_nativeSession;
 
   /// Detector construction object.
   /// G4RunManager will take care of deletion
@@ -132,6 +137,13 @@ class Geant4Simulation final : public Geant4SimulationBase {
           std::shared_ptr<const Geant4::EventContext>)>;
 
   struct Config : public Geant4SimulationBase::Config {
+    /// Number of native Geant4 transport workers. Zero selects the serial
+    /// session.
+    unsigned int numGeant4Workers = 0;
+
+    /// Optional prescribed decays keyed by the barcodes of the input particles.
+    std::string inputDecayGraph;
+
     /// Name of the output collection : hits
     std::string outputSimHits = "simhits";
 
@@ -163,13 +175,15 @@ class Geant4Simulation final : public Geant4SimulationBase {
 
     bool recordHitsOfSecondaries = true;
 
+    /// Prescribed parents are always retained to preserve the decay ancestry.
     bool keepParticlesWithoutHits = true;
 
     bool recordPropagationSummaries = false;
 
-    /// Invoked during initialization. If a factory fails, initialization can
-    /// retry the full list. Once installed, the actions run in configuration
-    /// order after the built-in particle-kill and hit actions on every run.
+    /// Invoked during initialization, once per native worker or serial session.
+    /// Serial retries may invoke the factories again. Each factory creates
+    /// an independent action. Actions run in configuration
+    /// order after the built-in particle-kill and hit actions.
     std::vector<SteppingActionFactory> steppingActionFactories;
   };
 
@@ -195,6 +209,9 @@ class Geant4Simulation final : public Geant4SimulationBase {
 
   WriteDataHandle<SimParticleContainer> m_outputParticles{this,
                                                           "OutputParticles"};
+  ReadDataHandle<SimParticleDecayGraph> m_inputDecayGraph{this,
+                                                          "InputDecayGraph"};
+
   WriteDataHandle<SimHitContainer> m_outputSimHits{this, "OutputSimHIts"};
 
   WriteDataHandle<PropagationSummaries> m_outputPropagationSummaries{

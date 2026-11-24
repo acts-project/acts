@@ -67,7 +67,7 @@ class ParticleTrackingAction : public G4UserTrackingAction {
   SimParticleState convert(const G4Track& track, SimBarcode particleId) const;
 
   /// Make the particle id
-  std::optional<SimBarcode> makeParticleId(G4int trackId, G4int parentId) const;
+  std::optional<SimBarcode> makeParticleId(G4int parentId) const;
 
   /// Private access method to the logging instance
   const Acts::Logger& logger() const { return *m_logger; }

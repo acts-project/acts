@@ -107,8 +107,7 @@ void SensitiveSteppingAction::UserSteppingAction(const G4Step* stepPtr) {
   // The particle after the step
   assert(step.GetTrack() != nullptr);
   const G4Track& track = *step.GetTrack();
-  G4PrimaryParticle* primaryParticle =
-      track.GetDynamicParticle()->GetPrimaryParticle();
+  const bool isPrimary = track.GetParentID() == 0;
 
   // Get PreStepPoint and PostStepPoint
   assert(step.GetPreStepPoint() != nullptr);
@@ -129,12 +128,12 @@ void SensitiveSteppingAction::UserSteppingAction(const G4Step* stepPtr) {
   }
 
   // Bail out if it is a primary & configured to be ignored
-  if (!m_cfg.primary && primaryParticle != nullptr) {
+  if (!m_cfg.primary && isPrimary) {
     return;
   }
 
   // Bail out if it is a secondary & configured to be ignored
-  if (!m_cfg.secondary && primaryParticle == nullptr) {
+  if (!m_cfg.secondary && !isPrimary) {
     return;
   }
 
@@ -158,21 +157,22 @@ void SensitiveSteppingAction::UserSteppingAction(const G4Step* stepPtr) {
   const Acts::Surface* surface = nullptr;
 
   // Find the range of candidate surfaces for the current position in the map
-  const auto surfaceMap_itr = m_surfaceMapping.find(volume);
-  if (surfaceMap_itr != m_surfaceMapping.end()) {
+  const auto surfaceMap_itr = m_surfaceMapping->find(volume);
+  if (surfaceMap_itr != m_surfaceMapping->end()) {
     const auto& surfacesToG4Vol = surfaceMap_itr->second;
     ACTS_VERBOSE("Found " << surfacesToG4Vol.size()
                           << " candidate surfaces for volume " << volumeName);
     const Acts::Vector3 volumePos =
         convertPosition(touchable->GetTranslation());
     const auto lookUp_itr = surfacesToG4Vol.find(volumePos);
-    if (lookUp_itr == surfacesToG4Vol.end() && !m_cfg.stepLogging) {
+    if (lookUp_itr != surfacesToG4Vol.end()) {
+      surface = lookUp_itr->second;
+      geoId = surface->geometryId();
+      ACTS_VERBOSE("Replica assignment successful -> to surface " << geoId);
+    } else if (!m_cfg.stepLogging) {
       ACTS_ERROR("No candidate surfaces found for volume " << volumeName);
       return;
     }
-    surface = lookUp_itr->second;
-    geoId = surface->geometryId();
-    ACTS_VERBOSE("Replica assignment successful -> to surface " << geoId);
   } else if (!m_cfg.stepLogging) {
     ACTS_ERROR("No candidate surfaces found for volume " << volumeName);
     return;

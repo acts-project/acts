@@ -13,8 +13,9 @@
 #include "Acts/Utilities/detail/ScopeExit.hpp"
 #include "ActsExamples/EventData/PropagationSummary.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
-#include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/EventData/SimParticleDecay.hpp"
 
+#include <exception>
 #include <set>
 #include <stdexcept>
 #include <unordered_map>
@@ -52,14 +53,21 @@ struct EventResult {
 struct EventStore {
   /// @param geometry Alignment context for the duration of transport.
   /// @param particles Read-only input for the duration of transport.
+  /// @param graph Optional generator-prescribed decays for the selected roots.
   EventStore(const Acts::GeometryContext& geometry,
-             const SimParticleContainer& particles)
-      : geoContext(geometry), inputParticles(particles) {}
+             const SimParticleContainer& particles,
+             const SimParticleDecayGraph* graph = nullptr)
+      : geoContext(geometry), inputParticles(particles), decayGraph(graph) {}
 
   /// Only the user actions see alignment here. The Geant4 geometry stays fixed.
   const Acts::GeometryContext& geoContext;
   /// Flat collection to translate to Geant4 primaries.
   const SimParticleContainer& inputParticles;
+  /// The event owns the optional graph for the duration of transport.
+  const SimParticleDecayGraph* decayGraph;
+  /// A rejected primary input leaves an empty G4 event. Report its error after
+  /// Geant4 has taken ownership and completed event cleanup.
+  std::exception_ptr primaryError;
   /// The result moves to the caller when transport completes.
   EventResult result;
 

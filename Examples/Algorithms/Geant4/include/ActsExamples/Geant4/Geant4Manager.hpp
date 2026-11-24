@@ -79,6 +79,9 @@ class Geant4Manager {
 
   std::shared_ptr<Geant4Handle> currentHandle() const;
 
+  /// Claim the process-wide Geant4 kernel before creating a run manager.
+  void reserveRunManager();
+
   /// This can only be called once due to Geant4 limitations
   std::shared_ptr<Geant4Handle> createHandle(const std::string &physicsList);
 
@@ -104,6 +107,10 @@ class Geant4Manager {
   Geant4Manager();
   ~Geant4Manager();
 
+  std::shared_ptr<Geant4Handle> makeHandle(
+      std::unique_ptr<G4VUserPhysicsList> physicsList,
+      std::string physicsListName);
+  mutable std::mutex m_mutex;
   bool m_created = false;
   std::weak_ptr<Geant4Handle> m_handle;
   std::unordered_map<std::string, std::shared_ptr<Geant4::PhysicsListFactory>>

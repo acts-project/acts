@@ -13,7 +13,9 @@
 #include "ActsExamples/Geant4/SensitiveSurfaceMapper.hpp"
 
 #include <memory>
+#include <stdexcept>
 #include <string>
+#include <utility>
 
 #include <G4UserSteppingAction.hh>
 
@@ -76,8 +78,18 @@ class SensitiveSteppingAction : public G4UserSteppingAction {
   ///
   /// @param surfaceMapping the multimap of physical volumes to surfaces
   using VolumeToSurfAssocMap_t = SensitiveSurfaceMapper::VolumeToSurfAssocMap_t;
-  void assignSurfaceMapping(const VolumeToSurfAssocMap_t& surfaceMapping) {
-    m_surfaceMapping = surfaceMapping;
+  void assignSurfaceMapping(VolumeToSurfAssocMap_t surfaceMapping) {
+    m_surfaceMapping = std::make_shared<const VolumeToSurfAssocMap_t>(
+        std::move(surfaceMapping));
+  }
+
+  /// Use the mapping built on the master for the shared detector geometry.
+  void shareSurfaceMapping(
+      std::shared_ptr<const VolumeToSurfAssocMap_t> mapping) {
+    if (!mapping) {
+      throw std::invalid_argument("Missing Geant4 sensitive volume mapping");
+    }
+    m_surfaceMapping = std::move(mapping);
   }
 
  protected:
@@ -93,7 +105,8 @@ class SensitiveSteppingAction : public G4UserSteppingAction {
   /// The looging instance
   std::unique_ptr<const Acts::Logger> m_logger;
 
-  VolumeToSurfAssocMap_t m_surfaceMapping{};
+  std::shared_ptr<const VolumeToSurfAssocMap_t> m_surfaceMapping =
+      std::make_shared<const VolumeToSurfAssocMap_t>();
 };
 
 }  // namespace ActsExamples::Geant4

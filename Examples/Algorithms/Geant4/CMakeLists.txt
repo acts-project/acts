@@ -2,6 +2,8 @@ acts_add_library(
     ExamplesGeant4
     src/AlgebraConverters.cpp
     src/Geant4Simulation.cpp
+    src/NativeSimulationSession.cpp
+    src/SimulationActions.cpp
     src/SimulationSession.cpp
     src/MagneticFieldWrapper.cpp
     src/MaterialPhysicsList.cpp

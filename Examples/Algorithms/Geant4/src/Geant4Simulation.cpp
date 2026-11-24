@@ -17,10 +17,7 @@
 #include "ActsExamples/Geant4/Geant4Manager.hpp"
 #include "ActsExamples/Geant4/MaterialPhysicsList.hpp"
 #include "ActsExamples/Geant4/MaterialSteppingAction.hpp"
-#include "ActsExamples/Geant4/ParticleKillAction.hpp"
 #include "ActsExamples/Geant4/ParticleTrackingAction.hpp"
-#include "ActsExamples/Geant4/SensitiveSteppingAction.hpp"
-#include "ActsExamples/Geant4/SensitiveSurfaceMapper.hpp"
 #include "ActsExamples/Geant4/SimParticleTranslation.hpp"
 #include "ActsExamples/Geant4/SteppingActionList.hpp"
 
@@ -28,15 +25,13 @@
 #include <utility>
 
 #include <G4RunManager.hh>
-#include <G4UserEventAction.hh>
-#include <G4UserLimits.hh>
-#include <G4UserRunAction.hh>
 #include <G4UserSteppingAction.hh>
 #include <G4UserTrackingAction.hh>
 #include <G4VUserDetectorConstruction.hh>
 #include <G4VUserPhysicsList.hh>
-#include <G4Version.hh>
 
+#include "NativeSimulationSession.hpp"
+#include "SimulationActions.hpp"
 #include "SimulationSession.hpp"
 
 namespace ActsExamples {
@@ -99,22 +94,33 @@ std::shared_ptr<Geant4::EventContext> Geant4SimulationBase::eventContext()
 }
 
 ProcessCode Geant4SimulationBase::initialize() {
-  m_session->beginRun();
+  if (m_nativeSession) {
+    m_nativeSession->beginRun();
+  } else {
+    m_session->beginRun();
+  }
   return ProcessCode::SUCCESS;
 }
 
 ProcessCode Geant4SimulationBase::finalize() {
-  if (m_session) {
+  if (m_nativeSession) {
+    m_nativeSession->endRun();
+  } else if (m_session) {
     m_session->endRun();
   }
   return ProcessCode::SUCCESS;
 }
 
 Geant4::EventResult Geant4SimulationBase::simulateEvent(
-    const AlgorithmContext& ctx) const {
+    const AlgorithmContext& ctx, const SimParticleDecayGraph* decays) const {
   ACTS_DEBUG("Processing Geant4 event");
-  auto result = m_session->simulate(m_inputParticles(ctx), ctx.simGeoContext,
-                                    config().randomNumbers->generateSeed(ctx));
+  const auto& particles = m_inputParticles(ctx);
+  const auto seed = config().randomNumbers->generateSeed(ctx);
+  auto result =
+      m_nativeSession
+          ? m_nativeSession->simulate(particles, ctx.simGeoContext, seed,
+                                      ctx.eventNumber, decays)
+          : m_session->simulate(particles, ctx.simGeoContext, seed, decays);
 
   // Print out warnings about possible particle collision if happened
   if (result.particleIdCollisionsInitial > 0 ||
@@ -140,7 +146,7 @@ Geant4::EventResult Geant4SimulationBase::simulateEvent(
 }
 
 std::shared_ptr<Geant4Handle> Geant4SimulationBase::geant4Handle() const {
-  return m_session->handle;
+  return m_session ? m_session->handle : nullptr;
 }
 
 Geant4Simulation::Geant4Simulation(const Config& cfg,
@@ -154,10 +160,23 @@ Geant4Simulation::Geant4Simulation(const Config& cfg,
   }
   m_inputParticles.initialize(cfg.inputParticles);
   m_outputSimHits.initialize(cfg.outputSimHits);
+  if (!cfg.inputDecayGraph.empty()) {
+    m_inputDecayGraph.initialize(cfg.inputDecayGraph);
+  }
   m_outputParticles.initialize(cfg.outputParticles);
 
   if (cfg.recordPropagationSummaries) {
     m_outputPropagationSummaries.initialize(cfg.outputPropagationSummaries);
+  }
+
+  if (cfg.numGeant4Workers > 0) {
+    if (cfg.geant4Handle) {
+      throw std::invalid_argument(
+          "Native Geant4 workers require their own master run manager");
+    }
+    m_nativeSession = std::make_unique<Geant4::NativeSimulationSession>(
+        m_cfg, this->logger());
+    return;
   }
 
   auto handle = m_cfg.geant4Handle
@@ -169,124 +188,41 @@ Geant4Simulation::Geant4Simulation(const Config& cfg,
 
   commonInitialization();
 
-  // Set the primarty generator
-  {
-    Geant4::SimParticleTranslation::Config prCfg;
-    prCfg.eventContext = eventContext();
-    // G4RunManager will take care of deletion
-    auto primaryGeneratorAction = new Geant4::SimParticleTranslation(
-        prCfg, this->logger().cloneWithSuffix("SimParticleTranslation"));
-    // Set the primary generator action
-    const auto* previous = runManager().GetUserPrimaryGeneratorAction();
-    runManager().SetUserAction(primaryGeneratorAction);
-    delete previous;
+  Geant4::SimulationActions actions(cfg, eventContext(), this->logger());
+  auto& manager = runManager();
+  const auto* oldGenerator = manager.GetUserPrimaryGeneratorAction();
+  manager.SetUserAction(actions.generator.release());
+  delete oldGenerator;
+  const auto* oldTracking = manager.GetUserTrackingAction();
+  manager.SetUserAction(actions.tracking.release());
+  delete oldTracking;
+  auto* steps = actions.stepping.get();
+  const auto* oldStepping = manager.GetUserSteppingAction();
+  manager.SetUserAction(actions.stepping.release());
+  delete oldStepping;
+  if (!cfg.steppingActionFactories.empty()) {
+    m_session->configureActions = [this, steps] {
+      Geant4::appendDiagnostics(*steps, m_cfg, eventContext());
+    };
   }
 
-  // Particle action
-  {
-    Geant4::ParticleTrackingAction::Config trackingCfg;
-    trackingCfg.eventContext = eventContext();
-    trackingCfg.keepParticlesWithoutHits = cfg.keepParticlesWithoutHits;
-    // G4RunManager will take care of deletion
-    auto trackingAction = new Geant4::ParticleTrackingAction(
-        trackingCfg, this->logger().cloneWithSuffix("ParticleTracking"));
-    const auto* previous = runManager().GetUserTrackingAction();
-    runManager().SetUserAction(trackingAction);
-    delete previous;
-  }
-
-  // Stepping actions
-  Geant4::SensitiveSteppingAction* sensitiveSteppingActionAccess = nullptr;
-  {
-    Geant4::ParticleKillAction::Config particleKillCfg;
-    particleKillCfg.eventContext = eventContext();
-    particleKillCfg.volume = cfg.killVolume;
-    particleKillCfg.maxTime = cfg.killAfterTime;
-    particleKillCfg.secondaries = cfg.killSecondaries;
-
-    Geant4::SensitiveSteppingAction::Config stepCfg;
-    stepCfg.eventContext = eventContext();
-    stepCfg.charged = cfg.recordHitsOfCharged;
-    stepCfg.neutral = cfg.recordHitsOfNeutrals;
-    stepCfg.primary = cfg.recordHitsOfPrimaries;
-    stepCfg.secondary = cfg.recordHitsOfSecondaries;
-    stepCfg.stepLogging = cfg.recordPropagationSummaries;
-
-    Geant4::SteppingActionList::Config steppingCfg;
-    steppingCfg.actions.push_back(std::make_unique<Geant4::ParticleKillAction>(
-        particleKillCfg, this->logger().cloneWithSuffix("Killer")));
-
-    auto sensitiveSteppingAction =
-        std::make_unique<Geant4::SensitiveSteppingAction>(
-            stepCfg, this->logger().cloneWithSuffix("SensitiveStepping"));
-    sensitiveSteppingActionAccess = sensitiveSteppingAction.get();
-
-    steppingCfg.actions.push_back(std::move(sensitiveSteppingAction));
-    // G4RunManager will take care of deletion
-    auto steppingAction = new Geant4::SteppingActionList(steppingCfg);
-    const auto* previous = runManager().GetUserSteppingAction();
-    runManager().SetUserAction(steppingAction);
-    delete previous;
-
-    if (!cfg.steppingActionFactories.empty()) {
-      m_session->configureActions = [this, steppingAction] {
-        Geant4::SteppingActionList::Config extensions;
-        for (const auto& factory : m_cfg.steppingActionFactories) {
-          auto action = factory(eventContext());
-          if (!action) {
-            throw std::invalid_argument(
-                "Geant4 stepping action factory returned null");
-          }
-          extensions.actions.push_back(std::move(action));
-        }
-        steppingAction->appendActions(extensions);
-      };
-    }
-  }
-
-  // Get the g4World cache
-  G4VPhysicalVolume* g4World = m_detectorConstruction->Construct();
-
-  // Please note:
-  // The following two blocks rely on the fact that the Acts
-  // detector constructions cache the world volume
-
-  // Set the magnetic field
+  auto& world = *m_detectorConstruction->Construct();
   if (cfg.magneticField) {
-    ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::INFO,
-                         "Setting ACTS configured field to Geant4.");
-
-    m_session->setMagneticField(*g4World, cfg.magneticField);
+    m_session->setMagneticField(world, cfg.magneticField);
   }
-
-  // ACTS sensitive surfaces are provided, so hit creation is turned on
-  if (cfg.sensitiveSurfaceMapper != nullptr) {
-    Geant4::SensitiveSurfaceMapper::State sState;
-    ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::INFO,
-                         "Remapping selected volumes from Geant4 to "
-                         "Acts::Surface::GeometryID");
-    cfg.sensitiveSurfaceMapper->remapSensitiveNames(
-        sState, Acts::GeometryContext::dangerouslyDefaultConstruct(), g4World,
-        Acts::Transform3::Identity());
-
-    auto allSurfacesMapped = cfg.sensitiveSurfaceMapper->checkMapping(
-        sState, Acts::GeometryContext::dangerouslyDefaultConstruct(), false,
-        false);
-    if (!allSurfacesMapped) {
-      ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::WARNING,
-                           "Not all sensitive surfaces have been mapped to "
-                           "Geant4 volumes!");
-    }
-
-    sensitiveSteppingActionAccess->assignSurfaceMapping(
-        sState.g4VolumeToSurfaces);
-  }
+  actions.sensitive->assignSurfaceMapping(
+      Geant4::mapSensitiveVolumes(cfg, world, this->logger()));
 }
 
-Geant4Simulation::~Geant4Simulation() = default;
+Geant4Simulation::~Geant4Simulation() {
+  // Join native workers before destroying the configuration and its actions.
+  m_nativeSession.reset();
+}
 
 ProcessCode Geant4Simulation::execute(const AlgorithmContext& ctx) const {
-  auto result = simulateEvent(ctx);
+  const auto* decays =
+      m_inputDecayGraph.isInitialized() ? &m_inputDecayGraph(ctx) : nullptr;
+  auto result = simulateEvent(ctx, decays);
 
   // Output handling: Simulation
   m_outputParticles(ctx, SimParticleContainer(result.particlesSimulated.begin(),
@@ -329,7 +265,7 @@ Geant4MaterialRecording::Geant4MaterialRecording(
 
   commonInitialization();
 
-  // Set the primarty generator
+  // Set the primary generator
   {
     Geant4::SimParticleTranslation::Config prCfg;
     prCfg.eventContext = eventContext();

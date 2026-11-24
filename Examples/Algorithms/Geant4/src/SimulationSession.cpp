@@ -114,14 +114,15 @@ void SimulationSession::beginRun() {
 
 EventResult SimulationSession::simulate(const SimParticleContainer& particles,
                                         const Acts::GeometryContext& geometry,
-                                        std::uint64_t seed) {
+                                        std::uint64_t seed,
+                                        const SimParticleDecayGraph* decays) {
   std::lock_guard lock(handle->mutex);
   if (!m_runStarted) {
     throw std::logic_error("Geant4 run has not been initialized");
   }
   m_manager.checkThread();
   G4Random::setTheSeed(seed);
-  EventStore event(geometry, particles);
+  EventStore event(geometry, particles, decays);
   auto binding = eventContext->bind(event);
   ActsPlugins::FpeMonitor mon{0};
   try {
@@ -129,6 +130,9 @@ EventResult SimulationSession::simulate(const SimParticleContainer& particles,
   } catch (...) {
     m_runStarted = m_manager.isRunActive();
     throw;
+  }
+  if (event.primaryError) {
+    std::rethrow_exception(event.primaryError);
   }
   return std::move(event.result);
 }

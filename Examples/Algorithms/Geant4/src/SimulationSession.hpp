@@ -37,7 +37,8 @@ class SimulationSession {
   void beginRun();
   EventResult simulate(const SimParticleContainer& particles,
                        const Acts::GeometryContext& geometry,
-                       std::uint64_t seed);
+                       std::uint64_t seed,
+                       const SimParticleDecayGraph* decays = nullptr);
   void endRun();
 
   const std::shared_ptr<Geant4Handle> handle;

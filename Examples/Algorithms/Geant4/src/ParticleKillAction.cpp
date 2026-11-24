@@ -37,8 +37,7 @@ void ParticleKillAction::UserSteppingAction(const G4Step* stepPtr) {
   G4Track& track = *step.GetTrack();
 
   const double time = convertTimeToActs * track.GetGlobalTime();
-  const bool isSecondary =
-      track.GetDynamicParticle()->GetPrimaryParticle() == nullptr;
+  const bool isSecondary = track.GetParentID() != 0;
 
   const bool outOfVolume =
       m_cfg.volume &&

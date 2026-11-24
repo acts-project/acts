@@ -39,17 +39,17 @@ Geant4Handle::Geant4Handle(std::unique_ptr<G4RunManager> _runManager,
                            std::unique_ptr<G4VUserPhysicsList> _physicsList,
                            std::string _physicsListName)
     : runManager(std::move(_runManager)),
-      physicsList(_physicsList.release()),
+      physicsList(_physicsList.get()),
       physicsListName(std::move(_physicsListName)) {
   if (runManager == nullptr) {
-    std::invalid_argument("runManager cannot be null");
+    throw std::invalid_argument("runManager cannot be null");
   }
   if (physicsList == nullptr) {
-    std::invalid_argument("physicsList cannot be null");
+    throw std::invalid_argument("physicsList cannot be null");
   }
 
   // Set physics list
-  runManager->SetUserInitialization(physicsList);
+  runManager->SetUserInitialization(_physicsList.release());
 }
 
 Geant4Handle::~Geant4Handle() {
@@ -96,33 +96,54 @@ void Geant4Manager::tweakLogging(G4RunManager& runManager, int level) {
 }
 
 std::shared_ptr<Geant4Handle> Geant4Manager::currentHandle() const {
+  std::lock_guard lock(m_mutex);
   return m_handle.lock();
 }
 
 std::shared_ptr<Geant4Handle> Geant4Manager::createHandle(
     const std::string& physicsList) {
-  return createHandle(createPhysicsList(physicsList), physicsList);
+  reserveRunManager();
+  std::unique_ptr<G4VUserPhysicsList> list;
+  try {
+    list = createPhysicsList(physicsList);
+  } catch (...) {
+    // No run manager exists yet. A different factory can still be tried.
+    std::lock_guard lock(m_mutex);
+    m_created = false;
+    throw;
+  }
+  return makeHandle(std::move(list), physicsList);
 }
 
 std::shared_ptr<Geant4Handle> Geant4Manager::createHandle(
     std::unique_ptr<G4VUserPhysicsList> physicsList,
     std::string physicsListName) {
-  if (!m_handle.expired()) {
-    throw std::runtime_error("creating a second handle is prohibited");
+  if (!physicsList) {
+    throw std::invalid_argument("physicsList cannot be null");
   }
+  reserveRunManager();
+  return makeHandle(std::move(physicsList), std::move(physicsListName));
+}
+
+void Geant4Manager::reserveRunManager() {
+  std::lock_guard lock(m_mutex);
   if (m_created) {
     throw std::runtime_error(
-        "creating a new handle is prohibited. you have to hold onto the "
-        "first one.");
+        "Geant4 run manager already created in this process");
   }
+  m_created = true;
+}
 
+std::shared_ptr<Geant4Handle> Geant4Manager::makeHandle(
+    std::unique_ptr<G4VUserPhysicsList> physicsList,
+    std::string physicsListName) {
   auto runManager = std::make_unique<Geant4::RunManager>();
 
   auto handle = std::make_shared<Geant4Handle>(std::move(runManager),
                                                std::move(physicsList),
                                                std::move(physicsListName));
 
-  m_created = true;
+  std::lock_guard lock(m_mutex);
   m_handle = handle;
   return handle;
 }
@@ -130,6 +151,10 @@ std::shared_ptr<Geant4Handle> Geant4Manager::createHandle(
 void Geant4Manager::registerPhysicsListFactory(
     std::string name,
     std::shared_ptr<Geant4::PhysicsListFactory> physicsListFactory) {
+  if (!physicsListFactory) {
+    throw std::invalid_argument("Physics list factory cannot be null");
+  }
+  std::lock_guard lock(m_mutex);
   if (m_physicsListFactories.contains(name)) {
     throw std::invalid_argument("name already mapped");
   }
@@ -139,11 +164,20 @@ void Geant4Manager::registerPhysicsListFactory(
 
 std::unique_ptr<G4VUserPhysicsList> Geant4Manager::createPhysicsList(
     const std::string& name) const {
-  auto it = m_physicsListFactories.find(name);
-  if (it == m_physicsListFactories.end()) {
-    throw std::invalid_argument("name not mapped");
+  std::shared_ptr<Geant4::PhysicsListFactory> factory;
+  {
+    std::lock_guard lock(m_mutex);
+    const auto it = m_physicsListFactories.find(name);
+    if (it == m_physicsListFactories.end()) {
+      throw std::invalid_argument("name not mapped");
+    }
+    factory = it->second;
   }
-  return it->second->factorize();
+  auto physics = factory->factorize();
+  if (!physics) {
+    throw std::invalid_argument("Physics list factory returned null");
+  }
+  return physics;
 }
 
 const std::unordered_map<std::string,

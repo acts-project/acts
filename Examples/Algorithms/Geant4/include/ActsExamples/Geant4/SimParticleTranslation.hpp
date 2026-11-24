@@ -18,6 +18,7 @@
 #include <G4VUserPrimaryGeneratorAction.hh>
 
 class G4Event;
+class G4Track;
 
 namespace ActsExamples::Geant4 {
 
@@ -35,6 +36,9 @@ class SimParticleTranslation final : public G4VUserPrimaryGeneratorAction {
   /// input particle collection name,
   struct Config {
     std::shared_ptr<EventContext> eventContext;
+
+    /// Keep event numbering assigned by the native Geant4 run manager.
+    bool preserveGeant4EventId = false;
 
     /// Force pdgCode & mass & charge in G4 units (this is needed for Geantino
     /// simulation)
@@ -61,10 +65,19 @@ class SimParticleTranslation final : public G4VUserPrimaryGeneratorAction {
   /// @param eventPtr is the event that will be run
   void GeneratePrimaries(G4Event* eventPtr) override;
 
+  /// Find the ACTS source of a primary or a generator-prescribed daughter.
+  static const SimParticle* sourceParticle(const G4Track& track);
+
+  /// Apply the generator masses and restore nested daughters after Geant4's
+  /// primary conversion and decay-product copying.
+  static void prepareDecay(const G4Track& track);
+
  protected:
   Config m_cfg;
 
  private:
+  void addPrimaries(G4Event& event);
+
   /// Event number cache for EventStore harmonization
   unsigned int m_eventNr = 0;
 

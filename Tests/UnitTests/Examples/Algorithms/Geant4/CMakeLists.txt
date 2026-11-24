@@ -39,3 +39,21 @@ set(unittest_extra_libraries ActsExamplesGeant4 ActsExamplesDetectorTelescope)
 add_unittest(Geant4SimulationActions Geant4SimulationActionsTests.cpp)
 
 add_unittest(Geant4Session Geant4SessionTests.cpp)
+
+if(Geant4_multithreaded_FOUND)
+    add_unittest(Geant4NativeSimulationSession NativeSimulationSessionTests.cpp)
+    add_test(
+        NAME Geant4NativeSimulationEmpty
+        COMMAND ActsUnitTestGeant4NativeSimulationSession -- empty
+    )
+    add_test(
+        NAME Geant4NativeSimulationStartupFailure
+        COMMAND ActsUnitTestGeant4NativeSimulationSession -- startup-failure
+    )
+    set_tests_properties(
+        Geant4NativeSimulationSession
+        Geant4NativeSimulationEmpty
+        Geant4NativeSimulationStartupFailure
+        PROPERTIES ENVIRONMENT "G4FORCENUMBEROFTHREADS=2" TIMEOUT 60
+    )
+endif()
