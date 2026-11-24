@@ -162,7 +162,7 @@ auto hough_transform_seeding_algorithm::operator()(
   // ---------------------------------------------------
   vecmem::data::jagged_vector_buffer<scalar> images(
       std::vector<unsigned int>(total_maxima, 32 * 32), mr().main, mr().host,
-      vecmem::data::buffer_type::resizable);
+      vecmem::data::buffer_type::fixed_size);
   vecmem::data::vector_buffer<scalar> maxima_x_value(total_maxima, mr().main);
 
   copy().setup(vecmem::ignore_event, maxima_x_value);
@@ -215,7 +215,7 @@ auto hough_transform_seeding_algorithm::operator()(
 
   vecmem::data::jagged_vector_buffer<scalar> matrices(
       matrices_sizes, mr().main, mr().host,
-      vecmem::data::buffer_type::resizable);
+      vecmem::data::buffer_type::fixed_size);
   copy().setup(vecmem::ignore_event, matrices);
 
   unsigned int max_hits = 0u;
