@@ -24,6 +24,7 @@
 #include "Acts/Propagator/detail/AbortConditions.hpp"
 #include "Acts/Propagator/detail/LoopProtection.hpp"
 #include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
+#include "Acts/TrackFitting/KalmanFitterError.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -462,6 +463,10 @@ class ReferenceTrajectoryBuilder {
 
   /// Update the track states in the trajectory using the provided updater. The
   /// updater is called for each track state that has a measurement.
+  /// Predictions initially contain the reference trajectory. This method
+  /// consumes them: rebuild the reference trajectory before filtering again.
+  /// Corrections are local linear approximations about that trajectory; large
+  /// changes require rebuilding its transport Jacobians.
   /// @tparam track_proxy_t The type of the track proxy
   /// @param geoContext The geometry context to be passed to the updater
   /// @param trackProxy The track proxy whose track states will be updated
@@ -475,15 +480,36 @@ class ReferenceTrajectoryBuilder {
     BoundMatrix predictedCovariance = BoundMatrix::Zero();
 
     for (auto trackState : trackProxy.trackStates()) {
+      const auto parametrization =
+          trackState.referenceSurface().boundParametrization(geoContext);
+      const BoundVector reference = trackState.predicted();
+      if (!reference.allFinite()) {
+        return KalmanFitterError::UpdateFailed;
+      }
       if (lastTrackState.has_value()) {
         // Transport the last delta to the current surface using the Jacobian of
         // the track state
 
         accumulatedBoundDeltas = trackState.jacobian() * accumulatedBoundDeltas;
-        trackState.predicted() += accumulatedBoundDeltas;
+        const BoundVector updated = reference + accumulatedBoundDeltas;
 
         predictedCovariance = trackState.jacobian() * predictedCovariance *
                               trackState.jacobian().transpose();
+        if (!updated.allFinite() || !predictedCovariance.allFinite()) {
+          return KalmanFitterError::UpdateFailed;
+        }
+        const auto canonical =
+            parametrization.canonicalize(updated, predictedCovariance);
+        if (!canonical.ok()) {
+          return canonical.error();
+        }
+        const auto basisChange =
+            parametrization.canonicalizationJacobian(updated);
+        // Store the transport into the same basis as the new prediction, for
+        // subsequent smoothing. The reference Jacobian has already been used.
+        trackState.jacobian() = (*basisChange) * trackState.jacobian();
+        trackState.predicted() = canonical->first;
+        predictedCovariance = canonical->second;
 
         {
           const FreeVector freeParams = transformBoundToFreeParameters(
@@ -509,8 +535,7 @@ class ReferenceTrajectoryBuilder {
                   freeParams[eFreeQOverP], true, true, true);
 
           const auto noise = detail::scatteringNoise(
-              trackState.referenceSurface().boundParametrization(geoContext),
-              freeParams.segment<3>(eFreeDir0),
+              parametrization, freeParams.segment<3>(eFreeDir0),
               materialEffects.scatteringVariance);
           if (!noise.ok()) {
             return noise.error();
@@ -538,7 +563,14 @@ class ReferenceTrajectoryBuilder {
       }
 
       lastTrackState = trackState;
-      accumulatedBoundDeltas += trackState.filtered() - trackState.predicted();
+      // Recompute against the original reference, rather than accumulating
+      // differences across independently wrapped coordinate branches.
+      if (!trackState.filtered().allFinite() ||
+          !trackState.filteredCovariance().allFinite()) {
+        return KalmanFitterError::UpdateFailed;
+      }
+      accumulatedBoundDeltas =
+          parametrization.difference(trackState.filtered(), reference);
       predictedCovariance = trackState.filteredCovariance();
 
       {
@@ -564,8 +596,7 @@ class ReferenceTrajectoryBuilder {
                 freeParams[eFreeQOverP], true, true, true);
 
         const auto noise = detail::scatteringNoise(
-            trackState.referenceSurface().boundParametrization(geoContext),
-            freeParams.segment<3>(eFreeDir0),
+            parametrization, freeParams.segment<3>(eFreeDir0),
             materialEffects.scatteringVariance);
         if (!noise.ok()) {
           return noise.error();
