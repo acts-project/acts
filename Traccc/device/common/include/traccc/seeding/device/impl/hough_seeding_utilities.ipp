@@ -97,7 +97,7 @@ inline bool is_local_maximum(const global_index_t globalIndex,
         continue;
       }
 
-      const auto neighbor_value = plane[neighbor_index];
+      const unsigned int neighbor_value = plane[neighbor_index];
       const bool strict = (dx == -1) || (dx == 0 && dy == 1);
       if (neighbor_value > value || (strict && neighbor_value == value)) {
         return false;
