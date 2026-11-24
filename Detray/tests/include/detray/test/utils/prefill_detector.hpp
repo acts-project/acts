@@ -23,6 +23,8 @@ namespace detray {
 
 /// Adds a few surfaces to the detector for testing the builder code on
 /// non-empty detectors
+/// @param d Detector to populate.
+/// @param ctx Geometry context used while building the surfaces.
 template <concepts::detector detector_t>
 void prefill_detector(detector_t& d,
                       typename detector_t::geometry_context ctx) {
@@ -57,7 +59,7 @@ void prefill_detector(detector_t& d,
 
   rectangle_factory->push_back({surface_id::e_sensitive,
                                 transform3_t(point3_t{0.f, 0.f, 0.f}), vol_link,
-                                std::vector<scalar_t>{-3.f, 3.f}});
+                                std::vector<scalar_t>{-3.f, -3.f, 3.f, 3.f}});
   rectangle_factory->add_material(
       material_id::e_material_slab,
       {3.f * unit<scalar_t>::mm, detray::gold<scalar_t>()});

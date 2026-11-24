@@ -36,18 +36,8 @@ if(PROJECT_IS_TOP_LEVEL)
 
     # Make CUDA generate debug symbols for the device code as well in a debug
     # build.
-    detray_add_flag(CMAKE_CUDA_FLAGS_DEBUG "-G -src-in-ptx")
-    detray_add_flag(CMAKE_CUDA_FLAGS_RELWITHDEBINFO "-lineinfo -src-in-ptx")
-
-    # Fail on warnings, if asked for that behaviour.
-    if(DETRAY_FAIL_ON_WARNINGS)
-        if(
-            ("${CUDAToolkit_VERSION}" VERSION_GREATER_EQUAL "10.2")
-            AND ("${CMAKE_CUDA_COMPILER_ID}" MATCHES "NVIDIA")
-        )
-            detray_add_flag(CMAKE_CUDA_FLAGS "-Werror all-warnings")
-        elseif("${CMAKE_CUDA_COMPILER_ID}" MATCHES "Clang")
-            detray_add_flag(CMAKE_CUDA_FLAGS "-Werror")
-        endif()
-    endif()
+    detray_add_flag( CMAKE_CUDA_FLAGS_DEBUG "-G -src-in-ptx" )
+    detray_add_flag( CMAKE_CUDA_FLAGS_RELWITHDEBINFO "-lineinfo -src-in-ptx" )
 endif()
+
+acts_apply_warning_flags(CUDA ${DETRAY_FAIL_ON_WARNINGS})

@@ -13,3 +13,29 @@
     not defined(SYCL_LANGUAGE_VERSION) && not defined(__HIP__)
 #define __NO_DEVICE__
 #endif
+
+// Define a macro that hints a pointer is in global memory
+#ifdef __CUDA_ARCH__
+#define DETRAY_ASSUME_PTR_GLOBAL(p) __builtin_assume(__isGlobal(p))
+#else
+#define DETRAY_ASSUME_PTR_GLOBAL(p)
+#endif
+
+// Assume that a boolean expression is always true.
+#if defined(__NVCC__)
+#if defined(__CUDA_ARCH__)
+#define DETRAY_ASSUME(...) __builtin_assume(__VA_ARGS__)
+#else
+#define DETRAY_ASSUME(...) static_cast<void>(0)
+#endif
+#elif defined(__has_builtin)
+#if __has_builtin(__builtin_assume)
+#define DETRAY_ASSUME(...) __builtin_assume(__VA_ARGS__)
+#elif defined(__GNUC__) && not defined(__clang__) && __GNUC__ >= 13
+#define DETRAY_ASSUME(...) __attribute__((assume(__VA_ARGS__)))
+#else
+#define DETRAY_ASSUME(...) static_cast<void>(0)
+#endif
+#else
+#define DETRAY_ASSUME(...) static_cast<void>(0)
+#endif

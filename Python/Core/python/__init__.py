@@ -71,6 +71,12 @@ class with_log_threshold:
 
 @staticmethod
 def _decoratorFromFile(file: Union[str, Path], **kwargs):
+    warnings.warn(
+        "IMaterialDecorator.fromFile is deprecated; load material with "
+        "TrackingGeometryMaterialJsonConverter.fromFile() and apply it to the geometry.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     if isinstance(file, str):
         file = Path(file)
 

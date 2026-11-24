@@ -119,6 +119,22 @@ TGeoBlueprintBuilderBackend::lookupLayerTransform(
       layerSpec.layerAxes.value(), m_cfg.lengthScale);
 }
 
+Acts::Volume TGeoBlueprintBuilderBackend::passiveVolume(
+    const Element& element) const {
+  auto volume = TGeoSurfaceConverter::cylinderVolume(
+      *nodeOf(element).GetVolume()->GetShape(), transformOf(element),
+      m_cfg.lengthScale);
+  if (!volume.has_value()) {
+    ACTS_ERROR("Element '" << pathOf(element)
+                           << "' shape could not be converted to either a "
+                              "cylinder or a disc.");
+    throw std::runtime_error(
+        "Passive element shape could not be converted to either a cylinder "
+        "or a disc.");
+  }
+  return *volume;
+}
+
 TGeoBlueprintBuilderBackend::Element TGeoBlueprintBuilderBackend::world()
     const {
   return m_world;

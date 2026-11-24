@@ -31,12 +31,14 @@
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 #include "Acts/Utilities/TransformHelpers.hpp"
 #include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsTests/CommonHelpers/SurfaceDerivatives.hpp"
 
 #include <cmath>
 #include <memory>
@@ -233,7 +235,11 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceEqualityOperators) {
   /// Test assignment
   auto assignedPlaneSurface =
       Surface::makeShared<PlaneSurface>(Transform3::Identity(), nullptr);
+  // TODO: surface copy-assignment is deprecated; switch to a makeShared copy
+  // when it is removed (SonarCloud cpp:S3624).
+  ACTS_PUSH_IGNORE_DEPRECATED()
   *assignedPlaneSurface = *planeSurfaceObject;
+  ACTS_POP_IGNORE_DEPRECATED()
 
   /// Test equality of assigned to original
   BOOST_CHECK(*assignedPlaneSurface == *planeSurfaceObject);
@@ -353,9 +359,9 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceAlignment) {
   const AlignmentToPathMatrix& alignToPath =
       planeSurfaceObject->alignmentToPathDerivative(tgContext, globalPosition,
                                                     direction);
-  // The expected results
+  // The expected results (local translations along local x/y/z)
   AlignmentToPathMatrix expAlignToPath = AlignmentToPathMatrix::Zero();
-  expAlignToPath << 1, 0, 0, 2, -1, 0;
+  expAlignToPath << 0, 0, 1, 2, -1, 0;
 
   // Check if the calculated derivative is as expected
   CHECK_CLOSE_ABS(alignToPath, expAlignToPath, 1e-10);
@@ -363,8 +369,8 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceAlignment) {
   // (b) Test the derivative of bound track parameters local position w.r.t.
   // position in local 3D Cartesian coordinates
   const auto& loc3DToLocBound =
-      planeSurfaceObject->localCartesianToBoundLocalDerivative(tgContext,
-                                                               globalPosition);
+      planeSurfaceObject->localCartesianToBoundLocalDerivative(
+          tgContext, globalPosition, direction);
   // For plane surface, this should be identity matrix
   CHECK_CLOSE_ABS(loc3DToLocBound, (Matrix<2, 3>::Identity()), 1e-10);
 
@@ -379,14 +385,20 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceAlignment) {
       alignToBound.block<1, 6>(eBoundLoc0, eAlignmentCenter0);
   const AlignmentToPathMatrix alignToloc1 =
       alignToBound.block<1, 6>(eBoundLoc1, eAlignmentCenter0);
-  // The expected results
+  // The expected results (local translations along local x/y/z)
   AlignmentToPathMatrix expAlignToloc0;
-  expAlignToloc0 << 0, 0, 1, 0, 0, 2;
+  expAlignToloc0 << -1, 0, 0, 0, 0, 2;
   AlignmentToPathMatrix expAlignToloc1;
   expAlignToloc1 << 0, -1, 0, 0, 0, -1;
   // Check if the calculated derivatives are as expected
   CHECK_CLOSE_ABS(alignToloc0, expAlignToloc0, 1e-10);
   CHECK_CLOSE_ABS(alignToloc1, expAlignToloc1, 1e-10);
+
+  checkSurfaceDerivatives(tgContext, *planeSurfaceObject, pTransform,
+                          globalPosition, direction, [&](const Transform3& tf) {
+                            return Surface::makeShared<PlaneSurface>(tf,
+                                                                     rBounds);
+                          });
 }
 
 BOOST_AUTO_TEST_SUITE(PlaneSurfaceMerging)
@@ -596,6 +608,66 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceMaterialAssignment) {
     BOOST_CHECK_THROW(surface->assignSurfaceMaterial(matBad),
                       std::invalid_argument);
   }
+}
+
+/// Unit test for PlaneSurface::contains
+BOOST_AUTO_TEST_CASE(PlaneSurfaceContains) {
+  auto rectangle = [](const Transform3& transform, double halfX, double halfY) {
+    return Surface::makeShared<PlaneSurface>(
+        transform, std::make_shared<const RectangleBounds>(halfX, halfY));
+  };
+  auto shifted = [](const Vector3& shift) {
+    return Transform3{Translation3{shift}};
+  };
+  const Transform3 identity = Transform3::Identity();
+  auto plane = rectangle(identity, 10_mm, 5_mm);
+
+  BOOST_CHECK(plane->contains(tgContext, *plane));
+  BOOST_CHECK(plane->contains(
+      tgContext, *rectangle(shifted({5_mm, 2_mm, 0}), 4_mm, 2_mm)));
+  BOOST_CHECK(!plane->contains(tgContext,
+                               *rectangle(shifted({7_mm, 0, 0}), 4_mm, 2_mm)));
+  // The larger plane is not contained in the smaller one
+  BOOST_CHECK(!rectangle(identity, 4_mm, 2_mm)->contains(tgContext, *plane));
+
+  // Bounds are compared in the frame of this plane
+  const Transform3 rotated{AngleAxis3{std::numbers::pi / 2., Vector3::UnitZ()}};
+  BOOST_CHECK(plane->contains(tgContext, *rectangle(rotated, 4_mm, 9_mm)));
+  BOOST_CHECK(!plane->contains(tgContext, *rectangle(identity, 4_mm, 9_mm)));
+
+  // The orientation of the normal does not matter
+  const Transform3 flipped{AngleAxis3{std::numbers::pi, Vector3::UnitX()}};
+  BOOST_CHECK(plane->contains(tgContext, *rectangle(flipped, 4_mm, 2_mm)));
+
+  // Not on the same plane
+  BOOST_CHECK(!plane->contains(tgContext,
+                               *rectangle(shifted({0, 0, 1_mm}), 4_mm, 2_mm)));
+  const Transform3 tilted{AngleAxis3{0.1, Vector3::UnitX()}};
+  BOOST_CHECK(!plane->contains(tgContext, *rectangle(tilted, 4_mm, 2_mm)));
+
+  // Equal edges are contained within the tolerance
+  BOOST_CHECK(plane->contains(tgContext,
+                              *rectangle(shifted({1e-6, 0, 0}), 10_mm, 5_mm)));
+  BOOST_CHECK(!plane->contains(tgContext,
+                               *rectangle(shifted({1e-3, 0, 0}), 10_mm, 5_mm)));
+
+  // Two halves of the plane do not contain each other
+  auto left = rectangle(shifted({-5_mm, 0, 0}), 5_mm, 5_mm);
+  auto right = rectangle(shifted({5_mm, 0, 0}), 5_mm, 5_mm);
+  BOOST_CHECK(plane->contains(tgContext, *left));
+  BOOST_CHECK(plane->contains(tgContext, *right));
+  BOOST_CHECK(!left->contains(tgContext, *right));
+
+  // Other polygons
+  auto trapezoid = Surface::makeShared<PlaneSurface>(
+      identity, std::make_shared<const TrapezoidBounds>(2_mm, 4_mm, 3_mm));
+  BOOST_CHECK(plane->contains(tgContext, *trapezoid));
+  BOOST_CHECK(!trapezoid->contains(tgContext, *plane));
+
+  // Unbounded planes are not supported
+  auto infinite = Surface::makeShared<PlaneSurface>(identity);
+  BOOST_CHECK(!infinite->contains(tgContext, *plane));
+  BOOST_CHECK(!plane->contains(tgContext, *infinite));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

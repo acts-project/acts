@@ -1,0 +1,171 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+#include <boost/test/unit_test.hpp>
+
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/BoundTrackParameters.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/Propagator/Navigator.hpp"
+#include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/PropagatorError.hpp"
+#include "Acts/Propagator/StraightLineStepper.hpp"
+#include "Acts/Surfaces/CurvilinearSurface.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
+#include "ActsTests/CommonHelpers/CylindricalTrackingGeometry.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
+
+#include <cstdint>
+#include <optional>
+
+using namespace Acts;
+using namespace Acts::UnitLiterals;
+
+namespace ActsTests {
+
+namespace {
+
+const auto gctx = GeometryContext::dangerouslyDefaultConstruct();
+const MagneticFieldContext mctx;
+
+using TestPropagator = Propagator<StraightLineStepper, Navigator>;
+
+// The builder owns the detector elements, so it must outlive the geometry
+CylindricalTrackingGeometry geometryBuilder(gctx);
+const auto geometry = geometryBuilder();
+
+TestPropagator makePropagator() {
+  return TestPropagator(StraightLineStepper(), Navigator({geometry}));
+}
+
+// A straight track from the origin out of the barrel
+const BoundTrackParameters start = BoundTrackParameters::createCurvilinear(
+    Vector4::Zero(), Vector3::UnitX(), 1 / 1_GeV, std::nullopt,
+    ParticleHypothesis::pion());
+
+// The path limit is far outside the world
+constexpr double farPathLimit = 50_m;
+
+double propagatePathLength(const TestPropagator::Options<>& options) {
+  auto result = makePropagator().propagate(start, options);
+  BOOST_REQUIRE(result.ok());
+  return result->pathLength;
+}
+
+}  // namespace
+
+BOOST_AUTO_TEST_SUITE(PropagatorSuite)
+
+BOOST_AUTO_TEST_CASE(DefaultActorPathLimit) {
+  TestPropagator::Options<> options(gctx, mctx);
+  options.pathLimit = 10_cm;
+
+  CHECK_CLOSE_ABS(propagatePathLength(options), 10_cm, 1_um);
+}
+
+BOOST_AUTO_TEST_CASE(DefaultActorEndOfWorld) {
+  TestPropagator::Options<> options(gctx, mctx);
+  options.pathLimit = farPathLimit;
+
+  // By default the propagation stops at the end of the world
+  BOOST_CHECK_LT(propagatePathLength(options), farPathLimit);
+
+  options.stopAtEndOfWorld = false;
+  CHECK_CLOSE_ABS(propagatePathLength(options), farPathLimit, 1_um);
+}
+
+BOOST_AUTO_TEST_CASE(DefaultActorTargetOutsideWorld) {
+  TestPropagator::Options<> options(gctx, mctx);
+  options.pathLimit = farPathLimit;
+
+  // A plane far outside the world, on the straight path of the track
+  const auto target =
+      CurvilinearSurface(10_m * Vector3::UnitX(), Vector3::UnitX())
+          .planeSurface();
+
+  auto stopped = makePropagator().propagate(start, *target, options);
+  BOOST_REQUIRE(!stopped.ok());
+  BOOST_CHECK(stopped.error() == PropagatorError::TargetNotReached);
+
+  // Also without final parameters
+  const auto propagator = makePropagator();
+  auto state = propagator.makeState(options);
+  auto stoppedNoParameters =
+      propagator.propagate(state, start, target.get(), false);
+  BOOST_REQUIRE(!stoppedNoParameters.ok());
+  BOOST_CHECK(stoppedNoParameters.error() == PropagatorError::TargetNotReached);
+
+  options.stopAtEndOfWorld = false;
+  auto reached = makePropagator().propagate(start, *target, options);
+  BOOST_REQUIRE(reached.ok());
+  CHECK_CLOSE_ABS(reached->pathLength, 10_m, 1_um);
+}
+
+BOOST_AUTO_TEST_CASE(DefaultActorTargetOutsideVolumeConstraint) {
+  TestPropagator::Options<> options(gctx, mctx);
+  options.pathLimit = farPathLimit;
+  options.stopAtEndOfWorld = false;
+
+  const auto startVolume =
+      geometry->resolveLowestTrackingVolume(gctx, start.position(gctx));
+  BOOST_REQUIRE(startVolume.ok());
+  options.constrainToVolumeIds = {
+      static_cast<std::uint32_t>((*startVolume)->geometryId().volume())};
+
+  // The volume constraint stops the propagation before the target
+  const auto target =
+      CurvilinearSurface(10_m * Vector3::UnitX(), Vector3::UnitX())
+          .planeSurface();
+  auto stopped = makePropagator().propagate(start, *target, options);
+  BOOST_REQUIRE(!stopped.ok());
+  BOOST_CHECK(stopped.error() == PropagatorError::TargetNotReached);
+}
+
+BOOST_AUTO_TEST_CASE(DefaultActorReusedState) {
+  TestPropagator::Options<> options(gctx, mctx);
+  options.pathLimit = 10_cm;
+
+  const auto propagator = makePropagator();
+  auto state = propagator.makeState(options);
+  auto first = propagator.propagate(state, start);
+  BOOST_REQUIRE(first.ok());
+  state.navigation.statistics.nRenavigations = 42;
+  auto second = propagator.propagate(state, start);
+  BOOST_REQUIRE(second.ok());
+
+  // The second run starts its counters from zero
+  CHECK_CLOSE_ABS(second->pathLength, 10_cm, 1_um);
+  BOOST_CHECK_EQUAL(second->steps, first->steps);
+  BOOST_CHECK_EQUAL(second->statistics.stepping.nSuccessfulSteps,
+                    first->statistics.stepping.nSuccessfulSteps);
+  BOOST_CHECK_EQUAL(second->statistics.navigation.nRenavigations,
+                    first->statistics.navigation.nRenavigations);
+}
+
+BOOST_AUTO_TEST_CASE(DefaultActorVolumeConstraint) {
+  TestPropagator::Options<> options(gctx, mctx);
+  options.pathLimit = farPathLimit;
+  const double endOfWorldPathLength = propagatePathLength(options);
+
+  // Stop when the track leaves the volume it starts in
+  const auto startVolume =
+      geometry->resolveLowestTrackingVolume(gctx, start.position(gctx));
+  BOOST_REQUIRE(startVolume.ok());
+  options.constrainToVolumeIds = {
+      static_cast<std::uint32_t>((*startVolume)->geometryId().volume())};
+
+  BOOST_CHECK_LT(propagatePathLength(options), endOfWorldPathLength);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

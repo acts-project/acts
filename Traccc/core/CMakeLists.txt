@@ -71,9 +71,6 @@ traccc_add_library( traccc_core core TYPE SHARED
   "include/traccc/utils/logging.hpp"
   "include/traccc/utils/prob.hpp"
   "src/utils/logging.cpp"
-  # Clusterization algorithmic code.
-  "include/traccc/clusterization/details/sparse_ccl.hpp"
-  "include/traccc/clusterization/impl/sparse_ccl.ipp"
   # Finding algorithmic code
   "include/traccc/finding/actors/ckf_aborter.hpp"
   "include/traccc/finding/actors/measurement_kalman_updater.hpp"
@@ -103,12 +100,14 @@ traccc_add_library( traccc_core core TYPE SHARED
   "include/traccc/seeding/detail/seeding_config.hpp"
   "include/traccc/seeding/detail/spacepoint_grid.hpp"
   "include/traccc/seeding/seed_selecting_helper.hpp"
+  "include/traccc/seeding/detail/strip_spacepoint_calibration.hpp"
   "include/traccc/seeding/track_params_estimation_helper.hpp"
   "include/traccc/seeding/doublet_finding_helper.hpp"
   "include/traccc/seeding/spacepoint_binning_helper.hpp"
   "include/traccc/seeding/triplet_finding_helper.hpp"
   "include/traccc/seeding/detail/spacepoint_formation.hpp"
   "include/traccc/seeding/impl/spacepoint_formation.ipp"
+  "include/traccc/seeding/detail/hough_seeding_config.hpp"
   #gbts seed finding config
   "include/traccc/gbts_seeding/gbts_seeding_config.hpp"
   "src/gbts_seeding/gbts_seeding_config.cpp"

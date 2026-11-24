@@ -20,6 +20,7 @@
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Material/detail/MaterialSurfaceRegistry.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsPlugins/Json/IVolumeMaterialJsonDecorator.hpp"
 #include "ActsPlugins/Json/JsonMaterialDecorator.hpp"
@@ -33,6 +34,9 @@
 #include <memory>
 
 #include <nlohmann/json.hpp>
+
+// These tests intentionally exercise the deprecated material format.
+ACTS_PUSH_IGNORE_DEPRECATED()
 
 namespace Acts {
 class IVolumeMaterial;
@@ -287,3 +291,5 @@ BOOST_AUTO_TEST_CASE(KeyedJsonDecoratorRejectsGen1Construction) {
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace ActsTests
+
+ACTS_POP_IGNORE_DEPRECATED()

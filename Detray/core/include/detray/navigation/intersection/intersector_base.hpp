@@ -34,23 +34,31 @@ struct intersector_base : public intersector_t {
   /// linear algebra types
   /// @{
   using algebra_type = typename intersector_t::algebra_type;
+  /// Scalar value type for the configured algebra layout.
   using value_type = dvalue<algebra_type>;
+  /// Scalar calculation type for the configured algebra layout.
   using scalar_type = dscalar<algebra_type>;
+  /// Two-dimensional point type for the configured algebra layout.
   using point2_type = dpoint2D<algebra_type>;
+  /// Three-dimensional point type for the configured algebra layout.
   using point3_type = dpoint3D<algebra_type>;
+  /// Three-dimensional vector type for the configured algebra layout.
   using vector3_type = dvector3D<algebra_type>;
+  /// Transform type used to place the surface in 3D.
   using transform3_type = dtransform3D<algebra_type>;
   /// @}
 
+  /// Intersection result type associated with a surface descriptor.
   template <typename surface_descr_t>
   using intersection_type =
       typename intersector_t::template intersection_type<surface_descr_t>;
 
+  /// Trajectory representation accepted for the requested algebra layout.
   template <typename other_algebra_t>
   using trajectory_type =
       typename intersector_t::template trajectory_type<other_algebra_t>;
 
-  // Maximum number of solutions this intersector can produce
+  /// Maximum number of solutions this intersector can produce
   static constexpr std::uint8_t n_solutions{intersector_t::n_solutions};
 
   /// Always includes the intersection position, in order to resolve the mask
@@ -61,17 +69,16 @@ struct intersector_base : public intersector_t {
   /// @tparam surface_descr_t is the type of surface handle
   /// @tparam mask_t is the input mask type
   ///
-  /// @param ray is the input ray trajectory
-  /// @param sf the surface handle the mask is associated with
-  /// @param mask is the input mask that defines the surface extent
-  /// @param trf is the surface placement transform
-  /// @param mask_tolerance is the tolerance for mask edges
-  /// @param overstep_tol negative cutoff for the path
-  ///
-  /// @returns the intersection
   /// @{
 
   /// Shapes that produce one solution
+  /// @param traj Trajectory to intersect with the surface.
+  /// @param sf Surface descriptor associated with the mask.
+  /// @param mask Surface mask used to classify the candidate point.
+  /// @param trf Transform from the surface frame to the global frame.
+  /// @param cfg Intersection tolerances and path cutoff.
+  /// @param external_mask_tol Additional tolerance for the mask boundary.
+  /// @returns The resolved intersection, including mask status.
   template <typename surface_descr_t, typename mask_t,
             concepts::algebra other_algebra_t, std::uint8_t N = n_solutions>
     requires(N == 1u)
@@ -90,6 +97,13 @@ struct intersector_base : public intersector_t {
   }
 
   /// Shapes that produce multiple solutions
+  /// @param traj Trajectory to intersect with the surface.
+  /// @param sf Surface descriptor associated with the mask.
+  /// @param mask Surface mask used to classify each candidate point.
+  /// @param trf Transform from the surface frame to the global frame.
+  /// @param cfg Intersection tolerances and path cutoff.
+  /// @param external_mask_tol Additional tolerance for the mask boundary.
+  /// @returns The resolved intersection candidates.
   template <typename surface_descr_t, typename mask_t,
             concepts::algebra other_algebra_t, std::uint8_t N = n_solutions>
     requires(N > 1u)
@@ -119,6 +133,13 @@ struct intersector_base : public intersector_t {
   /// @}
 
   /// Interface that uses fixed mask tolerance
+  /// @param traj Trajectory to intersect with the surface.
+  /// @param sf Surface descriptor associated with the mask.
+  /// @param mask Mask defining the finite extent of the surface.
+  /// @param trf Transform from the surface frame to the global frame.
+  /// @param mask_tolerance Fixed tolerance used to classify the mask boundary.
+  /// @param overstep_tol Minimum accepted signed path length.
+  /// @returns The resolved intersection result or results.
   template <typename surface_descr_t, typename mask_t,
             concepts::algebra other_algebra_t>
   DETRAY_HOST_DEVICE constexpr decltype(auto) operator()(
@@ -153,13 +174,14 @@ struct intersector_base : public intersector_t {
 
 /// @brief Fill an intersection with the result of the intersection alg.
 ///
-/// @param [out] sfi the surface intersection
-/// @param [in] traj the test trajectory that intersects the surface
-/// @param [in] s path length to the intersection point
-/// @param [in] mask the mask of the surface
-/// @param [in] trf the transform of the surface
-/// @param [in] mask_tol_scalor scale factor for adaptive mask tolerance
-/// @param [in] mask_tolerance minimal and maximal mask tolerance
+/// @param is Intersection object to populate.
+/// @param traj Trajectory used to evaluate the global intersection position.
+/// @param ip Geometric intersection candidate returned by the intersector.
+/// @param sf_desc Surface descriptor associated with the mask.
+/// @param mask Mask used to classify the candidate's local position.
+/// @param trf Transform from the surface frame to the global frame.
+/// @param cfg Tolerances and path cutoff used for classification.
+/// @param external_mask_tolerance Additional tolerance for the mask boundary.
 template <typename intersection_t, typename trajectory_t,
           concepts::algebra algebra_t, concepts::point point_t,
           typename surface_descr_t, typename mask_t,

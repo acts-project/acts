@@ -312,3 +312,21 @@ def test_particle_hypothesis():
     assert str(proton) == "ParticleHypothesis{absPdg=p, mass=0.938272, absCharge=1}"
     assert str(geantino) == "ParticleHypothesis{absPdg=0, mass=0, absCharge=0}"
     assert str(chargedGeantino) == "ParticleHypothesis{absPdg=0, mass=0, absCharge=1}"
+
+
+def test_bound_track_parameters_particle_hypothesis():
+    pion = acts.ParticleHypothesis.pion
+    electron = acts.ParticleHypothesis.electron
+
+    params = acts.BoundTrackParameters.createCurvilinear(
+        acts.Vector4(1, 2, 3, 4), acts.Vector3(1, 0, 0), 0.5, None, pion
+    )
+
+    copy = params.withParticleHypothesis(electron)
+    assert str(copy.particleHypothesis) == str(electron)
+    assert str(params.particleHypothesis) == str(pion)
+    assert list(copy.parameters) == list(params.parameters)
+
+    params.particleHypothesis = electron
+    assert str(params.particleHypothesis) == str(electron)
+    assert list(params.parameters) == list(copy.parameters)

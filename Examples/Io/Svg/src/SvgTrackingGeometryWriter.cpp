@@ -15,7 +15,8 @@ namespace ActsExamples {
 
 SvgTrackingGeometryWriter::SvgTrackingGeometryWriter(
     const SvgTrackingGeometryWriter::Config& config, Acts::Logging::Level level)
-    : m_logger{Acts::getDefaultLogger(name(), level)}, m_cfg(config) {}
+    : m_logger{Acts::getDefaultLogger("SvgTrackingGeometryWriter", level)},
+      m_cfg(config) {}
 
 std::string SvgTrackingGeometryWriter::name() const {
   return "SvgTrackingGeometryWriter";

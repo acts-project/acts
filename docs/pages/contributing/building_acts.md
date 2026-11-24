@@ -3,7 +3,7 @@
 # Quick start
 
 ACTS is developed in C++ and is built using [CMake](https://cmake.org). Building
-the core library requires a C++20 compatible compiler,
+the core library requires a C++23 compatible compiler,
 [Boost](https://www.boost.org), and [Eigen](https://eigen.tuxfamily.org). The
 following commands will clone the repository, configure, and build the core
 library:
@@ -14,8 +14,7 @@ cmake -B <build> -S <source>
 cmake --build <build>
 ```
 
-The default C++ standard is C++23. To build in the supported C++20 mode,
-configure with `-DCMAKE_CXX_STANDARD=20` and use dependencies built for C++20.
+The minimum and default C++ standard is C++23. Use dependencies built for C++23.
 
 For a full list of dependencies, including specific versions, see the
 [Prerequisites](#prerequisites) section below. Build options to activate
@@ -26,7 +25,7 @@ section.
 
 The following dependencies are required to build the ACTS core library:
 
-- A C++20 compatible compiler (recent versions of either gcc and clang should work)
+- A C++23 compatible compiler (recent versions of either gcc and clang should work)
 - [CMake](https://cmake.org) >= 3.14
 - [Boost](https://www.boost.org) >= 1.71 with `filesystem`, `program_options`, and `unit_test_framework`
 - [Eigen](https://eigen.tuxfamily.org) >= 3.3.7
@@ -234,6 +233,40 @@ source files or documentation.
 
 [doxygen]: https://doxygen.nl/
 
+# Documenting a code generator {#codegen-notebooks}
+
+Parts of ACTS are C++ headers derived symbolically with sympy and printed at
+build time (see @ref source-package for the mechanics). What such a generator
+does is rarely obvious from its source, so there is a way to write one that
+documents itself.
+
+A generator can be written in [jupytext](https://jupytext.readthedocs.io/)'s
+`percent` format: ordinary Python with `# %%` cell markers, which the build runs
+as a script and a notebook viewer (JupyterLab, or VS Code with the jupytext
+extension) opens as a notebook. Prose, the symbolic expressions and the
+generated code then live in one file that cannot drift out of date, because it
+is the file the build runs.
+
+`Core/src/Propagator/detail/generate_sympy_jac.py` is written this way; the
+result is @ref codegen_sympy_jac. Such a notebook has to work in both roles, so
+it takes the output path from `argv[1]` as any generator does, and detects the
+notebook case (`"ipykernel" in sys.modules`) to show its results instead of
+writing them.
+
+Registering one with the documentation is a line in `docs/CMakeLists.txt`:
+
+```cmake
+acts_render_notebook(
+    SOURCE ${PROJECT_SOURCE_DIR}/path/to/generator.py
+    PAGE_ID some_page_id
+)
+```
+
+The docs build then executes it with `docs/render_notebook.py` and turns the
+result into a doxygen page labelled `some_page_id`, so other pages can point at
+it with `@ref`. Note that the notebook is executed, so anything it prints or
+leaves as a cell's last expression ends up on the page.
+
 # Build options {#build-options}
 
 Optional zstd compression is controlled by the global string setting
@@ -267,6 +300,7 @@ components.
 | ACTS_PARAMETER_DEFINITIONS_HEADER             | Use a different (track) parameter<br>definitions header<br> type: `filepath`, default: `""`                                                                                                                                                                                 |
 | ACTS_SOURCELINK_SBO_SIZE                      | Customize the SBO size used by<br>SourceLink<br> type: `string`, default: `""`                                                                                                                                                                                              |
 | ACTS_FORCE_ASSERTIONS                         | Force assertions regardless of build<br>type<br> type: `bool`, default: `OFF`                                                                                                                                                                                               |
+| ACTS_FAIL_ON_WARNINGS                         | Treat compiler warnings in Acts' own<br>code as errors<br> type: `bool`, default: `OFF`                                                                                                                                                                                     |
 | ACTS_CODEGEN_PREBUILT_DIR                     | Directory holding pre-generated code; a<br>generated file found there is used<br>verbatim instead of being regenerated.<br>Defaults to prebuilt-codegen/ next to<br>this file when it exists, which is what<br>release source archives ship<br> type: `path`, default: `""` |
 | ACTS_CODEGEN_REQUIRE_PREBUILT                 | Fail the configure step instead of<br>running the code generators when pre-<br>generated code is missing<br> type: `bool`, default: `OFF`                                                                                                                                   |
 | ACTS_USE_ZSTD                                 | zstd support: AUTO (use if available),<br>ALWAYS (required), NEVER (disabled)<br> type: `string`, default: `AUTO`                                                                                                                                                           |
@@ -278,6 +312,13 @@ components.
 | ACTS_USE_SYSTEM_VECMEM                        | Use a system-provided vecmem<br>installation<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                                                                                                       |
 | ACTS_SETUP_VECMEM                             | If we want to set up vecmem<br> type: `bool`, default: `OFF`                                                                                                                                                                                                                |
 | ACTS_USE_SYSTEM_TRACCC                        | Use a system-provided traccc<br>installation<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                                                                                                       |
+| ACTS_USE_SYSTEM_ALPAKA                        | Use a system-provided Alpaka<br>installation for traccc<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                                                                                            |
+| ACTS_USE_SYSTEM_TBB                           | Use a system-provided TBB installation<br>for traccc<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                                                                                               |
+| ACTS_USE_SYSTEM_THRUST                        | Use a system-provided Thrust (CCCL)<br>installation for traccc; always on if<br>the CUDA toolkit is found<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                                          |
+| ACTS_SETUP_THRUST                             | Set up the Thrust (CCCL) target(s) for<br>traccc<br> type: `bool`, default: `ON`                                                                                                                                                                                            |
+| ACTS_USE_SYSTEM_ROCTHRUST                     | Use the rocThrust installation from ROCm<br>for traccc<br> type: `bool`, default: `ON`                                                                                                                                                                                      |
+| ACTS_USE_SYSTEM_DPL                           | Use a system-provided oneDPL<br>installation for traccc<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                                                                                            |
+| ACTS_USE_SYSTEM_GOOGLETEST                    | Use a system-provided GoogleTest<br>installation for traccc<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                                                                                        |
 | ACTS_USE_SYSTEM_NLOHMANN_JSON                 | Use nlohmann::json provided by the<br>system instead of the bundled version<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                                                                        |
 | ACTS_USE_SYSTEM_PYBIND11                      | Use a system installation of pybind11<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                                                                                                              |
 | ACTS_USE_SYSTEM_MODULEMAPGRAPH                | Use a system installation of<br>ModuleMapGraph<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                                                                                                     |
@@ -331,6 +372,17 @@ components.
 | ACTS_BUILD_CORE_UNITTESTS                     | Build Core unit tests<br> type: `bool`, default: `ON`                                                                                                                                                                                                                       |
 | ACTS_BUILD_EXAMPLES_UNITTESTS                 | Build Examples unit tests<br> type: `bool`, default: `ACTS_BUILD_UNITTESTS AND ACTS_BUILD_EXAMPLES`                                                                                                                                                                         |
 | ACTS_RUN_CLANG_TIDY                           | Run clang-tidy static analysis<br> type: `bool`, default: `OFF`                                                                                                                                                                                                             |
+| ACTS_TRACCC_BUILD_CUDA                        | Build the traccc CUDA libraries<br> type: `bool`, default: `ACTS_ENABLE_CUDA -> OFF`                                                                                                                                                                                        |
+| ACTS_TRACCC_BUILD_HIP                         | Build the traccc HIP libraries<br> type: `bool`, default: `OFF`                                                                                                                                                                                                             |
+| ACTS_TRACCC_BUILD_SYCL                        | Build the traccc SYCL libraries<br> type: `bool`, default: `OFF`                                                                                                                                                                                                            |
+| ACTS_TRACCC_BUILD_ALPAKA                      | Build the traccc Alpaka library<br> type: `bool`, default: `OFF`                                                                                                                                                                                                            |
+| ACTS_TRACCC_BUILD_IO                          | Build the traccc IO library<br> type: `bool`, default: `ON`                                                                                                                                                                                                                 |
+| ACTS_TRACCC_BUILD_PERFORMANCE                 | Build the traccc performance library<br> type: `bool`, default: `OFF`                                                                                                                                                                                                       |
+| ACTS_TRACCC_BUILD_TESTS                       | Build the traccc unit tests<br> type: `bool`, default: `ACTS_BUILD_UNITTESTS -> OFF`                                                                                                                                                                                        |
+| ACTS_TRACCC_BUILD_EXAMPLES                    | Build the traccc examples<br> type: `bool`, default: `ACTS_BUILD_EXAMPLES -> OFF`                                                                                                                                                                                           |
+| ACTS_TRACCC_ENABLE_NVTX_PROFILING             | Instrument the traccc device code for<br>NVTX profiling<br> type: `bool`, default: `OFF`                                                                                                                                                                                    |
+| ACTS_TRACCC_SUPPORTED_DETECTORS               | Semicolon-separated list of detector<br>types that traccc supports<br> type: `string`, default: `default_detector;odd_detector;telescope_detector`                                                                                                                          |
+| ACTS_TRACCC_DEVICE_LOG_LEVEL                  | Log level for traccc and detray device<br>code<br> type: `string`, default: `NONE`                                                                                                                                                                                          |
 | ACTS_BUILD_DOCS                               | Build documentation<br> type: `bool`, default: `OFF`                                                                                                                                                                                                                        |
 | ACTS_SETUP_BOOST                              | Explicitly set up Boost for the project<br> type: `bool`, default: `ON`                                                                                                                                                                                                     |
 | ACTS_SETUP_EIGEN3                             | Explicitly set up Eigen3 for the project<br> type: `bool`, default: `ON`                                                                                                                                                                                                    |
@@ -341,6 +393,14 @@ components.
 | ACTS_ENABLE_LOG_FAILURE_THRESHOLD             | Enable failing on log messages with<br>level above certain threshold<br> type: `bool`, default: `OFF`                                                                                                                                                                       |
 | ACTS_COMPILE_HEADERS                          | Generate targets to compile header files<br> type: `bool`, default: `ON`                                                                                                                                                                                                    |
 <!-- CMAKE_OPTS_END -->
+
+Some options automatically enable dependencies during configuration. CMake
+prints each newly enabled option and the condition that enabled it, followed
+by a summary of their effective values at the end of configuration. Options
+already enabled by the user are not marked as automatically enabled.
+
+These overrides do not change the CMake cache, so tools such as `ccmake` or
+`cmake -LAH` can still show an option as `OFF` even though the build uses `ON`.
 
 All ACTS-specific options are disabled or empty by default and must be
 specifically requested.
@@ -353,6 +413,16 @@ list of presets contains:
   necessary for running the ODD full chain examples with Fatras. It
   sets the cpp standard to 20, the generator to ninja and enables ccache.
 - `perf` is similar to `dev` but tweaked for performance measurements.
+- `github-ci` reproduces the GitHub CI configuration and enables ccache.
+- `github-ci-no-ccache` inherits the same configuration but clears the C++
+  compiler launcher, so it can be used locally without installing ccache:
+
+  ```console
+  cmake --preset github-ci-no-ccache -B build
+  ```
+
+  All other CI dependencies are still required. The `dev`, `perf`,
+  `devcontainer`, and `github-ci` presets continue to enable ccache by default.
 
 In addition to the ACTS-specific options, many generic options are available
 that modify various aspects of the build. The following options are some of the
@@ -416,6 +486,9 @@ where the generated file belongs. That file is the single source of truth:
 produces the same files from it ahead of time, so the two cannot disagree about
 what exists or where it goes. Adding a generator means adding it to the manifest;
 `acts_code_generation` refuses a key that is not listed there.
+
+Detray's detector metadata headers are manifest units as well, and are always
+generated; see `Detray/detectors/codegen/README.md`.
 
 Pre-generating the code needs `uv` and nothing else — no CMake, no compiler, and
 none of the C++ dependencies a real ACTS configure requires:

@@ -86,6 +86,8 @@ class annulus2D {
   }
 
   /// @returns The phi position in relative to the average phi of the annulus.
+  /// @param bounds Annulus boundary values, including its average azimuth.
+  /// @param loc_p Point in the annulus local frame.
   template <concepts::scalar scalar_t, concepts::point point_t>
   DETRAY_HOST_DEVICE inline scalar_t get_phi_rel(
       const bounds_type<scalar_t> &bounds, const point_t &loc_p) const {
@@ -94,6 +96,8 @@ class annulus2D {
   }
 
   /// @returns The squared radial position in the beam frame.
+  /// @param bounds Annulus boundaries and beam-frame center shift.
+  /// @param loc_p Point in the annulus local frame.
   template <concepts::scalar scalar_t, concepts::point point_t>
   DETRAY_HOST_DEVICE inline scalar_t get_r2_beam_frame(
       const bounds_type<scalar_t> &bounds, const point_t &loc_p) const {
@@ -150,6 +154,7 @@ class annulus2D {
   /// @param trf the surface transform
   /// @param glob_p the point to be checked in the global coordinate system
   /// @param tol dynamic tolerance determined by caller
+  /// @param edge_tol Additional tolerance used to classify points near an edge.
   ///
   /// @return true if the local point lies within the given boundaries.
   template <concepts::algebra algebra_t>
@@ -218,6 +223,7 @@ class annulus2D {
   /// @param bounds the boundary values for this shape
   /// @param loc_p the point to be checked in the local coordinate system
   /// @param tol dynamic tolerance determined by caller
+  /// @param edge_tol Additional tolerance used to classify points near an edge.
   ///
   /// @return true if the local point lies within the given boundaries.
   template <concepts::scalar scalar_t, concepts::point point_t>
@@ -301,7 +307,6 @@ class annulus2D {
   ///
   /// @note (not yet implemented!)
   ///
-  /// @param bounds the boundary values for this shape
   ///
   /// @returns the stereo annulus area.
   template <concepts::scalar scalar_t>
@@ -445,6 +450,7 @@ class annulus2D {
     return corner_pos;
   }
 
+  /// @param bounds Boundary values used to determine the center.
   /// @returns the shapes centroid in local cartesian coordinates
   /// @note the calculated centroid position is only an approximation
   /// (centroid of the four corner points)!

@@ -10,8 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Propagator/PropagatorStatistics.hpp"
-#include "Acts/Utilities/detail/Extendable.hpp"
+#include "Acts/Propagator/ActorConcepts.hpp"
 
 #include <functional>
 
@@ -33,8 +32,8 @@ enum class PropagatorStage {
 /// This struct holds the common state information for propagating
 /// which is independent of the actual stepper implementation.
 template <typename propagator_options_t, typename stepper_state_t,
-          typename navigator_state_t, typename... extension_state_t>
-struct PropagatorState : private detail::Extendable<extension_state_t...> {
+          typename navigator_state_t>
+struct PropagatorState {
   /// Type alias for propagator options
   using options_type = propagator_options_t;
   /// Type alias for stepper state
@@ -56,9 +55,6 @@ struct PropagatorState : private detail::Extendable<extension_state_t...> {
         stepping{std::move(steppingIn)},
         navigation{std::move(navigationIn)} {}
 
-  using detail::Extendable<extension_state_t...>::get;
-  using detail::Extendable<extension_state_t...>::tuple;
-
   /// Context object for the geometry
   std::reference_wrapper<const GeometryContext> geoContext;
 
@@ -74,20 +70,25 @@ struct PropagatorState : private detail::Extendable<extension_state_t...> {
   /// The direction of the propagation
   Vector3 direction = Vector3::Zero();
 
+  /// Global geometric curvature last prepared for navigation, in inverse length
+  /// units. Refreshed before navigation calls, including after actor updates.
+  /// Unchanged by reversing the propagation direction.
+  Vector3 curvature = Vector3::Zero();
+
   /// Stepper state - internal state of the Stepper
   stepper_state_t stepping;
 
   /// Navigation state - internal state of the Navigator
   navigator_state_t navigation;
 
+  /// State of the actor of the propagation
+  ActorStateType<typename propagator_options_t::actor_type> actor;
+
   /// Number of propagation steps that were carried out
   std::size_t steps = 0;
 
   /// Signed distance over which the parameters were propagated
   double pathLength = 0.;
-
-  /// Statistics of the propagation
-  PropagatorStatistics statistics;
 };
 
 }  // namespace Acts

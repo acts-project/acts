@@ -92,6 +92,12 @@ class TrackingGeometry {
       const GeometryIdentifierHook& hook = {},
       const Logger& logger = getDummyLogger(), bool close = true);
 
+  /// A geometry owns a linked object graph; share the geometry itself instead
+  /// of copying its ownership and lookup state.
+  TrackingGeometry(const TrackingGeometry&) = delete;
+  /// Copy assignment is disabled for the same reason.
+  TrackingGeometry& operator=(const TrackingGeometry&) = delete;
+
   /// Destructor
   ~TrackingGeometry();
 

@@ -55,6 +55,13 @@ set(DETRAY_PYTHON_INSTALL_DIR "python/detray")
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include(detray-functions)
 
+# Honour ACTS_FORCE_ASSERTIONS in standalone builds inside the ACTS tree. When
+# detray is built via add_subdirectory from ACTS this is a no-op.
+include(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/ActsForceAssertions.cmake)
+
+# Use an absolute path to avoid changing package lookup via CMAKE_MODULE_PATH.
+include("${CMAKE_CURRENT_SOURCE_DIR}/../cmake/ActsWarningFlags.cmake")
+
 #
 # Define build options
 #
@@ -73,11 +80,11 @@ set_property(
     PROPERTY STRINGS "NONE" "WARNING" "INFO" "VERBOSE" "DEBUG"
 )
 option(DETRAY_BUILD_CLI_TOOLS "Build the command line tools of Detray" OFF)
-# Which detector metadata headers to generate during the build
+# Additional detector metadata headers to generate; shipped ones always are
 set(DETRAY_GENERATE_METADATA
     ""
     CACHE STRING
-    "Semicolon-separated list of metadata generator scripts to run in this build"
+    "Semicolon-separated external /path/to/<name>_detector.py:configure selectors"
 )
 
 # Device compilation
@@ -473,9 +480,9 @@ option(
     ${DETRAY_USE_SYSTEM_LIBS}
 )
 if(DETRAY_SETUP_COVFIE)
-    set(DETRAY_COVFIE_VERSION 0.15.4)
+    set(DETRAY_COVFIE_VERSION 0.16.0)
     set(DETRAY_COVFIE_DIGEST
-        80de9b43644c59d8239fb8cc184c6276
+        6f645c2e5cc7e0587d801aff0c6fc75b
         CACHE STRING
         "MD5 digest of the downloaded zip"
     )
@@ -512,6 +519,9 @@ endif()
 #
 # Set up all of the libraries of the project.
 #
+
+# Apply warnings after dependency setup so they only affect our targets.
+acts_apply_warning_flags(CXX ${DETRAY_FAIL_ON_WARNINGS})
 
 add_subdirectory(core)
 add_subdirectory(detectors)

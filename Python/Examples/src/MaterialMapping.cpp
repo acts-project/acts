@@ -9,6 +9,7 @@
 #include "ActsExamples/MaterialMapping/MaterialMapping.hpp"
 
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/MaterialMapping/MappingMaterialDecorator.hpp"
@@ -54,9 +55,11 @@ void addMaterialMapping(py::module& mex) {
             return cfg;
           }),
           py::arg("geoContext"));
+    ACTS_PUSH_IGNORE_DEPRECATED()
     ACTS_PYTHON_STRUCT(c, inputMaterialTracks, mappedMaterialTracks,
                        unmappedMaterialTracks, geoContext, materialMapper,
                        materialWriters);
+    ACTS_POP_IGNORE_DEPRECATED()
   }
 
   {

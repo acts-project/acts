@@ -263,7 +263,9 @@ function run_comparison() {
     # scatter renders 3D histograms much faster than the default voxel
     # renderer at every histogram size
     local histcmp_ec=0
+    # A later --config in "$@" overrides this fallback.
     run histcmp $a $b \
+        --config CI/physmon/config/standard.toml \
         --label-reference=reference \
         --label-monitored=monitored \
         --title="$title" \
@@ -347,7 +349,7 @@ function trackfinding() {
     name=$1
     path=$2
 
-    default_config="CI/physmon/config/default.yml"
+    default_config="CI/physmon/config/default.toml"
 
     if [ -f $outdir/data/$path/performance_seeding.root ] || [ -f $refdir/$path/performance_seeding.root ]; then
         run_histcmp \
@@ -539,7 +541,7 @@ if [[ "$mode" == "all" || "$mode" == "kf" ]]; then
         $refdir/trackfitting_kf/performance_trackfitting.root \
         "Truth tracking (KF)" \
         trackfitting_kf/performance_trackfitting.html \
-        --config CI/physmon/config/trackfitting_kf.yml
+        --config CI/physmon/config/trackfitting_kf.toml
 fi
 
 if [[ "$mode" == "all" || "$mode" == "gsf" ]]; then
@@ -548,7 +550,7 @@ if [[ "$mode" == "all" || "$mode" == "gsf" ]]; then
         $refdir/trackfitting_gsf/performance_trackfitting.root \
         "Truth tracking (GSF)" \
         trackfitting_gsf/performance_trackfitting.html \
-        --config CI/physmon/config/trackfitting_gsf.yml
+        --config CI/physmon/config/trackfitting_gsf.toml
 fi
 
 if [[ "$mode" == "all" || "$mode" == "gx2f" ]]; then
@@ -557,7 +559,7 @@ if [[ "$mode" == "all" || "$mode" == "gx2f" ]]; then
         $refdir/trackfitting_gx2f/performance_trackfitting.root \
         "Truth tracking (GX2F)" \
         trackfitting_gx2f/performance_trackfitting.html \
-        --config CI/physmon/config/trackfitting_gx2f.yml
+        --config CI/physmon/config/trackfitting_gx2f.toml
 fi
 
 if [[ "$mode" == "all" || "$mode" == "refit_kf" ]]; then
@@ -566,7 +568,7 @@ if [[ "$mode" == "all" || "$mode" == "refit_kf" ]]; then
         $refdir/trackrefitting_kf/performance_trackrefitting.root \
         "Truth tracking (KF refit)" \
         trackrefitting_kf/performance_trackrefitting.html \
-        --config CI/physmon/config/trackfitting_kf.yml
+        --config CI/physmon/config/trackfitting_kf.toml
 fi
 
 if [[ "$mode" == "all" || "$mode" == "refit_gsf" ]]; then
@@ -575,7 +577,7 @@ if [[ "$mode" == "all" || "$mode" == "refit_gsf" ]]; then
         $refdir/trackrefitting_gsf/performance_trackrefitting.root \
         "Truth tracking (GSF refit)" \
         trackrefitting_gsf/performance_trackrefitting.html \
-        --config CI/physmon/config/trackfitting_gsf.yml
+        --config CI/physmon/config/trackfitting_gsf.toml
 fi
 
 if [[ "$mode" == "all" || "$mode" == "fullchains" ]]; then
@@ -598,7 +600,7 @@ if [[ "$mode" == "all" || "$mode" == "gx2f_vs_kf" ]]; then
         $outdir/data/trackfitting_gx2f_vs_kf/performance_trackfitting_kf.root \
         "Comparison - Truth tracking (GX2F vs KF)" \
         trackfitting_gx2f_vs_kf/performance_trackfitting.html \
-        --config CI/physmon/config/info_only.yml \
+        --config CI/physmon/config/info_only.toml \
         --label-reference=KF \
         --label-monitored=GX2F
 fi

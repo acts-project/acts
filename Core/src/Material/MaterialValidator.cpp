@@ -8,7 +8,7 @@
 
 #include "Acts/Material/MaterialValidator.hpp"
 
-#include "Acts/Material/interface/IAssignmentFinder.hpp"
+#include "Acts/Material/IAssignmentFinder.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
 
 namespace Acts {

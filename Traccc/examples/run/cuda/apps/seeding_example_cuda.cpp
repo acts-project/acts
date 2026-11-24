@@ -16,9 +16,7 @@
 #include "traccc/device/container_d2h_copy_alg.hpp"
 #include "traccc/device/container_h2d_copy_alg.hpp"
 #include "traccc/efficiency/finding_performance_writer.hpp"
-#include "traccc/efficiency/nseed_performance_writer.hpp"
 #include "traccc/efficiency/seeding_performance_writer.hpp"
-#include "traccc/efficiency/track_filter.hpp"
 #include "traccc/examples/make_magnetic_field.hpp"
 #include "traccc/examples/print_fitted_tracks_statistics.hpp"
 #include "traccc/geometry/detector.hpp"
@@ -104,16 +102,6 @@ int seq_run(const traccc::opts::track_seeding& seeding_opts,
   traccc::fitting_performance_writer fit_performance_writer(
       traccc::fitting_performance_writer::config{},
       logger().clone("FittingPerformanceWriter"));
-
-  traccc::nseed_performance_writer nsd_performance_writer(
-      "nseed_performance_",
-      std::make_unique<traccc::simple_charged_eta_pt_cut>(
-          2.7f, 1.f * traccc::unit<traccc::scalar>::GeV),
-      std::make_unique<traccc::stepped_percentage>(0.6f));
-
-  if (performance_opts.run) {
-    nsd_performance_writer.initialize();
-  }
 
   // Output stats
   std::uint64_t n_spacepoints = 0;
@@ -348,10 +336,8 @@ int seq_run(const traccc::opts::track_seeding& seeding_opts,
 
   if (performance_opts.run) {
     sd_performance_writer.finalize();
-    nsd_performance_writer.finalize();
     find_performance_writer.finalize();
     fit_performance_writer.finalize();
-    std::cout << nsd_performance_writer.generate_report_str();
   }
 
   std::cout << "==> Statistics ... " << std::endl;

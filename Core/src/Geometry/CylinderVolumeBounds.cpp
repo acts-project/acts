@@ -191,7 +191,9 @@ bool CylinderVolumeBounds::inside(const Vector3& pos, double tol) const {
   using VectorHelpers::perp;
   using VectorHelpers::phi;
   double ros = perp(pos);
-  bool insidePhi = std::cos(phi(pos)) >= std::cos(get(eHalfPhiSector)) - tol;
+  // Every position is within a full phi sector
+  bool insidePhi = get(eHalfPhiSector) >= std::numbers::pi ||
+                   std::cos(phi(pos)) >= std::cos(get(eHalfPhiSector)) - tol;
   bool insideR = insidePhi
                      ? ((ros >= get(eMinR) - tol) && (ros <= get(eMaxR) + tol))
                      : false;
@@ -269,8 +271,5 @@ void CylinderVolumeBounds::set(
     throw e;
   }
 }
-
-CylinderVolumeBounds::CylinderVolumeBounds(const CylinderVolumeBounds& cylbo) =
-    default;
 
 }  // namespace Acts

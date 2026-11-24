@@ -49,7 +49,7 @@ class navigator_base {
   /// @tparam track_t type of track, needs to provide pos() and dir() methods
   ///
   /// @param track access to the track parameters
-  /// @param state the current navigation state
+  /// @param navigation State to initialize for the current track.
   /// @param cfg the navigation configuration
   /// @param ctx the geometry context
   /// @param resolve_overstepping whether to check for overstepping
@@ -86,7 +86,7 @@ class navigator_base {
   /// @tparam track_t type of track, needs to provide pos() and dir() methods
   ///
   /// @param track access to the track parameters
-  /// @param state the current navigation state
+  /// @param navigation State to update after the track changes.
   /// @param cfg the navigation configuration
   /// @param ctx the geometry context
   ///

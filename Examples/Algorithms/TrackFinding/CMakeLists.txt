@@ -7,6 +7,7 @@ acts_add_library(
     src/HoughTransformSeeder.cpp
     src/AdaptiveHoughTransformSeeder.cpp
     src/TrackParamsEstimationAlgorithm.cpp
+    src/SeedParamsEstimator.cpp
     src/MuonHoughSeeder.cpp
     src/GraphBasedSeedingAlgorithm.cpp
     src/TrackParamsLookupEstimation.cpp

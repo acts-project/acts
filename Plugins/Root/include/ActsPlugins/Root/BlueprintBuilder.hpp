@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Geometry/BlueprintBuilder.hpp"
+#include "Acts/Geometry/Volume.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsPlugins/Root/TGeoAxes.hpp"
 #include "ActsPlugins/Root/TGeoDetectorElement.hpp"
@@ -143,6 +144,17 @@ class TGeoBlueprintBuilderBackend {
   /// @return Layer transform if one can be determined.
   std::optional<Acts::Transform3> lookupLayerTransform(
       const Element& element, const LayerSpec& layerSpec) const;
+
+  /// Describe a passive element as a cylindrical volume.
+  ///
+  /// Tube-like shapes (z half-length larger than the radial thickness, e.g. a
+  /// support tube) become a cylinder shell, disc-like shapes (e.g. an
+  /// endplate) an annular disc. Used by
+  /// @ref Acts::BlueprintBuilder::makePassiveElement.
+  /// @param element Element describing the passive tube or disc.
+  /// @throws std::runtime_error if the shape is neither tube- nor disc-like.
+  /// @return Volume with the element's placement and cylinder volume bounds.
+  Acts::Volume passiveVolume(const Element& element) const;
 
   /// Access the world/root element of the configured TGeo tree.
   /// @return Root element of the geometry hierarchy.

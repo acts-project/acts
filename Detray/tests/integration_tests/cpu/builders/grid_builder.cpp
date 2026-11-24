@@ -102,13 +102,13 @@ GTEST_TEST(detray_builders, decorator_grid_builder) {
   typename rectangle_factory::sf_data_collection rect_sf_data;
   rect_sf_data.emplace_back(surface_id::e_sensitive,
                             transform3(point3{7.07f, 7.07f, -500.f}), vol_idx,
-                            std::vector<scalar>{10.f, 8.f});
+                            std::vector<scalar>{-10.f, -8.f, 10.f, 8.f});
   rect_sf_data.emplace_back(surface_id::e_sensitive,
                             transform3(point3{7.07f, 7.07f, -250.f}), vol_idx,
-                            std::vector<scalar>{10.f, 8.f});
+                            std::vector<scalar>{-10.f, -8.f, 10.f, 8.f});
   rect_sf_data.emplace_back(surface_id::e_sensitive,
                             transform3(point3{7.07f, 7.07f, 100.f}), vol_idx,
-                            std::vector<scalar>{10.f, 8.f});
+                            std::vector<scalar>{-10.f, -8.f, 10.f, 8.f});
   rect_factory->push_back(std::move(rect_sf_data));
 
   auto trpz_factory = std::make_shared<trapezoid_factory>();

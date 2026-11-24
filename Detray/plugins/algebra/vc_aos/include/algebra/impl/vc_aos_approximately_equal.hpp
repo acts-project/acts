@@ -37,6 +37,7 @@ namespace detray::algebra {
 /// @param a first simd type
 /// @param b second simd type
 /// @param rel_error maximal relative error
+/// @param max_error Absolute tolerance used near zero.
 ///
 /// @returns true if the two simd types are elementwise approximately equal
 template <typename simd1_t, typename simd2_t>

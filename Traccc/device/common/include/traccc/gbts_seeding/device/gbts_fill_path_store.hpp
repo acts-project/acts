@@ -30,8 +30,8 @@ struct gbts_fill_path_store_payload {
   vecmem::data::vector_view<const unsigned int> path_count;
   /// Number of edges in the compacted graph
   unsigned int nConnectedEdges;
-  /// Maximum number of neighbours retained per edge
-  unsigned int max_num_neighbours;
+  /// Capacity of the compacted graph, the column stride of output_graph
+  unsigned int nConnectedEdgesMax;
   /// Output: per-path (edge index, parent path-store index or -1) entries
   vecmem::data::vector_view<int2> path_store;
   /// Compacted graph (read for per-edge neighbour lookup)

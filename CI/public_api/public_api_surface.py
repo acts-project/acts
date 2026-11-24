@@ -2,9 +2,10 @@
 """Measure the ACTS public API surface from Doxygen XML.
 
 The "public API surface" is the set of *documented*, non-``detail`` /
-non-``Experimental`` entities in the ``Acts`` namespace, matching the policy in
-docs/pages/versioning.md. Doxygen parses syntactically, so this needs no
-dependency headers or compile flags -- just the ``doxygen`` binary.
+non-``Experimental`` entities in the ``Acts`` and ``detray`` namespaces.
+Internal-symbol exclusions follow docs/pages/versioning.md. Doxygen parses
+syntactically, so this needs no dependency headers or compile flags -- just
+the ``doxygen`` binary.
 
 Typical use (runs Doxygen itself, then reports):
 
@@ -22,6 +23,7 @@ from __future__ import annotations
 import argparse
 import glob
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -33,9 +35,7 @@ from pathlib import Path
 # Absolute so it resolves regardless of the caller's working directory.
 DOXYFILE = str(Path(__file__).resolve().parent / "Doxyfile")
 
-# Plugins deliberately left out of the public-API surface metric. (The
-# top-level Detray/ and Traccc/ build-integration folders live outside Plugins/
-# and are never scanned; the Detray *plugin* under Plugins/ is in scope.)
+# Plugins deliberately left out of the public-API surface metric.
 EXCLUDED_PLUGINS: set[str] = set()
 
 
@@ -43,7 +43,8 @@ def standard_roots(under: Path) -> list[Path]:
     """Header roots whose public API we track, resolved under `under`.
 
     Core, Fatras and Alignment, plus every plugin under Plugins/. The Examples
-    tree and the top-level Detray/Traccc integration folders are not included.
+    tree and Traccc are not included. Detray library and reusable validation
+    headers are included; test fixtures and executables are not.
     """
     roots: list[Path] = []
     for rel in ("Core/include", "Fatras/include", "Alignment/include"):
@@ -59,6 +60,23 @@ def standard_roots(under: Path) -> list[Path]:
                 and (pdir / "include").is_dir()
             ):
                 roots.append(pdir / "include")
+    detray = under / "Detray"
+    for pattern in (
+        "core/include",
+        "detectors/include",
+        "io/include",
+        "plugins/*/include",
+        "plugins/algebra/*/include",
+        "tests/include/detray/test/common",
+        "tests/include/detray/test/utils",
+        "tests/include/detray/test/validation",
+        "tests/tools/include",
+    ):
+        roots.extend(p for p in sorted(detray.glob(pattern)) if p.is_dir())
+    # Validation configurations inherit this shared type from the test framework.
+    config = detray / "tests/include/detray/test/framework/test_configuration.hpp"
+    if config.is_file():
+        roots.append(config)
     return roots
 
 
@@ -90,6 +108,9 @@ def module_of(location: str | None) -> str:
         i = parts.index("Plugins")
         if i + 1 < len(parts):
             return "Plugin:" + parts[i + 1]
+    if "Detray" in parts:
+        i = parts.index("Detray")
+        return "Detray/" + "/".join(parts[i + 1 : parts.index("include", i)])
     if "Fatras" in parts:
         return "Fatras"
     if "Alignment" in parts:
@@ -142,7 +163,32 @@ def _norm_type(el) -> str:
     return _sanitize(" ".join("".join(el.itertext()).split()))
 
 
-def callable_forms(md, qualname: str) -> dict[str, str]:
+def _scoped_type(el, qualname: str, type_names: set[str]) -> str:
+    """Resolve documented type names in the callable's enclosing C++ scopes.
+
+    Doxygen can emit declarations and out-of-line definitions separately, with
+    different qualification and defaults. Canonicalizing their types lets the
+    declaration's shorter callable forms cover both spellings. Unknown names
+    remain unchanged; never discard namespace prefixes indiscriminately.
+    """
+    scopes = qualname.split("::")[:-1]
+
+    def resolve(match):
+        name = match.group()
+        if name.startswith("::"):
+            return name[2:] if name[2:] in type_names else name
+        for depth in range(len(scopes), -1, -1):
+            candidate = "::".join([*scopes[:depth], name])
+            if candidate in type_names:
+                return candidate
+        return name
+
+    return re.sub(r"(?:::)?[A-Za-z_]\w*(?:::[A-Za-z_]\w*)*", resolve, _norm_type(el))
+
+
+def callable_forms(
+    md, qualname: str, type_names: set[str] | None = None
+) -> dict[str, str]:
     """Expand a function memberdef into its source-callable signatures.
 
     A parameter with a default value makes shorter calls valid too, so
@@ -152,14 +198,16 @@ def callable_forms(md, qualname: str) -> dict[str, str]:
     one) shows up as a removed form. Maps form-key -> return type.
     """
     params = md.findall("param")
-    types = [_norm_type(p.find("type")) for p in params]
+    types = [
+        _scoped_type(p.find("type"), qualname, type_names or set()) for p in params
+    ]
     has_default = [p.find("defval") is not None for p in params]
     required = len(types)
     for i, d in enumerate(has_default):
         if d:
             required = i
             break
-    ret = _norm_type(md.find("type"))
+    ret = _scoped_type(md.find("type"), qualname, type_names or set())
     const = " const" if md.get("const") == "yes" else ""
     forms = {}
     for m in range(required, len(types) + 1):
@@ -177,6 +225,7 @@ def parse_xml(xml_dir: Path) -> dict:
     fields: dict[str, str] = {}  # public data member Class::name -> type
     methods = 0
 
+    roots = []
     for f in glob.glob(str(xml_dir / "*.xml")):
         base = os.path.basename(f)
         if base in ("index.xml", "Doxyfile.xml"):
@@ -185,10 +234,46 @@ def parse_xml(xml_dir: Path) -> dict:
             root = ET.parse(f).getroot()
         except ET.ParseError:
             continue
+        roots.append(root)
+
+    # Doxygen can emit private nested compounds even with EXTRACT_PRIVATE=NO.
+    # Their struct members still have prot="public", so member access alone
+    # does not establish whether they belong to the public API. Collect both
+    # forms of type access metadata before visiting any members.
+    private_types = set()
+    for root in roots:
+        for cd in root.findall("compounddef"):
+            if cd.get("prot") == "private":
+                private_types.add(_name(cd, "compoundname"))
+            for inner in cd.findall("innerclass"):
+                if inner.get("prot") == "private":
+                    private_types.add(_sanitize(inner.text or ""))
+    private_types.discard("")
+
+    # Collect types first so resolution does not depend on XML file order.
+    known_types = set()
+    for root in roots:
+        for cd in root.findall("compounddef"):
+            scope = _name(cd, "compoundname")
+            if cd.get("kind") in ("class", "struct", "union"):
+                known_types.add(scope.split("<")[0])
+            if cd.get("kind") in ("class", "struct", "union", "namespace"):
+                for md in cd.findall("sectiondef/memberdef"):
+                    if md.get("kind") in ("enum", "typedef"):
+                        known_types.add(f"{scope}::{_name(md, 'name')}")
+
+    for root in roots:
         for cd in root.findall("compounddef"):
             kind = cd.get("kind")
             name = _name(cd, "compoundname")
-            if not name.startswith("Acts") or is_internal(name):
+            # Public descendants of a private type are private as well.
+            if any(name == t or name.startswith(t + "::") for t in private_types):
+                continue
+            if not (
+                name.startswith("Acts")
+                or name == "detray"
+                or name.startswith("detray::")
+            ) or is_internal(name):
                 continue
             loc = cd.find("location")
             locfile = loc.get("file") if loc is not None else None
@@ -207,7 +292,9 @@ def parse_xml(xml_dir: Path) -> dict:
                     if md.get("kind") == "function":
                         methods += 1
                         callables.update(
-                            callable_forms(md, f"{bare}::{_name(md, 'name')}")
+                            callable_forms(
+                                md, f"{bare}::{_name(md, 'name')}", known_types
+                            )
                         )
                     elif md.get("kind") == "variable":
                         mname = _name(md, "name")
@@ -235,7 +322,7 @@ def parse_xml(xml_dir: Path) -> dict:
                     counts[bucket] += 1
                     symbols.add(f"{bucket} {full}")
                     if mk == "function":
-                        callables.update(callable_forms(md, full))
+                        callables.update(callable_forms(md, full, known_types))
                     mloc = md.find("location")
                     per_module[
                         module_of(mloc.get("file") if mloc is not None else None)
@@ -309,7 +396,7 @@ def main() -> int:
         "--roots-under",
         metavar="DIR",
         help="measure the standard component set (Core, Fatras, Alignment, "
-        "and all plugins) resolved under DIR; use for another checkout",
+        "Detray, and all plugins) resolved under DIR; use for another checkout",
     )
     ap.add_argument("--xml", help="existing Doxygen XML dir to parse")
     ap.add_argument("--json", help="write report JSON here")
@@ -348,7 +435,7 @@ def main() -> int:
             parts = d.parts
             if "Plugins" in parts:
                 return "Plugin:" + parts[parts.index("Plugins") + 1]
-            for comp in ("Core", "Fatras", "Alignment"):
+            for comp in ("Core", "Fatras", "Alignment", "Detray"):
                 if comp in parts:
                     return comp
             return d.name

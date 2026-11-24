@@ -33,7 +33,12 @@ class MaterialJsonDecodeContext;
 /// The encoding side is a @c TypeDispatcher registered on the concrete
 /// (or, for the grid family, the abstract templated) material types, the
 /// decoding side a @c JsonKindDispatcher keyed on the payload type tag.
-class SurfaceMaterialJsonConverter {
+///
+/// @deprecated Legacy material format; use
+/// @ref Acts::TrackingGeometryMaterialJsonConverter instead.
+class [[deprecated(
+    "Legacy material format; use TrackingGeometryMaterialJsonConverter")]]
+SurfaceMaterialJsonConverter {
  public:
   /// Context collecting the slab stores of the document being written
   using EncodeContext = detail::MaterialJsonEncodeContext;

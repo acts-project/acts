@@ -76,7 +76,10 @@ DETRAY_HOST_DEVICE constexpr decltype(auto) cast_to(const vector_t& v) {
   }
 }
 
-/// Cast a generic matrix @param v to the precision given by @tparam value_t
+/// Cast a generic matrix `m` to the precision given by `value_t`.
+///
+/// @param m matrix to convert
+/// @tparam value_t target element type
 template <concepts::value value_t, concepts::matrix matrix_t>
 DETRAY_HOST_DEVICE constexpr decltype(auto) cast_to(const matrix_t& m) {
   using index_t = detray::traits::index_t<matrix_t>;

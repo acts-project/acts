@@ -87,10 +87,11 @@ struct measurement_surface_order {
 silicon_strip_spacepoint_formation_algorithm::
     silicon_strip_spacepoint_formation_algorithm(
         const traccc::memory_resource& mr, const vecmem::copy& copy,
-        const stream_wrapper& str, std::unique_ptr<const Logger> logger)
+        const stream_wrapper& str, std::unique_ptr<const Logger> logger,
+        await_function_type await_func)
     : device::silicon_strip_spacepoint_formation_algorithm(mr, copy,
                                                            std::move(logger)),
-      cuda::algorithm_base(str) {}
+      cuda::algorithm_base(str, std::move(await_func)) {}
 
 void silicon_strip_spacepoint_formation_algorithm::count_strip_pairs_kernel(
     const count_strip_pairs_kernel_payload& payload) const {

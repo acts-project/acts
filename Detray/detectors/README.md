@@ -1,9 +1,8 @@
-## Generating custom Detector Metadata
+## Detector Metadata
 
-The scripts in the `python` folder use the tools in the detray python detector package to define various detector metadata headers in the `include` folder. A new generator file can be added here to the `python` folder, which will then be used during the cmake configuration step to generate the required detector metadata header for compilation of custom detector types (add `-DDETRAY_GENERATE_METADATA="my_metadata.py"` to the cmake setup)
-
-To run any of the scripts manually, use the following:
-```shell
-source path-to-detray-build/python/setup.sh
-python3 detray/detectors/python/odd_metadata.py
-```
+The `detray::detectors` component provides the detector metadata headers
+(`detray/detectors/<name>_metadata.hpp`). Only hand-written headers, currently
+`telescope_metadata.hpp`, live in `include/`. All others are generated at build
+time by the `detray_metadata` package in `codegen/`; see
+[`codegen/README.md`](codegen/README.md) for the vocabulary, layout and how to
+add shipped or external configurations.

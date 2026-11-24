@@ -10,6 +10,7 @@
 
 #include "Acts/Geometry/BlueprintBuilder.hpp"
 #include "Acts/Geometry/StaticBlueprintNode.hpp"
+#include "Acts/Geometry/Volume.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsPlugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "ActsPlugins/Root/TGeoAxes.hpp"
@@ -99,7 +100,8 @@ class DD4hepBackend {
   DetectorElementPtr createDetectorElement(const Element& detElement,
                                            AxisDefinition axes) const;
 
-  /// Convert a set of DD4hep sensitive elements into ACTS surfaces.
+  /// Convert a set of DD4hep sensitive elements into ACTS surfaces. Warns if
+  /// any of them is not a sensitive volume.
   /// @param sensitives Sensitive DD4hep elements belonging to one layer.
   /// @param layerSpec Layer configuration controlling axes and naming.
   /// @return Converted ACTS surfaces for the given sensitives.
@@ -117,6 +119,17 @@ class DD4hepBackend {
   /// Create a static beampipe blueprint node from the DD4hep world geometry.
   /// @return Shared pointer to the generated beampipe node.
   std::shared_ptr<Acts::StaticBlueprintNode> makeBeampipe() const;
+
+  /// Describe a passive DD4hep element as a cylindrical volume.
+  ///
+  /// Tube-like shapes (z half-length larger than the radial thickness, e.g. a
+  /// support tube) become a cylinder shell, disc-like shapes (e.g. an
+  /// endplate) an annular disc. Used by
+  /// @ref Acts::BlueprintBuilder::makePassiveElement.
+  /// @param element DD4hep element describing the passive tube or disc.
+  /// @throws std::runtime_error if the shape is neither tube- nor disc-like.
+  /// @return Volume with the element's placement and cylinder volume bounds.
+  Acts::Volume passiveVolume(const Element& element) const;
 
   /// Return the DD4hep world detector element.
   /// @return Root detector element of the DD4hep hierarchy.

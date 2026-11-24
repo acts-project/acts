@@ -28,8 +28,16 @@ TEST(strip_spacepoint_migration, count_fill_and_form_standard_and_overlap) {
   for (unsigned int i = 0; i < 3; ++i) {
     detray::geometry::identifier link{0u};
     link.set_index(i);
-    measurements.push_back(
-        {{0.f, 0.f}, {0.f, 0.f}, 1u, 0.f, 0.f, 0u, link, {1u, 0u}, i});
+    measurements.push_back({{0.f, 0.f},
+                            {0.f, 0.f},
+                            1u,
+                            0.f,
+                            0.f,
+                            0u,
+                            link,
+                            {1u, 0u},
+                            i,
+                            {0.f, 0.f}});
     strip_measurement_surface_info info{};
     info.surface_link = link.value();
     info.origin = {100.f, 0.f, 0.f};

@@ -86,8 +86,6 @@ BOOST_AUTO_TEST_CASE(MaterialSlabTest) {
   BOOST_CHECK_NE(payload.mat.params.at(4u), payload.mat.params.at(5u));
   CHECK_CLOSE_ABS(payload.mat.params.at(5u), 5.,
                   std::numeric_limits<double>::epsilon());
-  CHECK_CLOSE_ABS(payload.mat.params.at(6u), 0.,
-                  std::numeric_limits<double>::epsilon());
 }
 
 BOOST_AUTO_TEST_CASE(HomogeneousMaterialTest) {

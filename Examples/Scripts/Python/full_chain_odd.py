@@ -24,6 +24,7 @@ from acts.examples.simulation import (
 from acts.examples.reconstruction import (
     addSeeding,
     SeedingAlgorithm,
+    GbtsConfigArg,
     CkfConfig,
     addCKFTracks,
     TrackSelectorConfig,
@@ -391,6 +392,21 @@ if args.reco:
                 seedingAlgorithm=SeedingAlgorithm.Gbts,
                 layerMappingConfigFile=oddGbtsLayerMap,
                 connectorInputConfigFile=oddGbtsConnectionTable,
+                # with four pixel barrel layers a seed needs only two linked
+                # doublets and no z0 histogram cut, which asks for a fourth hit
+                gbtsConfigArg=GbtsConfigArg(
+                    seederConfig=acts.examples.GraphBasedSeedingConfig(
+                        minSeedLevel=2,
+                    ),
+                    graphConfig=acts.examples.GbtsGraphBuilderConfig(
+                        minPt=0.9 * u.GeV,
+                        z0HistogramMaxBarrelOrder=-1,
+                    ),
+                    useAdaptiveCuts=False,
+                ),
+                gbtsSeedParameters=True,
+                # for seeds without a GBTS fit
+                paramEstimationSpacePoints=acts.examples.SeedSpacePointSelection.SpreadTriplet,
             )
             if args.use_gbts
             else {}

@@ -10,8 +10,13 @@
 
 #include "Acts/Geometry/BlueprintBuilder.hpp"
 #include "Acts/Geometry/BlueprintNode.hpp"
+#include "Acts/Geometry/BlueprintOptions.hpp"
 #include "Acts/Geometry/ContainerBlueprintNode.hpp"
+#include "Acts/Geometry/CylinderVolumeBounds.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/LayerBlueprintNode.hpp"
+#include "Acts/Geometry/StaticBlueprintNode.hpp"
+#include "Acts/Geometry/Volume.hpp"
 #include "Acts/Geometry/detail/BlueprintBuilder_impl.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -131,9 +136,28 @@ struct StubBackend {
   bool isTracker(const Element& /*element*/) const { return false; }
 };
 
+// Same backend, extended with a passive-volume description: a cylinder shell
+// whose radius is the element value, shifted along z by the element value.
+struct PassiveStubBackend : StubBackend {
+  using StubBackend::StubBackend;
+
+  std::string nameOf(const Element& element) const {
+    return "passive" + std::to_string(element);
+  }
+
+  Volume passiveVolume(const Element& element) const {
+    const double r = static_cast<double>(element);
+    return Volume(Transform3{Translation3(0., 0., r)},
+                  std::make_shared<CylinderVolumeBounds>(r, r + 1., 10.));
+  }
+};
+
 static_assert(detail::BlueprintBackend<StubBackend>);
 static_assert(detail::HasAxisDefinition<StubBackend>);
 static_assert(detail::HasBarrelEndcapClassifier<StubBackend>);
+static_assert(!detail::HasPassiveVolume<StubBackend>);
+static_assert(detail::BlueprintBackend<PassiveStubBackend>);
+static_assert(detail::HasPassiveVolume<PassiveStubBackend>);
 
 BOOST_AUTO_TEST_SUITE(GeometrySuite)
 
@@ -178,6 +202,29 @@ BOOST_AUTO_TEST_CASE(CustomizerInstantiation) {
   static_cast<void>(builder.barrelEndcap().onContainer(mutatesContainer));
 
   BOOST_CHECK(true);
+}
+
+BOOST_AUTO_TEST_CASE(PassiveElement) {
+  BlueprintBuilder<PassiveStubBackend> builder{PassiveStubBackend::Config{}};
+
+  // Default name comes from the backend, the shape is used as reported.
+  auto node = builder.makePassiveElement(100);
+  BOOST_REQUIRE(node != nullptr);
+  BOOST_CHECK_EQUAL(node->name(), "passive100");
+
+  auto gctx = GeometryContext::dangerouslyDefaultConstruct();
+  const Volume& volume = node->build(BlueprintOptions{}, gctx);
+  const auto* bounds =
+      dynamic_cast<const CylinderVolumeBounds*>(&volume.volumeBounds());
+  BOOST_REQUIRE(bounds != nullptr);
+  BOOST_CHECK_EQUAL(bounds->get(CylinderVolumeBounds::eMinR), 100.);
+  BOOST_CHECK_EQUAL(bounds->get(CylinderVolumeBounds::eMaxR), 101.);
+  BOOST_CHECK_EQUAL(volume.localToGlobalTransform(gctx).translation().z(),
+                    100.);
+
+  // An explicit name overrides the element's own name.
+  auto named = builder.makePassiveElement(100, "Support");
+  BOOST_CHECK_EQUAL(named->name(), "Support");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

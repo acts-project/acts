@@ -48,7 +48,7 @@ void GeoModelTree::VolumePublisher::publishVolumes(
 GeoModelTree::GeoModelTree(const std::shared_ptr<GMDBManager>& db)
     : dbMgr{db},
       publisher{std::make_shared<VolumePublisher>(
-          std::make_shared<GeoModelIO::ReadGeoModel>(db.get()))},
+          std::make_shared<GeoModelIO::ReadGeoModel>(db))},
       worldVolume{publisher->reader()->buildGeoModel()} {}
 
 }  // namespace ActsPlugins
