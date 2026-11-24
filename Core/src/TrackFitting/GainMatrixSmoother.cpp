@@ -9,15 +9,17 @@
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/TrackParameterHelpers.hpp"
 #include "Acts/EventData/detail/CovarianceHelper.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/TrackFitting/KalmanFitterError.hpp"
+#include "Acts/Utilities/detail/AllFinite.hpp"
 
 namespace Acts {
 
 Result<void> GainMatrixSmoother::calculate(AnyMutableTrackStateProxy ts,
                                            AnyConstTrackStateProxy prev_ts,
                                            const Logger& logger) const {
+  const auto parametrization = BoundParametrization::globalSpherical();
   auto prevPredictedCovariance = prev_ts.predictedCovariance();
   auto filteredCovariance = ts.filteredCovariance();
   auto prevJacobian = prev_ts.jacobian();
@@ -32,8 +34,8 @@ Result<void> GainMatrixSmoother::calculate(AnyMutableTrackStateProxy ts,
   BoundMatrix G = filteredCovariance * prevJacobian.transpose() *
                   prevPredictedCovariance.inverse();
 
-  if (G.hasNaN()) {
-    ACTS_VERBOSE("Gain smoothing matrix G has NaNs");
+  if (!detail::allFinite(G)) {
+    ACTS_VERBOSE("Gain smoothing matrix G has nonfinite entries");
 
     ACTS_VERBOSE("Filtered covariance:\n" << filteredCovariance);
     ACTS_VERBOSE("Jacobian:\n" << prevJacobian);
@@ -52,8 +54,7 @@ Result<void> GainMatrixSmoother::calculate(AnyMutableTrackStateProxy ts,
   auto prevSmoothed = prev_ts.smoothed();
 
   auto filtered = ts.filtered();
-  auto smoothed = ts.smoothed();
-  auto smoothedCovariance = ts.smoothedCovariance();
+
   auto prevSmoothedCovariance = prev_ts.smoothedCovariance();
 
   ACTS_VERBOSE("Calculate smoothed parameters:");
@@ -61,20 +62,20 @@ Result<void> GainMatrixSmoother::calculate(AnyMutableTrackStateProxy ts,
   ACTS_VERBOSE("Prev. smoothed parameters: " << prevSmoothed.transpose());
   ACTS_VERBOSE("Prev. predicted parameters: " << prevPredicted.transpose());
 
-  // Calculate the smoothed parameters
-  smoothed =
-      filtered + G * subtractBoundParameters(prevSmoothed, prevPredicted);
-  // Normalize phi and theta
-  smoothed = normalizeBoundParameters(smoothed);
-
-  ACTS_VERBOSE("Smoothed parameters are: " << smoothed.transpose());
-  ACTS_VERBOSE("Calculate smoothed covariance:");
-  ACTS_VERBOSE("Prev. smoothed covariance:\n" << prevSmoothedCovariance);
-
-  // And the smoothed covariance
-  smoothedCovariance =
+  // The residual lives in the destination basis; G maps it to the source.
+  BoundVector smoothed =
+      filtered + G * parametrization.difference(prevSmoothed, prevPredicted);
+  BoundMatrix smoothedCovariance =
       filteredCovariance +
       G * (prevSmoothedCovariance - prevPredictedCovariance) * G.transpose();
+  if (!detail::allFinite(smoothed) || !detail::allFinite(smoothedCovariance)) {
+    return KalmanFitterError::SmoothFailed;
+  }
+  const auto canonicalization =
+      parametrization.canonicalizeInPlace(smoothed, smoothedCovariance);
+  if (!canonicalization.ok()) {
+    return canonicalization.error();
+  }
 
   if (doCovCheckAndAttemptFix) {
     // Check if the covariance matrix is semi-positive definite.
@@ -90,6 +91,9 @@ Result<void> GainMatrixSmoother::calculate(AnyMutableTrackStateProxy ts,
     // Reset smoothed covariance
     smoothedCovariance = smoothedCov;
   }
+
+  ts.smoothed() = smoothed;
+  ts.smoothedCovariance() = smoothedCovariance;
 
   ACTS_VERBOSE("Smoothed covariance is: \n" << smoothedCovariance);
 

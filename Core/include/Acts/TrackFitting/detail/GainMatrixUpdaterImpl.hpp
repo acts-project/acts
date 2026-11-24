@@ -9,17 +9,21 @@
 #pragma once
 
 #include "Acts/EventData/AnyTrackStateProxy.hpp"
-#include "Acts/EventData/TrackParameterHelpers.hpp"
+#include "Acts/EventData/SubspaceHelpers.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/KalmanFitterError.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/detail/AllFinite.hpp"
 
+#include <cmath>
 #include <cstddef>
 
 namespace Acts {
 
 template <std::size_t N>
 Result<void> GainMatrixUpdater::visitMeasurementImpl(
+    const BoundParametrization& parametrization,
     AnyMutableTrackStateProxy trackState, const Logger& logger) const {
   constexpr std::size_t kMeasurementSize = N;
   using ProjectedVector = Vector<kMeasurementSize>;
@@ -44,48 +48,56 @@ Result<void> GainMatrixUpdater::visitMeasurementImpl(
 
   ACTS_VERBOSE("Measurement projector H:\n" << H);
 
-  auto filtered = trackState.filtered();
-  auto filteredCovariance = trackState.filteredCovariance();
   const auto predicted = trackState.predicted();
   const auto predictedCovariance = trackState.predictedCovariance();
-
+  // The facade interprets periodic direction residuals in the measured
+  // subspace, as if the measurement were embedded in the predicted state.
+  const ProjectedVector innovation = parametrization.subspaceDifference(
+      calibrated, predicted, validSubspaceIndices);
+  const ProjectedMatrix innovationInverse =
+      (H * predictedCovariance * H.transpose() + calibratedCovariance)
+          .inverse();
   const auto K =
-      (predictedCovariance * H.transpose() *
-       (H * predictedCovariance * H.transpose() + calibratedCovariance)
-           .inverse())
-          .eval();
+      (predictedCovariance * H.transpose() * innovationInverse).eval();
 
   ACTS_VERBOSE("Gain Matrix K:\n" << K);
 
-  if (K.hasNaN()) {
+  if (!detail::allFinite(K)) {
     // set to error abort execution
     return Result<void>::failure(KalmanFitterError::UpdateFailed);
   }
 
-  filtered = predicted + K * (calibrated - H * predicted);
-  // Normalize phi and theta
-  filtered = normalizeBoundParameters(filtered);
-
+  BoundVector updated = predicted + K * innovation;
   const auto tmp = (BoundMatrix::Identity() - K * H).eval();
+  BoundMatrix updatedCovariance;
   if (!m_useJosephFormulation) {
-    filteredCovariance = tmp * predictedCovariance;
+    updatedCovariance = tmp * predictedCovariance;
   } else {
-    filteredCovariance = tmp * predictedCovariance * tmp.transpose() +
-                         K * calibratedCovariance * K.transpose();
+    updatedCovariance = tmp * predictedCovariance * tmp.transpose() +
+                        K * calibratedCovariance * K.transpose();
+  }
+  if (!detail::allFinite(updated) || !detail::allFinite(updatedCovariance)) {
+    return Result<void>::failure(KalmanFitterError::UpdateFailed);
+  }
+  const auto canonicalization =
+      parametrization.canonicalizeInPlace(updated, updatedCovariance);
+  if (!canonicalization.ok()) {
+    return canonicalization.error();
   }
 
-  ACTS_VERBOSE("Filtered parameters: " << filtered.transpose());
-  ACTS_VERBOSE("Filtered covariance:\n" << filteredCovariance);
-
-  const ProjectedVector residual = calibrated - H * filtered;
-  ACTS_VERBOSE("Residual: " << residual.transpose());
-
-  const ProjectedMatrix m =
-      ((ProjectedMatrix::Identity() - H * K) * calibratedCovariance);
-  const double chi2 = (residual.transpose() * m.inverse() * residual).value();
-  ACTS_VERBOSE("Chi2: " << chi2);
-
+  // Chi2 uses the innovation in the measurement's original coordinate basis.
+  // Folding the output coordinates must not change this statistic.
+  const double chi2 =
+      (innovation.transpose() * innovationInverse * innovation).value();
+  if (!std::isfinite(chi2)) {
+    return Result<void>::failure(KalmanFitterError::UpdateFailed);
+  }
+  trackState.filtered() = updated;
+  trackState.filteredCovariance() = updatedCovariance;
   trackState.chi2() = chi2;
+  ACTS_VERBOSE("Filtered parameters: " << trackState.filtered().transpose());
+  ACTS_VERBOSE("Filtered covariance:\n" << trackState.filteredCovariance());
+  ACTS_VERBOSE("Chi2: " << chi2);
 
   return Result<void>::success();
 }
@@ -94,6 +106,7 @@ Result<void> GainMatrixUpdater::visitMeasurementImpl(
 
 #define _EXTERN(N)                                                         \
   extern template Result<void> GainMatrixUpdater::visitMeasurementImpl<N>( \
+      const BoundParametrization& parametrization,                         \
       AnyMutableTrackStateProxy trackState, const Logger& logger) const
 
 _EXTERN(1);

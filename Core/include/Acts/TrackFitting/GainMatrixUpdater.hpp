@@ -9,7 +9,9 @@
 #pragma once
 
 #include "Acts/EventData/AnyTrackStateProxy.hpp"
+#include "Acts/EventData/BoundParametrization.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
@@ -18,6 +20,11 @@
 namespace Acts {
 
 /// Kalman update step using the gain matrix formalism.
+/// Uses the bound parametrization of the track state's reference
+/// surface for coordinate residuals and canonicalizes parameters and covariance
+/// together. States without a reference surface use the canonical
+/// global-spherical interpretation.
+/// A failed update leaves filtered values, covariance and chi2 unchanged.
 /// @ingroup track_fitting
 class GainMatrixUpdater {
  public:
@@ -31,15 +38,21 @@ class GainMatrixUpdater {
 
   /// Run the Kalman update step for a single trajectory state.
   ///
-  /// @tparam kMeasurementSizeMax
+  /// @tparam traj_t Trajectory type
+  /// @param[in] gctx Geometry context used to resolve the surface parametrization
   /// @param[in,out] trackState The track state
   /// @param[in] logger Where to write logging information to
   /// @return Success or failure of the update procedure
   template <typename traj_t>
-  Result<void> operator()(const GeometryContext& /*gctx*/,
+  Result<void> operator()(const GeometryContext& gctx,
                           typename traj_t::TrackStateProxy trackState,
                           const Logger& logger = getDummyLogger()) const {
     ACTS_VERBOSE("Invoked GainMatrixUpdater");
+
+    const auto parametrization =
+        trackState.hasReferenceSurface()
+            ? trackState.referenceSurface().boundParametrization(gctx)
+            : BoundParametrization::globalSpherical();
 
     // there should be a calibrated measurement
     assert(trackState.hasCalibrated());
@@ -61,17 +74,20 @@ class GainMatrixUpdater {
     // auto filtered = trackState.filtered();
     // auto filteredCovariance = trackState.filteredCovariance();
 
-    return visitMeasurement(AnyMutableTrackStateProxy{trackState}, logger);
+    return visitMeasurement(parametrization,
+                            AnyMutableTrackStateProxy{trackState}, logger);
   }
 
  private:
   bool m_useJosephFormulation = false;
 
-  Result<void> visitMeasurement(AnyMutableTrackStateProxy trackState,
+  Result<void> visitMeasurement(const BoundParametrization& parametrization,
+                                AnyMutableTrackStateProxy trackState,
                                 const Logger& logger) const;
 
   template <std::size_t N>
-  Result<void> visitMeasurementImpl(AnyMutableTrackStateProxy trackState,
+  Result<void> visitMeasurementImpl(const BoundParametrization& parametrization,
+                                    AnyMutableTrackStateProxy trackState,
                                     const Logger& logger) const;
 };
 

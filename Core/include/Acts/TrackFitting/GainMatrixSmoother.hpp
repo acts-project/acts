@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/EventData/AnyTrackStateProxy.hpp"
+#include "Acts/EventData/BoundParametrization.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/Delegate.hpp"
@@ -25,7 +26,9 @@ namespace Acts {
 ///
 /// This implements not a single smoothing step, but the full backwards
 /// smoothing procedure for a filtered, forward trajectory using the stored
-/// linearization.
+/// linearization. Coordinate residuals and covariance canonicalization use
+/// canonical global-spherical coordinates. A failed step preserves its stored
+/// values; later states may already have been smoothed.
 /// @ingroup track_fitting
 class GainMatrixSmoother {
  public:
