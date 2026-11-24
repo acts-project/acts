@@ -9,12 +9,14 @@
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/EventData/SimParticleDecay.hpp"
 #include "ActsExamples/EventData/SimVertex.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 
+#include <optional>
 #include <string>
+#include <vector>
 
 namespace HepMC3 {
 class GenEvent;
@@ -30,6 +32,11 @@ class HepMC3InputConverter : public IAlgorithm {
     std::string inputEvent;
     std::string outputParticles;
     std::string outputVertices;
+
+    /// Optional decay graph; outputParticles then holds only transport roots.
+    std::string outputDecayGraph;
+    /// Signed PDG IDs whose physical HepMC decays should be prescribed.
+    std::vector<int> decayPdgCodes;
 
     /// If true, print the listing of the generated event. This can be very
     /// verbose
@@ -75,7 +82,16 @@ class HepMC3InputConverter : public IAlgorithm {
                     std::vector<SimVertex>& vertices,
                     std::vector<SimParticle>& particles,
                     std::size_t& nSecondaryVertices, std::size_t& nParticles,
-                    std::vector<bool>& seenVertices) const;
+                    std::vector<bool>& seenVertices,
+                    SimParticleDecayGraph* graph) const;
+
+  std::optional<SimParticle> makeParticle(
+      const std::shared_ptr<const HepMC3::GenParticle>& source, SimBarcode id,
+      const Acts::Vector4& position, bool prescribed) const;
+
+  void addDecay(const HepMC3::GenParticle& source, const SimParticle& parent,
+                SimParticleDecayGraph& graph, std::vector<bool>& seenVertices,
+                SimBarcode::SubParticleId& nextSubparticle) const;
 
   Config m_cfg;
 
@@ -84,6 +100,8 @@ class HepMC3InputConverter : public IAlgorithm {
 
   WriteDataHandle<SimParticleContainer> m_outputParticles{this,
                                                           "OutputParticles"};
+  WriteDataHandle<SimParticleDecayGraph> m_outputDecayGraph{this,
+                                                            "OutputDecayGraph"};
   WriteDataHandle<SimVertexContainer> m_outputVertices{this, "OutputVertices"};
 };
 

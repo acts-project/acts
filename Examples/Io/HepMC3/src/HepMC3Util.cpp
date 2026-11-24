@@ -68,8 +68,16 @@ void mergeEventsImpl(HepMC3::GenEvent& event, std::span<T> genEvents,
         throw std::runtime_error("Particle id is not consecutive");
       }
       auto particle = std::make_shared<HepMC3::GenParticle>();
-      particle->set_momentum(srcParticle->momentum());
-      particle->set_generated_mass(srcParticle->generated_mass());
+      auto momentum = srcParticle->momentum();
+      HepMC3::Units::convert(momentum, genEvent->momentum_unit(),
+                             event.momentum_unit());
+      particle->set_momentum(momentum);
+      if (srcParticle->is_generated_mass_set()) {
+        double mass = srcParticle->generated_mass();
+        HepMC3::Units::convert(mass, genEvent->momentum_unit(),
+                               event.momentum_unit());
+        particle->set_generated_mass(mass);
+      }
       particle->set_pid(srcParticle->pid());
       particle->set_status(srcParticle->status());
 
@@ -80,7 +88,10 @@ void mergeEventsImpl(HepMC3::GenEvent& event, std::span<T> genEvents,
     }
 
     for (const auto& srcVertex : genEvent->vertices()) {
-      auto vertex = std::make_shared<HepMC3::GenVertex>(srcVertex->position());
+      auto position = srcVertex->position();
+      HepMC3::Units::convert(position, genEvent->length_unit(),
+                             event.length_unit());
+      auto vertex = std::make_shared<HepMC3::GenVertex>(position);
       vertex->set_status(srcVertex->status());
 
       event.add_vertex(vertex);

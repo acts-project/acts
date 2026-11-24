@@ -11,6 +11,9 @@
 #include "Acts/Utilities/ScopedTimer.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 
+#include <algorithm>
+#include <cmath>
+#include <limits>
 #include <unordered_set>
 
 #include <HepMC3/GenEvent.h>
@@ -40,6 +43,13 @@ HepMC3InputConverter::HepMC3InputConverter(
   m_outputParticles.initialize(m_cfg.outputParticles);
   m_outputVertices.initialize(m_cfg.outputVertices);
   m_inputEvent.initialize(m_cfg.inputEvent);
+  if (m_cfg.outputDecayGraph.empty() != m_cfg.decayPdgCodes.empty()) {
+    throw std::invalid_argument(
+        "Specify both outputDecayGraph and decayPdgCodes");
+  }
+  if (!m_cfg.outputDecayGraph.empty()) {
+    m_outputDecayGraph.initialize(m_cfg.outputDecayGraph);
+  }
 }
 
 ProcessCode HepMC3InputConverter::execute(const AlgorithmContext& ctx) const {
@@ -59,9 +69,26 @@ namespace {
 constexpr int kBeamParticleStatus = 4;
 constexpr int kUndecayedParticleStatus = 1;
 
-Acts::Vector4 convertPosition(const HepMC3::FourVector& vec) {
-  return Acts::Vector4(vec.x() * 1_mm, vec.y() * 1_mm, vec.z() * 1_mm,
-                       vec.t() * 1_mm);
+Acts::Vector4 convertPosition(const HepMC3::GenVertex& vertex) {
+  const auto& vec = vertex.position();
+  const double unit =
+      vertex.parent_event()->length_unit() == HepMC3::Units::CM ? 1_cm : 1_mm;
+  return unit * Acts::Vector4(vec.x(), vec.y(), vec.z(), vec.t());
+}
+
+Acts::Vector4 convertMomentum(const HepMC3::GenParticle& particle) {
+  const auto& vec = particle.momentum();
+  const double unit =
+      particle.parent_event()->momentum_unit() == HepMC3::Units::MEV ? 1_MeV
+                                                                     : 1_GeV;
+  return unit * Acts::Vector4(vec.px(), vec.py(), vec.pz(), vec.e());
+}
+
+std::invalid_argument badDecay(const HepMC3::GenParticle& source,
+                               const std::string& reason) {
+  return std::invalid_argument("HepMC decay at particle " +
+                               std::to_string(source.id()) + " (PDG " +
+                               std::to_string(source.pid()) + "): " + reason);
 }
 
 std::string printListing(const auto& vertices, const auto& particles) {
@@ -172,15 +199,137 @@ ActsExamples::HeavyFlavourOrigin HepMC3InputConverter::deriveHeavyFlavourOrigin(
   return ActsExamples::HeavyFlavourOrigin::None;
 }
 
-void HepMC3InputConverter::handleVertex(const HepMC3::GenVertex& genVertex,
-                                        SimVertex& vertex,
-                                        std::vector<SimVertex>& vertices,
-                                        std::vector<SimParticle>& particles,
-                                        std::size_t& nSecondaryVertices,
-                                        std::size_t& nParticles,
-                                        std::vector<bool>& seenVertices) const {
+std::optional<SimParticle> HepMC3InputConverter::makeParticle(
+    const std::shared_ptr<const HepMC3::GenParticle>& source, SimBarcode id,
+    const Acts::Vector4& position, bool prescribed) const {
+  const Acts::PdgParticle pdg{source->pid()};
+  auto massFromPdg = Acts::findMass(pdg);
+  auto chargeFromPdg = Acts::findCharge(pdg);
+  if (pdg == Acts::PdgParticle::eInvalid) {
+    massFromPdg = chargeFromPdg = 0.;
+  }
+  if (prescribed) {
+    // Geant4 transports neutrinos as massless. ACTS lists their masses as
+    // unknown, so retain this convention only for the prescribed decay tree.
+    const int absPdg = std::abs(source->pid());
+    if (absPdg == 12 || absPdg == 14 || absPdg == 16) {
+      massFromPdg = 0.;
+    }
+  }
+  if (!massFromPdg || !chargeFromPdg) {
+    if (prescribed) {
+      throw badDecay(*source, "missing PDG mass or charge");
+    }
+    ACTS_ERROR("No mass or charge found for PDG ID " << pdg);
+    throw std::bad_optional_access{};
+  }
+  const double mass = massFromPdg.value();
+  const double charge = chargeFromPdg.value();
+  const Acts::Vector4 mom = convertMomentum(*source);
+  if (prescribed) {
+    // Allow HepMC text rounding and small differences between PDG table
+    // editions.
+    if (pdg == Acts::PdgParticle::eInvalid || !mom.allFinite() ||
+        !position.allFinite() || !std::isfinite(mass) ||
+        !std::isfinite(charge) || mom[3] <= 0. ||
+        std::abs(mom[3] - std::hypot(mass, mom.head<3>().norm())) >
+            1e-6_GeV + 1e-6 * mom[3]) {
+      throw badDecay(*source, "expected finite on-shell four-momentum");
+    }
+  } else if (std::isnan(mass) || std::isnan(charge)) {
+    return std::nullopt;
+  }
+
+  SimParticle particle{id, pdg, charge, mass};
+  particle.initialState().setPosition4(position);
+  const double p = mom.head<3>().norm();
+  if (p > 0.) {
+    particle.initialState().setDirection(mom.head<3>() / p);
+  }
+  particle.initialState().setAbsoluteMomentum(p);
+  particle.setOrigParticleIdx(source->id());
+  particle.setHeavyFlavourOrigin(deriveHeavyFlavourOrigin(source));
+  return particle;
+}
+
+void HepMC3InputConverter::addDecay(
+    const HepMC3::GenParticle& source, const SimParticle& parent,
+    SimParticleDecayGraph& graph, std::vector<bool>& seenVertices,
+    SimBarcode::SubParticleId& nextSubparticle) const {
+  const auto& end = *source.end_vertex();
+  if (source.status() != 2 || end.particles_in().size() != 1 ||
+      end.particles_out().size() < 2 ||
+      seenVertices.at(std::abs(end.id()) - 1) || parent.mass() <= 0.) {
+    throw badDecay(source,
+                   "expected an unvisited single-parent decay with at least "
+                   "two daughters");
+  }
+  seenVertices.at(std::abs(end.id()) - 1) = true;
+  SimParticleDecay decay;
+  decay.endPosition = convertPosition(end);
+  const Acts::Vector4 flight = decay.endPosition - parent.fourPosition();
+  const double ct = flight[3];
+  const Acts::Vector3 expectedFlight = ct * parent.momentum() / parent.energy();
+  if (!flight.allFinite() || ct < 0. ||
+      (flight.head<3>() - expectedFlight).norm() > 1e-3_mm + 1e-5 * ct) {
+    throw badDecay(source,
+                   "inconsistent decay position, time and parent momentum");
+  }
+  decay.properTime = ct * parent.mass() / parent.energy();
+  Acts::Vector4 daughterSum = Acts::Vector4::Zero();
+  double daughterCharge = 0.;
+  for (const auto& child : end.particles_out()) {
+    if (parent.particleId().generation() ==
+            std::numeric_limits<SimBarcode::GenerationId>::max() ||
+        nextSubparticle ==
+            std::numeric_limits<SimBarcode::SubParticleId>::max()) {
+      throw badDecay(source, "decay tree exceeds the barcode range");
+    }
+    const SimBarcode id = parent.particleId().makeDescendant(++nextSubparticle);
+    SimParticle daughter =
+        makeParticle(child, id, decay.endPosition, true).value();
+    daughter.setParentParticleId(parent.particleId());
+    daughterSum += convertMomentum(*child);
+    daughterCharge += daughter.charge();
+    if (child->end_vertex() != nullptr) {
+      if (std::ranges::find(m_cfg.decayPdgCodes, child->pid()) ==
+          m_cfg.decayPdgCodes.end()) {
+        throw badDecay(*child,
+                       "nested decay requires its PDG in decayPdgCodes");
+      }
+      addDecay(*child, daughter, graph, seenVertices, nextSubparticle);
+    } else if (child->status() != kUndecayedParticleStatus) {
+      throw badDecay(*child, "terminal daughter must have status 1");
+    }
+    decay.daughters.push_back(std::move(daughter));
+  }
+  if (std::abs(daughterCharge - parent.charge()) > 1e-6) {
+    throw badDecay(source, "daughter charges do not sum to the parent charge");
+  }
+  if ((daughterSum - convertMomentum(source)).cwiseAbs().maxCoeff() >
+      1e-6_GeV + 1e-6 * parent.energy()) {
+    throw badDecay(source,
+                   "daughter four-momenta do not conserve four-momentum");
+  }
+  if (!graph.emplace(parent.particleId(), std::move(decay)).second) {
+    throw badDecay(source, "duplicate generator parent barcode");
+  }
+}
+
+void HepMC3InputConverter::handleVertex(
+    const HepMC3::GenVertex& genVertex, SimVertex& vertex,
+    std::vector<SimVertex>& vertices, std::vector<SimParticle>& particles,
+    std::size_t& nSecondaryVertices, std::size_t& nParticles,
+    std::vector<bool>& seenVertices, SimParticleDecayGraph* graph) const {
   for (const auto& particle : genVertex.particles_out()) {
-    if (particle->end_vertex() != nullptr) {
+    const bool prescribe =
+        graph != nullptr && particle->status() == 2 &&
+        std::ranges::find(m_cfg.decayPdgCodes, particle->pid()) !=
+            m_cfg.decayPdgCodes.end();
+    if (prescribe && !particle->end_vertex()) {
+      throw badDecay(*particle, "status-2 parent is missing its decay vertex");
+    }
+    if (!prescribe && particle->end_vertex() != nullptr) {
       // This particle has an end vertex, we need to handle that vertex
       const auto& endVertex = *particle->end_vertex();
       if (seenVertices.at(std::abs(endVertex.id()) - 1)) {
@@ -189,7 +338,7 @@ void HepMC3InputConverter::handleVertex(const HepMC3::GenVertex& genVertex,
       }
       seenVertices.at(std::abs(endVertex.id()) - 1) = true;
 
-      const auto endVertexPosition = convertPosition(endVertex.position());
+      const auto endVertexPosition = convertPosition(endVertex);
 
       ACTS_VERBOSE("Found secondary vertex at "
                    << endVertexPosition.transpose());
@@ -201,17 +350,23 @@ void HepMC3InputConverter::handleVertex(const HepMC3::GenVertex& genVertex,
               m_cfg.vertexSpatialThreshold * m_cfg.vertexSpatialThreshold &&
           m_cfg.mergeSecondaries) {
         handleVertex(endVertex, vertex, vertices, particles, nSecondaryVertices,
-                     nParticles, seenVertices);
+                     nParticles, seenVertices, graph);
       } else {
         // Over threshold, make a new vertex
         SimVertex secondaryVertex;
         nSecondaryVertices += 1;
+        if (graph != nullptr &&
+            nSecondaryVertices >
+                std::numeric_limits<SimBarcode::SecondaryVertexId>::max()) {
+          throw badDecay(*particle,
+                         "secondary vertex exceeds the barcode range");
+        }
         secondaryVertex.id =
             SimVertexBarcode{vertex.id}.withVertexSecondary(nSecondaryVertices);
-        secondaryVertex.position4 = convertPosition(endVertex.position());
+        secondaryVertex.position4 = convertPosition(endVertex);
 
         handleVertex(endVertex, secondaryVertex, vertices, particles,
-                     nSecondaryVertices, nParticles, seenVertices);
+                     nSecondaryVertices, nParticles, seenVertices, graph);
 
         // Only keep the secondary vertex if it has outgoing particles
         if (!secondaryVertex.outgoing.empty()) {
@@ -219,60 +374,25 @@ void HepMC3InputConverter::handleVertex(const HepMC3::GenVertex& genVertex,
         }
       }
     } else {
-      if (particle->status() != kUndecayedParticleStatus) {
-        ACTS_ERROR("Undecayed particle has status "
-                   << particle->status() << "(and not "
-                   << kUndecayedParticleStatus << ")");
+      if (!prescribe && particle->status() != kUndecayedParticleStatus) {
+        ACTS_ERROR("Undecayed particle has status " << particle->status());
       }
-      // This particle is a final state particle
-      nParticles += 1;
-      SimBarcode particleId =
+      const SimBarcode particleId =
           SimBarcode()
               .withVertexPrimary(vertex.vertexId().vertexPrimary())
               .withVertexSecondary(vertex.vertexId().vertexSecondary())
-              .withParticle(nParticles);
-
-      Acts::PdgParticle pdg{particle->pdg_id()};
-      double mass = 0.0;
-      double charge = 0.0;
-
-      if (pdg != Acts::PdgParticle::eInvalid) {
-        if (auto massOpt = Acts::findMass(pdg); massOpt.has_value()) {
-          mass = massOpt.value();
-        } else {
-          ACTS_ERROR("No mass found for PDG ID " << pdg);
-          throw std::bad_optional_access{};
-        }
-
-        if (auto chargeOpt = Acts::findCharge(pdg); chargeOpt.has_value()) {
-          charge = chargeOpt.value();
-        } else {
-          ACTS_ERROR("No charge found for PDG ID " << pdg);
-          throw std::bad_optional_access{};
-        }
-      }
-
-      if (std::isnan(mass) || std::isnan(charge)) {
-        // This particle does not have a mass or a charge based on our data
-        // table:
-        // => We can't handle it
+              .withParticle(++nParticles);
+      auto part = makeParticle(
+          particle, particleId,
+          prescribe ? convertPosition(genVertex) : vertex.position4, prescribe);
+      if (!part) {
         continue;
       }
-
-      SimParticle simParticle{particleId, pdg, charge, mass};
-      simParticle.initialState().setPosition4(vertex.position4);
-      simParticle.setOrigParticleIdx(particle->id());
-      simParticle.setHeavyFlavourOrigin(deriveHeavyFlavourOrigin(particle));
-
-      const HepMC3::FourVector& genMomentum = particle->momentum();
-      Acts::Vector3 momentum{genMomentum.px() * 1_GeV, genMomentum.py() * 1_GeV,
-                             genMomentum.pz() * 1_GeV};
-      double p = momentum.norm();
-
-      simParticle.initialState().setDirection(momentum.normalized());
-      simParticle.initialState().setAbsoluteMomentum(p);
-
-      particles.push_back(simParticle);
+      if (prescribe) {
+        SimBarcode::SubParticleId nextSubparticle = 0;
+        addDecay(*particle, *part, *graph, seenVertices, nextSubparticle);
+      }
+      particles.push_back(std::move(*part));
       vertex.outgoing.insert(particleId);
     }
   }
@@ -311,13 +431,12 @@ void HepMC3InputConverter::convertHepMC3ToInternalEdm(
                           return ss.str();
                         }());
 
-        auto position = convertPosition(vertex->position());
+        auto position = convertPosition(*vertex);
 
         if (auto it = std::ranges::find_if(
                 vertexClusters,
                 [&](const auto& cluster) {
-                  const auto clusterPosition =
-                      convertPosition(cluster.at(0)->position());
+                  const auto clusterPosition = convertPosition(*cluster.at(0));
                   return (position - clusterPosition)
                              .template head<3>()
                              .cwiseAbs()
@@ -340,6 +459,7 @@ void HepMC3InputConverter::convertHepMC3ToInternalEdm(
   std::vector<SimVertex> verticesUnordered;
   std::vector<SimParticle> particlesUnordered;
 
+  SimParticleDecayGraph graph;
   std::vector<bool> seenVertices;
   seenVertices.resize(genEvent.vertices().size());
 
@@ -370,7 +490,7 @@ void HepMC3InputConverter::convertHepMC3ToInternalEdm(
 
     for (auto& cluster : vertexClusters) {
       ACTS_VERBOSE("Primary vertex cluster at "
-                   << convertPosition(cluster.at(0)->position()).transpose()
+                   << convertPosition(*cluster.at(0)).transpose()
                    << " containing " << cluster.size() << " vertices:\n"
                    <<
                    [&]() {
@@ -383,9 +503,15 @@ void HepMC3InputConverter::convertHepMC3ToInternalEdm(
                    << "--------------");
 
       nPrimaryVertices += 1;
+      if (!m_cfg.outputDecayGraph.empty() &&
+          nPrimaryVertices >
+              std::numeric_limits<SimBarcode::PrimaryVertexId>::max()) {
+        throw std::overflow_error(
+            "HepMC primary vertex exceeds the barcode range");
+      }
       SimVertex primaryVertex;
       primaryVertex.id = SimVertexBarcode().withVertexPrimary(nPrimaryVertices);
-      primaryVertex.position4 = convertPosition(cluster.at(0)->position());
+      primaryVertex.position4 = convertPosition(*cluster.at(0));
 
       std::size_t nSecondaryVertices = 0;
       std::size_t nParticles = 0;
@@ -393,9 +519,23 @@ void HepMC3InputConverter::convertHepMC3ToInternalEdm(
       for (auto& genVertex : cluster) {
         handleVertex(*genVertex, primaryVertex, verticesUnordered,
                      particlesUnordered, nSecondaryVertices, nParticles,
-                     seenVertices);
+                     seenVertices,
+                     m_cfg.outputDecayGraph.empty() ? nullptr : &graph);
       }
       verticesUnordered.push_back(primaryVertex);
+    }
+  }
+
+  if (!m_cfg.outputDecayGraph.empty()) {
+    const auto expected =
+        std::ranges::count_if(genEvent.particles(), [&](const auto& source) {
+          return source->status() == 2 &&
+                 std::ranges::find(m_cfg.decayPdgCodes, source->pid()) !=
+                     m_cfg.decayPdgCodes.end();
+        });
+    if (graph.size() != static_cast<std::size_t>(expected)) {
+      throw std::invalid_argument(
+          "HepMC contains selected decays unreachable from a primary vertex");
     }
   }
 
@@ -446,6 +586,9 @@ void HepMC3InputConverter::convertHepMC3ToInternalEdm(
   // move generated event to the store
   m_outputParticles(ctx, std::move(particles));
   m_outputVertices(ctx, std::move(vertices));
+  if (!m_cfg.outputDecayGraph.empty()) {
+    m_outputDecayGraph(ctx, std::move(graph));
+  }
 }
 
 }  // namespace ActsExamples
