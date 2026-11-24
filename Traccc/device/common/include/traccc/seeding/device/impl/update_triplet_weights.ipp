@@ -10,6 +10,7 @@
 
 // Project include(s).
 #include "traccc/definitions/math.hpp"
+#include "traccc/seeding/seed_confirmation_helper.hpp"
 
 // System include(s).
 #include <cassert>
@@ -43,10 +44,14 @@ inline void update_triplet_weights(
     return;
   }
 
+  const edm::spacepoint_collection::const_device::const_proxy_type current_spM =
+      spacepoints.at(this_triplet.spM);
   const edm::spacepoint_collection::const_device::const_proxy_type current_spT =
       spacepoints.at(this_spT_idx);
 
-  const scalar currentTop_r = current_spT.radius();
+  const scalar currentTop_r = seed_confirmation_helper::top_radius(
+      filter_config, current_spM.radius(), current_spM.z(),
+      current_spT.radius(), current_spT.z());
 
   // if two compatible seeds with high distance in r are found, compatible
   // seeds span 5 layers
@@ -62,6 +67,9 @@ inline void update_triplet_weights(
 
   // Check if anything needs to be done.
   if (mb_count.m_nTriplets <= 1) {
+    triplets.at(globalIndex).weight += seed_confirmation_helper::extra_weight(
+        filter_config, 0u, this_triplet.impact_parameter, this_triplet.z_vertex,
+        this_triplet.cot_theta);
     return;
   }
 
@@ -91,7 +99,9 @@ inline void update_triplet_weights(
         spacepoints.at(other_spT_idx);
 
     // compared top SP should have at least deltaRMin distance
-    const scalar otherTop_r = other_spT.radius();
+    const scalar otherTop_r = seed_confirmation_helper::top_radius(
+        filter_config, current_spM.radius(), current_spM.z(),
+        other_spT.radius(), other_spT.z());
     const scalar deltaR = currentTop_r - otherTop_r;
     if (math::fabs(deltaR) < filter_config.deltaRMin) {
       continue;
@@ -134,7 +144,13 @@ inline void update_triplet_weights(
     }
   }
 
+  this_triplet.weight += seed_confirmation_helper::extra_weight(
+      filter_config, static_cast<unsigned int>(num_compat_seedR),
+      this_triplet.impact_parameter, this_triplet.z_vertex,
+      this_triplet.cot_theta);
   triplets.at(globalIndex).weight = this_triplet.weight;
+  triplets.at(globalIndex).n_compat =
+      static_cast<unsigned int>(num_compat_seedR);
 }
 
 }  // namespace traccc::device

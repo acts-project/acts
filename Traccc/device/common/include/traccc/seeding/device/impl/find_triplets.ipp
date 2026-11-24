@@ -130,7 +130,8 @@ TRACCC_HOST_DEVICE inline void find_triplets(
         // Add triplet to jagged vector
         triplets.at(tripletOffset + tripletIndex++) = device_triplet(
             {spB_idx, spM_idx, spT_idx, globalIndex, curvature,
-             -impact_parameter * filter_config.impactWeightFactor, lb.Zo()});
+             -impact_parameter * filter_config.impactWeightFactor, lb.Zo(),
+             impact_parameter, lb.cotTheta(), 0u, false});
       }
     }
   }
@@ -139,11 +140,12 @@ TRACCC_HOST_DEVICE inline void find_triplets(
   // finds _fewer_ results.
   for (; tripletIndex < tripletCount; ++tripletIndex) {
     // Add a sentinel triplet.
-    triplets.at(tripletOffset + tripletIndex) = device_triplet(
-        {std::numeric_limits<unsigned int>::max(),
-         std::numeric_limits<unsigned int>::max(),
-         std::numeric_limits<unsigned int>::max(),
-         std::numeric_limits<unsigned int>::max(), 0.f, 0.f, 0.f});
+    triplets.at(tripletOffset + tripletIndex) =
+        device_triplet({std::numeric_limits<unsigned int>::max(),
+                        std::numeric_limits<unsigned int>::max(),
+                        std::numeric_limits<unsigned int>::max(),
+                        std::numeric_limits<unsigned int>::max(), 0.f, 0.f, 0.f,
+                        0.f, 0.f, 0u, false});
   }
 }
 
