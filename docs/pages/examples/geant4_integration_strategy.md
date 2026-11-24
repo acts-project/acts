@@ -1,3 +1,5 @@
+@page geant4_integration_strategy Geant4 integration strategy
+
 # Geant4 integration strategy
 
 Evolve the ACTS Examples Geant4 integration around a persistent simulation

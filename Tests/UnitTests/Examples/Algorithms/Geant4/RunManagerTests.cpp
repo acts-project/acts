@@ -202,7 +202,7 @@ class EventAction final : public G4UserEventAction {
       G4RunManager::GetRunManager()->AbortRun(m_data.softAbort);
     }
   }
-  void EndOfEventAction(const G4Event*) override {
+  void EndOfEventAction(const G4Event* /*event*/) override {
     m_data.callbacks.emplace_back("end event");
     m_data.random.push_back(G4UniformRand());
   }
