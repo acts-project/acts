@@ -14,6 +14,8 @@
 #include "Acts/Seeding/GbtsGeometry.hpp"
 #include "Acts/Seeding/GbtsGraphBuilder.hpp"
 #include "Acts/Seeding/GbtsLayerConnection.hpp"
+#include "Acts/Seeding/GbtsProfiler.hpp"
+#include "Acts/Seeding/GbtsProfilerTypes.hpp"
 #include "Acts/Seeding/GbtsRoiDescriptor.hpp"
 #include "Acts/Seeding/GbtsTrackingFilter.hpp"
 #include "Acts/Seeding/GraphBasedTrackSeeder.hpp"
@@ -26,8 +28,12 @@
 #include <numbers>
 #include <optional>
 #include <ranges>
+#include <set>
 #include <sstream>
 #include <string>
+#include <string_view>
+#include <thread>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -401,12 +407,16 @@ struct SeederSetup {
 /// @param pruneShortChains leave out edges too short for a seed
 /// @param addTriplets accept a chain one edge short at low eta
 /// @param minSeedLevel chain length a seed needs
-SeederSetup makeSeeder(const ToyDetector& detector,
-                       const bool calibrateStrips = true,
-                       const bool quiet = false,
-                       const bool pruneShortChains = false,
-                       const bool addTriplets = false,
-                       const std::uint8_t minSeedLevel = 3) {
+/// @param profiler handed to the seeder, if not null
+/// @param sumRatioCutMax turns the sum of ratios linking cut on at this value
+/// @param postFitCurvatureFactor the seeder's post-fit curvature factor
+SeederSetup makeSeeder(
+    const ToyDetector& detector, const bool calibrateStrips = true,
+    const bool quiet = false, const bool pruneShortChains = false,
+    const bool addTriplets = false, const std::uint8_t minSeedLevel = 3,
+    std::shared_ptr<Experimental::GbtsProfiler> profiler = nullptr,
+    const std::optional<float> sumRatioCutMax = std::nullopt,
+    const float postFitCurvatureFactor = 0.f) {
   auto geometry = makeGeometry(detector);
 
   const auto makeLogger = [quiet]() -> std::unique_ptr<const Logger> {
@@ -419,17 +429,22 @@ SeederSetup makeSeeder(const ToyDetector& detector,
   config.useClusterWidthCuts = false;
   config.addTriplets = addTriplets;
   config.minSeedLevel = minSeedLevel;
+  config.postFitCurvatureFactor = postFitCurvatureFactor;
 
   Experimental::GbtsGraphBuilder::Config graphConfig;
   graphConfig.minPt = 1_GeV;
   graphConfig.maxOuterRadius = detector.maxOuterRadius;
   graphConfig.calibrateStrips = calibrateStrips;
   graphConfig.pruneShortChains = pruneShortChains;
+  if (sumRatioCutMax.has_value()) {
+    graphConfig.useSumRatioCut = true;
+    graphConfig.sumRatioCutMax = *sumRatioCutMax;
+  }
 
   return SeederSetup{
       .seeder = Experimental::GraphBasedTrackSeeder(
           Experimental::GraphBasedTrackSeeder::DerivedConfig(config), geometry,
-          makeLogger()),
+          makeLogger(), std::move(profiler)),
       .graphBuilder =
           Experimental::GbtsGraphBuilder(graphConfig, geometry, makeLogger()),
       .filter = Experimental::GbtsTrackingFilter(
@@ -824,6 +839,75 @@ BOOST_AUTO_TEST_CASE(PruneShortChainsKeepsTheSeeds) {
   }
 }
 
+// With the short chains pruned, a profiler still leaves the seeds as they are,
+// and records the edges the pruning drops and the outer nodes it leaves out.
+BOOST_AUTO_TEST_CASE(ProfilerLeavesThePrunedSeedsAlone) {
+  namespace DoubletCut = Experimental::GbtsDoubletCut;
+  std::size_t nPruned = 0;
+  for (const ToyDetector& detector : {barrelDetector(), forwardDetector()}) {
+    for (const auto& tracks : {makeMixedLengthTracks(),
+                               makeDenseForwardTracks(), makeForwardTracks()}) {
+      for (const std::uint8_t minSeedLevel :
+           std::array<std::uint8_t, 3>{2, 3, 4}) {
+        for (const bool addTriplets : {false, true}) {
+          const SpacePointContainer spacePoints =
+              makeSpacePoints(detector, tracks);
+          const auto run =
+              [&](std::shared_ptr<Experimental::GbtsProfiler> profiler) {
+                const SeederSetup setup =
+                    makeSeeder(detector, true, /*quiet=*/true,
+                               /*pruneShortChains=*/true, addTriplets,
+                               minSeedLevel, std::move(profiler));
+                SeedContainer result;
+                result.assignSpacePointContainer(spacePoints);
+                setup.seeder.createSeeds(spacePoints, setup.roi,
+                                         setup.graphBuilder, setup.filter,
+                                         setup.options, result);
+                return formatSeeds(result);
+              };
+
+          auto profiler = std::make_shared<Experimental::GbtsProfiler>();
+          BOOST_CHECK_EQUAL(run(profiler), run(nullptr));
+
+          const auto events = profiler->takeAll();
+          BOOST_REQUIRE_EQUAL(events.size(), 1u);
+          const auto& event = *events.front();
+
+          std::set<std::pair<SpacePointIndex, SpacePointIndex>> edges;
+          for (const auto& edge : event.edges) {
+            BOOST_CHECK(edges.emplace(edge.inner, edge.outer).second);
+          }
+          std::set<std::pair<SpacePointIndex, SpacePointIndex>> dropped;
+          for (const auto& doublet : event.rejectedDoublets) {
+            BOOST_CHECK(!edges.contains({doublet.inner, doublet.outer}));
+            if (doublet.cut == DoubletCut::ShortChain ||
+                doublet.cut == DoubletCut::ShortChainOuterNode) {
+              BOOST_CHECK_LT(doublet.value, doublet.threshold);
+              ++nPruned;
+            }
+            if (doublet.cut == DoubletCut::ShortChain ||
+                doublet.cut == DoubletCut::DeadEnd) {
+              dropped.emplace(doublet.inner, doublet.outer);
+            }
+          }
+          for (const auto& link : event.links) {
+            BOOST_CHECK(edges.contains({link.inner, link.middle}));
+            BOOST_CHECK(edges.contains({link.middle, link.outer}));
+          }
+          for (const auto& triplet : event.rejectedTriplets) {
+            BOOST_CHECK(edges.contains({triplet.inner, triplet.middle}) ||
+                        dropped.contains({triplet.inner, triplet.middle}));
+            BOOST_CHECK(edges.contains({triplet.middle, triplet.outer}));
+          }
+          BOOST_CHECK_EQUAL(event.heads.size(), event.edges.size());
+        }
+      }
+    }
+  }
+  // the cases above do prune
+  BOOST_CHECK_GT(nPruned, 0u);
+}
+
 // One seed per track, all four hits, in radial order.
 BOOST_AUTO_TEST_CASE(SeedsFromSeparatedTracks) {
   const ToyDetector detector = barrelDetector();
@@ -1087,6 +1171,345 @@ BOOST_AUTO_TEST_CASE(AdaptiveTauRatioCuts) {
     BOOST_CHECK_CLOSE(connections[i].tauRatioCutOuter, expected[i].second,
                       1e-4);
   }
+}
+
+// Profiling records what the cuts do and must not change what they do. Dense
+// tracks so that every stage rejects something.
+BOOST_AUTO_TEST_CASE(ProfilerLeavesTheSeedsAlone) {
+  const ToyDetector detector = barrelDetector();
+  const std::vector<Track> tracks = makeDenseTracks();
+  const SpacePointContainer spacePoints = makeSpacePoints(detector, tracks);
+
+  auto profiler = std::make_shared<Experimental::GbtsProfiler>();
+  const SeederSetup setup =
+      makeSeeder(detector, true, false, /*pruneShortChains=*/false,
+                 /*addTriplets=*/false, /*minSeedLevel=*/3, profiler);
+  profiler->setEventNumber(42);
+
+  SeedContainer seeds;
+  seeds.assignSpacePointContainer(spacePoints);
+  setup.seeder.createSeeds(spacePoints, setup.roi, setup.graphBuilder,
+                           setup.filter, setup.options, seeds);
+
+  BOOST_CHECK_EQUAL(formatSeeds(seeds),
+                    formatSeeds(runSeeding(detector, spacePoints)));
+
+  BOOST_CHECK(profiler->take(41) == nullptr);
+  const std::unique_ptr<const Experimental::GbtsProfiler::Event> event =
+      profiler->take(42);
+  BOOST_REQUIRE(event != nullptr);
+  // a caller reads an event, down to the fields of its records
+  static_assert(
+      std::is_same_v<decltype((event->rejectedDoublets.front().value)),
+                     const float&>);
+  BOOST_CHECK(profiler->takeAll().empty());
+  BOOST_CHECK_EQUAL(event->eventNumber, 42u);
+
+  BOOST_CHECK(event->rejectedNodes.empty());
+  BOOST_CHECK(!event->rejectedDoublets.empty());
+  BOOST_CHECK(!event->rejectedTriplets.empty());
+  BOOST_CHECK(!event->links.empty());
+
+  // a doublet is either an edge or rejected, never both
+  std::set<std::pair<SpacePointIndex, SpacePointIndex>> edges;
+  for (const auto& edge : event->edges) {
+    BOOST_CHECK(edges.emplace(edge.inner, edge.outer).second);
+  }
+  for (const auto& doublet : event->rejectedDoublets) {
+    BOOST_CHECK(!edges.contains({doublet.inner, doublet.outer}));
+  }
+  // a link joins two edges
+  for (const auto& link : event->links) {
+    BOOST_CHECK(edges.contains({link.inner, link.middle}));
+    BOOST_CHECK(edges.contains({link.middle, link.outer}));
+  }
+  // a rejected link's outer pair is an edge, and its inner pair one too unless
+  // the graph dropped it afterwards for finding no link or too short a chain
+  std::set<std::pair<SpacePointIndex, SpacePointIndex>> droppedEdges;
+  for (const auto& doublet : event->rejectedDoublets) {
+    if (doublet.cut == Experimental::GbtsDoubletCut::DeadEnd ||
+        doublet.cut == Experimental::GbtsDoubletCut::ShortChain) {
+      droppedEdges.emplace(doublet.inner, doublet.outer);
+    }
+  }
+  for (const auto& triplet : event->rejectedTriplets) {
+    BOOST_CHECK(edges.contains({triplet.inner, triplet.middle}) ||
+                droppedEdges.contains({triplet.inner, triplet.middle}));
+    BOOST_CHECK(edges.contains({triplet.middle, triplet.outer}));
+  }
+
+  // every edge is the head of a path once
+  BOOST_REQUIRE_EQUAL(event->heads.size(), event->edges.size());
+  std::size_t nCandidateHeads = 0;
+  for (const auto& head : event->heads) {
+    BOOST_CHECK(edges.contains({head.inner, head.outer}));
+    if (head.outcome == Experimental::GbtsHeadOutcome::Candidate) {
+      ++nCandidateHeads;
+    }
+  }
+
+  // a filter rejection's chain runs from the failed edge out to its head, edge
+  // by edge
+  for (const auto& rejection : event->filterRejections) {
+    const auto& chain = rejection.spacePoints;
+    BOOST_REQUIRE_EQUAL(chain.size(), rejection.pathLength + 2u);
+    BOOST_CHECK_EQUAL(chain[0], rejection.inner);
+    BOOST_CHECK_EQUAL(chain[1], rejection.outer);
+    BOOST_CHECK_EQUAL(chain[chain.size() - 2], rejection.headInner);
+    BOOST_CHECK_EQUAL(chain.back(), rejection.headOuter);
+    for (std::size_t k = 0; k + 1 < chain.size(); ++k) {
+      BOOST_CHECK(edges.contains({chain[k], chain[k + 1]}));
+    }
+  }
+
+  // the candidates are what the clone removal was given, and the output what
+  // it kept
+  BOOST_CHECK_EQUAL(event->candidates.size(), nCandidateHeads);
+  std::size_t nOutput = 0;
+  std::size_t nClones = 0;
+  namespace Fate = Experimental::GbtsCandidateFate;
+  for (const auto& candidate : event->candidates) {
+    nOutput += candidate.fate == Fate::Seed    ? 1
+               : candidate.fate == Fate::Split ? 2
+                                               : 0;
+    if (candidate.fate == Fate::Clone) {
+      ++nClones;
+    }
+  }
+  BOOST_CHECK_EQUAL(nOutput, seeds.size());
+  BOOST_CHECK_GT(nClones, 0u);
+
+  // a clone shares more than the threshold with better candidates, the one
+  // it is a clone of among them; a kept candidate shares no more than that
+  for (const auto& candidate : event->candidates) {
+    if (candidate.fate == Fate::TooFewSpacePoints) {
+      continue;
+    }
+    const float limit = candidate.shareThreshold * candidate.spacePoints.size();
+    if (candidate.fate == Fate::Clone) {
+      BOOST_CHECK_GT(candidate.nShared, limit);
+      BOOST_REQUIRE_GE(candidate.sharedWith, 0);
+      const auto& owner =
+          event->candidates.at(static_cast<std::size_t>(candidate.sharedWith));
+      BOOST_CHECK(owner.fate != Fate::TooFewSpacePoints);
+      BOOST_CHECK_LE(owner.quality, candidate.quality);
+    } else {
+      BOOST_CHECK_LE(candidate.nShared, limit);
+    }
+    BOOST_CHECK_EQUAL(candidate.nShared == 0, candidate.sharedWith < 0);
+  }
+}
+
+// The unresolved strip walk of `StripLayersNeedTheirPairResolved` loses every
+// seed to the tau ratio of the links, so that is what the profiler must name.
+BOOST_AUTO_TEST_CASE(ProfilerRecordsTheCutThatRejects) {
+  const std::vector<Track> tracks = makeSparseTracks();
+  constexpr float kWalk = 3.f;
+  constexpr std::size_t kFirstStripLayer = 2;
+
+  ToyDetector detector = barrelDetector();
+  for (std::size_t layer = kFirstStripLayer; layer < detector.layers.size();
+       ++layer) {
+    detector.layers[layer].technology = GbtsLayerTechnology::Strip;
+  }
+
+  const SpacePointContainer spacePoints =
+      makeStripSpacePoints(detector, tracks, kWalk);
+  auto profiler = std::make_shared<Experimental::GbtsProfiler>();
+  const SeederSetup setup =
+      makeSeeder(detector, /*calibrateStrips=*/false, /*quiet=*/true,
+                 /*pruneShortChains=*/false, /*addTriplets=*/false,
+                 /*minSeedLevel=*/3, profiler);
+  SeedContainer seeds;
+  seeds.assignSpacePointContainer(spacePoints);
+  setup.seeder.createSeeds(spacePoints, setup.roi, setup.graphBuilder,
+                           setup.filter, setup.options, seeds);
+  BOOST_CHECK_EQUAL(seeds.size(), 0u);
+
+  const auto events = profiler->takeAll();
+  BOOST_REQUIRE_EQUAL(events.size(), 1u);
+  const Experimental::GbtsProfiler::Event& event = *events.front();
+
+  auto trackColumn = spacePoints.column<std::uint32_t>("trackId");
+  const auto track = [&](const SpacePointIndex index) {
+    return spacePoints.at(index).extra(trackColumn);
+  };
+
+  // the outer triplet of a track is formed and rejected on its tau ratio,
+  // which leaves the second layer isolated, so the innermost doublet is never
+  // made: the first layer cuts on the z0 histogram of the second
+  BOOST_CHECK(event.links.empty());
+  std::size_t nTrueTriplets = 0;
+  for (const auto& triplet : event.rejectedTriplets) {
+    if (track(triplet.inner) != track(triplet.middle) ||
+        track(triplet.middle) != track(triplet.outer)) {
+      continue;
+    }
+    ++nTrueTriplets;
+    BOOST_CHECK(triplet.cut == Experimental::GbtsTripletCut::TauRatio);
+    BOOST_CHECK_GT(triplet.value, triplet.threshold);
+  }
+  BOOST_CHECK_EQUAL(nTrueTriplets, tracks.size());
+
+  std::size_t nTrueDoublets = 0;
+  for (const auto& doublet : event.rejectedDoublets) {
+    if (track(doublet.inner) != track(doublet.outer)) {
+      continue;
+    }
+    ++nTrueDoublets;
+    BOOST_CHECK(doublet.cut == Experimental::GbtsDoubletCut::IsolatedOuterNode);
+  }
+  BOOST_CHECK_EQUAL(nTrueDoublets, tracks.size());
+  BOOST_CHECK_EQUAL(event.edges.size(), 2 * tracks.size());
+
+  // so no edge has a path long enough to seed
+  BOOST_CHECK(!event.heads.empty());
+  for (const auto& head : event.heads) {
+    BOOST_CHECK(head.outcome == Experimental::GbtsHeadOutcome::ChainTooShort);
+  }
+  BOOST_CHECK(event.candidates.empty());
+}
+
+// Threads processing different events share a profiler without taking each
+// other's event numbers.
+BOOST_AUTO_TEST_CASE(ProfilerKeepsAnEventNumberPerThread) {
+  const ToyDetector detector = barrelDetector();
+  const std::vector<Track> tracks = makeSparseTracks();
+  const SpacePointContainer spacePoints = makeSpacePoints(detector, tracks);
+
+  auto profiler = std::make_shared<Experimental::GbtsProfiler>();
+  const SeederSetup setup =
+      makeSeeder(detector, true, false, /*pruneShortChains=*/false,
+                 /*addTriplets=*/false, /*minSeedLevel=*/3, profiler);
+  const auto runEvent = [&]() {
+    SeedContainer seeds;
+    seeds.assignSpacePointContainer(spacePoints);
+    setup.seeder.createSeeds(spacePoints, setup.roi, setup.graphBuilder,
+                             setup.filter, setup.options, seeds);
+  };
+
+  profiler->setEventNumber(1);
+  std::thread other([&]() {
+    profiler->setEventNumber(2);
+    runEvent();
+  });
+  other.join();
+  runEvent();
+
+  // added last, so this is the first thread's number surviving the other's
+  const auto events = profiler->takeAll();
+  BOOST_REQUIRE_EQUAL(events.size(), 2u);
+  BOOST_CHECK_EQUAL(events[0]->eventNumber, 2u);
+  BOOST_CHECK_EQUAL(events[1]->eventNumber, 1u);
+}
+
+// Each list holds every name of its kind once, from the first to the last.
+BOOST_AUTO_TEST_CASE(ProfilerListsTheLabelNames) {
+  const auto check = [](const auto& names, const std::string_view first,
+                        const std::string_view last) {
+    BOOST_REQUIRE(!names.empty());
+    BOOST_CHECK_EQUAL(names.front(), first);
+    BOOST_CHECK_EQUAL(names.back(), last);
+    const std::set<std::string_view> unique(names.begin(), names.end());
+    BOOST_CHECK_EQUAL(unique.size(), names.size());
+  };
+
+  check(Experimental::GbtsNodeCut::all, "EndcapClusterWidth",
+        "EndcapClusterWidth");
+  check(Experimental::GbtsDoubletCut::all, "IsolatedOuterNode", "ShortChain");
+  check(Experimental::GbtsTripletCut::all, "TauRatio",
+        "ValidationHighPtTauRatio");
+  check(Experimental::GbtsFilterCut::all, "Chi2X", "PostFitCurvature");
+  check(Experimental::GbtsHeadOutcome::all, "Candidate", "NoPathSurvived");
+  check(Experimental::GbtsCandidateFate::all, "Seed", "TooFewSpacePoints");
+}
+
+// At a threshold of zero the sum of ratios rejects what the separate cuts let
+// through, so that is what the profiler must name.
+BOOST_AUTO_TEST_CASE(ProfilerRecordsTheSumRatioCut) {
+  const ToyDetector detector = barrelDetector();
+  const std::vector<Track> tracks = makeDenseTracks();
+  const SpacePointContainer spacePoints = makeSpacePoints(detector, tracks);
+
+  auto profiler = std::make_shared<Experimental::GbtsProfiler>();
+  const SeederSetup setup =
+      makeSeeder(detector, /*calibrateStrips=*/true, /*quiet=*/true,
+                 /*pruneShortChains=*/false, /*addTriplets=*/false,
+                 /*minSeedLevel=*/3, profiler,
+                 /*sumRatioCutMax=*/0.f);
+  SeedContainer seeds;
+  seeds.assignSpacePointContainer(spacePoints);
+  setup.seeder.createSeeds(spacePoints, setup.roi, setup.graphBuilder,
+                           setup.filter, setup.options, seeds);
+
+  const auto events = profiler->takeAll();
+  BOOST_REQUIRE_EQUAL(events.size(), 1u);
+
+  std::size_t nRejected = 0;
+  for (const auto& triplet : events.front()->rejectedTriplets) {
+    if (triplet.cut != Experimental::GbtsTripletCut::SumRatio) {
+      continue;
+    }
+    ++nRejected;
+    BOOST_CHECK_GT(triplet.value, 0.f);
+    BOOST_CHECK_EQUAL(triplet.threshold, 0.f);
+  }
+  BOOST_CHECK_GT(nRejected, 0u);
+}
+
+// A factor this large rejects a complete chain, recorded with the space points
+// of the whole chain, for any curvature its fit finds. The toy tracks are
+// straight, so a few fits find exactly zero, which no factor rejects: seeds are
+// lost, but not all of them.
+BOOST_AUTO_TEST_CASE(ProfilerRecordsThePostFitCurvatureCut) {
+  const ToyDetector detector = barrelDetector();
+  const std::vector<Track> tracks = makeDenseTracks();
+  const SpacePointContainer spacePoints = makeSpacePoints(detector, tracks);
+
+  auto profiler = std::make_shared<Experimental::GbtsProfiler>();
+  const SeederSetup setup =
+      makeSeeder(detector, /*calibrateStrips=*/true, /*quiet=*/true,
+                 /*pruneShortChains=*/false, /*addTriplets=*/false,
+                 /*minSeedLevel=*/3, profiler,
+                 /*sumRatioCutMax=*/std::nullopt,
+                 /*postFitCurvatureFactor=*/1e12f);
+  SeedContainer seeds;
+  seeds.assignSpacePointContainer(spacePoints);
+  setup.seeder.createSeeds(spacePoints, setup.roi, setup.graphBuilder,
+                           setup.filter, setup.options, seeds);
+  BOOST_CHECK_LT(seeds.size(), runSeeding(detector, spacePoints).size());
+
+  const auto events = profiler->takeAll();
+  BOOST_REQUIRE_EQUAL(events.size(), 1u);
+  const Experimental::GbtsProfiler::Event& event = *events.front();
+
+  const float maxCurvature =
+      Experimental::GbtsTrackingFilter::Config{}.maxCurvature;
+  std::size_t nRejected = 0;
+  for (const auto& rejection : event.filterRejections) {
+    if (rejection.cut != Experimental::GbtsFilterCut::PostFitCurvature) {
+      continue;
+    }
+    ++nRejected;
+    BOOST_CHECK_GT(rejection.value, rejection.threshold);
+    BOOST_CHECK_EQUAL(rejection.threshold, maxCurvature);
+
+    const auto& chain = rejection.spacePoints;
+    BOOST_REQUIRE_EQUAL(chain.size(), rejection.pathLength + 2u);
+    BOOST_CHECK_EQUAL(chain[0], rejection.inner);
+    BOOST_CHECK_EQUAL(chain[1], rejection.outer);
+    BOOST_CHECK_EQUAL(chain[chain.size() - 2], rejection.headInner);
+    BOOST_CHECK_EQUAL(chain.back(), rejection.headOuter);
+  }
+  BOOST_CHECK_GT(nRejected, 0u);
+
+  std::size_t nNoPathSurvived = 0;
+  for (const auto& head : event.heads) {
+    if (head.outcome == Experimental::GbtsHeadOutcome::NoPathSurvived) {
+      ++nNoPathSurvived;
+    }
+  }
+  BOOST_CHECK_GT(nNoPathSurvived, 0u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

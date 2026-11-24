@@ -14,6 +14,7 @@
 #include "Acts/Seeding/GbtsGeometry.hpp"
 #include "Acts/Seeding/GbtsLayerDescription.hpp"
 #include "Acts/Seeding/GbtsNodeStorage.hpp"
+#include "Acts/Seeding/GbtsProfiler.hpp"
 #include "Acts/Seeding/GbtsRoiDescriptor.hpp"
 #include "Acts/Seeding/GbtsSeedFit.hpp"
 #include "Acts/Seeding/GbtsTauLookupTable.hpp"
@@ -114,11 +115,14 @@ class GraphBasedTrackSeeder {
   /// @param config Configuration for the seed finder
   /// @param geometry GBTS geometry
   /// @param logger Logging instance
+  /// @param profiler Records what every cut accepts and rejects, one event per
+  ///                 `createSeeds` call, if not null. Costs time and memory.
   GraphBasedTrackSeeder(const DerivedConfig& config,
                         std::shared_ptr<GbtsGeometry> geometry,
                         std::unique_ptr<const Acts::Logger> logger =
                             Acts::getDefaultLogger("Finder",
-                                                   Acts::Logging::Level::INFO));
+                                                   Acts::Logging::Level::INFO),
+                        std::shared_ptr<GbtsProfiler> profiler = nullptr);
 
   /// Create an empty node storage matching this seeder's configuration.
   ///
@@ -210,6 +214,8 @@ class GraphBasedTrackSeeder {
   std::unique_ptr<const Acts::Logger> m_logger =
       Acts::getDefaultLogger("Finder", Acts::Logging::Level::INFO);
 
+  std::shared_ptr<GbtsProfiler> m_profiler;
+
   const Acts::Logger& logger() const { return *m_logger; }
 
   /// Extract seed candidates from the graph.
@@ -218,11 +224,13 @@ class GraphBasedTrackSeeder {
   /// @param vOutputSeeds Output vector for seed candidates
   /// @param filter Tracking filter to be applied
   /// @param withFits Whether the fit of the filter to each seed is kept
+  /// @param profile Records the path heads, the filter rejections and the seed
+  ///                candidates, if not null
   void extractSeedsFromTheGraph(const GbtsNodeStorage& nodeStorage,
                                 const GbtsGraph& graph,
                                 std::vector<OutputSeedProperties>& vOutputSeeds,
-                                const GbtsTrackingFilter& filter,
-                                bool withFits) const;
+                                const GbtsTrackingFilter& filter, bool withFits,
+                                GbtsProfiler::Event* profile) const;
 
   /// A fitted path: the filter's state at its end, and its edges, the head
   /// edge first.
@@ -232,13 +240,21 @@ class GraphBasedTrackSeeder {
   };
 
   /// Extract the best fitted path from every edge inwards to a root edge.
-  /// @param nodeView View of the node positions and layers
+  /// @param nodeStorage Storage containing the graph nodes
   /// @param graph The graph
   /// @param filter Tracking filter fitting the paths
+  /// @param profile Records the path heads and the filter rejections, if not
+  ///                null
   /// @return The fitted paths
   std::vector<FittedPath> extractBestPathPerEdge(
-      const detail::GbtsNodeView& nodeView, const GbtsGraph& graph,
-      const GbtsTrackingFilter& filter) const;
+      const GbtsNodeStorage& nodeStorage, const GbtsGraph& graph,
+      const GbtsTrackingFilter& filter, GbtsProfiler::Event* profile) const;
+
+  /// `extractBestPathPerEdge`, compiled with and without the profiling.
+  template <bool doProfile>
+  std::vector<FittedPath> extractBestPathPerEdgeImpl(
+      const GbtsNodeStorage& nodeStorage, const GbtsGraph& graph,
+      const GbtsTrackingFilter& filter, GbtsProfiler::Event* profile) const;
 
   /// Estimate the inverse radius of the circle through three nodes.
   /// @param nodeView View of the node positions and layers

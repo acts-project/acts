@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Seeding/GbtsLayerDescription.hpp"
+#include "Acts/Seeding/detail/GbtsCutFailure.hpp"
 #include "Acts/Seeding/detail/GbtsFilterTypes.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -95,6 +96,21 @@ class GbtsTrackingFilter final {
   /// @return Success flag
   bool update(const detail::GbtsNodeView& nodeView, const detail::GbtsEdge& pS,
               detail::GbtsEdgeState& ts) const;
+
+  /// Update edge state with edge, saying why on a rejection
+  /// @param nodeView View of the node positions and layers
+  /// @param pS Edge to update with
+  /// @param ts Edge state to update
+  /// @param failure Set to the failed cut on a rejection
+  /// @return Success flag
+  bool update(const detail::GbtsNodeView& nodeView, const detail::GbtsEdge& pS,
+              detail::GbtsEdgeState& ts, detail::GbtsCutFailure& failure) const;
+
+  /// Both `update`s, with the failure reported only if not null.
+  template <bool doProfile>
+  bool updateImpl(const detail::GbtsNodeView& nodeView,
+                  const detail::GbtsEdge& pS, detail::GbtsEdgeState& ts,
+                  detail::GbtsCutFailure* failure) const;
 
   /// Get layer type from layer index
   /// @param layerIndex Layer index

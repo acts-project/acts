@@ -9,6 +9,7 @@
 #include "Acts/Seeding/GbtsTrackingFilter.hpp"
 
 #include "Acts/Seeding/GbtsGeometry.hpp"
+#include "Acts/Seeding/GbtsProfilerTypes.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 
 #include <array>
@@ -77,6 +78,21 @@ GbtsTrackingFilter::GbtsTrackingFilter(
 bool GbtsTrackingFilter::update(const detail::GbtsNodeView& nodeView,
                                 const detail::GbtsEdge& pS,
                                 detail::GbtsEdgeState& ts) const {
+  return updateImpl<false>(nodeView, pS, ts, nullptr);
+}
+
+bool GbtsTrackingFilter::update(const detail::GbtsNodeView& nodeView,
+                                const detail::GbtsEdge& pS,
+                                detail::GbtsEdgeState& ts,
+                                detail::GbtsCutFailure& failure) const {
+  return updateImpl<true>(nodeView, pS, ts, &failure);
+}
+
+template <bool doProfile>
+bool GbtsTrackingFilter::updateImpl(const detail::GbtsNodeView& nodeView,
+                                    const detail::GbtsEdge& pS,
+                                    detail::GbtsEdgeState& ts,
+                                    detail::GbtsCutFailure* failure) const {
   if (ts.cx[2][2] < 0 || ts.cx[1][1] < 0 || ts.cx[0][0] < 0) {
     ACTS_DEBUG("Negative cov_x");
   }
@@ -198,6 +214,13 @@ bool GbtsTrackingFilter::update(const detail::GbtsNodeView& nodeView,
   const float dchi2_y = resid_y * resid_y * Dy;
 
   if (dchi2_x > m_cfg.maxDChi2X || dchi2_y > m_cfg.maxDChi2Y) {
+    if constexpr (doProfile) {
+      if (dchi2_x > m_cfg.maxDChi2X) {
+        *failure = {GbtsFilterCut::Chi2X, dchi2_x, m_cfg.maxDChi2X};
+      } else {
+        *failure = {GbtsFilterCut::Chi2Y, dchi2_y, m_cfg.maxDChi2Y};
+      }
+    }
     return false;
   }
 
@@ -216,6 +239,10 @@ bool GbtsTrackingFilter::update(const detail::GbtsNodeView& nodeView,
   }
 
   if (std::abs(ts.x[2]) > m_cfg.maxCurvature) {
+    if constexpr (doProfile) {
+      *failure = {GbtsFilterCut::Curvature, std::abs(ts.x[2]),
+                  m_cfg.maxCurvature};
+    }
     return false;
   }
 
@@ -227,6 +254,10 @@ bool GbtsTrackingFilter::update(const detail::GbtsNodeView& nodeView,
 
   const GbtsZ0Range& z0Range = m_geometry->z0Range();
   if (z0 < z0Range.min || z0 > z0Range.max) {
+    if constexpr (doProfile) {
+      *failure = {GbtsFilterCut::Z0, z0,
+                  z0 < z0Range.min ? z0Range.min : z0Range.max};
+    }
     return false;
   }
 

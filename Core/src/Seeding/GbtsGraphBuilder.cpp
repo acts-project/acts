@@ -9,6 +9,7 @@
 #include "Acts/Seeding/GbtsGraphBuilder.hpp"
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Seeding/detail/GbtsCutFailure.hpp"
 #include "Acts/SpacePointFormation/detail/StripSpacePointCalibrationImpl.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 
@@ -22,6 +23,7 @@
 #include <numbers>
 #include <ranges>
 #include <span>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -63,6 +65,7 @@ struct SlidingWindow {
 };
 
 /// Check a triplet against the pT and d0 cuts.
+/// @tparam doProfile Whether the failed cut is reported
 /// @param cfg Graph builder configuration
 /// @param nodeView View of the node positions and layers
 /// @param candidateTriplet The three graph nodes
@@ -70,12 +73,15 @@ struct SlidingWindow {
 /// @param tauRatio Tau ratio of the triplet
 /// @param tauRatioCut Tau ratio cut threshold
 /// @param bFieldInZ Magnetic field in z, in GeV/(e*mm)
+/// @param failure Set to the failed cut on a rejection, with doProfile
 /// @return Whether the triplet is accepted
+template <bool doProfile>
 bool validateTriplet(const GbtsGraphBuilder::Config& cfg,
                      const detail::GbtsNodeView& nodeView,
                      const std::array<SpacePointIndex, 3>& candidateTriplet,
                      const float tripletMinPt, const float tauRatio,
-                     const float tauRatioCut, const float bFieldInZ) {
+                     const float tauRatioCut, const float bFieldInZ,
+                     detail::GbtsCutFailure& failure) {
   // conformal mapping with the center at the middle spacepoint
 
   std::array<float, 2> u{};
@@ -114,6 +120,9 @@ bool validateTriplet(const GbtsGraphBuilder::Config& cfg,
   const float du = u[0] - u[1];
 
   if (du == 0.0) {
+    if constexpr (doProfile) {
+      failure = {GbtsTripletCut::ValidationDegenerate, 0.f, 0.f};
+    }
     return false;
   }
 
@@ -124,6 +133,9 @@ bool validateTriplet(const GbtsGraphBuilder::Config& cfg,
   const float d0 = r0 * (B * r0 - A);
 
   if (std::abs(d0) > cfg.d0Max) {
+    if constexpr (doProfile) {
+      failure = {GbtsTripletCut::ValidationD0, std::abs(d0), cfg.d0Max};
+    }
     return false;
   }
 
@@ -135,12 +147,19 @@ bool validateTriplet(const GbtsGraphBuilder::Config& cfg,
     const float pT = std::abs(bFieldInZ * R / 2);
 
     if (pT < tripletMinPt) {
+      if constexpr (doProfile) {
+        failure = {GbtsTripletCut::ValidationPt, pT, tripletMinPt};
+      }
       return false;
     }
 
     if (pT > 5 * tripletMinPt) {  // relatively high-pT track
 
       if (tauRatio > 0.9f * tauRatioCut) {
+        if constexpr (doProfile) {
+          failure = {GbtsTripletCut::ValidationHighPtTauRatio, tauRatio,
+                     0.9f * tauRatioCut};
+        }
         return false;
       }
     }
@@ -252,7 +271,20 @@ GbtsGraphBuilder::GbtsGraphBuilder(const Config& config,
 
 GbtsGraph GbtsGraphBuilder::buildTheGraph(
     const GbtsRoiDescriptor& roi, GbtsNodeStorage& nodeStorage,
-    const float bFieldInZ, const std::uint32_t minEdgeLevel) const {
+    const float bFieldInZ, const std::uint32_t minEdgeLevel,
+    GbtsProfiler::Event* const profile) const {
+  return profile != nullptr
+             ? buildTheGraphImpl<true>(roi, nodeStorage, bFieldInZ,
+                                       minEdgeLevel, profile)
+             : buildTheGraphImpl<false>(roi, nodeStorage, bFieldInZ,
+                                        minEdgeLevel, nullptr);
+}
+
+template <bool doProfile>
+GbtsGraph GbtsGraphBuilder::buildTheGraphImpl(
+    const GbtsRoiDescriptor& roi, GbtsNodeStorage& nodeStorage,
+    const float bFieldInZ, const std::uint32_t minEdgeLevel,
+    GbtsProfiler::Event* const profile) const {
   GbtsGraph graph;
   std::vector<detail::GbtsEdge>& edgeStorage = graph.edgeStorage;
 
@@ -335,6 +367,37 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(
     return true;
   };
 
+  // profiling: a doublet or triplet some cut rejected, by the caller's indices
+  namespace DoubletCut = GbtsDoubletCut;
+  namespace TripletCut = GbtsTripletCut;
+  [[maybe_unused]] const auto rejectDoublet =
+      [&](const SpacePointIndex inner, const SpacePointIndex outer,
+          const std::string_view cut, const float value = 0.f,
+          const float threshold = 0.f) {
+        profile->rejectedDoublets.push_back(
+            {.inner = nodeStorage.spacePointIndex(inner),
+             .outer = nodeStorage.spacePointIndex(outer),
+             .cut = cut,
+             .value = value,
+             .threshold = threshold});
+      };
+  [[maybe_unused]] const auto rejectTriplet =
+      [&](const SpacePointIndex inner, const SpacePointIndex middle,
+          const SpacePointIndex outer, const std::string_view cut,
+          const float value, const float threshold) {
+        profile->rejectedTriplets.push_back(
+            {.inner = nodeStorage.spacePointIndex(inner),
+             .middle = nodeStorage.spacePointIndex(middle),
+             .outer = nodeStorage.spacePointIndex(outer),
+             .cut = cut,
+             .value = value,
+             .threshold = threshold});
+      };
+
+  // profiling: per window, whether its nodes would have been filtered below,
+  // which a profiler does not do, so that it records those pairs
+  [[maybe_unused]] std::vector<bool> windowFiltersNodes;
+
   // loop over bin groups
   for (const auto& bg : m_geometry->binGroups()) {
     const detail::GbtsEtaBinInfo& B1 = nodeStorage.etaBin(bg.bin);
@@ -376,6 +439,9 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(
     // prepare a sliding window for each non-empty bin2 in the group
 
     phiSlidingWindow.clear();
+    if constexpr (doProfile) {
+      windowFiltersNodes.clear();
+    }
 
     // loop over n2 eta-bins in L2 layers
     for (const GbtsBinLink& link : bg.links) {
@@ -427,9 +493,14 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(
       // the branch is unpredictable. Filter them out of the window once
       // instead, and with dropDeadEnds or the chain pruning the n2 nodes whose
       // chains are too short. Not for the group's own bin: its nodes gain
-      // connections as n1 is processed.
-      if ((useZ0Histogram || dropDeadEnds || pruneGroup) &&
-          link.bin != bg.bin) {
+      // connections as n1 is processed. Not with a profiler either, which
+      // records those pairs.
+      const bool filterNodes =
+          (useZ0Histogram || dropDeadEnds || pruneGroup) && link.bin != bg.bin;
+      if constexpr (doProfile) {
+        windowFiltersNodes.push_back(filterNodes);
+      }
+      if (!doProfile && filterNodes) {
         const std::size_t windowIdx = phiSlidingWindow.size() - 1;
         // growing the outer vector moves the inner ones, which keeps their
         // buffers, so earlier windows' pointers stay valid
@@ -479,47 +550,106 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(
       // n1's side of the tau window, the same for every n2
       const float maxTau1 = std::min(m_cfg.maxAbsTau, n1pars.maxTau);
 
-      const auto passesDoubletCuts = [&](const detail::GbtsNodeParams& n2pars,
-                                         const std::uint16_t nodeInfo,
-                                         const float r1c, const float z1c,
-                                         const float tau, const float curv) {
-        const float ftau = std::abs(tau);
-        // The doublet cuts as one test rather than a branch each: which cut
-        // a pair fails depends on the data, so separate branches
-        // mispredict. Equivalent to the separate cuts for finite values
-        // (dr >= minDeltaRadius > 0 by default). First maxAbsTau and both
-        // nodes' tau windows; z0 is bounded only by the detector's size,
-        // which keeps the casts below in range,
-        const float minTau = std::max(n1pars.minTau, n2pars.minTau);
-        const float maxTau = std::min(maxTau1, n2pars.maxTau);
-        const bool inTauWindow = (static_cast<int>(ftau >= minTau) &
-                                  static_cast<int>(ftau <= maxTau)) != 0;
+      // Forced inline: it runs for every pair of a window, and since the graph
+      // building became a template for the profiler the compiler no longer
+      // inlines it on its own, which cost ~5% of the seeding.
+      const auto passesDoubletCuts =
+          [&](const detail::GbtsNodeParams& n2pars,
+              const std::uint16_t nodeInfo, const float r1c, const float z1c,
+              const float tau,
+              const float curv) __attribute__((always_inline)) {
+            const float ftau = std::abs(tau);
+            // The doublet cuts as one test rather than a branch each: which cut
+            // a pair fails depends on the data, so separate branches
+            // mispredict. Equivalent to the separate cuts for finite values
+            // (dr >= minDeltaRadius > 0 by default). First maxAbsTau and both
+            // nodes' tau windows; z0 is bounded only by the detector's size,
+            // which keeps the casts below in range,
+            const float minTau = std::max(n1pars.minTau, n2pars.minTau);
+            const float maxTau = std::min(maxTau1, n2pars.maxTau);
+            const bool inTauWindow = (static_cast<int>(ftau >= minTau) &
+                                      static_cast<int>(ftau <= maxTau)) != 0;
 
-        const float z0 = z1c - r1c * tau;
+            const float z0 = z1c - r1c * tau;
 
-        // then the z0 histogram, the r-z cuts and the curvature cut. The two
-        // flags are fixed per bin group, so their branches are predicted.
-        const bool inZ0Histogram =
-            !useZ0Histogram ||
-            checkZ0BitMask(m_cfg, minZ0, nodeInfo, z0, z0HistoCoeff);
+            // then the z0 histogram, the r-z cuts and the curvature cut. The
+            // two flags are fixed per bin group, so their branches are
+            // predicted.
+            const bool inZ0Histogram =
+                !useZ0Histogram ||
+                checkZ0BitMask(m_cfg, minZ0, nodeInfo, z0, z0HistoCoeff);
 
-        const float zOuter = z0 + m_cfg.maxOuterRadius * tau;
-        const bool inRZ =
-            !m_cfg.doubletFilterRZ ||
-            (static_cast<int>(z0 >= minZ0) & static_cast<int>(z0 <= maxZ0) &
-             static_cast<int>(zOuter >= cutZMinU) &
-             static_cast<int>(zOuter <= cutZMaxU)) != 0;
+            const float zOuter = z0 + m_cfg.maxOuterRadius * tau;
+            const bool inRZ =
+                !m_cfg.doubletFilterRZ ||
+                (static_cast<int>(z0 >= minZ0) & static_cast<int>(z0 <= maxZ0) &
+                 static_cast<int>(zOuter >= cutZMinU) &
+                 static_cast<int>(zOuter <= cutZMaxU)) != 0;
 
-        const float curvCut = ftau < m_cfg.curvatureSplitAbsTau
-                                  ? curvatureCutLowEta
-                                  : curvatureCutHighEta;
+            const float curvCut = ftau < m_cfg.curvatureSplitAbsTau
+                                      ? curvatureCutLowEta
+                                      : curvatureCutHighEta;
 
-        const bool inCurvature = std::abs(curv) <= curvCut;
+            const bool inCurvature = std::abs(curv) <= curvCut;
 
-        return (static_cast<int>(inTauWindow) &
-                static_cast<int>(inZ0Histogram) & static_cast<int>(inRZ) &
-                static_cast<int>(inCurvature)) != 0;
-      };
+            return (static_cast<int>(inTauWindow) &
+                    static_cast<int>(inZ0Histogram) & static_cast<int>(inRZ) &
+                    static_cast<int>(inCurvature)) != 0;
+          };
+
+      // profiling: the folded cuts do not say which one a pair failed, so they
+      // are gone through again, one at a time in the order they are listed
+      // above, and the first that fails is recorded
+      [[maybe_unused]] const auto rejectFoldedCut =
+          [&](const SpacePointIndex n2Idx, const detail::GbtsNodeParams& n2pars,
+              const std::uint16_t nodeInfo, const float r1c, const float z1c,
+              const float tau, const float curv) {
+            const float ftau = std::abs(tau);
+            if (ftau > m_cfg.maxAbsTau) {
+              rejectDoublet(n1Idx, n2Idx, DoubletCut::MaxAbsTau, ftau,
+                            m_cfg.maxAbsTau);
+              return;
+            }
+            if (ftau < n1pars.minTau || ftau > n1pars.maxTau) {
+              rejectDoublet(
+                  n1Idx, n2Idx, DoubletCut::InnerTauWindow, ftau,
+                  ftau < n1pars.minTau ? n1pars.minTau : n1pars.maxTau);
+              return;
+            }
+            if (ftau < n2pars.minTau || ftau > n2pars.maxTau) {
+              rejectDoublet(
+                  n1Idx, n2Idx, DoubletCut::OuterTauWindow, ftau,
+                  ftau < n2pars.minTau ? n2pars.minTau : n2pars.maxTau);
+              return;
+            }
+            const float z0 = z1c - r1c * tau;
+            // an empty mask fails the histogram whatever z0 is
+            if (useZ0Histogram && nodeInfo == 0) {
+              rejectDoublet(n1Idx, n2Idx, DoubletCut::IsolatedOuterNode);
+              return;
+            }
+            if (useZ0Histogram &&
+                !checkZ0BitMask(m_cfg, minZ0, nodeInfo, z0, z0HistoCoeff)) {
+              rejectDoublet(n1Idx, n2Idx, DoubletCut::Z0Histogram, z0);
+              return;
+            }
+            const float zOuter = z0 + m_cfg.maxOuterRadius * tau;
+            if (m_cfg.doubletFilterRZ && (z0 < minZ0 || z0 > maxZ0)) {
+              rejectDoublet(n1Idx, n2Idx, DoubletCut::Z0Range, z0,
+                            z0 < minZ0 ? minZ0 : maxZ0);
+              return;
+            }
+            if (m_cfg.doubletFilterRZ &&
+                (zOuter < cutZMinU || zOuter > cutZMaxU)) {
+              rejectDoublet(n1Idx, n2Idx, DoubletCut::ZAtOuterRadius, zOuter,
+                            zOuter < cutZMinU ? cutZMinU : cutZMaxU);
+              return;
+            }
+            const float curvCut = ftau < m_cfg.curvatureSplitAbsTau
+                                      ? curvatureCutLowEta
+                                      : curvatureCutHighEta;
+            rejectDoublet(n1Idx, n2Idx, DoubletCut::Curvature, curv, curvCut);
+          };
 
       // The tau range a doublet from n1 can pass the cuts below with: n1's own
       // |tau| window, narrowed by the z0 and zOuter cuts when doubletFilterRZ
@@ -581,8 +711,9 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(
         // No pair of the window is in reach: every one would fail the radius,
         // |tau|, or z0/zOuter cuts below. A strip pair's ends move, so it is
         // not judged here. Skipping leaves firstIt behind; the next visit
-        // catches up.
-        if (!stripPair) {
+        // catches up. A profiler records the cut each of those pairs fails, so
+        // it sees them all.
+        if (!doProfile && !stripPair) {
           if (slw.maxRadius - r1 < m_cfg.minDeltaRadius) {
             continue;
           }
@@ -630,6 +761,28 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(
 
           const std::uint16_t nodeInfo = edgeInfo[n2Idx].isConnected;
 
+          // profiling: the n2 nodes the window would have left out, in the
+          // order of the filter's conditions
+          if constexpr (doProfile) {
+            if (windowFiltersNodes[static_cast<std::size_t>(
+                    &slw - phiSlidingWindow.data())]) {
+              if (useZ0Histogram && nodeInfo == 0) {
+                rejectDoublet(n1Idx, n2Idx, DoubletCut::IsolatedOuterNode);
+                continue;
+              }
+              if (dropDeadEnds && edgeInfo[n2Idx].numEdges == 0) {
+                rejectDoublet(n1Idx, n2Idx, DoubletCut::DeadEndOuterNode);
+                continue;
+              }
+              if (pruneGroup && nodeLevel[n2Idx] + 1u < minLevel1) {
+                rejectDoublet(n1Idx, n2Idx, DoubletCut::ShortChainOuterNode,
+                              static_cast<float>(nodeLevel[n2Idx] + 1u),
+                              static_cast<float>(minLevel1));
+                continue;
+              }
+            }
+          }
+
           const detail::GbtsNodeParams& n2pars = params[n2Idx];
 
           const float r2 = n2pars.r;
@@ -639,6 +792,10 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(
           // On the nominal radii, so an endcap pair the slide would have
           // opened up is lost here. The cheap reject is worth more.
           if (dr < m_cfg.minDeltaRadius) {
+            if constexpr (doProfile) {
+              rejectDoublet(n1Idx, n2Idx, DoubletCut::MinDeltaRadius, dr,
+                            m_cfg.minDeltaRadius);
+            }
             continue;
           }
 
@@ -657,6 +814,9 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(
             // skip isolated nodes as their incoming edges lead to nowhere; only
             // the group's own bin can still hold them here
             if (useZ0Histogram && (nodeInfo == 0)) {
+              if constexpr (doProfile) {
+                rejectDoublet(n1Idx, n2Idx, DoubletCut::IsolatedOuterNode);
+              }
               continue;
             }
 
@@ -678,11 +838,18 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(
                   n2Idx, {dx - dy * turn, dy + dx * turn, dzc}, r2c, z2c);
             }
             if (!resolved) {
+              if constexpr (doProfile) {
+                rejectDoublet(n1Idx, n2Idx, DoubletCut::StripCrossing);
+              }
               continue;
             }
 
             dr = r2c - r1c;
             if (dr < m_cfg.minDeltaRadius) {
+              if constexpr (doProfile) {
+                rejectDoublet(n1Idx, n2Idx, DoubletCut::MinDeltaRadius, dr,
+                              m_cfg.minDeltaRadius);
+              }
               continue;
             }
           }
@@ -697,8 +864,14 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(
           kept.r2[numKept] = r2c;
           kept.tau[numKept] = tau;
           kept.curv[numKept] = curv;
-          numKept += static_cast<std::uint32_t>(
-              passesDoubletCuts(n2pars, nodeInfo, r1c, z1c, tau, curv));
+          const bool passes =
+              passesDoubletCuts(n2pars, nodeInfo, r1c, z1c, tau, curv);
+          numKept += static_cast<std::uint32_t>(passes);
+          if constexpr (doProfile) {
+            if (!passes) {
+              rejectFoldedCut(n2Idx, n2pars, nodeInfo, r1c, z1c, tau, curv);
+            }
+          }
         }
 
         // the inner loop over the n2 nodes kept
@@ -751,6 +924,18 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(
             }
 
             if (!isGood) {  // no match found, skip creating [n1 <- n2] edge
+              if constexpr (doProfile) {
+                // the closest match there was
+                float bestTauRatio = std::numeric_limits<float>::max();
+                for (std::uint32_t n2InIdx = n2FirstEdge; n2InIdx < n2LastEdge;
+                     ++n2InIdx) {
+                  bestTauRatio = std::min(
+                      bestTauRatio,
+                      std::abs(edgeStorage[n2InIdx].p[0] * invExpEta - 1.0f));
+                }
+                rejectDoublet(n1Idx, n2Idx, DoubletCut::MatchBeforeCreate,
+                              bestTauRatio, m_cfg.tauRatioPrecut);
+              }
               continue;
             }
           }
@@ -787,6 +972,10 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(
                   std::max(slw.tauRatioCutInner, pS->tauRatioCut);
 
               if (absTauRatio > tauRatioCut) {
+                if constexpr (doProfile) {
+                  rejectTriplet(n1Idx, n2Idx, pS->n2, TripletCut::TauRatio,
+                                absTauRatio, tauRatioCut);
+                }
                 continue;  // bad match
               }
 
@@ -801,22 +990,36 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(
               }
 
               if (std::abs(dPhi) > m_cfg.cutDPhiMax) {
+                if constexpr (doProfile) {
+                  rejectTriplet(n1Idx, n2Idx, pS->n2, TripletCut::DeltaPhi,
+                                std::abs(dPhi), m_cfg.cutDPhiMax);
+                }
                 continue;
               }
 
               const float dcurv = curv2 - pS->p[1];
 
               if (dcurv < -m_cfg.cutDCurvMax || dcurv > m_cfg.cutDCurvMax) {
+                if constexpr (doProfile) {
+                  rejectTriplet(n1Idx, n2Idx, pS->n2,
+                                TripletCut::DeltaCurvature, dcurv,
+                                m_cfg.cutDCurvMax);
+                }
                 continue;
               }
 
               // marginal in all three at once
-              if (m_cfg.useSumRatioCut &&
-                  absTauRatio / tauRatioCut +
-                          std::abs(dPhi) / m_cfg.cutDPhiMax +
-                          std::abs(dcurv) / m_cfg.cutDCurvMax >
-                      m_cfg.sumRatioCutMax) {
-                continue;
+              if (m_cfg.useSumRatioCut) {
+                const float sumRatio = absTauRatio / tauRatioCut +
+                                       std::abs(dPhi) / m_cfg.cutDPhiMax +
+                                       std::abs(dcurv) / m_cfg.cutDCurvMax;
+                if (sumRatio > m_cfg.sumRatioCutMax) {
+                  if constexpr (doProfile) {
+                    rejectTriplet(n1Idx, n2Idx, pS->n2, TripletCut::SumRatio,
+                                  sumRatio, m_cfg.sumRatioCutMax);
+                  }
+                  continue;
+                }
               }
 
               // final check: cuts on pT and d0
@@ -825,9 +1028,14 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(
                 const std::array<SpacePointIndex, 3> candidateTriplet = {
                     n1Idx, n2Idx, pS->n2};
 
-                if (!validateTriplet(m_cfg, nodeView, candidateTriplet,
-                                     tripletPtMin, absTauRatio,
-                                     m_cfg.tauRatioCut, bFieldInZ)) {
+                detail::GbtsCutFailure failure;
+                if (!validateTriplet<doProfile>(
+                        m_cfg, nodeView, candidateTriplet, tripletPtMin,
+                        absTauRatio, m_cfg.tauRatioCut, bFieldInZ, failure)) {
+                  if constexpr (doProfile) {
+                    rejectTriplet(n1Idx, n2Idx, pS->n2, failure.cut,
+                                  failure.value, failure.threshold);
+                  }
                   continue;
                 }
               }
@@ -855,15 +1063,43 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(
 
             if ((pruneGroup && level < minLevel1) ||
                 (dropDeadEnds && links.size() == numLinks)) {
+              if constexpr (doProfile) {
+                if (dropDeadEnds && links.size() == numLinks) {
+                  rejectDoublet(n1Idx, n2Idx, DoubletCut::DeadEnd);
+                } else {
+                  rejectDoublet(n1Idx, n2Idx, DoubletCut::ShortChain,
+                                static_cast<float>(level),
+                                static_cast<float>(minLevel1));
+                }
+              }
               // A pruned edge's z0 stays in the histogram, so that the z0 cut
               // further in is the same as without the pruning.
               links.resize(numLinks);
               edgeStorage.pop_back();
               --numCreatedEdges;
-            } else if (pruneShortChains) {
-              edgeLevel.push_back(level);
-              maxLevel1 = std::max(maxLevel1, level);
+            } else {
+              if (pruneShortChains) {
+                edgeLevel.push_back(level);
+                maxLevel1 = std::max(maxLevel1, level);
+              }
+              // profiling: the edge and its links, now that it is kept
+              if constexpr (doProfile) {
+                profile->edges.push_back(
+                    {.inner = nodeStorage.spacePointIndex(n1Idx),
+                     .outer = nodeStorage.spacePointIndex(n2Idx)});
+                for (std::size_t k = numLinks; k < links.size(); ++k) {
+                  profile->links.push_back(
+                      {.inner = nodeStorage.spacePointIndex(n1Idx),
+                       .middle = nodeStorage.spacePointIndex(n2Idx),
+                       .outer = nodeStorage.spacePointIndex(
+                           edgeStorage[links[k].first].n2)});
+                }
+              }
             }
+          } else if constexpr (doProfile) {
+            rejectDoublet(n1Idx, n2Idx, DoubletCut::EdgeLimit,
+                          static_cast<float>(edgeStorage.size()),
+                          static_cast<float>(maxEdges));
           }
         }  // loop over n2 (outer) nodes inside a sliding window on n2 bin
       }  // loop over sliding windows associated with n2 bins
