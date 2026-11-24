@@ -16,9 +16,11 @@
 #include "Acts/EventData/BoundParametrization.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Material/MaterialInteractionError.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
+#include "Acts/Utilities/detail/AllFinite.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -163,6 +165,41 @@ inline Result<Matrix<2, 2>> scatteringNoise(
                                        jacobian->transpose());
 }
 
+/// Internal checked subtraction; see updateMaterialCovariance for the contract.
+/// @param covariance Covariance, modified only on success
+/// @param directionNoise Direction noise to subtract
+/// @param varianceQoverP Q/p variance to subtract
+/// @return Success or InvalidCovarianceAfterNoiseRemoval
+Result<void> removeMaterialCovarianceNoise(BoundMatrix& covariance,
+                                           const Matrix<2, 2>& directionNoise,
+                                           double varianceQoverP);
+
+/// Add or remove material noise in the current bound covariance basis.
+/// Removal checks the whole covariance, including correlations outside the
+/// direction block. It does not clamp variances or partially remove noise.
+/// @param covariance Covariance, modified only on success
+/// @param directionNoise Symmetric positive-semidefinite direction noise block
+/// @param varianceQoverP Nonnegative q/p variance increment
+/// @param mode Whether to add or remove noise
+/// @pre Inputs are finite; covariance is symmetric and positive semidefinite.
+/// @return Success or InvalidCovarianceAfterNoiseRemoval. The removal check
+/// uses diagonal scaling and a relative eigenvalue tolerance of 64 machine
+/// epsilons.
+inline Result<void> updateMaterialCovariance(BoundMatrix& covariance,
+                                             const Matrix<2, 2>& directionNoise,
+                                             double varianceQoverP,
+                                             NoiseUpdateMode mode) {
+  assert(detail::allFinite(covariance) && detail::allFinite(directionNoise));
+  assert(std::isfinite(varianceQoverP) && varianceQoverP >= 0.);
+  if (mode == NoiseUpdateMode::addNoise) {
+    covariance.block<2, 2>(eBoundDir0, eBoundDir0) += directionNoise;
+    covariance(eBoundQOverP, eBoundQOverP) += varianceQoverP;
+    return Result<void>::success();
+  }
+  return removeMaterialCovarianceNoise(covariance, directionNoise,
+                                       varianceQoverP);
+}
+
 /// Global angular variances for legacy material diagnostics.
 /// @param direction Global unit direction
 /// @param scatteringVariance Projected physical scattering variance
@@ -252,35 +289,40 @@ Result<PointwiseMaterialEffects> performMaterialInteraction(
   const double nextQOverP =
       particleHypothesis.qOverP(nextP, std::copysign(absQ, qOverP));
 
+  auto covariance = stepper.covariance(state.stepping);
+
+  if (noiseUpdateMode == NoiseUpdateMode::addNoise) {
+    // Adding positive-semidefinite noise cannot fail, so nothing needs to be
+    // validated before committing. This performs the same operations, in the
+    // same order, as updateMaterialCovariance with addNoise.
+    stepper.update(state.stepping, position, direction, nextQOverP, time);
+    if (covariance.has_value()) {
+      assert(std::isfinite(effects.varianceQoverP) &&
+             effects.varianceQoverP >= 0.);
+      covariance->template block<2, 2>(eBoundDir0, eBoundDir0) += *noise;
+      (*covariance)(eBoundQOverP, eBoundQOverP) += effects.varianceQoverP;
+      stepper.setCovariance(state.stepping, *covariance);
+    }
+    return effects;
+  }
+
+  // Validate noise removal before committing either momentum or covariance.
+  if (covariance.has_value()) {
+    const auto updateResult = updateMaterialCovariance(
+        *covariance, *noise, effects.varianceQoverP, noiseUpdateMode);
+    if (!updateResult.ok()) {
+      return updateResult.error();
+    }
+  }
+
   // update track parameters
   stepper.update(state.stepping, position, direction, nextQOverP, time);
   //! [energy loss update]
 
-  if (!stepper.hasCovariance(state.stepping)) {
-    return effects;
-  }
-
-  // Convenience method to update a variance given a change and noise update
-  // mode
-  const auto updateVariance = [](double variance, double change,
-                                 NoiseUpdateMode updateMode) {
-    // Add/Subtract the change
-    // Protect the variance against becoming negative
-    return std::max(0.,
-                    variance + std::copysign(change, toUnderlying(updateMode)));
-  };
-
-  // update covariance matrix
   //! [covariance update]
-  BoundMatrix covariance = *stepper.covariance(state.stepping);
-  covariance(eBoundDir0, eBoundDir0) = updateVariance(
-      covariance(eBoundDir0, eBoundDir0), (*noise)(0, 0), noiseUpdateMode);
-  covariance(eBoundDir1, eBoundDir1) = updateVariance(
-      covariance(eBoundDir1, eBoundDir1), (*noise)(1, 1), noiseUpdateMode);
-  covariance(eBoundQOverP, eBoundQOverP) =
-      updateVariance(covariance(eBoundQOverP, eBoundQOverP),
-                     effects.varianceQoverP, noiseUpdateMode);
-  stepper.setCovariance(state.stepping, covariance);
+  if (covariance.has_value()) {
+    stepper.setCovariance(state.stepping, *covariance);
+  }
   //! [covariance update]
 
   return effects;
