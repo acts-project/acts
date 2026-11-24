@@ -99,10 +99,9 @@ inline void make_seeds(
 
   // create seeds
   edm::seed_collection::device seeds(seeds_view);
-  seeds.push_back({filtered_hits[globalIndex][0], 
+  seeds.push_back({filtered_hits[globalIndex][0],
                    filtered_hits[globalIndex][(n_filtered_hits - 1) / 2],
-                   filtered_hits[globalIndex][n_filtered_hits - 1],
-                   0.f});
+                   filtered_hits[globalIndex][n_filtered_hits - 1], 0.f});
 }
 
 }  // namespace traccc::device
