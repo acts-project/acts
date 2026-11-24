@@ -11,12 +11,16 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/TrackFitting/GsfComponent.hpp"
+#include "Acts/TrackFitting/GsfError.hpp"
 #include "Acts/TrackFitting/GsfOptions.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
 #include <cstddef>
 #include <iosfwd>
+#include <ranges>
+#include <sstream>
 #include <stdexcept>
+#include <system_error>
 #include <tuple>
 #include <utility>
 #include <vector>
@@ -27,20 +31,23 @@ namespace Acts::detail::Gsf {
 /// the specified method to reduce the mixture.
 ///
 /// @param mixture The mixture iterable
+/// @param gctx Geometry context used to select the bound parametrization
 /// @param surface The surface, on which the bound state is
 /// @param method How to reduce the mixture
 /// @return parameters and covariance as tuple
 std::tuple<BoundVector, BoundMatrix> mergeGaussianMixture(
-    std::span<const GsfComponent> mixture, const Surface &surface,
-    ComponentMergeMethod method);
+    const GeometryContext &gctx, std::span<const GsfComponent> mixture,
+    const Surface &surface, ComponentMergeMethod method);
 
 /// Merge two Gaussian mixture components into one
 ///
 /// @param a First component
 /// @param b Second component
+/// @param gctx Geometry context used to select the bound parametrization
 /// @param surface The surface, on which the bound state is
 /// @return merged component
-GsfComponent mergeTwoComponents(const GsfComponent &a, const GsfComponent &b,
+GsfComponent mergeTwoComponents(const GeometryContext &gctx,
+                                const GsfComponent &a, const GsfComponent &b,
                                 const Surface &surface);
 
 /// Angle descriptions for the combineBoundGaussianMixture function
@@ -56,6 +63,7 @@ struct CyclicRadiusAngle {
   double constant = 1.0;  // the radius
 };
 
+/// Canonical global-spherical direction rules plus surface-local periodicity.
 /// A compile time map to provide angle descriptions for different surfaces
 //! [angle description]
 template <Surface::SurfaceType type_t>
@@ -77,11 +85,25 @@ struct AngleDescription<Surface::Cylinder> {
 
 /// Helper function that encapsulates a switch-case to select the correct angle
 /// description dependent on the surface
+/// @param gctx Geometry context used to select the bound parametrization
 /// @param surface The surface, which the bound state is on
 /// @param callable A callable that takes the angle description as argument
 /// @return The return value of the callable
+/// @throws std::system_error for an unsupported bound parametrization
 template <typename Callable>
-auto angleDescriptionSwitch(const Surface &surface, Callable &&callable) {
+auto angleDescriptionSwitch(const GeometryContext &gctx, const Surface &surface,
+                            Callable &&callable) {
+  // The circular mean below assumes global phi and linear theta. Surface-local
+  // position periodicity alone is not enough to select the direction rules.
+  if (!surface.boundParametrization(gctx).isGlobalSpherical()) {
+    std::ostringstream message;
+    message << "Gaussian mixture merging requires global-spherical bound "
+               "coordinates on surface "
+            << surface.geometryId();
+    throw std::system_error(
+        make_error_code(GsfError::UnsupportedBoundParametrization),
+        message.str());
+  }
   switch (surface.type()) {
     case Surface::Cylinder: {
       AngleDescription<Surface::Cylinder>::Desc desc{};
@@ -291,6 +313,7 @@ BoundVector mergeGaussianMixtureParams(const component_range_t &cmps,
 /// @return parameters and covariance
 template <typename component_range_t, typename projector_t,
           typename angle_desc_t>
+  requires std::ranges::range<component_range_t>
 std::tuple<BoundVector, BoundMatrix> mergeGaussianMixture(
     const component_range_t &cmps, const projector_t &projector,
     const angle_desc_t &angleDesc, ComponentMergeMethod method) {
@@ -316,15 +339,17 @@ std::tuple<BoundVector, BoundMatrix> mergeGaussianMixture(
 ///
 /// @param cmps The component range to merge
 /// @param projector A projector to extract the weight and parameters from the components
+/// @param gctx Geometry context used to select the bound parametrization
 /// @param surface The surface, which the bound state is on
 /// @param method How to reduce the mixture
 /// @return parameters
 template <typename component_range_t, typename projector_t>
-BoundVector mergeGaussianMixtureParams(const component_range_t &cmps,
+BoundVector mergeGaussianMixtureParams(const GeometryContext &gctx,
+                                       const component_range_t &cmps,
                                        const projector_t &projector,
                                        const Surface &surface,
                                        ComponentMergeMethod method) {
-  return angleDescriptionSwitch(surface, [&](const auto &desc) {
+  return angleDescriptionSwitch(gctx, surface, [&](const auto &desc) {
     return mergeGaussianMixtureParams(cmps, projector, desc, method);
   });
 }
@@ -340,14 +365,16 @@ double computeSymmetricKlDivergence(const GsfComponent &a,
 /// @param cmps The component range to merge
 /// @param projector A projector to extract the weight, parameters and covariance
 ///        from the components
+/// @param gctx Geometry context used to select the bound parametrization
 /// @param surface The surface, which the bound state is on
 /// @param method How to reduce the mixture
 /// @return parameters and covariance
 template <typename component_range_t, typename projector_t>
 std::tuple<BoundVector, BoundMatrix> mergeGaussianMixture(
-    const component_range_t &cmps, const projector_t &projector,
-    const Surface &surface, ComponentMergeMethod method) {
-  return angleDescriptionSwitch(surface, [&](const auto &desc) {
+    const GeometryContext &gctx, const component_range_t &cmps,
+    const projector_t &projector, const Surface &surface,
+    ComponentMergeMethod method) {
+  return angleDescriptionSwitch(gctx, surface, [&](const auto &desc) {
     return mergeGaussianMixture(cmps, projector, desc, method);
   });
 }

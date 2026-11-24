@@ -30,6 +30,9 @@ class GsfErrorCategory : public std::error_category {
         return "No measurement states found in the backward pass";
       case GsfError::NoMeasurementStatesCreatedFinal:
         return "No measurement states in the final trajectory";
+      case GsfError::UnsupportedBoundParametrization:
+        return "Gaussian mixture merging does not support this bound "
+               "parametrization";
       default:
         return "unknown";
     }

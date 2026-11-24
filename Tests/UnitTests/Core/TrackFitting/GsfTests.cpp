@@ -94,7 +94,8 @@ struct MultiCmpsParsInterface : public BoundTrackParameters {
   MultiComponentBoundTrackParameters multi_pars;
 
   explicit MultiCmpsParsInterface(const MultiComponentBoundTrackParameters &p)
-      : BoundTrackParameters(p.merge(ComponentMergeMethod::eMean)),
+      : BoundTrackParameters(
+            p.merge(tester.geoCtx, ComponentMergeMethod::eMean)),
         multi_pars(p) {}
 
   explicit operator MultiComponentBoundTrackParameters() const {

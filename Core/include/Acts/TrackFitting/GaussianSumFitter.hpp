@@ -497,7 +497,8 @@ struct GaussianSumFitter {
 
     if (options.referenceSurface) {
       const auto& params = *bwdPropResult.endParameters;
-      const auto singleParams = params.merge(options.componentMergeMethod);
+      const auto singleParams =
+          params.merge(options.geoContext, options.componentMergeMethod);
 
       track.parameters() = singleParams.parameters();
       track.covariance() = singleParams.covariance().value();
