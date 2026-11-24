@@ -26,40 +26,6 @@ namespace Acts::Experimental {
 
 namespace {
 
-/// The phi sort's result and the storage `detail::sortByKey` expects
-/// (`scratch`, `buckets`), kept from bin to bin.
-struct PhiSortBuffers {
-  /// A bin's (phi, index into its staged nodes) pairs in phi order
-  std::vector<std::pair<float, std::uint32_t>> order;
-  std::vector<std::pair<float, std::uint32_t>> scratch;
-  std::vector<std::uint32_t> buckets;
-};
-
-/// Fill `buffers.order` with a bin's (phi, staged index) pairs in phi order.
-template <typename staged_node_t>
-void sortBinByPhi(std::span<const staged_node_t> staged,
-                  PhiSortBuffers& buffers) {
-  using Item = std::pair<float, std::uint32_t>;
-
-  buffers.order.clear();
-  for (std::uint32_t stagedIdx = 0; stagedIdx < staged.size(); ++stagedIdx) {
-    buffers.order.emplace_back(staged[stagedIdx].phi, stagedIdx);
-  }
-
-  // Sort by phi. Nodes with the same phi are ordered by z, then r, so the
-  // result does not depend on the order the space points were inserted in.
-  // Nodes at the same position stay in insertion order, as the sort is
-  // stable.
-  const auto phiOf = [](const Item& item) { return item.first; };
-  const auto byPosition = [&staged](const Item& a, const Item& b) {
-    const staged_node_t& nodeA = staged[a.second];
-    const staged_node_t& nodeB = staged[b.second];
-    return std::tie(nodeA.z, nodeA.r) < std::tie(nodeB.z, nodeB.r);
-  };
-
-  Acts::detail::sortByKey(std::span(buffers.order), buffers, phiOf, byPosition);
-}
-
 /// Fill a bin's phi index: its nodes in phi order, those within `dphi` of the
 /// wrap-around repeated shifted by 2pi, so the sliding window never wraps.
 void fillPhiNodes(detail::GbtsEtaBinInfo& binInfo,
@@ -183,7 +149,10 @@ void GbtsNodeStorage::finalize() {
     strips.reserve(m_strips.size());
   }
 
-  PhiSortBuffers phiSort;
+  using Item = std::pair<float, std::uint32_t>;
+  std::vector<Item> phiOrder;
+  std::vector<Item> scratch;
+  std::vector<std::uint32_t> buckets;
   for (std::uint32_t bin = 0; bin < m_etaBins.size(); ++bin) {
     detail::GbtsEtaBinInfo& binInfo = m_etaBins[bin];
 
@@ -194,9 +163,24 @@ void GbtsNodeStorage::finalize() {
       continue;
     }
 
-    sortBinByPhi(std::span(staged), phiSort);
-    const std::vector<std::pair<float, std::uint32_t>>& phiOrder =
-        phiSort.order;
+    phiOrder.clear();
+    for (std::uint32_t stagedIdx = 0; stagedIdx < staged.size(); ++stagedIdx) {
+      phiOrder.emplace_back(staged[stagedIdx].phi, stagedIdx);
+    }
+
+    // Sort by phi, then z and r. Identical positions keep insertion order.
+    const auto keyOf = [](const Item& item) { return item.first; };
+    const auto byPosition = [&staged](const Item& a, const Item& b) {
+      const StagedNode& nodeA = staged[a.second];
+      const StagedNode& nodeB = staged[b.second];
+      return std::tie(nodeA.z, nodeA.r) < std::tie(nodeB.z, nodeB.r);
+    };
+    const auto [scratchSize, bucketSize] =
+        Acts::detail::sortByKeyBufferSizes(phiOrder.size());
+    scratch.resize(std::max(scratch.size(), scratchSize));
+    buckets.resize(std::max(buckets.size(), bucketSize));
+    Acts::detail::sortByKey(std::span(phiOrder), std::span(scratch),
+                            std::span(buckets), keyOf, byPosition);
 
     for (const auto& [phi, stagedIdx] : phiOrder) {
       const StagedNode& node = staged[stagedIdx];

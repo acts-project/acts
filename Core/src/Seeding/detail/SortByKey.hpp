@@ -12,6 +12,7 @@
 #include <array>
 #include <bit>
 #include <bitset>
+#include <cassert>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
@@ -29,6 +30,17 @@ namespace Acts::detail {
 /// one architecture: anything from 32 to 256 does about as well, below 32 it
 /// can get slower.
 inline constexpr std::size_t kQuadraticLinearCrossover = 32;
+
+/// Required buffer sizes for sorting @p size items with sortByKey.
+/// @param size Number of items to sort
+/// @return Number of scratch items and bucket entries, respectively
+constexpr std::pair<std::size_t, std::size_t> sortByKeyBufferSizes(
+    std::size_t size) {
+  if (size <= kQuadraticLinearCrossover) {
+    return {0, 0};
+  }
+  return {size, 2 * std::bit_ceil(size) + size};
+}
 
 /// Sorts at most @p kMaxSize items stably by key with a rank sort: an item's
 /// new position is the number of smaller keys, plus the number of equal keys
@@ -97,11 +109,10 @@ void rankSortByKey(std::span<item_t> items, const key_of_t& keyOf) {
 /// kQuadraticLinearCrossover items is sorted with std::ranges::stable_sort
 /// instead, so that uneven keys cannot make it slow. The keys must lie well
 /// within float's range.
-template <typename item_t, typename storage_t, typename key_of_t,
-          typename key_t>
-void bucketSortByKey(std::span<item_t> items, storage_t& storage,
-                     const key_of_t& keyOf, const key_t minKey,
-                     const key_t maxKey) {
+template <typename item_t, typename key_of_t, typename key_t>
+void bucketSortByKey(std::span<item_t> items, std::span<item_t> scratch,
+                     std::span<std::uint32_t> buckets, const key_of_t& keyOf,
+                     const key_t minKey, const key_t maxKey) {
   if (maxKey == minKey) {
     return;  // all keys equal
   }
@@ -131,11 +142,8 @@ void bucketSortByKey(std::span<item_t> items, storage_t& storage,
   };
 
   // The storage holds each bucket's first position, then each item's bucket
-  storage.buckets.resize(nBuckets + n);
-  const std::span<std::uint32_t> starts =
-      std::span(storage.buckets).first(nBuckets);
-  const std::span<std::uint32_t> bucketOfItem =
-      std::span(storage.buckets).subspan(nBuckets, n);
+  const std::span<std::uint32_t> starts = buckets.first(nBuckets);
+  const std::span<std::uint32_t> bucketOfItem = buckets.subspan(nBuckets, n);
 
   // Count the items in each bucket, and the most in any one
   std::ranges::fill(starts, 0u);
@@ -151,8 +159,7 @@ void bucketSortByKey(std::span<item_t> items, storage_t& storage,
                       std::uint32_t{0});
 
   // Spread the items over the buckets, in order
-  auto& spread = storage.scratch;
-  spread.resize(n);
+  const std::span<item_t> spread = scratch.first(n);
   for (std::size_t i = 0; i < n; ++i) {
     spread[starts[bucketOfItem[i]]] = std::move(items[i]);
     ++starts[bucketOfItem[i]];
@@ -188,13 +195,20 @@ void bucketSortByKey(std::span<item_t> items, storage_t& storage,
 /// type: the rank sort up to kQuadraticLinearCrossover items, the bucket
 /// sort above, and std::ranges::stable_sort where a key is not finite.
 ///
+/// @pre Buffer sizes are at least those returned by sortByKeyBufferSizes.
+///      The buffers and items must not overlap.
 /// @param items The items to sort
-/// @param storage Kept between calls: `scratch`, a vector of items, and
-///        `buckets`, a vector of std::uint32_t, both of any content
+/// @param scratch Reusable item buffer; contents overwritten
+/// @param buckets Reusable bucket buffer; contents overwritten
 /// @param keyOf Returns the key of an item
-template <typename item_t, typename storage_t, typename key_of_t>
-void sortByKey(std::span<item_t> items, storage_t& storage,
-               const key_of_t& keyOf) {
+template <typename item_t, typename key_of_t>
+void sortByKey(std::span<item_t> items, std::span<item_t> scratch,
+               std::span<std::uint32_t> buckets, const key_of_t& keyOf) {
+  [[maybe_unused]] const auto [scratchSize, bucketSize] =
+      sortByKeyBufferSizes(items.size());
+  assert(scratch.size() >= scratchSize);
+  assert(buckets.size() >= bucketSize);
+
   // The type keyOf returns for an item
   using key_t = decltype(keyOf(items.front()));
 
@@ -224,7 +238,7 @@ void sortByKey(std::span<item_t> items, storage_t& storage,
   if (items.size() <= kQuadraticLinearCrossover) {
     rankSortByKey<kQuadraticLinearCrossover>(items, keyOf);
   } else {
-    bucketSortByKey(items, storage, keyOf, minKey, maxKey);
+    bucketSortByKey(items, scratch, buckets, keyOf, minKey, maxKey);
   }
 }
 
@@ -232,18 +246,20 @@ void sortByKey(std::span<item_t> items, storage_t& storage,
 /// @p orderOfEqualKeys. With float keys equal keys are rare, so this costs
 /// little more than the sort by key.
 ///
+/// @pre Buffer sizes are at least those returned by sortByKeyBufferSizes.
+///      The buffers and items must not overlap.
 /// @param items The items to sort
-/// @param storage Kept between calls: `scratch`, a vector of items, and
-///        `buckets`, a vector of std::uint32_t, both of any content
+/// @param scratch Reusable item buffer; contents overwritten
+/// @param buckets Reusable bucket buffer; contents overwritten
 /// @param keyOf Returns the key of an item
 /// @param orderOfEqualKeys Whether the first of two items with equal keys goes
 ///        before the second, a strict weak order; it is called only on items
 ///        with equal keys
-template <typename item_t, typename storage_t, typename key_of_t,
-          typename order_t>
-void sortByKey(std::span<item_t> items, storage_t& storage,
-               const key_of_t& keyOf, const order_t& orderOfEqualKeys) {
-  sortByKey(items, storage, keyOf);
+template <typename item_t, typename key_of_t, typename order_t>
+void sortByKey(std::span<item_t> items, std::span<item_t> scratch,
+               std::span<std::uint32_t> buckets, const key_of_t& keyOf,
+               const order_t& orderOfEqualKeys) {
+  sortByKey(items, scratch, buckets, keyOf);
 
   for (auto first = items.begin(); first != items.end();) {
     const auto key = keyOf(*first);
