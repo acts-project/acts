@@ -142,11 +142,19 @@ parser.add_argument(
     "--digi-config", help="Digitization configuration file", type=pathlib.Path
 )
 parser.add_argument(
+    "--seeding-config",
+    help="Seeding geometry selection configuration file",
+    type=pathlib.Path,
+)
+parser.add_argument(
     "--material-config", help="Material map configuration file", type=pathlib.Path
 )
 parser.add_argument(
     "--gen1",
-    help="Run on the Gen1 (Layer-based) geometry instead of Gen3 (default).",
+    help="Run on the Gen1 (Layer-based) geometry instead of Gen3 (default). "
+    "The default configs in Examples/Configs use Gen3 geometry identifiers, so "
+    "Gen1 also needs Gen1 configs via --digi-config and --seeding-config (and "
+    "--gbts-layer-map with --use-gbts); otherwise almost no tracks are found.",
     action="store_true",
 )
 parser.add_argument(
@@ -257,7 +265,11 @@ oddGbtsConnectionTable = (
     else actsDir / "Examples/Configs/odd-gbts-connection-table.json"
 )
 
-oddSeedingSel = actsDir / "Examples/Configs/odd-seeding-config.json"
+oddSeedingSel = (
+    args.seeding_config
+    if args.seeding_config
+    else actsDir / "Examples/Configs/odd-seeding-config.json"
+)
 if gen3:
     oddMaterialDeco = MaterialMapDecorator(
         TrackingGeometryMaterialJsonConverter().fromFile(oddMaterialMap)
