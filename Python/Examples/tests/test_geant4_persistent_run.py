@@ -62,7 +62,8 @@ runMaterialRecording(
             text=True,
         )
         assert result.returncode == 0, result.stdout + result.stderr
-        with uproot.open(output / "material.root") as file:
+        path = output / "material.root"
+        with path.open("rb") as stream, uproot.open(stream) as file:
             tree = file["material_tracks"]
             assert tree.num_entries == events * 20
             return tree.arrays(library="ak")
