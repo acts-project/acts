@@ -125,6 +125,11 @@ trajectory before filtering again. It remains a local linear approximation:
 large direction changes require rebuilding the reference transport Jacobians.
 Only canonical global-spherical coordinates are currently supported.
 
+@ref Acts::Experimental::RiddersStepper forms its numerical transport residuals
+using the destination surface's parametrization, including periodic direction
+differences. Its perturbation generation and finite-difference algorithm are
+unchanged.
+
 Pointwise material physics computes a projected scattering variance independently
 of the direction coordinates. A separate mapping produces the direction-noise
 block, with a direct diagonal calculation for the canonical spherical convention.
