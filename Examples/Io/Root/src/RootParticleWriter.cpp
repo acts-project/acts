@@ -291,8 +291,8 @@ ProcessCode RootParticleWriter::writeT(const AlgorithmContext& ctx,
     const auto perigeeZ0 = perigee_pars[Acts::BoundIndices::eBoundLoc1];
 
     // truth phi;theta;q/p *at the perigee*,
-    const auto perigeePhi = perigee_pars[Acts::BoundIndices::eBoundPhi];
-    const auto perigeeTheta = perigee_pars[Acts::BoundIndices::eBoundTheta];
+    const auto perigeePhi = perigee_pars[Acts::BoundIndices::eBoundDir0];
+    const auto perigeeTheta = perigee_pars[Acts::BoundIndices::eBoundDir1];
     const auto perigeeQop = perigee_pars[Acts::BoundIndices::eBoundQOverP];
 
     m_perigeePhi.push_back(Acts::clampValue<float>(perigeePhi));

@@ -155,8 +155,8 @@ ProcessCode ArrowTrackOutputConverter::execute(
       const auto& p = track.parameters();
       d0V->UnsafeAppend(static_cast<float>(p[Acts::eBoundLoc0]));
       z0V->UnsafeAppend(static_cast<float>(p[Acts::eBoundLoc1]));
-      phiV->UnsafeAppend(static_cast<float>(p[Acts::eBoundPhi]));
-      thetaV->UnsafeAppend(static_cast<float>(p[Acts::eBoundTheta]));
+      phiV->UnsafeAppend(static_cast<float>(p[Acts::eBoundDir0]));
+      thetaV->UnsafeAppend(static_cast<float>(p[Acts::eBoundDir1]));
       qopV->UnsafeAppend(static_cast<float>(p[Acts::eBoundQOverP]));
       if (m_cfg.writeTime) {
         tV->UnsafeAppend(static_cast<float>(p[Acts::eBoundTime]));

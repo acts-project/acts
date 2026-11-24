@@ -691,8 +691,8 @@ BOOST_AUTO_TEST_CASE(NeutralParticleDoesNotBend) {
   const double dtds = fastHypot(1., neutral.mass() / absMom);
   CHECK_CLOSE_ABS(stepper.time(state), time + *result * dtds, eps);
   const auto jac = stepper.transportToCurvilinear(state);
-  CHECK_CLOSE_ABS(jac(eBoundPhi, eBoundQOverP), 0., eps);
-  CHECK_CLOSE_ABS(jac(eBoundTheta, eBoundQOverP), 0., eps);
+  CHECK_CLOSE_ABS(jac(eBoundDir0, eBoundQOverP), 0., eps);
+  CHECK_CLOSE_ABS(jac(eBoundDir1, eBoundQOverP), 0., eps);
   CHECK_CLOSE_ABS(jac(eBoundTime, eBoundQOverP), 0., eps);
   BOOST_CHECK_EQUAL(stepper.qOverP(state), 0.);
 }
