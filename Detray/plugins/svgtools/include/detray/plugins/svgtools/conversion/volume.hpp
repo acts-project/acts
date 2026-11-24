@@ -38,10 +38,12 @@ namespace detray::svgtools::conversion {
 /// @param context The geometry context.
 /// @param detector The detractor the volume belongs to.
 /// @param d_volume The detray volume.
+/// @param view Projection used to convert geometry to SVG primitives.
 /// @param style the style settings
 /// @param hide_portals whether to display the volumes portals.
 /// @param hide_passives whether to display the contained passive surfaces.
 /// @param hide_grids whether to display the contained surface grid.
+/// @param hide_material whether material decorations are omitted.
 /// @param search_window neighborhood search window for the grid.
 ///
 /// @returns An actsvg proto volume representing the volume.

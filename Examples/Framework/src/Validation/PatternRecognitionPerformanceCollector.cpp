@@ -9,13 +9,105 @@
 #include "ActsExamples/Validation/PatternRecognitionPerformanceCollector.hpp"
 
 #include "Acts/EventData/BoundTrackParameters.hpp"
+#include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
+#include "Acts/Utilities/Zip.hpp"
+#include "Acts/Utilities/detail/periodic.hpp"
 
+#include <algorithm>
+#include <array>
+#include <cassert>
+#include <cmath>
 #include <format>
+#include <limits>
+#include <numbers>
+#include <optional>
 #include <utility>
+#include <vector>
 
 namespace ActsExamples {
+
+namespace {
+
+std::vector<double> nearestParticleDistances(
+    const SimParticleContainer& particles, double maxDeltaR) {
+  std::vector<double> distances(particles.size(), -1.);
+  // A singleton has no neighbour; retain -1 to fill the histogram underflow.
+  if (particles.size() < 2) {
+    return distances;
+  }
+  assert((std::isfinite(maxDeltaR) && maxDeltaR > 0.) &&
+         "DeltaR histogram upper edge must be finite and positive");
+  // Distances at or above the histogram upper edge share its overflow bin.
+  std::ranges::fill(distances, maxDeltaR);
+
+  std::vector<std::array<double, 2>> coordinates;
+  coordinates.reserve(particles.size());
+  double etaMin = std::numeric_limits<double>::infinity();
+  double etaMax = -std::numeric_limits<double>::infinity();
+  std::vector<std::size_t> finiteIndices;
+  finiteIndices.reserve(particles.size());
+  for (const auto& particle : particles) {
+    const double eta = Acts::VectorHelpers::eta(particle.direction());
+    const double phi = Acts::VectorHelpers::phi(particle.direction());
+    coordinates.push_back({eta, phi});
+    // Non-finite directions do not participate in the neighbour search.
+    if (!std::isfinite(eta) || !std::isfinite(phi)) {
+      continue;
+    }
+    finiteIndices.push_back(coordinates.size() - 1);
+    etaMin = std::min(etaMin, eta);
+    etaMax = std::max(etaMax, eta);
+  }
+  if (finiteIndices.size() < 2) {
+    return distances;
+  }
+  etaMin -= maxDeltaR;
+  etaMax += maxDeltaR;
+
+  assert((std::isfinite(etaMax - etaMin) && etaMin < etaMax) &&
+         "DeltaR histogram range cannot define an eta grid");
+
+  using EtaAxis =
+      Acts::Axis<Acts::AxisType::Equidistant, Acts::AxisBoundaryType::Bound>;
+  using PhiAxis =
+      Acts::Axis<Acts::AxisType::Equidistant, Acts::AxisBoundaryType::Closed>;
+  // Widen bins when necessary to keep grid storage linear in particle count.
+  const double maxBins =
+      std::ceil(std::sqrt(static_cast<double>(particles.size())));
+  auto bins = [&](double extent) {
+    return static_cast<std::size_t>(
+        std::clamp(std::floor(extent / maxDeltaR), 1., maxBins));
+  };
+  Acts::Grid<std::vector<std::size_t>, EtaAxis, PhiAxis> grid(
+      EtaAxis(etaMin, etaMax, bins(etaMax - etaMin)),
+      PhiAxis(-std::numbers::pi, std::numbers::pi,
+              bins(2. * std::numbers::pi)));
+  for (auto i : finiteIndices) {
+    grid.atPosition(coordinates[i]).push_back(i);
+  }
+
+  for (auto i : finiteIndices) {
+    const auto localBins =
+        grid.multiAxis().getLocalBinsFromPoint(coordinates[i]);
+    for (auto bin : grid.multiAxis().getNeighborHoodIndices(localBins, 1)) {
+      for (auto j : grid.at(bin)) {
+        if (i == j) {
+          continue;
+        }
+        const double dphi = Acts::detail::difference_periodic(
+            coordinates[i][1], coordinates[j][1], 2. * std::numbers::pi);
+        const double deta = coordinates[i][0] - coordinates[j][0];
+        distances[i] = std::min(distances[i], Acts::fastHypot(dphi, deta));
+      }
+    }
+  }
+  return distances;
+}
+
+}  // namespace
 
 PatternRecognitionPerformanceCollector::PatternRecognitionPerformanceCollector(
     Config cfg, std::unique_ptr<const Acts::Logger> logger)
@@ -55,53 +147,72 @@ void PatternRecognitionPerformanceCollector::fill(
     const TrackParticleMatching& trackParticleMatching,
     const ParticleTrackMatching& particleTrackMatching,
     const InverseMultimap<SimBarcode>& particleMeasurementsMap) {
+  std::string labelPlural = std::format("{}s", m_cfg.label);
+
   std::size_t unmatched = 0;
   std::size_t missingRefSurface = 0;
 
-  std::string labelPlural = std::format("{}s", m_cfg.label);
-
   for (const auto& track : tracks) {
     m_stats.nTotalTracks++;
+    m_stats.nTotalMeasurements += track.nMeasurements();
+    m_stats.nTotalOutliers += track.nOutliers();
+    m_stats.nTotalHoles += track.nHoles();
+    m_stats.nTotalSharedHits += track.nSharedHits();
 
-    if (!track.hasReferenceSurface()) {
+    // Plots and quantities below require track parameters at a reference
+    // surface. Everything else (matching, integrated counts) is computed
+    // regardless of whether a reference surface is available.
+    std::optional<Acts::BoundTrackParameters> fittedParameters;
+    if (track.hasReferenceSurface()) {
+      fittedParameters = track.createParametersAtReference();
+      m_trackSummaryPlotTool.fill(*fittedParameters, track.nTrackStates(),
+                                  track.nMeasurements(), track.nOutliers(),
+                                  track.nHoles(), track.nSharedHits());
+    } else {
+      m_stats.nTotalTracksMissingRefSurface++;
       missingRefSurface++;
-      continue;
     }
 
-    Acts::BoundTrackParameters fittedParameters =
-        track.createParametersAtReference();
-
-    m_trackSummaryPlotTool.fill(fittedParameters, track.nTrackStates(),
-                                track.nMeasurements(), track.nOutliers(),
-                                track.nHoles(), track.nSharedHits());
-
     for (const auto& [key, volumes] : m_cfg.subDetectorTrackSummaryVolumes) {
-      std::size_t nTrackStates{};
-      std::size_t nMeasurements{};
-      std::size_t nOutliers{};
-      std::size_t nHoles{};
-      std::size_t nSharedHits{};
-
+      SubDetectorStats counts;
       for (auto state : track.trackStatesReversed()) {
         if (!state.hasReferenceSurface() ||
             !volumes.contains(state.referenceSurface().geometryId().volume())) {
           continue;
         }
-        nTrackStates++;
-        nMeasurements +=
+        counts.nTrackStates++;
+        counts.nMeasurements +=
             static_cast<std::size_t>(state.typeFlags().isMeasurement());
-        nOutliers += static_cast<std::size_t>(state.typeFlags().isOutlier());
-        nHoles += static_cast<std::size_t>(state.typeFlags().isHole());
-        nSharedHits +=
+        counts.nOutliers +=
+            static_cast<std::size_t>(state.typeFlags().isOutlier());
+        counts.nHoles += static_cast<std::size_t>(state.typeFlags().isHole());
+        counts.nSharedHits +=
             static_cast<std::size_t>(state.typeFlags().isSharedHit());
       }
-      m_subDetectorSummaryTools.at(key).fill(fittedParameters, nTrackStates,
-                                             nMeasurements, nOutliers, nHoles,
-                                             nSharedHits);
+
+      SubDetectorStats& total = m_stats.subDetectors[key];
+      total.nTrackStates += counts.nTrackStates;
+      total.nMeasurements += counts.nMeasurements;
+      total.nOutliers += counts.nOutliers;
+      total.nHoles += counts.nHoles;
+      total.nSharedHits += counts.nSharedHits;
+
+      if (fittedParameters.has_value()) {
+        m_subDetectorSummaryTools.at(key).fill(
+            *fittedParameters, counts.nTrackStates, counts.nMeasurements,
+            counts.nOutliers, counts.nHoles, counts.nSharedHits);
+      }
     }
 
     auto imatched = trackParticleMatching.find(track.index());
+    if (fittedParameters.has_value()) {
+      m_fakePlotTool.fill(*fittedParameters,
+                          imatched != trackParticleMatching.end() &&
+                              imatched->second.classification ==
+                                  TrackMatchClassification::Fake);
+    }
     if (imatched == trackParticleMatching.end()) {
+      m_stats.nTotalUnmatchedTracks++;
       unmatched++;
       continue;
     }
@@ -115,14 +226,18 @@ void PatternRecognitionPerformanceCollector::fill(
       m_stats.nTotalDuplicateTracks++;
     }
 
-    m_fakePlotTool.fill(fittedParameters, particleMatch.classification ==
-                                              TrackMatchClassification::Fake);
-    m_duplicationPlotTool.fill(
-        fittedParameters,
-        particleMatch.classification == TrackMatchClassification::Duplicate);
+    if (fittedParameters.has_value()) {
+      m_duplicationPlotTool.fill(
+          *fittedParameters,
+          particleMatch.classification == TrackMatchClassification::Duplicate);
+    }
 
     if (particleMatch.particle.has_value() &&
-        particleMeasurementsMap.contains(particleMatch.particle.value())) {
+        particleMeasurementsMap.contains(particleMatch.particle.value()) &&
+        particles.contains(particleMatch.particle.value())) {
+      const auto matchedParticle =
+          particles.find(particleMatch.particle.value());
+
       const auto measurements =
           particleMeasurementsMap.equal_range(particleMatch.particle.value());
 
@@ -136,7 +251,12 @@ void PatternRecognitionPerformanceCollector::fill(
       double completeness = static_cast<double>(nMatchedHits) / nParticleHits;
       double purity = static_cast<double>(nMatchedHits) / nTrackMeasurements;
 
-      m_trackQualityPlotTool.fill(fittedParameters, completeness, purity);
+      m_stats.nTotalQualityTracks++;
+      m_stats.sumCompleteness += completeness;
+      m_stats.sumPurity += purity;
+
+      m_trackQualityPlotTool.fill(matchedParticle->initialState(), completeness,
+                                  purity);
     }
   }
 
@@ -149,7 +269,11 @@ void PatternRecognitionPerformanceCollector::fill(
                                                       << " " << labelPlural);
   }
 
-  for (const auto& particle : particles) {
+  const auto& deltaRAxis = m_cfg.effPlotToolConfig.varBinning.at("DeltaR");
+  const auto nearestDistances = nearestParticleDistances(
+      particles, deltaRAxis.bin(deltaRAxis.size() - 1).upper());
+  for (const auto& [particle, nearestDistance] :
+       Acts::zip(particles, nearestDistances)) {
     auto particleId = particle.particleId();
 
     std::size_t nMatchedTracks = 0;
@@ -173,19 +297,7 @@ void PatternRecognitionPerformanceCollector::fill(
       }
     }
 
-    double minDeltaR = -1;
-    for (const auto& closeParticle : particles) {
-      if (closeParticle.particleId() == particleId) {
-        continue;
-      }
-      double distance = Acts::VectorHelpers::deltaR(particle.direction(),
-                                                    closeParticle.direction());
-      if (minDeltaR == -1 || distance < minDeltaR) {
-        minDeltaR = distance;
-      }
-    }
-
-    m_effPlotTool.fill(geoContext, particle.initialState(), minDeltaR,
+    m_effPlotTool.fill(geoContext, particle.initialState(), nearestDistance,
                        isReconstructed);
     m_duplicationPlotTool.fill(particle.initialState(), nMatchedTracks);
     m_fakePlotTool.fill(particle.initialState(), nMatchedTracks, nFakeTracks);
@@ -225,6 +337,31 @@ void PatternRecognitionPerformanceCollector::logSummary() const {
   ACTS_LOG_WITH_LOGGER(log, Acts::Logging::DEBUG,
                        "nTotalFake" << m_cfg.label << "s            = "
                                     << m_stats.nTotalFakeTracks);
+  ACTS_LOG_WITH_LOGGER(log, Acts::Logging::DEBUG,
+                       "nTotalUnmatched" << m_cfg.label << "s       = "
+                                         << m_stats.nTotalUnmatchedTracks);
+  ACTS_LOG_WITH_LOGGER(log, Acts::Logging::DEBUG,
+                       "nTotal" << m_cfg.label << "s MissingRefSurface = "
+                                << m_stats.nTotalTracksMissingRefSurface);
+  ACTS_LOG_WITH_LOGGER(
+      log, Acts::Logging::DEBUG,
+      "nTotalMeasurements          = " << m_stats.nTotalMeasurements);
+  ACTS_LOG_WITH_LOGGER(
+      log, Acts::Logging::DEBUG,
+      "nTotalOutliers              = " << m_stats.nTotalOutliers);
+  ACTS_LOG_WITH_LOGGER(log, Acts::Logging::DEBUG,
+                       "nTotalHoles                 = " << m_stats.nTotalHoles);
+  ACTS_LOG_WITH_LOGGER(
+      log, Acts::Logging::DEBUG,
+      "nTotalSharedHits            = " << m_stats.nTotalSharedHits);
+  for (const auto& [key, sub] : m_stats.subDetectors) {
+    ACTS_LOG_WITH_LOGGER(log, Acts::Logging::DEBUG,
+                         key << ": nTrackStates = " << sub.nTrackStates
+                             << ", nMeasurements = " << sub.nMeasurements
+                             << ", nOutliers = " << sub.nOutliers
+                             << ", nHoles = " << sub.nHoles
+                             << ", nSharedHits = " << sub.nSharedHits);
+  }
 
   ACTS_LOG_WITH_LOGGER(log, Acts::Logging::INFO,
                        "Efficiency with "
@@ -251,6 +388,12 @@ void PatternRecognitionPerformanceCollector::logSummary() const {
       log, Acts::Logging::INFO,
       "Duplicate ratio with particles (nDuplicateParticles/nTrueParticles) = "
           << duplicationRatio_particle);
+  ACTS_LOG_WITH_LOGGER(log, Acts::Logging::INFO,
+                       "Mean completeness with " << labelPlural << " = "
+                                                 << m_stats.meanCompleteness());
+  ACTS_LOG_WITH_LOGGER(
+      log, Acts::Logging::INFO,
+      "Mean purity with " << labelPlural << " = " << m_stats.meanPurity());
 }
 
 }  // namespace ActsExamples

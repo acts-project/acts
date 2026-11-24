@@ -41,13 +41,17 @@ class detector_builder {
  public:
   // Cannot use the host::detector type, because the friendship relation with
   // the volume builders cannot be resolved through the type alias
+  /// Detector type produced from the configured metadata.
   using detector_type = detail::detector<metadata_t, host_container_types>;
+  /// Algebra backend used by the detector geometry.
   using algebra_type = typename detector_type::algebra_type;
+  /// Scalar type used for geometry values.
   using scalar_type = dscalar<algebra_type>;
 
   DETRAY_HOST detector_builder() { DETRAY_VERBOSE_HOST("New builder created"); }
 
-  /// Set the name of the detector under construction to @param det_name
+  /// Set the name of the detector under construction to @p det_name
+  /// @param det_name Name to assign to the detector.
   DETRAY_HOST void set_name(std::string det_name) {
     m_detector_name = std::move(det_name);
     DETRAY_VERBOSE_HOST("Set detector name: " << m_detector_name);
@@ -56,26 +60,11 @@ class detector_builder {
   /// @returns the name of the detector under construction
   DETRAY_HOST std::string_view name() const { return m_detector_name; }
 
-  /// Toggles whether identical surface material (homogeneous material and
-  /// material maps) is shared between surfaces instead of being copied for
-  /// every surface. Applies to all volumes and overrides the setting of the
-  /// individual material builders. Off by default.
-  ///
-  /// @note The material links of the surfaces are no longer unique, i.e.
-  /// several surfaces (possibly in different volumes) can point to the same
-  /// material entry.
-  DETRAY_HOST void deduplicate_material(bool toggle) {
-    m_deduplicate_material = toggle;
-    DETRAY_VERBOSE_HOST("Deduplicate material: " << std::boolalpha << toggle);
-  }
-
-  /// @returns whether identical surface material is shared between surfaces
-  DETRAY_HOST bool deduplicate_material() const {
-    return m_deduplicate_material;
-  }
-
   /// Add a new volume builder that will build a volume of the shape given by
-  /// @param id
+  /// @p id
+  /// @param id Volume shape to build.
+  /// @param args Additional arguments forwarded to the volume builder.
+  /// @returns Pointer to the new volume builder.
   template <typename... Args>
   DETRAY_HOST auto new_volume(const volume_id id, Args&&... args)
       -> volume_builder_interface<detector_type>* {
@@ -93,14 +82,17 @@ class detector_builder {
     return static_cast<dindex>(m_volumes.size());
   }
 
+  /// @param volume_idx Volume index to check.
   /// @returns 'true' if there is a volume builder registered for
-  /// the volume with index @param volume_idx
+  /// the volume with index @p volume_idx
   DETRAY_HOST bool has_volume(const std::size_t volume_idx) const {
     return volume_idx < m_volumes.size();
   }
 
-  /// Decorate a volume builder at position @param volume_idx with more
+  /// Decorate a volume builder at position @p volume_idx with more
   /// functionality
+  /// @param volume_idx Index of the builder to decorate.
+  /// @returns Pointer to the decorated builder.
   template <class builder_t>
   DETRAY_HOST auto decorate(dindex volume_idx) -> builder_t* {
     assert(has_volume(volume_idx));
@@ -112,7 +104,9 @@ class detector_builder {
     return dynamic_cast<builder_t*>(m_volumes[volume_idx].get());
   }
 
-  /// Decorate a volume builder @param v_builder with more functionality
+  /// Decorate a volume builder @p v_builder with more functionality
+  /// @param v_builder Builder to decorate; it must belong to this detector builder.
+  /// @returns Pointer to the decorated builder.
   template <class builder_t>
   DETRAY_HOST auto decorate(
       const volume_builder_interface<detector_type>* v_builder) -> builder_t* {
@@ -121,7 +115,9 @@ class detector_builder {
     return decorate<builder_t>(v_builder->vol_index());
   }
 
-  /// Access a particular volume builder by volume index @param volume_idx
+  /// Access a particular volume builder by volume index @p volume_idx
+  /// @param volume_idx Index of the requested builder.
+  /// @returns Pointer to the requested builder.
   DETRAY_HOST
   auto operator[](dindex volume_idx)
       -> volume_builder_interface<detector_type>* {
@@ -129,9 +125,13 @@ class detector_builder {
   }
 
   /// Assembles the final detector from the volumes builders and allocates
-  /// the detector containers with the memory resource @param resource
+  /// the detector containers with the memory resource @p resource
+  /// @param resource Memory resource used for detector storage.
+  /// @param opt Options applied while building each volume.
+  /// @returns The completed detector.
   DETRAY_HOST
-  auto build(vecmem::memory_resource& resource) -> detector_type {
+  auto build(vecmem::memory_resource& resource,
+             const volume_builder_options& opt) -> detector_type {
     DETRAY_INFO_HOST("Building detector: \"" << name() << "\"... ");
     DETRAY_INFO_HOST("-> type: " << DETRAY_TYPENAME(metadata_t));
 
@@ -142,8 +142,7 @@ class detector_builder {
     DETRAY_VERBOSE_HOST("Start building the volumes...");
     for (auto& vol_builder : m_volumes) {
       DETRAY_VERBOSE_HOST("-> Build: " << vol_builder->name());
-      vol_builder->deduplicate_material(m_deduplicate_material);
-      vol_builder->build(det);
+      vol_builder->build(det, opt);
     }
 
     // TODO: Make fully generic for more volume accelerator types
@@ -177,9 +176,14 @@ class detector_builder {
   }
 
   /// Assembles the final detector and fill an externally provided name map
-  /// @param name_map
+  /// @p name_map
+  /// @param resource Memory resource used for detector storage.
+  /// @param opt Options applied while building each volume.
+  /// @param name_map Map to populate with detector and volume names.
+  /// @returns The completed detector.
   DETRAY_HOST
   auto build(vecmem::memory_resource& resource,
+             const volume_builder_options& opt,
              typename detector_type::name_map& name_map) -> detector_type {
     DETRAY_VERBOSE_HOST("detray: filling names for detector " << name());
 
@@ -193,14 +197,12 @@ class detector_builder {
                        std::string{vol_builder->name()});
     }
 
-    return build(resource);
+    return build(resource, opt);
   }
 
  private:
   /// Name of the new detector
   std::string m_detector_name{"detray_detector"};
-  /// Share identical surface material between surfaces
-  bool m_deduplicate_material{false};
   /// Data structure that holds a volume builder for every detector volume
   volume_data_t<std::unique_ptr<volume_builder_interface<detector_type>>>
       m_volumes{};

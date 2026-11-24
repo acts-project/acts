@@ -28,9 +28,25 @@ namespace detray {
 /// @name Operators on @c algebra::storage::vector types
 /// @{
 
+/// Multiply an SoA vector by a scalar or another compatible vector.
+/// @param a First vector operand when multiplying two vectors.
+/// @param s Scalar multiplier when multiplying by a scalar.
+/// @returns The component-wise product or scaled vector.
 using algebra::storage::operator*;
+/// Divide compatible SoA vectors component-wise.
+/// @param a Numerator vector.
+/// @param b Denominator vector.
+/// @returns The component-wise quotient.
 using algebra::storage::operator/;
+/// Subtract compatible SoA vectors component-wise.
+/// @param a Left-hand vector.
+/// @param b Right-hand vector.
+/// @returns The component-wise difference.
 using algebra::storage::operator-;
+/// Add compatible SoA vectors component-wise.
+/// @param a Left-hand vector.
+/// @param b Right-hand vector.
+/// @returns The component-wise sum.
 using algebra::storage::operator+;
 
 /// @}
@@ -42,22 +58,32 @@ struct vc_soa {
   /// Define scalar precision
   using value_type = V;
 
+  /// Backend vectorized representation of an element type.
   template <concepts::element T>
   using simd = Vc::Vector<T>;
 
+  /// Boolean type used for element-wise predicates.
   using boolean = Vc::Mask<V>;
 
   /// Linear Algebra type definitions
   /// @{
   using scalar = simd<value_type>;
+  /// Index type used for matrix and vector access.
   using index_type = algebra::vc_soa::index_type;
+  /// Three-dimensional transform type.
   using transform3D = algebra::vc_soa::transform3<value_type>;
+  /// Two-dimensional point type.
   using point2D = algebra::vc_soa::point2<value_type>;
+  /// Three-dimensional point type.
   using point3D = algebra::vc_soa::point3<value_type>;
+  /// Two-dimensional vector type.
   using vector2D = algebra::vc_soa::vector2<value_type>;
+  /// Three-dimensional vector type.
   using vector3D = algebra::vc_soa::vector3<value_type>;
 
+  /// Fixed-size matrix type with the requested dimensions.
   template <std::size_t ROWS, std::size_t COLS>
+  /// Fixed-size matrix type with the requested row and column counts.
   using matrix = algebra::vc_soa::matrix_type<value_type, ROWS, COLS>;
   /// @}
 };

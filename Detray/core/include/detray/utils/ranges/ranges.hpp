@@ -158,6 +158,8 @@ inline constexpr bool borrowed_range =
 struct dangling {
   constexpr dangling() noexcept = default;
 
+  /// Construct a dangling sentinel while accepting ignored iterator arguments.
+  /// @tparam Args argument types supplied by a borrowed-range conversion
   template <class... Args>
     requires(!(std::same_as<dangling, Args> || ...))
   explicit constexpr dangling(Args&&... /*unused*/) noexcept {}
@@ -199,6 +201,8 @@ class view_interface : public base_view {
   /// @}
 
  public:
+  /// Check whether the view contains no elements.
+  /// @return true when the range is empty
   /// @note requires forward range
   template <detray::ranges::forward_range R = view_impl_t>
   DETRAY_HOST_DEVICE constexpr auto empty() const -> bool {
@@ -206,11 +210,15 @@ class view_interface : public base_view {
             detray::ranges::end(cast_impl()));
   }
 
+  /// Test whether the view contains at least one element.
+  /// @return true when the view is nonempty
   DETRAY_HOST_DEVICE
   constexpr explicit operator bool() const {
     return !detray::ranges::empty(cast_impl());
   }
 
+  /// Return a pointer to the first element, or null for an empty view.
+  /// @return pointer to the first element
   /// @note requires contiguous range (not yet modelled)
   DETRAY_HOST_DEVICE
   constexpr auto data() const {
@@ -218,12 +226,16 @@ class view_interface : public base_view {
                    : std::addressof(*(detray::ranges::begin(cast_impl())));
   }
 
+  /// Return a writable pointer to the first element, or null if empty.
+  /// @return pointer to the first element
   /// @note requires contiguous range (not yet modelled)
   DETRAY_HOST_DEVICE
   constexpr auto data() {
     return empty() ? nullptr : &(*(detray::ranges::begin(cast_impl())));
   }
 
+  /// Return the number of elements in the view.
+  /// @return element count
   /// @note requires forward range
   template <detray::ranges::forward_range R = view_impl_t>
   DETRAY_HOST_DEVICE constexpr auto size() const {
@@ -231,6 +243,8 @@ class view_interface : public base_view {
         detray::ranges::begin(cast_impl()), detray::ranges::end(cast_impl())));
   }
 
+  /// Return a reference to the first element.
+  /// @return reference to the first element
   /// @note requires forward range
   template <detray::ranges::forward_range R = view_impl_t>
   DETRAY_HOST_DEVICE constexpr decltype(auto) front() const {
@@ -239,6 +253,8 @@ class view_interface : public base_view {
     return *bg;
   }
 
+  /// Return a writable reference to the first element.
+  /// @return reference to the first element
   /// @note requires forward range
   template <detray::ranges::forward_range R = view_impl_t>
   DETRAY_HOST_DEVICE constexpr decltype(auto) front() {
@@ -247,6 +263,8 @@ class view_interface : public base_view {
     return *bg;
   }
 
+  /// Return a reference to the last element.
+  /// @return reference to the last element
   /// @note requires bidirectional range
   template <detray::ranges::bidirectional_range R = view_impl_t>
   DETRAY_HOST_DEVICE constexpr decltype(auto) back() const {
@@ -255,6 +273,8 @@ class view_interface : public base_view {
     return *(--sentinel);
   }
 
+  /// Return a writable reference to the last element.
+  /// @return reference to the last element
   /// @note requires bidirectional range
   template <detray::ranges::bidirectional_range R = view_impl_t>
   DETRAY_HOST_DEVICE constexpr decltype(auto) back() {
@@ -265,6 +285,8 @@ class view_interface : public base_view {
 
   /// Subscript operator that takes detray @c dindex
   ///
+  /// @param i zero-based element index
+  /// @return reference to the element at `i`
   /// @note requires random access range
   template <detray::ranges::random_access_range R = view_impl_t>
   DETRAY_HOST_DEVICE constexpr decltype(auto) operator[](const dindex i) const {
@@ -275,6 +297,8 @@ class view_interface : public base_view {
   }
   /// Subscript operator that takes detray @c dindex
   ///
+  /// @param i zero-based element index
+  /// @return writable reference to the element at `i`
   /// @note requires random access range
   template <detray::ranges::random_access_range R = view_impl_t>
   DETRAY_HOST_DEVICE constexpr decltype(auto) operator[](const dindex i) {
@@ -307,7 +331,7 @@ inline constexpr bool viewable_range =
 /// @param c closure
 ///
 /// @returns composed range c(r)
-/// @TODO: Add concept for range adaptors, closures etc.
+/// TODO: Add a concept for range adaptors and closures.
 template <detray::ranges::range R, detray::ranges::range C>
 DETRAY_HOST_DEVICE auto operator|(R&& r, C&& c) {
   return std::forward<C>(c)(std::forward<R>(r));

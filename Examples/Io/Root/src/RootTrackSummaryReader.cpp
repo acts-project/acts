@@ -25,6 +25,8 @@
 
 namespace ActsExamples {
 
+RootTrackSummaryReader::~RootTrackSummaryReader() = default;
+
 RootTrackSummaryReader::RootTrackSummaryReader(
     const RootTrackSummaryReader::Config& config, Acts::Logging::Level level)
     : IReader(),

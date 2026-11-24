@@ -3,7 +3,7 @@
 # requires-python = ">=3.12"
 # dependencies = ["boto3==1.42.0"]
 # ///
-"""Restore/publish bounded ccache snapshots; keep compilation lookups local.
+"""Restore, publish, and prune bounded ccache snapshots; keep compilation lookups local.
 
 Overlapping publishers may leave an older valid snapshot as latest.
 Readers are always anonymous. Remote cache failures never fail the build.
@@ -136,6 +136,76 @@ def publish(client, bucket, prefix, cache, run_number, run_id, attempt):
         )
 
 
+def list_snapshots(client, bucket, prefix):
+    # Finish listing before reading pointers. Later uploads are not candidates.
+    variants = {}
+    pattern = re.compile(
+        re.escape(prefix) + r".+/snapshots/[0-9]+-[0-9]+-[0-9a-f]{32}\.tar"
+    )
+    for page in client.get_paginator("list_objects_v2").paginate(
+        Bucket=bucket, Prefix=prefix
+    ):
+        for item in page.get("Contents", []):
+            key = item["Key"]
+            if pattern.fullmatch(key):
+                variant = key.rsplit("snapshots/", 1)[0]
+                variants.setdefault(variant, {})[key] = item["Size"]
+
+    return variants
+
+
+def prune_variant(client, bucket, variant, objects, dry_run):
+    manifest = read_manifest(client, bucket, variant)
+    if manifest is None:
+        raise ValueError("Missing latest manifest")
+    protected = {manifest["key"]}
+    keys = sorted(objects)
+    for offset in range(0, len(keys), 1000):
+        # Protect both observed pointers if publication overlaps cleanup.
+        current = read_manifest(client, bucket, variant)
+        if current is None:
+            raise ValueError("Missing latest manifest")
+        protected.add(current["key"])
+        candidates = [
+            key for key in keys[offset : offset + 1000] if key not in protected
+        ]
+        if not candidates:
+            continue
+        if dry_run:
+            yield candidates
+            continue
+        result = client.delete_objects(
+            Bucket=bucket,
+            Delete={"Objects": [{"Key": key} for key in candidates]},
+        )
+        deleted = [item["Key"] for item in result.get("Deleted", [])]
+        yield deleted
+        if result.get("Errors") or set(deleted) != set(candidates):
+            raise RuntimeError("Incomplete deletion")
+
+
+def prune(client, bucket, prefix, dry_run=False):
+    variants = list_snapshots(client, bucket, prefix)
+    total = sum(sum(objects.values()) for objects in variants.values())
+    removed_count = removed_bytes = failures = 0
+    for variant, objects in sorted(variants.items()):
+        try:
+            for deleted in prune_variant(client, bucket, variant, objects, dry_run):
+                removed_count += len(deleted)
+                removed_bytes += sum(objects[key] for key in deleted)
+        except Exception as error:
+            failures += 1
+            report(f"ccache pruning failed for {variant} ({type(error).__name__})")
+    verb = "would delete" if dry_run else "deleted"
+    report(
+        f"ccache pruning: {verb} {removed_count} archives "
+        f"({removed_bytes / 1024**2:.1f} MiB); "
+        f"retained {(total - removed_bytes) / 1024**2:.1f} MiB of listed archives"
+    )
+    if failures:
+        raise RuntimeError(f"ccache pruning encountered {failures} failures")
+
+
 def make_client(writable):
     import boto3
     from botocore import UNSIGNED
@@ -160,10 +230,38 @@ def make_client(writable):
     )
 
 
+def prune_main(dry_run):
+    if not (
+        os.environ.get("GITHUB_REPOSITORY") == "acts-project/acts"
+        and os.environ.get("GITHUB_REF") == "refs/heads/main"
+        and os.environ.get("GITHUB_EVENT_NAME") in ("schedule", "workflow_dispatch")
+        and os.environ.get("CACHE_PREFIX")
+        == "acts-sccache/ccache-snapshots/acts-project/acts/"
+    ):
+        report("ccache pruning refused: requires an authorized main cleanup run")
+        return 1
+    try:
+        prune(
+            make_client(True),
+            os.environ["CACHE_BUCKET"],
+            os.environ["CACHE_PREFIX"],
+            dry_run,
+        )
+    except Exception as error:
+        report(f"ccache pruning failed ({type(error).__name__})")
+        return 1
+    return 0
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("operation", choices=["restore", "publish"])
+    parser.add_argument("operation", choices=["restore", "publish", "prune"])
+    parser.add_argument("--dry-run", action="store_true", help="Preview pruning only")
     args = parser.parse_args()
+    if args.dry_run and args.operation != "prune":
+        parser.error("--dry-run requires prune")
+    if args.operation == "prune":
+        return prune_main(args.dry_run)
     writable = args.operation == "publish"
     if writable and not (
         os.environ.get("GITHUB_REF") == "refs/heads/main"

@@ -118,11 +118,12 @@ int main() {
     for (std::size_t intr_idx = 1u; intr_idx < intersection_trace.size();
          ++intr_idx) {
       debug_stream << "-------Intersection trace\n"
-                   << "Volume: " << intersection_trace[intr_idx].vol_idx
+                   << "Volume: " << intersection_trace.at(intr_idx).volume()
                    << "\n\nray gun: "
-                   << intersection_trace[intr_idx].intersection;
+                   << intersection_trace.at(intr_idx).intersection();
       // Object tracer does not save extra intersection at origin
-      debug_stream << "\n\nnavig.:  " << obj_tracer[intr_idx - 1u].intersection;
+      debug_stream << "\n\nnavig.:  "
+                   << obj_tracer[intr_idx - 1u].intersection();
     }
     std::clog << debug_stream.str() << std::endl;
 

@@ -58,12 +58,18 @@ BOOST_AUTO_TEST_CASE(trajectoryState) {
   ts.typeFlags().setIsOutlier();
   ts.setReferenceSurface(surface);
 
+  ts = traj.makeTrackState(TrackStatePropMask::None, ts.index());
+  ts.typeFlags().setIsMeasurement();
+  ts.typeFlags().setIsSplitHit();
+  ts.setReferenceSurface(surface);
+
   auto state = MultiTrajectoryHelpers::trajectoryState(traj, ts.index());
   BOOST_CHECK_EQUAL(state.nHoles, 2);
-  BOOST_CHECK_EQUAL(state.nMeasurements, 3);
+  BOOST_CHECK_EQUAL(state.nMeasurements, 4);
   BOOST_CHECK_EQUAL(state.nOutliers, 3);
   BOOST_CHECK_EQUAL(state.nSharedHits, 2);
-  BOOST_CHECK_EQUAL(state.nStates, 8);
+  BOOST_CHECK_EQUAL(state.nSplitHits, 1);
+  BOOST_CHECK_EQUAL(state.nStates, 9);
 }
 
 BOOST_AUTO_TEST_CASE(trajectoryStateVolume) {

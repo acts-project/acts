@@ -35,6 +35,9 @@ codegen/src/codegen.egg-info/
 !codegen/manifest.json
 # the generated material map example shown in the docs, same exception
 !docs/examples/material_map_example.json
+# Draft material schema and its hand-authored validation fixtures.
+!Plugins/Json/schema/material-map-v1.schema.json
+!docs/examples/material-map-v1/*.json
 # generated code shipped in source archives, never committed
 /prebuilt-codegen/
 

@@ -103,7 +103,7 @@ GTEST_TEST(detray_intersection, helix_plane_intersector_no_bfield) {
   ASSERT_NEAR(hit_bound.local()[1], -1.f, tol);
 
   // The same test but bound to local frame & masked - inside
-  mask<rectangle2D, test_algebra> rect_for_inside{0u, 3.f, 3.f};
+  mask<rectangle2D, test_algebra> rect_for_inside{0u, -3.f, -3.f, 3.f, 3.f};
   const auto hit_bound_inside =
       pi(h, surface_descriptor<>{}, rect_for_inside, shifted, tol);
   ASSERT_TRUE(hit_bound_inside.is_inside());
@@ -118,7 +118,8 @@ GTEST_TEST(detray_intersection, helix_plane_intersector_no_bfield) {
   ASSERT_NEAR(hit_bound_inside.local()[1], -1.f, tol);
 
   // The same test but bound to local frame & masked - outside
-  mask<rectangle2D, test_algebra> rect_for_outside{0u, 0.5f, 3.5f};
+  mask<rectangle2D, test_algebra> rect_for_outside{0u, -0.5f, -3.5f, 0.5f,
+                                                   3.5f};
   const auto hit_bound_outside =
       pi(h, surface_descriptor<>{}, rect_for_outside, shifted, tol);
   ASSERT_FALSE(hit_bound_outside.is_inside());
@@ -142,8 +143,9 @@ GTEST_TEST(detray_intersection, helix_plane_intersector) {
   const transform3_t trf(trl, w, v);
 
   // Rectangle surface
-  const mask<rectangle2D, test_algebra> rectangle{0u, 10.f * unit<scalar>::cm,
-                                                  10.f * unit<scalar>::cm};
+  const mask<rectangle2D, test_algebra> rectangle{
+      0u, -10.f * unit<scalar>::cm, -10.f * unit<scalar>::cm,
+      10.f * unit<scalar>::cm, 10.f * unit<scalar>::cm};
 
   const helix_intersector<rectangle2D, test_algebra> hpi;
 
@@ -385,4 +387,79 @@ GTEST_TEST(detray_intersection, helix_line_intersector) {
   EXPECT_NEAR(is.local()[1], 0.f, tol);
   EXPECT_TRUE(is.is_inside());
   EXPECT_FALSE(is.is_along());
+}
+
+// A plane parallel to B can miss the entire transverse helix circle. Test
+// both charges and scalar types, together with nearby intersecting planes.
+GTEST_TEST(detray_intersection, helix_plane_parallel_field_bounds) {
+  const auto check = []<typename value_t>() {
+    using algebra_t = test::algebra_type<value_t>;
+    using vec_t = dvector3D<algebra_t>;
+    using trf_t = dtransform3D<algebra_t>;
+    using helix_type = detail::helix<algebra_t>;
+    const vec_t origin{10.f, -20.f, 30.f};
+    const vec_t field{0.f, 0.f, 1.f * unit<value_t>::T};
+    const vec_t dir{1.f, 0.f, 0.f};
+    const helix_intersector_impl<cartesian2D<algebra_t>, algebra_t> solver;
+    for (value_t charge : {value_t{-1}, value_t{1}}) {
+      const helix_type h{origin, 0.f, dir, charge, field};
+      const value_t radius = h.radius();
+      const value_t turn = -charge;
+      // The circle spans y = origin.y to origin.y + 2 * turn * radius.
+      for (value_t offset : {value_t{-0.1f}, value_t{2.1f}}) {
+        const vec_t center = origin + vec_t{0.f, turn * offset * radius, 0.f};
+        const trf_t plane{center, vec_t{0.f, 1.f, 0.f}, vec_t{1.f, 0.f, 0.f}};
+        EXPECT_EQ(solver.point_of_intersection(h, plane).path,
+                  detail::invalid_value<value_t>());
+      }
+      // An ordinary crossing must still be solved by the existing algorithm.
+      const value_t path_length = radius / 2.f;
+      const trf_t crossing{h.pos(path_length), vec_t{0.f, 1.f, 0.f},
+                           vec_t{1.f, 0.f, 0.f}};
+      EXPECT_NEAR(solver.point_of_intersection(h, crossing).path, path_length,
+                  value_t{0.01f});
+      // A plane perpendicular to B uses the general solver as before.
+      const helix_type pitched{
+          origin, 0.f, vector::normalize(vec_t{1.f, 0.f, 1.f}), charge, field};
+      const trf_t endcap{pitched.pos(value_t{100}), vec_t{0.f, 0.f, 1.f},
+                         vec_t{1.f, 0.f, 0.f}};
+      EXPECT_NEAR(solver.point_of_intersection(pitched, endcap).path, 100.f,
+                  value_t{0.01f});
+    }
+  };
+  check.template operator()<float>();
+  check.template operator()<double>();
+}
+
+/// Regression test: the safe root finder's bracket can be centred on s = 0,
+/// which must not be reported as an intersection at the track origin
+GTEST_TEST(detray_intersection, helix_plane_intersector_no_root_at_origin) {
+  const scalar pT{1.f * unit<scalar>::GeV};
+  const scalar eta{0.146924f};
+  const scalar phi{1.64955f};
+  const vector3 mom{pT * math::cos(phi), pT * math::sin(phi),
+                    pT * math::sinh(eta)};
+  const vector3 B_2T{0.f, 0.f, 2.f * unit<scalar>::T};
+  const helix_t h(
+      free_track_parameters<test_algebra>({0.f, 0.f, 0.f}, 0.f, mom, -1.f),
+      B_2T);
+
+  // Tilted plane that the helix crosses far from its origin
+  const vector3 t{0.f, 170.705f, -408.f};
+  const vector3 n{0.f, -0.3907311f, 0.9205049f};
+  const vector3 x{1.f, 0.f, 0.f};
+  const transform3_t trf(t, n, x);
+
+  const mask<rectangle2D, test_algebra> rectangle{0u, -19.3f, -20.1f, 19.3f,
+                                                  20.1f};
+  const helix_intersector<rectangle2D, test_algebra> hpi;
+
+  const auto is = hpi(h, surface_descriptor<>{}, rectangle, trf, tol);
+
+  // If a root was found, its position has to be on the plane
+  if (!detail::is_invalid_value(is.path())) {
+    EXPECT_NE(is.path(), 0.f);
+    EXPECT_NEAR(vector::dot(h.pos(is.path()) - t, n), 0.f,
+                1.f * unit<scalar>::um);
+  }
 }

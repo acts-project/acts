@@ -8,12 +8,20 @@
 
 #include "ActsExamples/TruthTracking/GbtsTrainingAlgorithm.hpp"
 
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/ProtoLayer.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
 #include "ActsPlugins/Json/GbtsConfigJsonConverter.hpp"
 
+#include <algorithm>
+#include <cstdint>
+#include <map>
 #include <stdexcept>
 #include <utility>
+#include <vector>
 
 namespace ActsExamples {
 
@@ -47,8 +55,67 @@ GbtsTrainingAlgorithm::GbtsTrainingAlgorithm(
 
   ACTS_INFO("LayerConnectionTool chosen");
 
-  m_cfg.gbtsLayerConnectionToolConfig.detectorGeometry =
-      Acts::Experimental::readGbtsLayerDescriptions(m_cfg.geometryFileDir);
+  if (m_cfg.trackingGeometry == nullptr) {
+    throw std::invalid_argument("Missing tracking geometry");
+  }
+
+  // the layers and the surfaces they are made of
+  const auto layers = Acts::Experimental::readGbtsLayers(m_cfg.geometryFileDir);
+  std::vector<Acts::GeometryHierarchyMap<
+      Acts::Experimental::GbtsExperimentLayerId>::InputElement>
+      surfaceLayers;
+  for (const auto& layer : layers) {
+    for (const Acts::GeometryIdentifier& surface : layer.surfaces) {
+      surfaceLayers.emplace_back(surface, layer.id);
+    }
+  }
+  m_surfaceLayers =
+      Acts::GeometryHierarchyMap<Acts::Experimental::GbtsExperimentLayerId>(
+          std::move(surfaceLayers));
+
+  // the sensitive surfaces of every layer
+  std::map<Acts::Experimental::GbtsExperimentLayerId,
+           std::vector<const Acts::Surface*>>
+      layerSurfaces;
+  m_cfg.trackingGeometry->visitSurfaces([&](const Acts::Surface* surface) {
+    // the entry of the module or, without one, the one of its whole layer
+    const auto layer = m_surfaceLayers.find(surface->geometryId());
+
+    if (layer == m_surfaceLayers.end()) {
+      ACTS_DEBUG("No GBTS layer for volume: "
+                 << surface->geometryId().volume()
+                 << " Layer: " << surface->geometryId().layer()
+                 << " Surface: " << surface->geometryId().sensitive());
+      return;
+    }
+
+    layerSurfaces[*layer].push_back(surface);
+  });
+
+  // the symmetrization finds the mirrored layer through the r and z extent of
+  // every layer, measured by a proto layer of its surfaces, which takes the
+  // closest approach of a surface to the beam line and the thickness of a
+  // sensitive surface into account
+  const auto gctx = Acts::GeometryContext::dangerouslyDefaultConstruct();
+  auto& detectorGeometry = m_cfg.gbtsLayerConnectionToolConfig.detectorGeometry;
+  detectorGeometry.clear();
+  for (const auto& layer : layers) {
+    const auto surfaces = layerSurfaces.find(layer.id);
+    if (surfaces == layerSurfaces.end()) {
+      ACTS_WARNING("No surface of GBTS layer " << layer.id
+                                               << " is in the geometry");
+      continue;
+    }
+    using enum Acts::AxisDirection;
+    const Acts::ProtoLayer protoLayer(gctx, surfaces->second);
+    detectorGeometry.push_back(
+        {.minR = static_cast<float>(protoLayer.min(AxisR)),
+         .maxR = static_cast<float>(protoLayer.max(AxisR)),
+         .minZ = static_cast<float>(protoLayer.min(AxisZ)),
+         .maxZ = static_cast<float>(protoLayer.max(AxisZ)),
+         .gbtsId = layer.id});
+    ACTS_DEBUG("GBTS layer " << layer.id << ": " << protoLayer.extent);
+  }
 
   m_layerConnectionTool.emplace(
       m_cfg.gbtsLayerConnectionToolConfig,
@@ -86,12 +153,11 @@ ProcessCode GbtsTrainingAlgorithm::execute(const AlgorithmContext& ctx) const {
     ACTS_VERBOSE(measurements.size()
                  << " measurements for particle " << particle);
 
-    std::vector<double> hitTimes;
-    std::vector<Acts::Experimental::GbtsLayerConnectionTool::HitCoordinates>
-        hitCoords;
+    // the time and the GBTS layer of every hit on one of the layers
+    std::vector<std::pair<double, Acts::Experimental::GbtsExperimentLayerId>>
+        hits;
 
-    hitTimes.reserve(measurements.size());
-    hitCoords.reserve(measurements.size());
+    hits.reserve(measurements.size());
 
     for (const auto& [barcode, index] : measurements) {
       ConstVariableBoundMeasurementProxy measurement =
@@ -115,36 +181,32 @@ ProcessCode GbtsTrainingAlgorithm::execute(const AlgorithmContext& ctx) const {
         continue;
       }
 
-      const auto& simHit = *simHitIt;
-      const auto pos = simHit.position();
+      const auto layer = m_surfaceLayers.find(measurement.geometryId());
+      if (layer == m_surfaceLayers.end()) {
+        ACTS_DEBUG("No GBTS layer for volume: "
+                   << measurement.geometryId().volume()
+                   << " Layer: " << measurement.geometryId().layer()
+                   << " Surface: " << measurement.geometryId().sensitive());
+        continue;
+      }
 
-      const float r = static_cast<float>(std::hypot(pos.x(), pos.y()));
-      const float z = static_cast<float>(pos.z());
-
-      hitTimes.emplace_back(simHit.time());
-      hitCoords.push_back({r, z});
+      hits.emplace_back(simHitIt->time(), *layer);
     }
 
-    std::vector<std::size_t> indices;
-    indices.resize(hitCoords.size());
-    std::iota(indices.begin(), indices.end(), 0);
+    // the layers in the order the particle passed them
+    std::ranges::sort(hits, {}, [](const auto& hit) { return hit.first; });
 
-    std::ranges::sort(indices, [&hitTimes](std::size_t a, std::size_t b) {
-      return hitTimes[a] < hitTimes[b];
-    });
+    std::vector<Acts::Experimental::GbtsExperimentLayerId> layers;
 
-    std::vector<Acts::Experimental::GbtsLayerConnectionTool::HitCoordinates>
-        coords;
+    layers.reserve(hits.size());
 
-    coords.reserve(hitCoords.size());
-
-    for (const auto& idx : indices) {
-      coords.push_back(hitCoords[idx]);
+    for (const auto& [time, layer] : hits) {
+      layers.push_back(layer);
     }
 
     {
       std::lock_guard<std::mutex> lock(m_gbtsLayerConnectionToolMutex);
-      m_layerConnectionTool->addTrack(coords);
+      m_layerConnectionTool->addTrack(layers);
     }
   }
 

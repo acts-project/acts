@@ -18,13 +18,18 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/GridPortalLink.hpp"
+#include "Acts/Geometry/LinearVolumeLookup.hpp"
 #include "Acts/Geometry/Portal.hpp"
 #include "Acts/Geometry/PortalLinkBase.hpp"
+#include "Acts/Geometry/RzGridVolumeLookup.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
 #include "Acts/Geometry/TrivialPortalLink.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
+#include "Acts/Material/MergedMaterialMarker.hpp"
+#include "Acts/Material/ProtoSurfaceMaterial.hpp"
+#include "Acts/Material/detail/MaterialSurfaceRegistry.hpp"
 #include "Acts/Navigation/CylinderNavigationPolicy.hpp"
 #include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Navigation/MultiLayerNavigationPolicy.hpp"
@@ -45,7 +50,10 @@
 #include "ActsPlugins/Json/UtilitiesJsonConverter.hpp"
 #include "ActsPlugins/Json/detail/JsonIo.hpp"
 
+#include <array>
+#include <cstdint>
 #include <filesystem>
+#include <limits>
 #include <stdexcept>
 #include <unordered_set>
 
@@ -145,7 +153,7 @@ constexpr const char* kHeaderKey = "acts-geometry-volumes";
 constexpr const char* kVersionKey = "format-version";
 constexpr const char* kScopeKey = "scope";
 constexpr const char* kScopeValue = "volumes-bounds-portals";
-constexpr int kFormatVersion = 1;
+constexpr int kFormatVersion = 2;
 
 constexpr const char* kPortalsKey = "portals";
 constexpr const char* kSurfacesKey = "surfaces";
@@ -167,6 +175,7 @@ constexpr const char* kAlongNormalKey = "along_normal";
 constexpr const char* kOppositeNormalKey = "opposite_normal";
 
 constexpr const char* kNavigationPolicyKey = "navigation_policy";
+constexpr const char* kVolumeLookupKey = "volume_lookup";
 
 constexpr const char* kKindKey = "kind";
 constexpr const char* kValuesKey = "values";
@@ -292,8 +301,20 @@ std::unique_ptr<Acts::INavigationPolicy> decodeSurfaceArrayNavigationPolicy(
                       .get<Acts::SurfaceArrayNavigationPolicy::LayerType>();
   cfg.bins = {encoded.at("bins0").get<std::size_t>(),
               encoded.at("bins1").get<std::size_t>()};
+  if (encoded.contains("numberOfBinsFactor")) {
+    cfg.numberOfBinsFactor = encoded.at("numberOfBinsFactor").get<double>();
+  }
   if (encoded.contains("envelope")) {
     cfg.envelope = encoded.at("envelope").get<Acts::ExtentEnvelope>();
+  }
+  if (encoded.contains("neighborWindow")) {
+    const auto& jWindow = encoded.at("neighborWindow");
+    cfg.neighborWindow = Acts::SurfaceArray::NeighborWindow{
+        jWindow.at("min").get<std::array<std::uint8_t, 2>>(),
+        jWindow.at("max").get<std::array<std::uint8_t, 2>>()};
+  }
+  if (encoded.contains("overfill")) {
+    cfg.overfill = encoded.at("overfill").get<std::uint8_t>();
   }
 
   return std::make_unique<Acts::SurfaceArrayNavigationPolicy>(gctx, volume,
@@ -337,7 +358,13 @@ nlohmann::json encodeSurfaceArrayNavigationPolicy(
   jPolicy["layerType"] = cfg.layerType;
   jPolicy["bins0"] = cfg.bins.first;
   jPolicy["bins1"] = cfg.bins.second;
+  jPolicy["numberOfBinsFactor"] = cfg.numberOfBinsFactor;
   jPolicy["envelope"] = cfg.envelope;
+  if (cfg.neighborWindow.has_value()) {
+    jPolicy["neighborWindow"] = {{"min", cfg.neighborWindow->min},
+                                 {"max", cfg.neighborWindow->max}};
+  }
+  jPolicy["overfill"] = cfg.overfill;
   return jPolicy;
 }
 
@@ -419,24 +446,12 @@ std::unique_ptr<Acts::GridPortalLink> makeGridPortalLink(
     throw std::invalid_argument(
         "makeGridPortalLink() - Non regular surface was passed");
   }
+  // type-erased factories: dispatching here would instantiate every
+  // GridPortalLinkT axis combination in this translation unit
   if (axis1 == nullptr) {
-    axis0.visit([&](const auto& a0) {
-      using axis_t = std::remove_cvref_t<decltype(a0)>;
-      axis_t axisCopy = a0;
-      grid =
-          Acts::GridPortalLink::make(surface, direction, std::move(axisCopy));
-    });
+    grid = Acts::GridPortalLink::make(surface, direction, axis0);
   } else {
-    axis0.visit([&](const auto& a0) {
-      using axis0_t = std::remove_cvref_t<decltype(a0)>;
-      axis0_t axis0Copy = a0;
-      axis1->visit([&](const auto& a1) {
-        using axis1_t = std::remove_cvref_t<decltype(a1)>;
-        axis1_t axis1Copy = a1;
-        grid = Acts::GridPortalLink::make(surface, std::move(axis0Copy),
-                                          std::move(axis1Copy));
-      });
-    });
+    grid = Acts::GridPortalLink::make(surface, axis0, *axis1);
   }
 
   if (grid == nullptr) {
@@ -569,8 +584,17 @@ std::unique_ptr<Acts::PortalLinkBase> decodeCompositePortalLink(
   for (const auto& child : encoded.at(kChildrenKey)) {
     children.push_back(converter.portalLinkFromJson(child, surfaces, volumes));
   }
-  return std::make_unique<Acts::CompositePortalLink>(std::move(children),
-                                                     direction);
+  auto link = std::make_unique<Acts::CompositePortalLink>(std::move(children),
+                                                          direction);
+  // Construction merges the child surfaces into a new surface. Restore the
+  // serialized surface identity so material is applied to the actual portal.
+  auto surface = std::dynamic_pointer_cast<Acts::RegularSurface>(
+      surfaces.at(encoded.at(kSurfaceIdKey).get<std::size_t>()));
+  if (!surface) {
+    throw std::invalid_argument("Composite portal surface is not regular");
+  }
+  link->setSurface(std::move(surface));
+  return link;
 }
 
 std::unique_ptr<Acts::PortalLinkBase> decodeGridPortalLink(
@@ -634,6 +658,79 @@ std::unique_ptr<Acts::PortalLinkBase> decodeGridPortalLink(
 // -------------------------------------------------------------------
 // Records for temporary storage
 
+nlohmann::json encodeVolumeLookup(const Acts::IVolumeLookup* policy) {
+  using namespace Acts;
+  nlohmann::json encoded;
+  if (policy == nullptr) {
+    return encoded;
+  }
+  if (const auto* grid = dynamic_cast<const RzGridVolumeLookup*>(policy)) {
+    const auto& config = grid->config();
+    encoded = {{"kind", "RzGrid"},
+               {"max_tolerance", config.maxTolerance},
+               {"fallback_warning_fraction", config.fallbackWarningFraction},
+               {"max_grid_cells", config.maxGridCells}};
+  } else if (const auto* linear =
+                 dynamic_cast<const LinearVolumeLookup*>(policy)) {
+    encoded = {{"kind", "Linear"},
+               {"warning_threshold",
+                linear->config().warningThreshold
+                    ? nlohmann::json(*linear->config().warningThreshold)
+                    : nlohmann::json(nullptr)}};
+  } else {
+    throw std::invalid_argument(
+        "Unsupported volume lookup policy for JSON serialization");
+  }
+  return encoded;
+}
+
+std::unique_ptr<const Acts::IVolumeLookup> decodeVolumeLookup(
+    const Acts::GeometryContext& gctx, Acts::TrackingVolume& volume,
+    const nlohmann::json& lookup, const Acts::Logger& logger) {
+  using namespace Acts;
+  std::unique_ptr<const IVolumeLookup> policy;
+  if (!lookup.is_null()) {
+    const auto kind = lookup.at("kind").get<std::string>();
+    // Check the JSON type and range before converting to an unsigned size.
+    auto sizeValue = [&](const char* key, std::size_t defaultValue) {
+      if (!lookup.contains(key)) {
+        return defaultValue;
+      }
+      const auto& value = lookup.at(key);
+      if (!value.is_number_integer() ||
+          (!value.is_number_unsigned() && value.get<std::int64_t>() < 0) ||
+          value.get<std::uint64_t>() >
+              std::numeric_limits<std::size_t>::max()) {
+        throw std::invalid_argument(
+            std::string("Invalid volume lookup parameter: ") + key);
+      }
+      return value.get<std::size_t>();
+    };
+    if (kind == "RzGrid") {
+      RzGridVolumeLookup::Config config;
+      config.maxTolerance = lookup.value("max_tolerance", config.maxTolerance);
+      config.fallbackWarningFraction = lookup.value(
+          "fallback_warning_fraction", config.fallbackWarningFraction);
+      config.maxGridCells = sizeValue("max_grid_cells", config.maxGridCells);
+      policy =
+          std::make_unique<RzGridVolumeLookup>(gctx, volume, config, logger);
+    } else if (kind == "Linear") {
+      LinearVolumeLookup::Config config;
+      if (lookup.contains("warning_threshold") &&
+          lookup.at("warning_threshold").is_null()) {
+        config.warningThreshold = std::nullopt;
+      } else {
+        config.warningThreshold =
+            sizeValue("warning_threshold", *config.warningThreshold);
+      }
+      policy = std::make_unique<LinearVolumeLookup>(volume, config, logger);
+    } else {
+      throw std::invalid_argument("Unknown volume lookup kind: " + kind);
+    }
+  }
+  return policy;
+}
+
 struct SurfaceRecord {
   std::size_t surfaceId = 0u;
   nlohmann::json payload;
@@ -654,6 +751,7 @@ struct VolumeRecord {
   std::vector<std::size_t> portalIds;
   std::vector<std::size_t> surfaceIds;
   nlohmann::json navigationPolicy;
+  nlohmann::json volumeLookup;
 };
 
 // -------------------------------------------------------------------
@@ -664,7 +762,8 @@ void verifySchemaHeader(const nlohmann::json& encoded) {
     throw std::invalid_argument("Missing geometry JSON header");
   }
   const auto& header = encoded.at(kHeaderKey);
-  if (header.at(kVersionKey).get<int>() != kFormatVersion) {
+  const int version = header.at(kVersionKey).get<int>();
+  if (version != 1 && version != kFormatVersion) {
     throw std::invalid_argument("Unsupported geometry JSON format version");
   }
   if (header.at(kScopeKey).get<std::string>() != kScopeValue) {
@@ -920,12 +1019,65 @@ nlohmann::json Acts::TrackingGeometryJsonConverter::trackingVolumeToJson(
 
   encoded[kRootVolumeIdKey] = volumeIds.at(world);
 
+  // Portal-link child/artifact surfaces are serialized for navigation, but
+  // are not material targets in the completed geometry.
+  std::unordered_set<const Surface*> activeSurfaces;
+  world.visitSurfaces(
+      [&](const Surface* surface) { activeSurfaces.insert(surface); }, false);
+
+  if (options.writeMaterial) {
+    std::vector<const Surface*> materialSurfaces;
+    SurfaceMaterialMaps assignments;
+    SurfaceMaterialMaps markers;
+    for (const auto* surface : orderedSurfaces) {
+      if (!activeSurfaces.contains(surface)) {
+        continue;
+      }
+      if (auto material = surface->surfaceMaterialSharedPtr()) {
+        // Markers are diagnostic payloads, not mapping inputs. Preserve them
+        // through the material codec without registering them for mapping.
+        if (dynamic_cast<const MergedMaterialMarker*>(material.get()) !=
+            nullptr) {
+          if (!markers.try_emplace(surface->geometryId(), std::move(material))
+                   .second) {
+            throw std::invalid_argument(
+                "Duplicate material surface geometry ID");
+          }
+          continue;
+        }
+        materialSurfaces.push_back(surface);
+        assignments.try_emplace(surface->geometryId(), std::move(material));
+      }
+    }
+    const detail::MaterialSurfaceRegistry registry(materialSurfaces);
+    auto material = registry.materialMaps(std::move(assignments));
+    for (auto& [id, marker] : markers) {
+      if (registry.surfaces().contains(id)) {
+        throw std::invalid_argument("Duplicate material surface geometry ID");
+      }
+      material.surfaceMaterials.emplace(id, std::move(marker));
+    }
+    for (const auto* volume : orderedVolumes) {
+      if (volume->volumeMaterial() != nullptr) {
+        material.volumeMaterials.try_emplace(volume->geometryId(),
+                                             volume->volumeMaterialPtr());
+      }
+    }
+    encoded["material"] =
+        TrackingGeometryMaterialJsonConverter(m_cfg.materialConfig)
+            .toJson(material, options.materialOptions);
+  }
+
   // Encode surfaces
-  const SurfaceJsonConverter::Options surfaceOptions{.writeMaterial =
-                                                         options.writeMaterial};
+  const SurfaceJsonConverter::Options surfaceOptions{.writeMaterial = false};
   for (const auto* surf : orderedSurfaces) {
     nlohmann::json jSurface =
         SurfaceJsonConverter::toJson(gctx, *surf, surfaceOptions);
+    if (activeSurfaces.contains(surf)) {
+      if (const auto& key = detail::materialKey(surf->surfaceMaterial())) {
+        jSurface["material_key"] = *key;
+      }
+    }
     jSurface[kSurfaceIdKey] = surfaceIds.at(*surf);
     encoded[kSurfacesKey].push_back(std::move(jSurface));
   }
@@ -968,6 +1120,11 @@ nlohmann::json Acts::TrackingGeometryJsonConverter::trackingVolumeToJson(
         Transform3JsonConverter::toJson(volume->localToGlobalTransform(gctx));
     jVolume[kBoundsKey] = m_cfg.encodeVolumeBounds(volume->volumeBounds());
 
+    if (auto lookup = encodeVolumeLookup(volume->volumeLookup());
+        !lookup.is_null()) {
+      jVolume[kVolumeLookupKey] = std::move(lookup);
+    }
+
     jVolume[kNavigationPolicyKey] =
         navigationPolicyToJson(*volume->navigationPolicy());
 
@@ -997,6 +1154,8 @@ Acts::TrackingGeometryJsonConverter::trackingVolumeFromJson(
     const GeometryContext& gctx, const nlohmann::json& encoded,
     const Options& /*options*/) const {
   verifySchemaHeader(encoded);
+  const bool legacyFormat =
+      encoded.at(kHeaderKey).at(kVersionKey).get<int>() == 1;
 
   if (!encoded.contains(kVolumesKey) || !encoded.contains(kRootVolumeIdKey) ||
       !encoded.contains(kPortalsKey)) {
@@ -1044,6 +1203,7 @@ Acts::TrackingGeometryJsonConverter::trackingVolumeFromJson(
     record.surfaceIds =
         jVolume.value(kSurfaceIdKey, std::vector<std::size_t>{});
     record.navigationPolicy = jVolume.at(kNavigationPolicyKey);
+    record.volumeLookup = jVolume.value(kVolumeLookupKey, nlohmann::json{});
 
     if (!jVolume["geometry_id"].is_null()) {
       GeometryIdentifier geoID =
@@ -1078,7 +1238,16 @@ Acts::TrackingGeometryJsonConverter::trackingVolumeFromJson(
 
   // ---------------------------------------------------
   for (const auto& [surfaceId, record] : surfaceRecords) {
+    if (!legacyFormat && record.payload.contains("material")) {
+      throw std::invalid_argument(
+          "Inline surface material is not supported in geometry v2");
+    }
     auto surface = Acts::SurfaceJsonConverter::fromJson(record.payload);
+    if (!legacyFormat && record.payload.contains("material_key")) {
+      surface->assignSurfaceMaterial(std::make_shared<ProtoSurfaceMaterial>(
+          BinUtility{}, MappingType::Default,
+          record.payload.at("material_key").get<std::string>()));
+    }
     surfacePointers.emplace(surfaceId, surface);
   }
 
@@ -1093,7 +1262,7 @@ Acts::TrackingGeometryJsonConverter::trackingVolumeFromJson(
         record.transform, std::move(volumeBounds), record.name);
 
     GeometryIdentifier geometryId(record.geometryId);
-    if (geometryId == GeometryIdentifier{}) {
+    if (legacyFormat && geometryId == GeometryIdentifier{}) {
       geometryId = GeometryIdentifier{}.withVolume(volumeId + 1u);
     }
     volume->assignGeometryId(geometryId);
@@ -1197,11 +1366,41 @@ Acts::TrackingGeometryJsonConverter::trackingVolumeFromJson(
         gctx, record.navigationPolicy, *volume, logger()));
   }
 
+  // Install local policies first: enclosing subtree indices discover delegation
+  // boundaries from the explicit policies already present on their descendants.
+  auto installLookup = [&](auto&& self, std::size_t volumeId) -> void {
+    const auto& record = volumeRecords.at(volumeId);
+    for (const auto childId : record.children) {
+      self(self, childId);
+    }
+    auto* volume = volumePointers.at(volumeId);
+    volume->setVolumeLookup(
+        decodeVolumeLookup(gctx, *volume, record.volumeLookup, logger()));
+  };
+  installLookup(installLookup, rootVolumeId);
+
   auto root = std::move(volumeStorage.at(rootVolumeId));
   if (root == nullptr) {
     throw std::invalid_argument("Root volume reconstruction failed");
   }
 
+  if (!legacyFormat && encoded.contains("material")) {
+    auto material = TrackingGeometryMaterialJsonConverter(m_cfg.materialConfig)
+                        .fromJson(encoded.at("material"));
+    std::vector<Surface*> surfaces;
+    for (const auto& [id, record] : portalRecords) {
+      surfaces.push_back(&portalPointers.at(id)->surface());
+    }
+    for (const auto& [id, record] : volumeRecords) {
+      for (const auto surfaceId : record.surfaceIds) {
+        surfaces.push_back(surfacePointers.at(surfaceId).get());
+      }
+    }
+    material.apply(surfaces);
+    for (const auto& [id, record] : volumeRecords) {
+      material.apply(*volumePointers.at(id));
+    }
+  }
   return std::shared_ptr<TrackingVolume>(std::move(root));
 }
 
@@ -1235,8 +1434,12 @@ Acts::TrackingGeometryJsonConverter::fromJson(const GeometryContext& gctx,
   ACTS_DEBUG("Reconstructing TrackingGeometry from JSON");
   auto world = trackingVolumeFromJson(gctx, encoded, options);
 
-  GeometryIdentifier::Value nextVolumeId = 1u;
-  ensureIdentifiers(*world, nextVolumeId);
+  // V2 preserves serialized IDs exactly: material assignment uses those IDs.
+  // Retain the historical synthesis of missing identifiers only for v1 files.
+  if (encoded.at(kHeaderKey).at(kVersionKey).get<int>() == 1) {
+    GeometryIdentifier::Value nextVolumeId = 1u;
+    ensureIdentifiers(*world, nextVolumeId);
+  }
 
   ACTS_DEBUG("TrackingGeometry reconstruction complete, root volume '"
              << world->volumeName() << "'");

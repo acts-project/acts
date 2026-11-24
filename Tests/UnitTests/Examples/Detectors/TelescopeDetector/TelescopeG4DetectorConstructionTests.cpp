@@ -87,13 +87,13 @@ bool hasOverlaps(G4VPhysicalVolume& physicalVolume) {
   return overlaps;
 }
 
-TelescopeDetector::Config makeConfig(int binValue) {
+TelescopeDetector::Config makeConfig(int rotDirection) {
   TelescopeDetector::Config cfg;
   cfg.positions = {30, 60, 90, 120, 150, 180};
   cfg.stereos = {0, 0, 0, 0, 0, 0};
   cfg.offsets = {10, -20};
   cfg.bounds = {25, 100};
-  cfg.binValue = binValue;
+  cfg.rotDirection = rotDirection;
   return cfg;
 }
 
@@ -118,8 +118,8 @@ BOOST_AUTO_TEST_CASE(ConstructSmoke) {
 
 // The Geant4 sensors have to match the tracking geometry surfaces on all axes
 BOOST_DATA_TEST_CASE(MatchesTrackingGeometry,
-                     boost::unit_test::data::make({0, 1, 2}), binValue) {
-  const auto cfg = makeConfig(binValue);
+                     boost::unit_test::data::make({0, 1, 2}), rotDirection) {
+  const auto cfg = makeConfig(rotDirection);
   TelescopeDetector detector{cfg};
 
   auto construction =

@@ -48,7 +48,7 @@ auto silicon_pixel_spacepoint_formation_algorithm::operator()(
   // of its spacepoint, which makes the output independent of the thread order.
   vecmem::data::vector_buffer<unsigned int> spacepoint_flags(n_measurements,
                                                              mr().main);
-  copy().setup(spacepoint_flags)->ignore();
+  copy().setup(vecmem::ignore_event, spacepoint_flags);
   vecmem::data::vector_view<unsigned int> spacepoint_flags_view(
       spacepoint_flags);
   count_spacepoints_kernel(
@@ -74,7 +74,7 @@ auto silicon_pixel_spacepoint_formation_algorithm::operator()(
 
   // Create the result buffer.
   edm::spacepoint_collection::buffer spacepoints(n_spacepoints, mr().main);
-  copy().setup(spacepoints)->ignore();
+  copy().setup(vecmem::ignore_event, spacepoints);
 
   // Launch the spacepoint formation kernel.
   const vecmem::data::vector_view<const unsigned int> spacepoint_index_view(

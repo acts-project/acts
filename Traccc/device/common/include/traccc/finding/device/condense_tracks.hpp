@@ -151,7 +151,7 @@ TRACCC_HOST_DEVICE inline void condense_tracks(
         static_cast<unsigned int>(!last_step);
     links.at(link_out_index) = in_tmp_links.at(in_offset);
 
-    if (payload.tmp_jacobian_view.ptr() != nullptr) {
+    if (payload.tmp_jacobian_view.capacity()) {
       assert(payload.jacobian_view.ptr() != nullptr);
       jacobian.at(link_out_index) = tmp_jacobian.at(in_param_id);
     }

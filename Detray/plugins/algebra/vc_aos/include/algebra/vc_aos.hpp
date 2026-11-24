@@ -30,18 +30,28 @@ struct vc_aos {
   /// Define scalar type
   using value_type = V;
 
+  /// SIMD scalar wrapper used by this scalar backend.
   template <concepts::element T>
   using simd = T;
 
+  /// Boolean value type for predicates in this backend.
   using boolean = bool;
+  /// Scalar element type.
   using scalar = value_type;
+  /// Index type used to access fixed-size arrays and matrices.
   using index_type = algebra::vc_aos::index_type;
+  /// Three-dimensional rigid transform type.
   using transform3D = algebra::vc_aos::transform3<value_type>;
+  /// Two-dimensional point type.
   using point2D = algebra::vc_aos::point2<value_type>;
+  /// Three-dimensional point type.
   using point3D = algebra::vc_aos::point3<value_type>;
+  /// Two-dimensional vector type.
   using vector2D = algebra::vc_aos::vector2<value_type>;
+  /// Three-dimensional vector type.
   using vector3D = algebra::vc_aos::vector3<value_type>;
 
+  /// Fixed-size matrix type with the requested dimensions.
   template <std::size_t ROWS, std::size_t COLS>
   using matrix = algebra::vc_aos::matrix_type<value_type, ROWS, COLS>;
 };
@@ -84,17 +94,23 @@ using algebra::vc_aos::math::theta;
 namespace algebra::generic {
 
 // Determinant algorithms
+/// Choose the backend-specific determinant implementation for 4x4 matrices.
 template <concepts::scalar T, auto ROWS, auto COLS>
 struct determinant_selector<4, vc_aos::matrix_type<T, ROWS, COLS>,
                             vc_aos::element_getter> {
+  /// Closed-form determinant implementation selected for 4x4 matrices.
+  /// Selected algorithm type.
   using type =
       matrix::determinant::hard_coded<vc_aos::matrix_type<T, ROWS, COLS>>;
 };
 
 // Inversion algorithms
+/// Choose the backend-specific inverse implementation for 4x4 matrices.
 template <concepts::scalar T, auto ROWS, auto COLS>
 struct inversion_selector<4, vc_aos::matrix_type<T, ROWS, COLS>,
                           vc_aos::element_getter> {
+  /// Closed-form inverse implementation selected for 4x4 matrices.
+  /// Selected algorithm type.
   using type = matrix::inverse::hard_coded<vc_aos::matrix_type<T, ROWS, COLS>>;
 };
 

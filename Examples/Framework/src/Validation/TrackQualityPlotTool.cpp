@@ -58,21 +58,20 @@ TrackQualityPlotTool::TrackQualityPlotTool(const Config& cfg,
                                     m_cfg.varBinning.at("Phi"), "Purity")});
 }
 
-void TrackQualityPlotTool::fill(
-    const Acts::BoundTrackParameters& fittedParameters, double completeness,
-    double purity) {
-  const auto momentum = fittedParameters.momentum();
-  const double fit_phi = phi(momentum);
-  const double fit_eta = eta(momentum);
-  const double fit_pT = perp(momentum);
+void TrackQualityPlotTool::fill(const SimParticleState& truthParticle,
+                                double completeness, double purity) {
+  const auto direction = truthParticle.direction();
+  const double truth_phi = phi(direction);
+  const double truth_eta = eta(direction);
+  const double truth_pT = truthParticle.transverseMomentum();
 
-  m_profiles.at("completeness_vs_pT").fill({fit_pT}, completeness);
-  m_profiles.at("completeness_vs_eta").fill({fit_eta}, completeness);
-  m_profiles.at("completeness_vs_phi").fill({fit_phi}, completeness);
+  m_profiles.at("completeness_vs_pT").fill({truth_pT}, completeness);
+  m_profiles.at("completeness_vs_eta").fill({truth_eta}, completeness);
+  m_profiles.at("completeness_vs_phi").fill({truth_phi}, completeness);
 
-  m_profiles.at("purity_vs_pT").fill({fit_pT}, purity);
-  m_profiles.at("purity_vs_eta").fill({fit_eta}, purity);
-  m_profiles.at("purity_vs_phi").fill({fit_phi}, purity);
+  m_profiles.at("purity_vs_pT").fill({truth_pT}, purity);
+  m_profiles.at("purity_vs_eta").fill({truth_eta}, purity);
+  m_profiles.at("purity_vs_phi").fill({truth_phi}, purity);
 }
 
 }  // namespace ActsExamples

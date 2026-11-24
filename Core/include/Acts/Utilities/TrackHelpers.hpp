@@ -20,7 +20,6 @@
 #include "Acts/EventData/TrackStateType.hpp"
 #include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
@@ -360,8 +359,7 @@ Result<void> extrapolateTrackToReferenceSurface(
                << " with starting parameters " << parameters);
 
   auto propagateResult =
-      propagator.template propagate<propagator_options_t, ForcedSurfaceReached>(
-          parameters, referenceSurface, options);
+      propagator.propagate(parameters, referenceSurface, options);
 
   if (!propagateResult.ok()) {
     ACTS_DEBUG("failed to extrapolate track: " << propagateResult.error());
@@ -427,6 +425,7 @@ void calculateTrackQuantities(track_proxy_t track)
   track.nHoles() = 0;
   track.nMeasurements() = 0;
   track.nSharedHits() = 0;
+  track.nSplitHits() = 0;
   track.nOutliers() = 0;
 
   for (const auto &trackState : track.trackStatesReversed()) {
@@ -439,6 +438,9 @@ void calculateTrackQuantities(track_proxy_t track)
     } else if (typeFlags.isMeasurement()) {
       if (typeFlags.isSharedHit()) {
         track.nSharedHits()++;
+      }
+      if (typeFlags.isSplitHit()) {
+        track.nSplitHits()++;
       }
       track.nMeasurements()++;
       track.chi2() += trackState.chi2();

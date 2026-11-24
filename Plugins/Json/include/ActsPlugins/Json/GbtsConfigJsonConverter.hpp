@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Seeding/GbtsLayerConnection.hpp"
-#include "Acts/Seeding/GbtsLayerConnectionTool.hpp"
 #include "Acts/Seeding/GbtsLayerDescription.hpp"
 #include "Acts/Seeding/GbtsTauLookupTable.hpp"
 #include "ActsPlugins/Json/ActsJson.hpp"
@@ -54,18 +53,6 @@ void to_json(nlohmann::json& j, const GbtsLayerConfig& layer);
 /// @param layer Destination GbtsLayerConfig to populate
 void from_json(const nlohmann::json& j, GbtsLayerConfig& layer);
 
-/// Convert GbtsLayerConnectionTool::LayerDescription to JSON
-/// @param j Destination JSON object
-/// @param layer Source LayerDescription to convert
-void to_json(nlohmann::json& j,
-             const GbtsLayerConnectionTool::LayerDescription& layer);
-
-/// Convert JSON to GbtsLayerConnectionTool::LayerDescription
-/// @param j Source JSON object
-/// @param layer Destination LayerDescription to populate
-void from_json(const nlohmann::json& j,
-               GbtsLayerConnectionTool::LayerDescription& layer);
-
 /// Convert GbtsTauBounds to JSON
 /// @param j Destination JSON object
 /// @param bounds Source GbtsTauBounds to convert
@@ -80,13 +67,6 @@ void from_json(const nlohmann::json& j, GbtsTauBounds& bounds);
 /// @param path The file to read, any format the JSON plugin reads
 /// @return The layers of the file's `layers` entry
 std::vector<GbtsLayerConfig> readGbtsLayers(const std::filesystem::path& path);
-
-/// Read the layer geometry the layer connection training needs from a layer
-/// map file
-/// @param path The file to read, any format the JSON plugin reads
-/// @return The layer descriptions of the file's `layers` entry
-std::vector<GbtsLayerConnectionTool::LayerDescription>
-readGbtsLayerDescriptions(const std::filesystem::path& path);
 
 /// Read the layer connections from a connection table file
 /// @param path The file to read, any format the JSON plugin reads

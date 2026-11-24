@@ -8,6 +8,7 @@
 
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/Framework/BufferedReader.hpp"
+#include "ActsExamples/Io/Csv/CsvGeometryIdMap.hpp"
 #include "ActsExamples/Io/Csv/CsvGnnGraphReader.hpp"
 #include "ActsExamples/Io/Csv/CsvMeasurementReader.hpp"
 #include "ActsExamples/Io/Csv/CsvMuonSegmentReader.hpp"
@@ -22,6 +23,7 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <pybind11/stl/filesystem.h>
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -58,6 +60,8 @@ void addInput(py::module& mex) {
   ACTS_PYTHON_DECLARE_READER(CsvTrackParameterReader, mex,
                              "CsvTrackParameterReader", inputDir, inputStem,
                              outputTrackParameters, beamspot);
+
+  mex.def("readCsvGeometryIdMap", readCsvGeometryIdMap);
 
   ACTS_PYTHON_DECLARE_READER(CsvGnnGraphReader, mex, "CsvGnnGraphReader",
                              inputDir, inputStem, outputGraph);

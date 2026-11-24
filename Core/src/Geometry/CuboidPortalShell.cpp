@@ -15,10 +15,12 @@
 #include "Acts/Geometry/PortalLinkBase.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
+#include "Acts/Utilities/ThrowAssert.hpp"
 
 #include <algorithm>
 #include <array>
 #include <cstddef>
+#include <functional>
 #include <numeric>
 #include <sstream>
 #include <stdexcept>
@@ -161,23 +163,20 @@ CuboidStackPortalShell::CuboidStackPortalShell(
     throw std::invalid_argument("Invalid shell");
   }
 
-  std::ranges::sort(
-      m_shells, [*this, &gctx](const auto& shellA, const auto& shellB) {
-        switch (m_direction) {
-          case AxisX:
-            return (shellA->localToGlobalTransform(gctx).translation().x() <
-                    shellB->localToGlobalTransform(gctx).translation().x());
-          case AxisY:
-            return (shellA->localToGlobalTransform(gctx).translation().y() <
-                    shellB->localToGlobalTransform(gctx).translation().y());
-          case AxisZ:
-            return (shellA->localToGlobalTransform(gctx).translation().z() <
-                    shellB->localToGlobalTransform(gctx).translation().z());
-          default:
-            throw std::invalid_argument(
-                "CuboidPortalShell: Invalid axis direction");
-        }
-      });
+  throw_assert(!m_shells.empty(), "CuboidStackPortalShell: No shells supplied");
+  const Transform3 globalToStack =
+      m_shells.front()->localToGlobalTransform(gctx).inverse();
+  throw_assert(
+      std::ranges::is_sorted(
+          m_shells, std::less{},
+          [&](const auto* shell) {
+            const Vector3 localPosition =
+                globalToStack *
+                shell->localToGlobalTransform(gctx).translation();
+            return localPosition[toUnderlying(m_direction)];
+          }),
+      "CuboidStackPortalShell: Shells must be ordered along the local stacking "
+      "axis");
 
   auto merge = [&](Face face) {
     std::vector<std::shared_ptr<Portal>> portals;

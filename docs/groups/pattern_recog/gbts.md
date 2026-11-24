@@ -28,10 +28,10 @@ The workflow has four stages, each documented below:
 1. @ref gbts-nodes — sort the space points into eta/phi-ordered graph nodes.
 2. @ref gbts-graph — create edges between compatible node pairs and link
    compatible edges to each other.
-3. @ref gbts-cca — propagate a "level" through the edge graph to find the
-   longest chains.
-4. @ref gbts-extraction — follow the best chains through a Kalman-like filter
-   and emit seeds.
+3. @ref gbts-levels — give every edge a "level", the length of the longest
+   chain of linked edges going outwards from it.
+4. @ref gbts-extraction — follow the best fitted path from every edge through a
+   Kalman-like filter and emit seeds.
 
 ## Geometry and layer connections {#gbts-geometry}
 
@@ -45,6 +45,11 @@ description: a flat list of `GbtsLayer` logical layers, each subdivided into
 other way round. The ID is the caller's own numbering, and the algorithm never
 decodes it.
 
+A ring of inclined modules is described by its `slope` in @f$r@f$-@f$z@f$,
+along which its eta bins are cut. `ActsExamples::GraphBasedSeedingAlgorithm`
+takes the slope from the module planes of the tracking geometry when
+`useLayerTilt` is set.
+
 A pixel barrel layer carries one more field, `barrelOrder`: the position of the
 layer in the inside-out ordering of the pixel barrel. Every other layer keeps
 the default `-1`, so the sign of the field also says whether a layer is a pixel
@@ -54,9 +59,9 @@ barrel layer. If the caller leaves the field unset,
 them, because the constructor rejects a partial ordering.
 
 The cuts that were tuned on the pixel barrel read `barrelOrder` and nothing
-else. The adaptive @f$\tau@f$ correction of @ref gbts-graph asks whether three
-layers are radially consecutive, and the two innermost-layer cuts of the same
-section ask how deep a layer sits. GBTS therefore runs on any layer numbering.
+else: the two innermost-layer cuts of @ref gbts-graph ask how deep a layer sits.
+The @f$\tau@f$ ratio tolerance comes from the layer pairs instead, see below.
+GBTS therefore runs on any layer numbering.
 
 Which layer pairs may be joined by an edge is a list of
 @ref Acts::Experimental::GbtsLayerConnection, each naming a source (outer) and a
@@ -152,7 +157,7 @@ A candidate pair @f$(n_1, n_2)@f$ becomes an edge if it survives, in order:
 | @f$\Delta r > @f$ `minDeltaRadius` | the two hits are radially separated enough for @f$\tau@f$ to be meaningful |
 | @f$\lvert\tau\rvert < @f$ `maxAbsTau` | within the detector's angular acceptance |
 | @f$\tau@f$ inside both nodes' windows | per-node acceptance from the ML lookup table |
-| @f$z_0@f$ inside `[minZ0, maxZ0]`, and @f$z@f$ at the outer radius inside the ROI | the pair points back to the luminous region |
+| @f$z_0@f$ inside the geometry's `GbtsZ0Range`, and @f$z@f$ at the outer radius inside the ROI | the pair points back to the luminous region |
 | @f$\lvert\kappa\rvert@f$ below an @f$\eta@f$-dependent bound | consistent with the @f$p_T@f$ threshold |
 
 with @f$\tau = \Delta z/\Delta r@f$, @f$z_0 = z_1 - r_1\tau@f$ and the curvature
@@ -170,11 +175,19 @@ a node form a contiguous range, recorded in that node's `GbtsNodeEdgeInfo`.
 Immediately after creating an edge @f$(n_1, n_2)@f$, the builder scans the edges
 incoming to @f$n_2@f$ — that is, edges @f$(n_2, n_3)@f$ — and links the two
 whenever the implied triplet is consistent: the @f$\tau@f$ ratio, the @f$\phi@f$
-continuation and the curvature difference must all agree within tolerance. For
+continuation and the curvature difference must all agree within tolerance. The
+@f$\tau@f$ ratio tolerance comes from the layer pairs: a triplet is held to
+the looser of `tauRatioCutInner` of its inner pair and `tauRatioCutOuter` of
+its outer pair, see @ref Acts::Experimental::GbtsLayerConnection.
+@ref Acts::Experimental::assignAdaptiveTauRatioCuts fills them from the
+layers: wider for a pair that skips a pixel barrel layer or, as the outer
+pair, leaves the pixel barrel, and wider again for a pair with a strip layer.
+With `useSumRatioCut` the three differences, each divided by its own cut, may
+not add up to more than `sumRatioCutMax`, which rejects a pair that is marginal
+in all three at once. For
 pixel-barrel triplets an optional
 @ref Acts::Experimental::GraphBasedTrackSeeder "validateTriplets" step also fits
-a circle through the three points and cuts on @f$d_0@f$ and @f$p_T@f$. Each
-edge stores up to `kGbtsMaxEdgeNeighbours` (6) such neighbours.
+a circle through the three points and cuts on @f$d_0@f$ and @f$p_T@f$.
 
 Two further cuts apply on the innermost pixel barrel layers, where the
 combinatorics are worst. Each cut has its own depth limit on the `barrelOrder`
@@ -191,23 +204,44 @@ of the inner layer, and a negative limit switches the cut off:
   rejects candidates whose @f$z_0@f$ falls in an empty bin, and nodes with no
   connections at all are skipped outright.
 
-## Connected component analysis {#gbts-cca}
+Edges of an inner bin that no connection leads into, in practice the innermost
+pixel barrel layer, are never extended inwards. With `dropDeadEnds` (on by
+default) such an edge is kept only if it links to an outer edge, and outer
+nodes without edges are not tried for it. Neither could be part of a seed, so
+the seeds are unchanged while the graph and the edge array shrink.
 
-With the edge graph built, a cellular automaton assigns each edge a **level**:
-the length of the longest chain of linked edges ending at it. All edges start at
-level 1; in each iteration an edge whose level equals that of one of its
-neighbours proposes an increment, and the proposals are committed at the end of
-the iteration. The sweep repeats until nothing changes, or for at most 15
-iterations.
+With `pruneShortChains` the graph builder also leaves out the
+edges that cannot be on a chain long enough for a seed. The seeder hands it the
+level a seed needs: `minSeedLevel`, less one with `addTriplets`. An edge of a
+bin from which a chain can still go @f$k@f$ connection steps further in needs
+@f$k@f$ less. Edges are linked to the edges further out as they are created, and
+those are built first, so an edge's level is known right away: one below its
+bin's minimum is dropped, and outer nodes whose highest edge level cannot reach
+it are not tried. On the bins `dropDeadEnds` acts on, this drops at least the
+same edges.
 
-The level is the chain-length signal that drives extraction: an edge at level
-@f$L@f$ is the head of a chain spanning @f$L+1@f$ space points.
+## Chain levels {#gbts-levels}
+
+With the edge graph built, every edge gets a **level**: the length of the
+longest chain of linked edges going outwards from it, so an edge that nothing
+further out links to is at level 1. An edge only links to edges further in,
+which are always created after it, so a single pass over the edges in creation
+order settles every level. Chains longer than `maxChainLength` edges are left
+unsettled and take no part in the extraction.
+
+An edge with no settled edge further in exactly one level up is a **root**, the
+innermost edge of a chain. An edge further in that is more than one level up
+belongs to a longer chain outwards elsewhere and does not continue the chain.
 
 ## Seed extraction {#gbts-extraction}
 
-Edges whose level clears the minimum chain length become **chain heads**, sorted
-by level so the longest chains are collected first. Each head is then followed
-back through the graph by @ref Acts::Experimental::GbtsTrackingFilter.
+Every edge yields at most one seed candidate: the best fitted path from it
+inwards to a root, each step going to an edge one level up, i.e. along the
+longest chain outwards of that root. The paths are found by a depth first
+search from every edge, fitted on the way by
+@ref Acts::Experimental::GbtsTrackingFilter, and edges and branches that cannot
+reach a root far enough in are skipped. Nothing depends on the order the edges
+are visited in. This is the seed extraction of the traccc GPU GBTS.
 
 The filter is a small Kalman filter over the chain. It carries a state of two
 independent parts — a quadratic in the bending plane and a linear @f$z@f$ versus
@@ -218,9 +252,9 @@ threshold (`maxDChi2X`, `maxDChi2Y`).
 Every accepted hit adds a fixed reward `addHit` to the branch score, minus its
 two @f$\chi^2@f$ increments weighted by `weightX` and `weightY`. The score
 therefore counts the hits on the chain, discounted by how badly they fit the
-circle and the @f$z@f$ versus @f$r@f$ line. Where an edge has several
-neighbours the filter *branches*, recursing into each; the branch with the best
-accumulated score wins.
+circle and the @f$z@f$ versus @f$r@f$ line. Of the complete paths from an
+edge, the one with the best score per space point wins, and a path that fails
+the filter is dropped.
 
 The result is a set of seed candidates. These are reduced in two passes:
 
@@ -258,26 +292,42 @@ the angle. Wide clusters in the pixel endcap are dropped entirely
 
 ## Configuration {#gbts-configuration}
 
-The main knobs on @ref Acts::Experimental::GraphBasedTrackSeeder "GraphBasedTrackSeeder::Config":
+The cuts that build and link the doublets live on
+@ref Acts::Experimental::GbtsGraphBuilder "GbtsGraphBuilder::Config", which
+`GraphBasedSeedingAlgorithm` takes as `graphConfig` and exposes to Python as
+`GbtsGraphBuilderConfig`:
 
 | Option | Stage | Effect |
 | --- | --- | --- |
-| `useStripConnections` | @ref gbts-geometry | take the strip layer connections from the connector file instead of the pixel ones |
 | `minPt` | @ref gbts-graph | drives the curvature and @f$\phi@f$-window bounds |
-| `nMaxPhiSlice` | @ref gbts-graph | sets the base @f$\phi@f$ sliding-window width |
 | `minDeltaRadius`, `maxAbsTau` | @ref gbts-graph | doublet acceptance |
-| `minZ0`, `maxZ0`, `doubletFilterRZ` | @ref gbts-graph | luminous-region cuts on the doublet |
-| `tauRatioCut`, `cutDPhiMax`, `cutDCurvMax` | @ref gbts-graph | edge-to-edge linking tolerances |
-| `useAdaptiveCuts`, `tauRatioCorr` | @ref gbts-graph | widen the @f$\tau@f$ tolerance when a layer is skipped |
+| `doubletFilterRZ` | @ref gbts-graph | luminous-region cuts on the doublet, against the geometry's `GbtsZ0Range` |
+| `cutDPhiMax`, `cutDCurvMax` | @ref gbts-graph | edge-to-edge linking tolerances |
+| `useSumRatioCut`, `sumRatioCutMax` | @ref gbts-graph | bound on the summed linking tolerances, against pairs marginal in all three |
+| `tauRatioCut` | @ref gbts-graph | @f$\tau@f$ scale of the `validateTriplets` high-pT check. The linking cut comes from @ref Acts::Experimental::GbtsLayerConnection |
 | `validateTriplets`, `d0Max` | @ref gbts-graph | circle fit on pixel-barrel triplets |
-| `nMaxEdges` | @ref gbts-graph | hard cap on the edge array (2M by default); exceeding it costs efficiency |
+| `maxEdgesPerSP` | @ref gbts-graph | cap on the edge array per space point (30 by default); exceeding it costs efficiency |
+| `dropDeadEnds` | @ref gbts-graph | leave out the innermost edges that cannot join a chain (on by default); the seeds are unchanged |
 | `matchBeforeCreate`, `tauRatioPrecut`, `matchBeforeCreateMaxBarrelOrder` | @ref gbts-graph | require a compatible incoming edge before creating one, down to that depth in the pixel barrel |
 | `z0HistogramMaxBarrelOrder`, `z0Resolution` | @ref gbts-graph | @f$z_0@f$ histogram cut, down to that depth in the pixel barrel |
+| `pruneShortChains` | @ref gbts-graph | leave out edges too short for a seed while the graph is built |
+The rest are on @ref Acts::Experimental::GraphBasedTrackSeeder "GraphBasedTrackSeeder::Config":
+
+| Option | Stage | Effect |
+| --- | --- | --- |
+| `nMaxPhiSlice` | @ref gbts-nodes | sets the @f$\phi@f$ slice width, and with it the base sliding-window width the graph uses |
+| `maxChainLength` | @ref gbts-levels | longest chain of edges taken into account |
+| `minSeedLevel` | @ref gbts-extraction | chain length a candidate must reach |
+| `postFitCurvatureFactor` | @ref gbts-extraction | tighter curvature bound on the fitted chain, as a factor on the filter's `maxCurvature`; values below 1 does nothing |
+| `addTriplets`, `maxAbsEtaAddTriplets` | @ref gbts-extraction | allow shorter chains within an @f$\eta@f$ range |
 | `hitShareThreshold` | @ref gbts-extraction | fraction of shared hits above which a candidate is a clone |
 | `maxSeedSplitEta`, `maxInvRadDiff` | @ref gbts-extraction | seed splitting |
-| `addTriplets`, `maxAbsEtaAddTriplets` | @ref gbts-extraction | allow shorter chains within an @f$\eta@f$ range |
 | `useClusterWidthCuts`, `tauLookupTable` | @ref gbts-ml | cluster-width based @f$\tau@f$ windows |
 | `maxEndcapClusterWidth`, `moduleHalfLengthY`, `moduleEdgeTolerance` | @ref gbts-ml | cluster-width acceptance and module-edge handling |
+
+`useStripConnections`, which takes the strip layer connections from the
+connector file instead of the pixel ones, is read where the file is loaded and
+so sits on `GraphBasedSeedingAlgorithm::Config` itself.
 
 @ref Acts::Experimental::GbtsTrackingFilter "GbtsTrackingFilter::Config"
 separately controls the chain-following filter of @ref gbts-extraction "seed extraction":
@@ -288,7 +338,7 @@ separately controls the chain-following filter of @ref gbts-extraction "seed ext
 | `maxDChi2X`, `maxDChi2Y` | per-step @f$\chi^2@f$ ceilings; a branch exceeding either is dropped |
 | `addHit`, `weightX`, `weightY` | the reward and the two @f$\chi^2@f$ weights in the branch score |
 | `sigmaMS`, `radLen` | multiple-scattering inflation added before each extrapolation |
-| `maxCurvature`, `maxZ0` | track-level bounds checked after each update |
+| `maxCurvature` | track-level bounds checked after each update, with @f$z_0@f$ against the geometry's `GbtsZ0Range` |
 
 ## Implementation pointers {#gbts-implementation}
 

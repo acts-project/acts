@@ -45,8 +45,7 @@ void addTruthTracking(py::module& mex) {
     auto c = py::class_<Config>(mex, "GbtsLayerConnectionToolConfig")
                  .def(py::init<>());
 
-    ACTS_PYTHON_STRUCT(c, zMinTol, zMaxTol, rMinTol, rMaxTol, doSymmetrization,
-                       probThreshold);
+    ACTS_PYTHON_STRUCT(c, doSymmetrization, probThreshold);
 
     patchKwargsConstructor(c);
   }
@@ -55,7 +54,7 @@ void addTruthTracking(py::module& mex) {
       GbtsTrainingAlgorithm, mex, "GbtsTrainingAlgorithm", inputParticles,
       inputParticleMeasurementsMap, inputMeasurements, inputSimHits,
       inputMeasurementSimHitsMap, gbtsLayerConnectionToolConfig,
-      geometryFileDir, outputFileDir);
+      geometryFileDir, trackingGeometry, outputFileDir);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ParticleTrackParamExtractor, mex,
                                 "ParticleTrackParamExtractor", inputParticles,

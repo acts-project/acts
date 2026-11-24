@@ -45,14 +45,23 @@ Vector2 CylinderBounds::closestPoint(const Vector2& lposition,
                                      const SquareMatrix2& metric) const {
   double halfLengthZ = get(eHalfLengthZ);
   double radius = get(eR);
+  double halfRPhi = radius * get(eHalfPhiSector);
 
-  Vector2 vertices[] = {{-radius, -halfLengthZ},
-                        {radius, -halfLengthZ},
-                        {radius, halfLengthZ},
-                        {-radius, halfLengthZ}};
+  // check with phi wrap around the average phi of the sector
+  double rDeltaPhi =
+      radius * detail::radian_sym(lposition[0] / radius - get(eAveragePhi));
+  Vector2 relative{rDeltaPhi, lposition[1]};
 
-  return detail::VerticesHelper::computeClosestPointOnPolygon(lposition,
-                                                              vertices, metric);
+  Vector2 vertices[] = {{-halfRPhi, -halfLengthZ},
+                        {halfRPhi, -halfLengthZ},
+                        {halfRPhi, halfLengthZ},
+                        {-halfRPhi, halfLengthZ}};
+
+  Vector2 closest = detail::VerticesHelper::computeClosestPointOnPolygon(
+      relative, vertices, metric);
+  // back to the caller's r*phi frame
+  closest[0] += lposition[0] - rDeltaPhi;
+  return closest;
 }
 
 Vector2 CylinderBounds::center() const {

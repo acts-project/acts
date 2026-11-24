@@ -37,4 +37,18 @@ struct geo_id_surface_comparator {
 
 };  // struct geo_id_surface_comparator
 
+/// Relation checking that two consecutive measurements are ordered by surface
+///
+/// The CKF requires the measurements to be sorted in the same order that
+/// @c geo_id_surface_comparator uses, to be able to find the measurement
+/// ranges for each surface. Being grouped by surface is not enough.
+///
+struct geo_id_order_relation {
+  TRACCC_HOST_DEVICE bool operator()(
+      const detray::geometry::identifier& lhs,
+      const detray::geometry::identifier& rhs) const {
+    return (lhs <= rhs);
+  }
+};  // struct geo_id_order_relation
+
 }  // namespace traccc::device

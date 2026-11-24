@@ -3,6 +3,7 @@ acts_add_library(
     src/Geant4Converters.cpp
     src/Geant4DetectorElement.cpp
     src/Geant4DetectorSurfaceFactory.cpp
+    src/Geant4MaterialStepConverter.cpp
     src/Geant4PhysicalVolumeSelectors.cpp
     ACTS_INCLUDE_FOLDER include/ActsPlugins
 )

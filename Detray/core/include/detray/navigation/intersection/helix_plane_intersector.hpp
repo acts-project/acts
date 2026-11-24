@@ -20,6 +20,8 @@
 #include "detray/utils/root_finding.hpp"
 
 // System include(s)
+#include <cmath>
+#include <limits>
 #include <type_traits>
 
 namespace detray {
@@ -38,18 +40,23 @@ struct helix_intersector_impl<cartesian2D<algebra_t>, algebra_t> {
   using scalar_t = dscalar<algebra_t>;
 
  public:
+  /// Algebra policy used by this intersector.
   using algebra_type = algebra_t;
 
+  /// Intersection result type associated with a surface descriptor.
   template <typename surface_descr_t>
   using intersection_type =
       intersection2D<surface_descr_t, algebra_t, intersection::contains_pos>;
 
+  /// Trajectory representation accepted by this intersector.
   template <typename other_algebra_t>
   using trajectory_type = detail::helix<other_algebra_t>;
 
   // Maximum number of solutions this intersector can produce
+  /// Maximum number of solutions produced by this intersector.
   static constexpr std::uint8_t n_solutions{1u};
 
+  /// Result type returned by the geometric intersection calculation.
   using result_type = intersection_point_err<algebra_t>;
 
   /// Operator function to find intersections between a helix and a planar
@@ -69,6 +76,32 @@ struct helix_intersector_impl<cartesian2D<algebra_t>, algebra_t> {
     const vector3_t sn = trf.z();
     // Surface translation
     const point3_t st = trf.translation();
+
+    // For a plane parallel to the magnetic field, the projected helix is
+    // a circle. Reject planes outside that circle before attempting to find
+    // a root: bracket expansion cannot succeed when no intersection exists.
+    const vector3_t field = h.b_field();
+    const scalar_t curvature = -h.qop() * h.B();
+    if (vector::dot(sn, field) == 0.f && curvature != 0.f &&
+        h.radius() * h.B() >= 1e-6f) {
+      const vector3_t field_axis = vector::normalize(field);
+      // The transverse circle centre is offset from the initial position.
+      const vector3_t center_offset =
+          (1.f / curvature) * vector::cross(field_axis, h.dir());
+      const scalar_t center_distance = math::fabs(
+          vector::dot(sn, h.pos() - st) + vector::dot(sn, center_offset));
+      const scalar_t radius = h.radius();
+      // Keep near-tangent cases within the solver's tolerance, with an
+      // additional allowance for floating-point roundoff.
+      const scalar_t margin = convergence_tolerance +
+                              64.f * std::numeric_limits<scalar_t>::epsilon() *
+                                  (center_distance + radius);
+      if (std::isfinite(center_distance) && std::isfinite(radius) &&
+          center_distance - radius > margin) {
+        constexpr scalar_t inv = detail::invalid_value<scalar_t>();
+        return {inv, point3_t{inv, inv, inv}, inv};
+      }
+    }
 
     // Starting point on the helix for the Newton iteration
     const vector3_t dist{st - h.pos(0.f)};
@@ -108,11 +141,11 @@ struct helix_intersector_impl<cartesian2D<algebra_t>, algebra_t> {
 
   /// Tolerance for convergence
   scalar_t convergence_tolerance{1.f * unit<scalar_t>::um};
-  // Guard against infinite loops
+  /// Guard against infinite loops
   std::size_t max_n_tries{1000u};
-  // Early exit, if the intersection is too far away
+  /// Early exit, if the intersection is too far away
   scalar_t max_path{5.f * unit<scalar_t>::m};
-  // Complement the Newton algorithm with Bisection steps
+  /// Complement the Newton algorithm with Bisection steps
   bool run_rtsafe{true};
 };
 

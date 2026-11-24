@@ -1,13 +1,13 @@
 repos:
   - repo: https://github.com/pre-commit/mirrors-clang-format
-    rev: 'v22.1.8'
+    rev: ce4bd7270237e95464b37d808b942f02785192c4 # frozen: v23.1.5
     hooks:
       - id: clang-format
         types_or: [file]
         files: \.(cpp|hpp|ipp|cu|cuh|hip|sycl)$
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v6.0.0
+    rev: 3e8a8703264a2f4a69428a0aa4dcb512790b2c8c # frozen: v6.0.0
     hooks:
     - id: trailing-whitespace
       exclude: \.(diff|patch)$
@@ -20,18 +20,18 @@ repos:
 
   # Using this mirror lets us use mypyc-compiled black, which is about 2x faster
   - repo: https://github.com/psf/black-pre-commit-mirror
-    rev: 26.5.1
+    rev: a5439e9af2ff9371297bb1a76a01b8ad17989b88 # frozen: 26.10.1
     hooks:
     - id: black-jupyter
 
   - repo: https://github.com/BlankSpruce/gersemi-pre-commit
-    rev: 0.29.1
+    rev: 28010ddd6016e1a0f7bd232acb6536ef996ae897 # frozen: 0.29.2
     hooks:
     - id: gersemi
       args: ["-i", "--no-warn-about-unknown-commands"]
 
   - repo: https://github.com/codespell-project/codespell
-    rev: v2.4.3
+    rev: 57b21406f092110c18776e39b0bda50d37c945c8 # frozen: v2.4.3
     hooks:
     - id: codespell
       args: [
@@ -43,6 +43,14 @@ repos:
 
   - repo: local
     hooks:
+    - id: material-schema
+      name: Validate material schema and examples
+      language: python
+      entry: python CI/check_material_schema.py
+      additional_dependencies: ["jsonschema>=4.18,<5"]
+      files: ^(Plugins/Json/schema/|docs/examples/material-map-v1/|CI/check_material_schema\.py$)
+      pass_filenames: false
+
     - id: license
       name: license
       language: system
@@ -98,7 +106,9 @@ repos:
       language: python
       entry: CI/check_codegen_dependencies.sh
       additional_dependencies: ["uv"]
-      files: pyproject.toml$
+      # Only codegen/ consumes its compiled requirements.txt; keep in sync with
+      # the folder list in .github/workflows/update-pip-requirements.yml.
+      files: ^codegen/pyproject\.toml$
 
     - id: format-json
       name: Format JSON files (Python)
@@ -126,6 +136,6 @@ repos:
       pass_filenames: false
 
   - repo: https://github.com/woodruffw/zizmor-pre-commit
-    rev: v1.29.0   # check latest
+    rev: 06a39750ec31860bb44f2acf67182c40016cd1e7 # frozen: v1.32.0
     hooks:
       - id: zizmor

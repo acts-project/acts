@@ -24,8 +24,16 @@
 namespace detray::svgtools::meta::display {
 
 /// @brief Converts a proto volume to its surface grid SVG.
+/// @tparam point3_t Coordinate point type.
+/// @tparam view_t Projection type.
+/// @param id SVG object identifier.
+/// @param p_volume Volume containing the converted surfaces.
+/// @param gr_type Grid orientation used to select compatible views.
+/// @param grid_svg SVG object to be updated with grid connectors.
+/// @param view Requested projection.
+/// @return SVG object representing the surface grid.
 ///
-/// @note the @param grid_svg has to be a non-const reference in order to select
+/// @note The SVG object must be a non-const reference in order to select
 /// the correct overload of the @c actsvg::connectors::connect_action function
 template <concepts::point3D point3_t, typename view_t>
 inline auto surface_grid(

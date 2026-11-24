@@ -167,11 +167,16 @@ def _fill_track(track):
     track.nHoles = 1
     track.nOutliers = 2
     track.nSharedHits = 1
+    track.nSplitHits = 2
     track.chi2 = 4.5
     track.nDoF = 5
 
     state = track.appendTrackState(ae.TrackStatePropMask.All)
     state.typeFlags.setIsMeasurement()
+    state.typeFlags.isSharedHit = True
+    state.typeFlags.isSplitHit = True
+    assert state.typeFlags.isSplitHit
+    assert not state.typeFlags.isSharedHit
     state.referenceSurface = surface
     state.uncalibratedSourceLink = ae.IndexSourceLink(geo_id, 0).toSourceLink()
     state.predicted = acts.BoundVector(0.1, 0.2, 0.3, 1.4, 0.01, 0.0)
@@ -203,6 +208,7 @@ def _check_track(track, state, *, linked):
     assert track.nHoles == 1
     assert track.nOutliers == 2
     assert track.nSharedHits == 1
+    assert track.nSplitHits == 2
     assert track.chi2 == pytest.approx(4.5)
     assert track.nDoF == 5
     assert track.nTrackStates == 1
@@ -331,6 +337,7 @@ def test_track_container_soa_numpy_views():
         t.chi2 = float(i) + 0.5
         t.nOutliers = i
         t.nSharedHits = 2 * i
+        t.nSplitHits = 3 * i
 
     const_tc = tc.makeConst()
 
@@ -339,6 +346,7 @@ def test_track_container_soa_numpy_views():
         assert const_tc.chi2[i] == pytest.approx(track.chi2)
         assert const_tc.nOutliers[i] == track.nOutliers
         assert const_tc.nSharedHits[i] == track.nSharedHits
+        assert const_tc.nSplitHits[i] == track.nSplitHits
 
 
 def test_ensure_dynamic_columns_and_copy_from():

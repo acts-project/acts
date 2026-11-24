@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Io/Arrow/ArrowParticleOutputConverter.hpp"
 #include "ActsExamples/Io/Arrow/ArrowSimHitOutputConverter.hpp"

@@ -10,7 +10,6 @@
 
 // Project include(s)
 #include "detray/io/frontend/payloads.hpp"
-#include "detray/io/json/detail/json_algebra_io.hpp"
 #include "detray/io/json/detail/json_common_io.hpp"
 #include "detray/io/json/detail/json_grids_io.hpp"
 #include "detray/io/json/json.hpp"
@@ -26,25 +25,28 @@
 /// JSON I/O extension
 namespace detray::io {
 
-inline void to_json(nlohmann::ordered_json& j, const geo_header_payload& h) {
-  j["common"] = h.common;
+inline void to_json(nlohmann::ordered_json& j,
+                    const geometry_header_payload& h) {
+  j["volume_count"] = h.n_volumes;
+  j["surface_count"] = h.n_surfaces;
+}
 
-  if (h.sub_header.has_value()) {
-    const auto& geo_sub_header = h.sub_header.value();
-    j["volume_count"] = geo_sub_header.n_volumes;
-    j["surface_count"] = geo_sub_header.n_surfaces;
+inline void from_json(const nlohmann::ordered_json& j,
+                      geometry_header_payload& h) {
+  if (j.find("volume_count") != j.end() && j.find("surface_count") != j.end()) {
+    h.n_volumes = j["volume_count"];
+    h.n_surfaces = j["surface_count"];
   }
 }
 
-inline void from_json(const nlohmann::ordered_json& j, geo_header_payload& h) {
-  h.common = j["common"];
+inline void to_json(nlohmann::ordered_json& j, const transform_payload& t) {
+  j["translation"] = t.tr;
+  j["rotation"] = t.rot;
+}
 
-  if (j.find("volume_count") != j.end() && j.find("surface_count") != j.end()) {
-    h.sub_header.emplace();
-    auto& geo_sub_header = h.sub_header.value();
-    geo_sub_header.n_volumes = j["volume_count"];
-    geo_sub_header.n_surfaces = j["surface_count"];
-  }
+inline void from_json(const nlohmann::ordered_json& j, transform_payload& t) {
+  t.tr = j["translation"];
+  t.rot = j["rotation"];
 }
 
 inline void to_json(nlohmann::ordered_json& j, const mask_payload& m) {
@@ -146,7 +148,8 @@ inline void from_json(const nlohmann::ordered_json& j, volume_payload& v) {
   }
 }
 
-inline void to_json(nlohmann::ordered_json& j, const detector_payload& d) {
+inline void to_json(nlohmann::ordered_json& j,
+                    const detector_geometry_payload& d) {
   if (!d.volumes.empty()) {
     nlohmann::ordered_json jvolumes;
     for (const auto& v : d.volumes) {
@@ -159,7 +162,8 @@ inline void to_json(nlohmann::ordered_json& j, const detector_payload& d) {
   }
 }
 
-inline void from_json(const nlohmann::ordered_json& j, detector_payload& d) {
+inline void from_json(const nlohmann::ordered_json& j,
+                      detector_geometry_payload& d) {
   if (j.find("volumes") != j.end()) {
     for (const auto& jvolume : j["volumes"]) {
       d.volumes.push_back(jvolume);

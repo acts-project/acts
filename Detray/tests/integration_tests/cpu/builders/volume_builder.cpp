@@ -70,6 +70,8 @@ GTEST_TEST(detray_builders, tracking_volume_construction) {
   vecmem::host_memory_resource host_mr;
   detector_t d(host_mr);
   auto geo_ctx = typename detector_t::geometry_context{};
+  volume_builder_options builder_opts{};
+
   // ensure there is a data offset that needs to be handled correctly
   prefill_detector(d, geo_ctx);
   const dindex first_trf{d.transform_store().size()};
@@ -129,13 +131,13 @@ GTEST_TEST(detray_builders, tracking_volume_construction) {
   typename rectangle_factory::sf_data_collection rect_sf_data;
   rect_sf_data.emplace_back(surface_id::e_sensitive,
                             transform3(point3{0.f, 0.f, -10.f}), vol_idx,
-                            std::vector<scalar>{10.f, 8.f});
+                            std::vector<scalar>{-10.f, -8.f, 10.f, 8.f});
   rect_sf_data.emplace_back(surface_id::e_sensitive,
                             transform3(point3{0.f, 0.f, -20.f}), vol_idx,
-                            std::vector<scalar>{10.f, 8.f});
+                            std::vector<scalar>{-10.f, -8.f, 10.f, 8.f});
   rect_sf_data.emplace_back(surface_id::e_sensitive,
                             transform3(point3{0.f, 0.f, -30.f}), vol_idx,
-                            std::vector<scalar>{10.f, 8.f});
+                            std::vector<scalar>{-10.f, -8.f, 10.f, 8.f});
   rect_factory->push_back(std::move(rect_sf_data));
 
   auto trpz_factory = std::make_shared<trapezoid_factory>();
@@ -181,15 +183,15 @@ GTEST_TEST(detray_builders, tracking_volume_construction) {
   rect_sf_data.clear();
   rect_sf_data.emplace_back(surface_id::e_sensitive,
                             transform3(point3{0.f, 0.f, 10.f}), vol_idx,
-                            std::vector<scalar>{10.f, 8.f});
+                            std::vector<scalar>{-10.f, -8.f, 10.f, 8.f});
   rect_sf_data.emplace_back(surface_id::e_sensitive,
                             transform3(point3{0.f, 0.f, 20.f}), vol_idx,
-                            std::vector<scalar>{10.f, 8.f});
+                            std::vector<scalar>{-10.f, -8.f, 10.f, 8.f});
   rect_factory->push_back(std::move(rect_sf_data));
   rect_sf_data.clear();
   rect_sf_data.emplace_back(surface_id::e_sensitive,
                             transform3(point3{0.f, 0.f, 30.f}), vol_idx,
-                            std::vector<scalar>{10.f, 8.f});
+                            std::vector<scalar>{-10.f, -8.f, 10.f, 8.f});
   rect_factory->push_back(std::move(rect_sf_data));
 
   vbuilder.add_surfaces(rect_factory, geo_ctx);
@@ -197,7 +199,7 @@ GTEST_TEST(detray_builders, tracking_volume_construction) {
   //
   // Adds all surfaces to the detector
   //
-  vbuilder.build(d);
+  vbuilder.build(d, builder_opts);
 
   //
   // check results

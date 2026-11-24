@@ -441,6 +441,41 @@ BOOST_AUTO_TEST_CASE(NonUniformFieldRoundTrip) {
   CHECK_CLOSE_OR_SMALL(track.parameters(), read.parameters(), 1e-5, 1e-8);
 }
 
+// readTrackState is the inverse of writeTrackState for a single state, with
+// the field sampled at the same place on both sides.
+BOOST_AUTO_TEST_CASE(TrackStateRoundTrip) {
+  auto gctx = GeometryContext::dangerouslyDefaultConstruct();
+  MagneticFieldContext mctx{};
+  ZGradientField field{2_T};
+
+  const Vector3 refPoint{1_mm, -2_mm, 300_mm};
+  BoundVector par;
+  par << 50_mm, 300_mm, 0.7, 1.1, 1. / 2_GeV, 0;
+  BoundMatrix cov = BoundMatrix::Identity() * 1e-6;
+  BoundTrackParameters params{Surface::makeShared<PerigeeSurface>(refPoint),
+                              par, cov, ParticleHypothesis::pion()};
+
+  edm4hep::TrackState state = EDM4hepUtil::writeTrackState(
+      gctx, mctx, edm4hep::TrackState::AtIP, params, field);
+
+  auto fieldCache = field.makeCache(mctx);
+  BoundTrackParameters read =
+      EDM4hepUtil::readTrackState(gctx, state, field, fieldCache);
+
+  CHECK_CLOSE_OR_SMALL(read.referenceSurface().center(gctx), refPoint, 1e-6,
+                       1e-6);
+  CHECK_CLOSE_OR_SMALL(read.parameters(), par, 1e-5, 1e-8);
+  BOOST_REQUIRE(read.covariance().has_value());
+  CHECK_CLOSE_OR_SMALL(read.covariance().value(), cov, 1e-5, 1e-8);
+
+  // The overload creating its own field cache gives the same result
+  BoundTrackParameters readNoCache =
+      EDM4hepUtil::readTrackState(gctx, mctx, state, field);
+  BOOST_CHECK_EQUAL(readNoCache.parameters(), read.parameters());
+  BOOST_CHECK_EQUAL(readNoCache.covariance().value(),
+                    read.covariance().value());
+}
+
 BOOST_AUTO_TEST_CASE(RoundTripTests) {
   auto trackContainer = std::make_shared<VectorTrackContainer>();
   auto trackStateContainer = std::make_shared<VectorMultiTrajectory>();

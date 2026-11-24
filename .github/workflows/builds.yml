@@ -34,7 +34,7 @@ env:
   CTEST_OUTPUT_ON_FAILURE: 1
   HOMEBREW_NO_INSTALL_CLEANUP: 1
   CCACHE_DIR: ${{ github.workspace }}/ccache
-  CCACHE_MAXSIZE: 500M
+  CCACHE_MAXSIZE: 2G
   ACTS_SEQUENCER_FAIL_ON_UNMASKED_FPE: 0
 
 jobs:
@@ -52,7 +52,7 @@ jobs:
       packages: read
     container: registry.cern.ch/ghcr.io/acts-project/ubuntu2604:90
     env:
-      CCACHE_MAXSIZE: 1G
+      CCACHE_MAXSIZE: 4G
       CCACHE_DIR: ${{ github.workspace }}/ccache-snapshot
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
@@ -64,7 +64,7 @@ jobs:
           persist-credentials: false
 
       - name: Install dependencies
-        uses: ./.github/actions/dependencies
+        uses: $/.github/actions/dependencies
         with:
           compiler: g++
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -73,7 +73,7 @@ jobs:
       - name: Restore ccache snapshot
         continue-on-error: true
         timeout-minutes: 10
-        uses: ./.github/actions/ccache-s3
+        uses: $/.github/actions/ccache-s3
         with:
           key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/linux_ubuntu/v1/
 
@@ -120,7 +120,7 @@ jobs:
       - name: Package build
         run: tar czf build.tar.gz -C build --exclude "*.o" --exclude "bin/ActsUnitTest*" --exclude "bin/ActsIntegrationTest*" .
 
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: acts-linux-ubuntu
           path: build.tar.gz
@@ -144,7 +144,7 @@ jobs:
 
       - name: ccache statistics
         if: always()
-        uses: ./.github/actions/ccache-s3/stats
+        uses: $/.github/actions/ccache-s3/stats
 
       - name: Clean ccache before publication
         id: ccache-cleanup
@@ -156,7 +156,7 @@ jobs:
         if: ${{ !cancelled() && steps.ccache-cleanup.outcome == 'success' }}
         continue-on-error: true
         timeout-minutes: 10
-        uses: ./.github/actions/ccache-s3
+        uses: $/.github/actions/ccache-s3
         with:
           operation: publish
           key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/linux_ubuntu/v1/
@@ -172,7 +172,8 @@ jobs:
       # so reads fall back to the anonymous (heavily rate limited) bucket.
       packages: read
     container: registry.cern.ch/ghcr.io/acts-project/ubuntu2604:90
-    needs: [linux_ubuntu]
+    needs: [linux_ubuntu, changes]
+    if: github.event_name != 'pull_request' || needs.changes.outputs.acts == 'true'
     env:
       # Enforce FPE masking on the RelWithDebInfo (github-ci-fpe) build: source
       # locations resolve, so the test_fpe.py masking tests run instead of being
@@ -187,13 +188,13 @@ jobs:
           persist-credentials: false
 
       - name: Install dependencies
-        uses: ./.github/actions/dependencies
+        uses: $/.github/actions/dependencies
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           full_install: true
           env_file: .env
 
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: acts-linux-ubuntu
 
@@ -205,15 +206,28 @@ jobs:
 
       - name: Python level tests
         shell: bash
+        timeout-minutes: 20
         env:
           PYTEST_MD_REPORT: true
           PYTEST_MD_REPORT_VERBOSE: 0
           PYTEST_MD_REPORT_OUTPUT: pytest.md
           PYTEST_ADDOPTS: "-rs --durations=10"
+          # Per-test peak memory summary, see Python/Examples/tests/conftest.py
+          ACTS_PYTEST_MEMORY_REPORT: 1
         run: |
           source .env
           source build/this_acts_withdeps.sh
-          pytest -rfExw -k "not gnn" -v
+          nproc; grep -E 'MemTotal|MemAvailable|SwapTotal' /proc/meminfo
+          # Sample used memory (MiB) to measure the effect of parallel workers
+          (while sleep 10; do awk '/MemTotal/{t=$2} /MemAvailable/{a=$2} END{print int((t-a)/1024)}' /proc/meminfo; done > mem.log) &
+          trap 'echo "Peak used memory: $(sort -n mem.log | tail -1) MiB"' EXIT
+          # loadgroup keeps the xdist_group("heavy") tests on one worker so the
+          # memory-hungry ones never run at the same time. A crashed worker
+          # fails the run: replacing it has been seen to hang the session.
+          # Two workers only: with FPE monitoring on, resolving masked FPE
+          # stack traces loads the (RelWithDebInfo) debug info into each
+          # worker, several GB that is never freed, so three do not fit.
+          pytest -rfExw -k "not gnn" -v -n 3 --dist loadgroup --max-worker-restart 0
           cat ${PYTEST_MD_REPORT_OUTPUT} >> $GITHUB_STEP_SUMMARY
 
   linux_physmon:
@@ -224,7 +238,8 @@ jobs:
       # GHCR reads are rate limited hard enough to break the job.
       packages: read
     container: registry.cern.ch/ghcr.io/acts-project/ubuntu2604:90
-    needs: [linux_ubuntu]
+    needs: [linux_ubuntu, changes]
+    if: github.event_name != 'pull_request' || needs.changes.outputs.acts == 'true'
     env:
       # Enforce FPE masking on the RelWithDebInfo (github-ci-fpe) build: the
       # full reconstruction must stay FPE-clean (auto-loaded source masks
@@ -238,18 +253,18 @@ jobs:
           persist-credentials: false
 
       # Before this job's own apt-get; the upstream archive is slow from CERN.
-      - uses: ./.github/actions/apt_mirror
+      - uses: $/.github/actions/apt_mirror
 
       - run: apt-get update && apt-get install -y time
 
       - name: Install dependencies
-        uses: ./.github/actions/dependencies
+        uses: $/.github/actions/dependencies
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           full_install: true
           env_file: .env
 
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: acts-linux-ubuntu
 
@@ -272,46 +287,15 @@ jobs:
           mkdir -p physmon
           cat physmon/summary.md >> $GITHUB_STEP_SUMMARY
 
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: physmon
-          path: physmon
-
-  linux_physmon_perf_report:
-    needs: [linux_physmon]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    if: github.ref == 'refs/heads/main'
-    steps:
-      - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
-        with:
-          enable-cache: false
-
-      - name: Install dependencies
-        run: uv tool install --no-build spyral-cli==1.1.2
-
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          name: physmon
-          path: physmon
-
-      - name: Store metrics
-        env:
-          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
-          RUNTIME_METRIC_DEPLOY_SSH_KEY: ${{ secrets.RUNTIME_METRIC_DEPLOY_SSH_KEY }}
-        run: |
-          ssh-agent -a $SSH_AUTH_SOCK > /dev/null
-          ssh-add - <<< "$RUNTIME_METRIC_DEPLOY_SSH_KEY"
-          git config --global user.email "action@github.com"
-          git config --global user.name "GitHub Action"
-          git clone git@github.com:acts-project/runtime_metrics.git
-          spyral maxima runtime_metrics/metrics.csv physmon/memory/*.csv -e $(date +%Y-%m-%dT%H-%M-%S) -e ${GITHUB_REF_NAME} -e ${GITHUB_REF} -e ${GITHUB_SHA}
-          cd runtime_metrics
-          git add -A
-          git commit -m"update metrics"
-          git push
+          # The GSF simulation is only an input to the GSF fits and no
+          # comparison reads it
+          path: |
+            physmon
+            !physmon/data/simulation_gsf
 
   linux_ubuntu_extra:
     environment:
@@ -342,7 +326,7 @@ jobs:
           persist-credentials: false
 
       - name: Install dependencies
-        uses: ./.github/actions/dependencies
+        uses: $/.github/actions/dependencies
         with:
           compiler: ${{ matrix.cxx }}
           cxx_std: ${{ matrix.std }}
@@ -350,7 +334,7 @@ jobs:
           env_file: .env
 
       - name: Restore ccache snapshot
-        uses: ./.github/actions/ccache-s3
+        uses: $/.github/actions/ccache-s3
         continue-on-error: true
         timeout-minutes: 10
         with:
@@ -371,7 +355,7 @@ jobs:
 
       - name: ccache statistics
         if: always()
-        uses: ./.github/actions/ccache-s3/stats
+        uses: $/.github/actions/ccache-s3/stats
 
       - name: Clean ccache before publication
         if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
@@ -384,7 +368,7 @@ jobs:
         if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         continue-on-error: true
         timeout-minutes: 10
-        uses: ./.github/actions/ccache-s3
+        uses: $/.github/actions/ccache-s3
         with:
           operation: publish
           key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/builds/linux_ubuntu_extra/${{ runner.os }}-${{ runner.arch }}/${{ matrix.image }}-${{ matrix.std }}-${{ matrix.cxx }}/v1/
@@ -442,6 +426,7 @@ jobs:
       contents: read
       pull-requests: read
     outputs:
+      acts: ${{ steps.filter.outputs.acts }}
       gnn: ${{ steps.filter.outputs.gnn }}
       cuda_muon: ${{ steps.filter.outputs.cuda_muon }}
     steps:
@@ -453,6 +438,12 @@ jobs:
         if: github.event_name == 'pull_request'
         with:
           filters: |
+            acts:
+              # Defer selected ACTS checks for Detray-only PRs to the merge queue.
+              # Any change outside Detray still requires these checks on the PR.
+              - '!Detray/**'
+              # The root presets include this file, even for ACTS builds.
+              - 'Detray/CMakePresets.json'
             gnn:
               # What the presets compile
               - 'Core/**'
@@ -540,7 +531,7 @@ jobs:
           persist-credentials: false
 
       - name: Install dependencies
-        uses: ./.github/actions/dependencies
+        uses: $/.github/actions/dependencies
         with:
           compiler: g++
           flavor: cuda13
@@ -548,7 +539,7 @@ jobs:
           env_file: .env
 
       - name: Restore ccache snapshot
-        uses: ./.github/actions/ccache-s3
+        uses: $/.github/actions/ccache-s3
         continue-on-error: true
         timeout-minutes: 10
         with:
@@ -599,7 +590,7 @@ jobs:
 
       - name: ccache statistics
         if: always()
-        uses: ./.github/actions/ccache-s3/stats
+        uses: $/.github/actions/ccache-s3/stats
 
       - name: Clean ccache before publication
         if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
@@ -612,7 +603,7 @@ jobs:
         if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         continue-on-error: true
         timeout-minutes: 10
-        uses: ./.github/actions/ccache-s3
+        uses: $/.github/actions/ccache-s3
         with:
           operation: publish
           key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/builds/gnn_build/${{ runner.os }}-${{ runner.arch }}/v1/
@@ -624,7 +615,7 @@ jobs:
       - name: Package build
         run: tar czf build.tar.gz -C build --exclude "*.o" --exclude "bin/ActsIntegrationTest*" .
 
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: acts-gnn-build
           path: build.tar.gz
@@ -669,14 +660,14 @@ jobs:
           persist-credentials: false
 
       - name: Install dependencies
-        uses: ./.github/actions/dependencies
+        uses: $/.github/actions/dependencies
         with:
           compiler: g++
           flavor: cuda13
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           env_file: .env
 
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: acts-gnn-build
 
@@ -736,7 +727,7 @@ jobs:
           persist-credentials: false
 
       - name: Install dependencies
-        uses: ./.github/actions/dependencies
+        uses: $/.github/actions/dependencies
         with:
           compiler: g++
           flavor: cuda13
@@ -744,7 +735,7 @@ jobs:
           env_file: .env
 
       - name: Restore ccache snapshot
-        uses: ./.github/actions/ccache-s3
+        uses: $/.github/actions/ccache-s3
         continue-on-error: true
         timeout-minutes: 10
         with:
@@ -762,7 +753,7 @@ jobs:
 
       - name: ccache statistics
         if: always()
-        uses: ./.github/actions/ccache-s3/stats
+        uses: $/.github/actions/ccache-s3/stats
 
       - name: Clean ccache before publication
         if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
@@ -775,7 +766,7 @@ jobs:
         if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         continue-on-error: true
         timeout-minutes: 10
-        uses: ./.github/actions/ccache-s3
+        uses: $/.github/actions/ccache-s3
         with:
           operation: publish
           key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/builds/gnn_tensorrt/${{ runner.os }}-${{ runner.arch }}/v1/
@@ -814,7 +805,7 @@ jobs:
           apt-get install -y bc
 
       - name: Install dependencies
-        uses: ./.github/actions/dependencies
+        uses: $/.github/actions/dependencies
         with:
           compiler: g++
           flavor: cuda13
@@ -822,7 +813,7 @@ jobs:
           env_file: .env
 
       - name: Restore ccache snapshot
-        uses: ./.github/actions/ccache-s3
+        uses: $/.github/actions/ccache-s3
         continue-on-error: true
         timeout-minutes: 10
         with:
@@ -840,7 +831,7 @@ jobs:
 
       - name: ccache statistics
         if: always()
-        uses: ./.github/actions/ccache-s3/stats
+        uses: $/.github/actions/ccache-s3/stats
 
       - name: Clean ccache before publication
         if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
@@ -853,7 +844,7 @@ jobs:
         if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         continue-on-error: true
         timeout-minutes: 10
-        uses: ./.github/actions/ccache-s3
+        uses: $/.github/actions/ccache-s3
         with:
           operation: publish
           key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/builds/cuda_muon_build/${{ runner.os }}-${{ runner.arch }}/v1/
@@ -863,7 +854,7 @@ jobs:
       - name: Package build
         run: tar czf build.tar.gz -C build --exclude "*.o" .
 
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: acts-cuda-muon-build
           path: build.tar.gz
@@ -896,14 +887,14 @@ jobs:
           apt-get install -y bc
 
       - name: Install dependencies
-        uses: ./.github/actions/dependencies
+        uses: $/.github/actions/dependencies
         with:
           compiler: g++
           flavor: cuda13
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           env_file: .env
 
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: acts-cuda-muon-build
 
@@ -927,6 +918,8 @@ jobs:
   # fail on a missing /cvmfs.
   # ─────────────────────────────────────────────────────────────────────
   lcg:
+    needs: changes
+    if: github.event_name != 'pull_request' || needs.changes.outputs.acts == 'true'
     environment:
       name: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 's3-sccache' || '' }}
     name: lcg_${{ matrix.tag }}
@@ -964,11 +957,11 @@ jobs:
             view: LCG_109
             tests: true
 
-          - tag: 109_alma9_clang19
+          - tag: 110_alma9_gcc16
             platform: el9
-            compiler: clang19
+            compiler: gcc16
             repo: sft.cern.ch
-            view: LCG_109
+            view: LCG_110
             tests: true
 
     env:
@@ -1005,21 +998,23 @@ jobs:
           persist-credentials: false
 
       - name: Set up uv for Python tests and cache transfers
-        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
 
       - name: Restore ccache snapshot
-        uses: ./.github/actions/ccache-s3
+        uses: $/.github/actions/ccache-s3
         continue-on-error: true
         timeout-minutes: 10
         with:
           key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/builds/lcg/${{ runner.os }}-${{ runner.arch }}/${{ matrix.tag }}/v1/
 
+      # Exercise the minimum supported standard against this LCG dependency stack.
       - name: Configure
         run: >
           source "${LCG_VIEW}/setup.sh" &&
           ccache -z &&
           cmake -B build -S .
           --preset=github-ci-lcg
+          -DCMAKE_CXX_STANDARD=23
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
 
       - name: Build
@@ -1047,7 +1042,7 @@ jobs:
         if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         continue-on-error: true
         timeout-minutes: 10
-        uses: ./.github/actions/ccache-s3
+        uses: $/.github/actions/ccache-s3
         with:
           operation: publish
           key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/builds/lcg/${{ runner.os }}-${{ runner.arch }}/${{ matrix.tag }}/v1/
@@ -1070,6 +1065,10 @@ jobs:
       - name: Python level tests
         if: matrix.tests
         shell: bash
+        timeout-minutes: 25
+        env:
+          # Per-test peak memory summary, see Python/Examples/tests/conftest.py
+          ACTS_PYTEST_MEMORY_REPORT: 1
         run: |
           source "${LCG_VIEW}/setup.sh"
           source build/this_acts_withdeps.sh
@@ -1079,7 +1078,14 @@ jobs:
           uv pip install --no-build --require-hashes --python .venv/bin/python -r Python/Examples/tests/requirements.txt
           # plotting tests with mplhep fail because an ancient mplhep version in
           # LCG overrides the mplhep version in our venv
-          .venv/bin/python -m pytest -rsfExw --durations=10 -k "not gnn and not plot" -v -n1
+          nproc; grep -E 'MemTotal|MemAvailable|SwapTotal' /proc/meminfo
+          # Sample used memory (MiB) to measure the effect of parallel workers
+          (while sleep 10; do awk '/MemTotal/{t=$2} /MemAvailable/{a=$2} END{print int((t-a)/1024)}' /proc/meminfo; done > mem.log) &
+          trap 'echo "Peak used memory: $(sort -n mem.log | tail -1) MiB"' EXIT
+          # loadgroup keeps the xdist_group("heavy") tests on one worker so the
+          # memory-hungry ones never run at the same time. A crashed worker
+          # fails the run: replacing it has been seen to hang the session.
+          .venv/bin/python -m pytest -rsfExw --durations=10 -k "not gnn and not plot" -v -n 3 --dist loadgroup --max-worker-restart 0
 
   # This moving nightly view is independent of PR changes. Keep it separate
   # from the release-view matrix so it can run only on main without referring
@@ -1116,16 +1122,17 @@ jobs:
           persist-credentials: false
 
       - name: Set up uv for cache transfers
-        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
         continue-on-error: true
 
       - name: Restore ccache snapshot
-        uses: ./.github/actions/ccache-s3
+        uses: $/.github/actions/ccache-s3
         continue-on-error: true
         timeout-minutes: 10
         with:
           key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/builds/lcg_dev4/${{ runner.os }}-${{ runner.arch }}/v1/
 
+      # Exercise the minimum supported standard against this LCG dependency stack.
       - name: Configure
         id: configure
         continue-on-error: true
@@ -1134,6 +1141,7 @@ jobs:
           ccache -z &&
           cmake -B build -S .
           --preset=github-ci-lcg
+          -DCMAKE_CXX_STANDARD=23
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
 
       - name: Build
@@ -1163,7 +1171,7 @@ jobs:
         if: ${{ !cancelled() && steps.configure.outcome == 'success' }}
         continue-on-error: true
         timeout-minutes: 10
-        uses: ./.github/actions/ccache-s3
+        uses: $/.github/actions/ccache-s3
         with:
           operation: publish
           key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/builds/lcg_dev4/${{ runner.os }}-${{ runner.arch }}/v1/
@@ -1302,14 +1310,14 @@ jobs:
           xcode-version: "26.3.0"
 
       - name: Install dependencies
-        uses: ./.github/actions/dependencies
+        uses: $/.github/actions/dependencies
         with:
           compiler: clang++
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           env_file: .env
 
       - name: Restore ccache snapshot
-        uses: ./.github/actions/ccache-s3
+        uses: $/.github/actions/ccache-s3
         continue-on-error: true
         timeout-minutes: 10
         env:
@@ -1330,7 +1338,7 @@ jobs:
 
       - name: ccache statistics
         if: always()
-        uses: ./.github/actions/ccache-s3/stats
+        uses: $/.github/actions/ccache-s3/stats
 
       - name: Clean ccache before publication
         if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
@@ -1343,7 +1351,7 @@ jobs:
         if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         continue-on-error: true
         timeout-minutes: 10
-        uses: ./.github/actions/ccache-s3
+        uses: $/.github/actions/ccache-s3
         with:
           operation: publish
           key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/builds/macos/${{ runner.os }}-${{ runner.arch }}/v1/
@@ -1363,7 +1371,7 @@ jobs:
       - name: Install
         run: cmake --build build --target install
 
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: acts-macos
           path: ${{ env.INSTALL_DIR }}
@@ -1384,6 +1392,8 @@ jobs:
         run: ctest --test-dir build-downstream --output-on-failure
 
   external_eic-shell:
+    needs: changes
+    if: github.event_name != 'pull_request' || needs.changes.outputs.acts == 'true'
     environment:
       name: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 's3-sccache' || '' }}
     runs-on: ubuntu-latest
@@ -1402,14 +1412,14 @@ jobs:
           persist-credentials: false
 
       - name: Setup CMVFS
-        uses: cvmfs-contrib/github-action-cvmfs@72f2a8d366043978d6aebee154bc9ed321c2f2a8 # v5.6
+        uses: cvmfs-contrib/github-action-cvmfs@d705955b32075b4b0178f3a0160b6fe527483cf8 # v5.7
 
       - name: Set up uv for cache transfers
-        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
         continue-on-error: true
 
       - name: Restore ccache snapshot
-        uses: ./acts/.github/actions/ccache-s3
+        uses: $/.github/actions/ccache-s3
         continue-on-error: true
         timeout-minutes: 10
         with:
@@ -1443,6 +1453,7 @@ jobs:
               -DACTS_BUILD_EXAMPLES=ON \
               -DACTS_BUILD_FATRAS=ON \
               -DACTS_BUILD_PLUGIN_DD4HEP=ON \
+              -DACTS_USE_SYSTEM_LIBS=ON \
               -DACTS_USE_SYSTEM_NLOHMANN_JSON=ON
             echo "::endgroup::"
             echo "::group::Acts build phase"
@@ -1512,7 +1523,7 @@ jobs:
 
       - name: Upload Artifact
         if: ${{ steps.build-eicrecon.outcome == 'failure' && github.event_name == 'pull_request' }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: comment-50-external-failure.md
           path: comment-50-external-failure.md
@@ -1538,7 +1549,7 @@ jobs:
         if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         continue-on-error: true
         timeout-minutes: 10
-        uses: ./acts/.github/actions/ccache-s3
+        uses: $/.github/actions/ccache-s3
         with:
           operation: publish
           key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/builds/external_eic-shell/${{ runner.os }}-${{ runner.arch }}/v1/
@@ -1548,6 +1559,8 @@ jobs:
   # Sources the key4hep nightly view straight out of the job container: the
   # `cvmfs` label binds the repositories in, so nothing has to mount them.
   external_key4hep-nightlies:
+    needs: changes
+    if: github.event_name != 'pull_request' || needs.changes.outputs.acts == 'true'
     environment:
       name: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 's3-sccache' || '' }}
     runs-on: [self-hosted, linux, x64, husk-size-standard, cvmfs]
@@ -1572,8 +1585,6 @@ jobs:
         with:
           path: acts
           persist-credentials: false
-      - name: Install test-data download tool
-        run: dnf install -y wget
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: key4hep/k4ActsTracking
@@ -1581,11 +1592,11 @@ jobs:
           persist-credentials: false
 
       - name: Set up uv for cache transfers
-        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
         continue-on-error: true
 
       - name: Restore ccache snapshot
-        uses: ./acts/.github/actions/ccache-s3
+        uses: $/.github/actions/ccache-s3
         continue-on-error: true
         timeout-minutes: 10
         with:
@@ -1597,6 +1608,7 @@ jobs:
         shell: bash
         run: |
           source "${KEY4HEP_VIEW}/setup.sh"
+          export CMAKE_BUILD_PARALLEL_LEVEL="$(nproc)"
 
           pushd acts
           ccache -z
@@ -1625,18 +1637,6 @@ jobs:
             -DCMAKE_CXX_STANDARD=23 \
             -DCMAKE_INSTALL_PREFIX="$(pwd)/install" \
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-          echo "::endgroup::"
-          # Configure pulls the test geometries and material maps off
-          # key4hep.web.cern.ch, but data/download_files.sh reports "All files
-          # downloaded successfully!" and exits 0 even when every single wget
-          # failed. Without this the check keeps passing on a runner that cannot
-          # reach the host, having quietly skipped the data-driven tests.
-          echo "::group::Check data files"
-          while read -r file _; do
-            case "$file" in ''|\#*) continue;; esac
-            test -f "data/${file}" ||
-              { echo "data/${file} missing: the download from key4hep.web.cern.ch failed"; exit 1; }
-          done <data/file_list.txt
           echo "::endgroup::"
           echo "::group::Build k4ActsTracking"
           cmake --build build
@@ -1669,7 +1669,7 @@ jobs:
         if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         continue-on-error: true
         timeout-minutes: 10
-        uses: ./acts/.github/actions/ccache-s3
+        uses: $/.github/actions/ccache-s3
         with:
           operation: publish
           key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/builds/external_key4hep-nightlies/${{ runner.os }}-${{ runner.arch }}/v1/
@@ -1687,7 +1687,7 @@ jobs:
 
       - name: Upload Artifact
         if: ${{ steps.build.outcome == 'failure' && github.event_name == 'pull_request' }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: comment-51-key4hep-external-failure.md
           path: comment-51-key4hep-external-failure.md
@@ -1695,6 +1695,8 @@ jobs:
 
 
   linux_ubuntu_python_wheel:
+    needs: changes
+    if: github.event_name != 'pull_request' || needs.changes.outputs.acts == 'true'
     environment:
       name: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 's3-sccache' || '' }}
     runs-on: ubuntu-latest
@@ -1707,17 +1709,17 @@ jobs:
           persist-credentials: false
 
       - name: Set up uv for cache transfers
-        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
 
       - name: Restore ccache snapshot
-        uses: ./.github/actions/ccache-s3
+        uses: $/.github/actions/ccache-s3
         continue-on-error: true
         timeout-minutes: 10
         with:
           key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/builds/linux_ubuntu_python_wheel/${{ runner.os }}-${{ runner.arch }}/v1/
 
       - name: Build wheel
-        uses: ./.github/actions/cibuildwheel_wrapper
+        uses: $/.github/actions/cibuildwheel_wrapper
         with:
           package-dir: .
           cibw-build: "cp313-*"
@@ -1725,7 +1727,7 @@ jobs:
 
       - name: Publish ccache snapshot
         if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
-        uses: ./.github/actions/ccache-s3
+        uses: $/.github/actions/ccache-s3
         continue-on-error: true
         timeout-minutes: 10
         with:
@@ -1734,7 +1736,7 @@ jobs:
           access-key-id: ${{ secrets.S3_ACCESS_KEY_ID }}
           secret-access-key: ${{ secrets.S3_SECRET_ACCESS_KEY }}
 
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: linux-ubuntu-wheel
           path: ./wheelhouse/*.whl

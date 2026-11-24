@@ -25,11 +25,13 @@
 #include "ActsFatras/Digitization/UncorrelatedHitSmearer.hpp"
 
 #include <cstddef>
+#include <memory>
 #include <string>
 #include <variant>
 #include <vector>
 
 namespace ActsExamples {
+class DigitizationDesign;
 
 /// Algorithm that turns simulated hits into measurements by truth smearing.
 class DigitizationAlgorithm final : public IAlgorithm {
@@ -78,6 +80,11 @@ class DigitizationAlgorithm final : public IAlgorithm {
     /// Table 35.10)
     /// @NOTE The default is set to 0 because this works only well with Geant4
     double minEnergyDeposit = 0.0;  // 1000 * 3.65 * Acts::UnitConstants::eV;
+    /// On cylinder surfaces, limit the geometric path of a hit to the longest
+    /// straight chord through the curved layer, 2 sqrt(2 R thickness).
+    /// Otherwise an (almost) tangential hit direction gives a path of
+    /// thickness / |cos(incidence)|, possibly many times around the cylinder.
+    bool limitCylinderPathToChord = false;
     /// The digitizers per GeometryIdentifiers
     Acts::GeometryHierarchyMap<DigiComponentsConfig> digitizationConfigs;
 
@@ -131,8 +138,9 @@ class DigitizationAlgorithm final : public IAlgorithm {
 
   /// Configuration of the Algorithm
   Config m_cfg;
-  /// Digitizers within geometry hierarchy
-  Acts::GeometryHierarchyMap<Digitizer> m_digitizers;
+  /// One shared design per config rule, looked up by geometry hierarchy
+  Acts::GeometryHierarchyMap<std::shared_ptr<const DigitizationDesign>>
+      m_designs;
   /// Geometric digitizer
   ActsFatras::Channelizer m_channelizer;
 

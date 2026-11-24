@@ -52,6 +52,19 @@ class GbtsLayer final {
                           std::uint32_t b2, float minZ0, float maxZ0) const;
 
  private:
+  struct LayerPoint final {
+    float r{};
+    float z{};
+
+    float eta() const;
+  };
+
+  /// Point on the layer line at a boundary coordinate
+  LayerPoint pointAt(float bound) const;
+
+  /// Boundary coordinate where the layer line reaches an eta value
+  float boundAt(float eta) const;
+
   GbtsLayerDescription m_layerDescription;
   GbtsLayerBinning m_binning;
 

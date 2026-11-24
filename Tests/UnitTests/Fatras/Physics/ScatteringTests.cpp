@@ -16,6 +16,7 @@
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 #include "ActsTests/CommonHelpers/PredefinedMaterials.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <cstdint>
 #include <limits>
@@ -48,8 +49,9 @@ void test(const Scattering& scattering, std::uint32_t seed,
   // scattering leaves absolute energy/momentum unchanged
   CHECK_CLOSE_REL(after.absoluteMomentum(), before.absoluteMomentum(), eps);
   CHECK_CLOSE_REL(after.energy(), before.energy(), eps);
-  // scattering has changed the direction
-  BOOST_CHECK_LT(before.direction().dot(after.direction()), 1);
+  // Compare directions directly: the cosine of a tiny scattering angle can
+  // round to one even when the directions differ.
+  BOOST_CHECK_GT((before.direction() - after.direction()).norm(), 0.0);
   // scattering creates no new particles
   BOOST_CHECK(outgoing.empty());
 }
@@ -105,6 +107,34 @@ BOOST_AUTO_TEST_CASE(HighlandRms) {
 
   CHECK_CLOSE_REL(rmsThetaYZ, theta0, 0.02);
   CHECK_CLOSE_REL(rmsTheta3D, std::numbers::sqrt2 * theta0, 0.02);
+}
+
+BOOST_AUTO_TEST_CASE(GeneralMixtureCoreWidth) {
+  auto scattering = ActsFatras::GeneralMixtureScattering();
+  auto particle = Dataset::makeParticle(Acts::PdgParticle::eMuon, 0, 0, 1);
+  auto materialSlab = makePercentSlab();
+
+  auto theta0 = Acts::computeMultipleScatteringTheta0(
+      materialSlab, particle.absolutePdg(), particle.mass(), particle.qOverP(),
+      particle.absoluteCharge());
+
+  std::ranlux48 gen(0);
+
+  std::vector<double> thetaYZs;
+  for (std::size_t i = 0; i < 10000; i++) {
+    auto newParticle = particle;
+    scattering(gen, materialSlab, newParticle);
+    thetaYZs.push_back(
+        std::atan2(newParticle.direction().y(), newParticle.direction().z()));
+  }
+
+  // the mixture has non-Gaussian tails, so compare the width of the central
+  // 68 % of the projected angle to the Highland width
+  std::ranges::sort(thetaYZs);
+  double q68 = 0.5 * (thetaYZs[static_cast<std::size_t>(0.8413 * 10000)] -
+                      thetaYZs[static_cast<std::size_t>(0.1587 * 10000)]);
+
+  CHECK_CLOSE_REL(q68, theta0, 0.2);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

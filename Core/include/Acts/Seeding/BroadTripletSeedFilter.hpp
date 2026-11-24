@@ -19,7 +19,6 @@
 
 #include <cstdint>
 #include <memory>
-#include <unordered_map>
 #include <vector>
 
 namespace Acts {
@@ -84,9 +83,7 @@ class BroadTripletSeedFilter final : public ITripletSeedFilter {
     /// subtracted from weight. This is the c3 factor in the seed score
     /// calculation (w = c1 * Nt - c2 * d0 - c3 * z0)
     float zOriginWeightFactor = 1;
-    /// Maximum number (minus one) of accepted seeds per middle space-point
-    /// In dense environments many seeds may be found per middle space-point
-    /// Only seeds with the highest weight will be kept if this limit is reached
+    /// Maximum number (minus one) of seeds kept per middle space-point
     std::uint32_t maxSeedsPerSpM = 5;
     /// Maximum limit to number of compatible space-point used in score
     /// calculation. We increase by c1 the weight calculation for each
@@ -125,11 +122,7 @@ class BroadTripletSeedFilter final : public ITripletSeedFilter {
     /// Contains parameters for forward seed confirmation
     SeedConfirmationRangeConfig forwardSeedConfirmationRange;
 
-    /// If seedConfirmation is true we classify seeds as "high-quality" seeds.
-    /// Seeds that are not confirmed as "high-quality" are only selected if no
-    /// other "high-quality" seed has been found for that inner-middle doublet
-    /// Maximum number of normal seeds (not classified as "high-quality" seeds)
-    /// in seed confirmation
+    /// Maximum number of normal-quality seeds kept in seed confirmation
     std::uint32_t maxSeedsPerSpMConf = 5;
     /// Maximum number of "high-quality" seeds for each inner-middle SP-dublet
     /// in seed confirmation. If the limit is reached we check if there is a
@@ -154,13 +147,16 @@ class BroadTripletSeedFilter final : public ITripletSeedFilter {
     /// Maximum radius for seed confirmation
     float rMaxSeedConf{};
 
-    /// Map to store the best seed quality for each space point.
-    /// This is used to avoid creating seeds with lower quality than the best
-    /// seed quality already found for that space point.
-    /// The key is the space point index, and the value is the best seed quality
-    /// found for that space point.
-    /// @note The index is the space point index, not the seed index.
-    std::unordered_map<SpacePointIndex, float> bestSeedQualityMap;
+    /// Best seed quality found so far for each space point, indexed directly by
+    /// the space point index. Space points that have not been part of a seed
+    /// yet hold std::numeric_limits<float>::lowest(). This is used to avoid
+    /// creating seeds with lower quality than the best already found for one of
+    /// their space points.
+    /// @note The index is the space point index, not the seed index. The
+    /// vector is sized to the number of space points on first use per event.
+    /// @note Kept under its previous name so that `.at(index)` lookups in
+    /// downstream code keep working with the vector.
+    std::vector<float> bestSeedQualityMap;
   };
 
   /// Cache for intermediate results to avoid reallocations. No information is

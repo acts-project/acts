@@ -10,6 +10,7 @@
 
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Geant4/EventStore.hpp"
+#include "ActsPlugins/Geant4/Geant4MaterialStepConverter.hpp"
 
 #include <memory>
 #include <string>
@@ -55,6 +56,9 @@ class MaterialSteppingAction final : public G4UserSteppingAction {
  private:
   /// Config struct
   Config m_cfg;
+
+  /// Converts the steps into material interactions
+  ActsPlugins::Geant4MaterialStepConverter m_stepConverter;
 
   /// Private access method to the logging instance
   const Acts::Logger& logger() const { return *m_logger; }

@@ -106,7 +106,7 @@ ProcessCode ActsSolverFromMille::finalize() {
       ACTS_INFO("     Reading input record " << iRec);
     }
     res = ActsPlugins::ActsToMille::unpackMilleRecord(
-        *milleReader, state, alignResult.idxedAlignSurfaces);
+        *milleReader, state, alignResult.idxedAlignSurfaces, logger());
     if (res == Mille::MilleDecoder::ReadResult::OK) {
       alignmentStates.push_back(state);
     } else if (res == Mille::MilleDecoder::ReadResult::error) {
@@ -148,12 +148,9 @@ ProcessCode ActsSolverFromMille::finalize() {
   }
 
   if (!m_cfg.outFile.empty()) {
-    std::ofstream resFile;
-    resFile.open(m_cfg.outFile);
     // also write in a text file format that can be parsed consistently with
     // Millepede output
-    ActsPlugins::ActsToMille::dumpAsMillepedeRes(alignResult, resFile);
-    resFile.close();
+    ActsAlignment::dumpResultAsMP2(alignResult, m_cfg.outFile);
   }
 
   return ProcessCode::SUCCESS;

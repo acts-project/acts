@@ -52,6 +52,10 @@ enum class surface_id : std::uint_least8_t {
     os << #x;         \
     break
 
+/// Write the volume shape identifier using its enumerator name.
+/// @param os output stream
+/// @param vid volume identifier to print
+/// @return the output stream
 DETRAY_HOST inline std::ostream& operator<<(std::ostream& os, volume_id vid) {
   switch (vid) {
     using enum volume_id;
@@ -65,6 +69,10 @@ DETRAY_HOST inline std::ostream& operator<<(std::ostream& os, volume_id vid) {
   return os;
 }
 
+/// Write the surface category identifier using its enumerator name.
+/// @param os output stream
+/// @param sid surface identifier to print
+/// @return the output stream
 DETRAY_HOST inline std::ostream& operator<<(std::ostream& os, surface_id sid) {
   switch (sid) {
     using enum surface_id;

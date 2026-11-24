@@ -35,6 +35,7 @@ void GreedyAmbiguityResolution::computeInitialState(
       continue;
     }
     std::vector<std::size_t> measurements;
+    boost::container::flat_set<std::size_t> splitMeasurements;
     for (auto ts : track.trackStatesReversed()) {
       if (ts.typeFlags().isMeasurement()) {
         SourceLink sourceLink = ts.getUncalibratedSourceLink();
@@ -42,12 +43,17 @@ void GreedyAmbiguityResolution::computeInitialState(
         auto emplace = measurementIndexMap.try_emplace(
             sourceLink, measurementIndexMap.size());
         measurements.push_back(emplace.first->second);
+        // save measurement if it is a split hit
+        if (ts.typeFlags().isSplitHit()) {
+          splitMeasurements.insert(emplace.first->second);
+        }
       }
     }
 
     state.trackTips.push_back(track.index());
     state.trackChi2.push_back(track.chi2() / static_cast<float>(track.nDoF()));
     state.measurementsPerTrack.push_back(std::move(measurements));
+    state.splitMeasurementsPerTrack.push_back(std::move(splitMeasurements));
     state.selectedTracks.insert(state.numberOfTracks);
 
     ++state.numberOfTracks;
@@ -66,7 +72,10 @@ void GreedyAmbiguityResolution::computeInitialState(
   for (std::size_t iTrack = 0; iTrack < state.numberOfTracks; ++iTrack) {
     for (auto iMeasurement : state.measurementsPerTrack[iTrack]) {
       if (state.tracksPerMeasurement[iMeasurement].size() > 1) {
-        ++state.sharedMeasurementsPerTrack[iTrack];
+        // only count measurement as "shared" if it is not "split"
+        if (!state.splitMeasurementsPerTrack[iTrack].contains(iMeasurement)) {
+          ++state.sharedMeasurementsPerTrack[iTrack];
+        }
       }
     }
   }

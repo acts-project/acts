@@ -46,6 +46,9 @@ struct GbtsLayerDescription final {
   float minBound{};
   /// Maximum boundary coordinate.
   float maxBound{};
+  /// Slope in r-z about the middle of the bounds: dr/dz for a barrel layer,
+  /// dz/dr for an endcap layer.
+  float slope{0.f};
   /// Position of the layer in the inside-out ordering of the pixel barrel,
   /// -1 for every other layer. Derived from `refCoord` when left unset; set it
   /// on every pixel barrel layer or on none of them.

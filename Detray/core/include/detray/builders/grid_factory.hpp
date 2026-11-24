@@ -50,28 +50,43 @@ template <typename bin_t, template <std::size_t> class serializer_t,
 class grid_factory {
  public:
   // All grids are owning since they are used to fill the data
+  /// Grid instances returned by this factory own their axis and bin storage.
   static constexpr bool is_owning = true;
 
+  /// Bin container type used for grid values.
   using bin_type = bin_t;
+  /// Grid type parameterized by a geometric shape.
   template <typename grid_shape_t>
   using grid_type = grid<algebra_t, axes<grid_shape_t>, bin_type, serializer_t>;
+  /// Local index type for bins in a grid of the selected shape.
   template <typename grid_shape_t>
   using loc_bin_index = typename grid_type<grid_shape_t>::loc_bin_index;
 
+  /// Scalar type used by axes and geometry coordinates.
   using scalar_type = dscalar<algebra_t>;
+  /// Host vector container type used by grid storage.
   template <typename T>
   using vector_type = host_container_types::template vector_type<T>;
+  /// Linear algebra backend used by the grid.
   using algebra_type = algebra_t;
 
   grid_factory() = default;
 
   /// Takes the resource of the detector to allocate memory correctly
+  /// @param resource Resource used to allocate grid storage.
   explicit grid_factory(vecmem::memory_resource &resource)
       : m_resource(&resource) {}
 
   //
   // annulus 2D
   //
+  /// Build an annular grid from its mask and axis binning.
+  /// @param grid_bounds Mask supplying the grid extent.
+  /// @param n_bins Number of bins on each axis.
+  /// @param bin_capacities Optional capacities for local bins.
+  /// @param bin_edges Optional explicit edges for variable binning.
+  /// @param axis_spans Optional axis ranges that override mask bounds.
+  /// @returns A grid initialized with the requested shape and axis settings.
   template <
       typename r_bounds = axis::closed<axis::label::e_r>,
       typename phi_bounds = axis::circular<>,
@@ -127,6 +142,13 @@ class grid_factory {
   //
   // cuboid 3D
   //
+  /// Build a cuboid grid from its mask and axis binning.
+  /// @param grid_bounds Mask supplying the grid extent.
+  /// @param n_bins Number of bins on each axis.
+  /// @param bin_capacities Optional capacities for local bins.
+  /// @param bin_edges Optional explicit edges for variable binning.
+  /// @param axis_spans Optional axis ranges that override mask bounds.
+  /// @returns A grid initialized with the requested shape and axis settings.
   template <
       typename x_bounds = axis::closed<axis::label::e_x>,
       typename y_bounds = axis::closed<axis::label::e_y>,
@@ -183,6 +205,13 @@ class grid_factory {
   //
   // cylinder 2D
   //
+  /// Build a cylindrical 2D grid from its mask and axis binning.
+  /// @param grid_bounds Mask supplying the grid extent.
+  /// @param n_bins Number of bins on each axis.
+  /// @param bin_capacities Optional capacities for local bins.
+  /// @param bin_edges Optional explicit edges for variable binning.
+  /// @param axis_spans Optional axis ranges that override mask bounds.
+  /// @returns A grid initialized with the requested shape and axis settings.
   template <
       typename rphi_bounds = axis::circular<axis::label::e_rphi>,
       typename z_bounds = axis::closed<axis::label::e_cyl_z>,
@@ -227,6 +256,13 @@ class grid_factory {
   //
   // concentric cylinder 2D
   //
+  /// Build a concentric cylindrical grid from its mask and axis binning.
+  /// @param grid_bounds Mask supplying the grid extent.
+  /// @param n_bins Number of bins on each axis.
+  /// @param bin_capacities Optional capacities for local bins.
+  /// @param bin_edges Optional explicit edges for variable binning.
+  /// @param axis_spans Optional axis ranges that override mask bounds.
+  /// @returns A grid initialized with the requested shape and axis settings.
   template <
       typename rphi_bounds = axis::circular<axis::label::e_rphi>,
       typename z_bounds = axis::closed<axis::label::e_cyl_z>,
@@ -273,6 +309,13 @@ class grid_factory {
   //
   // cylinder 3D
   //
+  /// Build a cylindrical 3D grid from its mask and axis binning.
+  /// @param grid_bounds Mask supplying the grid extent.
+  /// @param n_bins Number of bins on each axis.
+  /// @param bin_capacities Optional capacities for local bins.
+  /// @param bin_edges Optional explicit edges for variable binning.
+  /// @param axis_spans Optional axis ranges that override mask bounds.
+  /// @returns A grid initialized with the requested shape and axis settings.
   template <
       typename r_bounds = axis::closed<axis::label::e_r>,
       typename phi_bounds = axis::circular<>,
@@ -335,6 +378,13 @@ class grid_factory {
   //
   // polar 2D
   //
+  /// Build a ring grid from its mask and axis binning.
+  /// @param grid_bounds Mask supplying the grid extent.
+  /// @param n_bins Number of bins on each axis.
+  /// @param bin_capacities Optional capacities for local bins.
+  /// @param bin_edges Optional explicit edges for variable binning.
+  /// @param axis_spans Optional axis ranges that override mask bounds.
+  /// @returns A grid initialized with the requested shape and axis settings.
   template <
       typename r_bounds = axis::closed<axis::label::e_r>,
       typename phi_bounds = axis::circular<>,
@@ -380,6 +430,13 @@ class grid_factory {
   //
   // rectangle 2D
   //
+  /// Build a rectangular grid from its mask and axis binning.
+  /// @param grid_bounds Mask supplying the grid extent.
+  /// @param n_bins Number of bins on each axis.
+  /// @param bin_capacities Optional capacities for local bins.
+  /// @param bin_edges Optional explicit edges for variable binning.
+  /// @param axis_spans Optional axis ranges that override mask bounds.
+  /// @returns A grid initialized with the requested shape and axis settings.
   template <
       typename x_bounds = axis::closed<axis::label::e_x>,
       typename y_bounds = axis::closed<axis::label::e_y>,
@@ -406,16 +463,18 @@ class grid_factory {
     // Overwrite the mask values if axis spans are provided
     if (!axis_spans[0UL].empty()) {
       assert(axis_spans[0UL].size() == 2UL);
-      b_values[boundary::e_half_x] = axis_spans[0UL].at(1UL);
+      b_values[boundary::e_min_x] = axis_spans[0UL].at(0UL);
+      b_values[boundary::e_max_x] = axis_spans[0UL].at(1UL);
     }
     if (!axis_spans[1UL].empty()) {
       assert(axis_spans[1UL].size() == 2UL);
-      b_values[boundary::e_half_y] = axis_spans[1UL].at(1UL);
+      b_values[boundary::e_min_y] = axis_spans[1UL].at(0UL);
+      b_values[boundary::e_max_y] = axis_spans[1UL].at(1UL);
     }
 
     return new_grid<local_frame>(
-        {-b_values[boundary::e_half_x], b_values[boundary::e_half_x],
-         -b_values[boundary::e_half_y], b_values[boundary::e_half_y]},
+        {b_values[boundary::e_min_x], b_values[boundary::e_max_x],
+         b_values[boundary::e_min_y], b_values[boundary::e_max_y]},
         {n_bins[e_x_axis], n_bins[e_y_axis]}, bin_capacities,
         {bin_edges[e_x_axis], bin_edges[e_y_axis]},
         types::list<x_bounds, y_bounds>{}, types::list<x_binning, y_binning>{});
@@ -424,6 +483,13 @@ class grid_factory {
   //
   // trapezoid 2D
   //
+  /// Build a trapezoidal grid from its mask and axis binning.
+  /// @param grid_bounds Mask supplying the grid extent.
+  /// @param n_bins Number of bins on each axis.
+  /// @param bin_capacities Optional capacities for local bins.
+  /// @param bin_edges Optional explicit edges for variable binning.
+  /// @param axis_spans Optional axis ranges that override mask bounds.
+  /// @returns A grid initialized with the requested shape and axis settings.
   template <
       typename x_bounds = axis::closed<axis::label::e_x>,
       typename y_bounds = axis::closed<axis::label::e_y>,
@@ -479,9 +545,11 @@ class grid_factory {
   /// @param spans the span of the axis values for regular axes, otherwise
   ///              ignored.
   /// @param n_bins the number of bins for regular axes, otherwise ignored
+  /// @param bin_capacities Optional capacities for local bins.
   /// @param ax_bin_edges the explicit bin edges for irregular axes
   ///                     (lower bin edges + the the upper edge of the
   ///                     last bin), otherwise ignored.
+  /// @returns A grid with initialized axes and empty bins.
   template <concepts::coordinate_frame grid_frame_t, typename... bound_ts,
             typename... binning_ts>
   auto new_grid(
@@ -504,6 +572,13 @@ class grid_factory {
   }
 
   /// Helper to build grid from shape plus binning and bounds types
+  /// @param spans Axis spans used by regular axes.
+  /// @param n_bins Bin counts used by regular axes.
+  /// @param bin_capacities Optional capacities for local bins.
+  /// @param ax_bin_edges Explicit edges for irregular axes.
+  /// @param bounds Axis-bound types for the shape.
+  /// @param binnings Axis-binning types.
+  /// @returns A grid whose frame is derived from the supplied shape.
   template <typename grid_shape_t, typename... bound_ts, typename... binning_ts>
     requires concepts::shape<grid_shape_t, algebra_t>
   auto new_grid(
@@ -521,6 +596,11 @@ class grid_factory {
 
   /// Helper overload for grid builder: Build from mask and resolve bounds
   /// and binnings from concrete grid type
+  /// @param m Mask defining the grid extent.
+  /// @param n_bins Number of bins on each axis.
+  /// @param bin_capacities Optional capacities for local bins.
+  /// @param ax_bin_edges Optional explicit edges for variable binning.
+  /// @returns A grid with axes and binning types taken from grid_t.
   template <concepts::grid grid_t, typename grid_shape_t>
     requires concepts::shape<grid_shape_t, algebra_t>
   auto new_grid(
@@ -537,6 +617,11 @@ class grid_factory {
 
   /// Helper overload for grid builder: Build from mask and resolve bounds
   /// and binnings
+  /// @param m Mask defining the grid extent.
+  /// @param n_bins Number of bins on each axis.
+  /// @param bin_capacities Optional capacities for local bins.
+  /// @param ax_bin_edges Optional explicit edges for variable binning.
+  /// @returns A grid initialized with the requested axis types.
   template <typename grid_shape_t, typename... bound_ts, typename... binning_ts>
     requires concepts::shape<grid_shape_t, algebra_t>
   auto new_grid(
@@ -559,9 +644,11 @@ class grid_factory {
   /// @param spans the span of the axis values for regular axes, otherwise
   ///              ignored.
   /// @param n_bins the number of bins for regular axes, otherwise ignored
+  /// @param bin_capacities Optional capacities for local bins.
   /// @param ax_bin_edges the explicit bin edges for irregular axes
   ///                     (lower bin edges + the the upper edge of the
   ///                     last bin), otherwise ignored.
+  /// @returns A grid of the requested concrete grid type with initialized axes.
   template <concepts::grid grid_t>
   auto new_grid(
       const std::vector<scalar_type> &spans,
@@ -570,7 +657,7 @@ class grid_factory {
           std::pair<typename grid_t::loc_bin_index, dindex>> &bin_capacities =
           {},
       const std::vector<std::vector<scalar_type>> &ax_bin_edges = {}) const {
-    using owning_grid_t = typename grid_t::template type<true>;
+    using owning_grid_t = typename grid_t::template owning_type<true>;
     using axes_t = typename owning_grid_t::axes_type;
 
     // Prepare data
@@ -661,7 +748,7 @@ class grid_factory {
   vecmem::memory_resource *m_resource{};
 };
 
-// Infer a grid factory type from an already completely assembled grid type
+/// Infer a grid factory type from an already completely assembled grid type
 template <concepts::grid grid_t>
 using grid_factory_type =
     grid_factory<typename grid_t::bin_type,

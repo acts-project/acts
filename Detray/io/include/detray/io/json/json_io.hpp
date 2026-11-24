@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "detray/io/json/detail/json_algebra_io.hpp"
 #include "detray/io/json/detail/json_geometry_io.hpp"
 #include "detray/io/json/detail/json_grids_io.hpp"
 #include "detray/io/json/detail/json_material_io.hpp"

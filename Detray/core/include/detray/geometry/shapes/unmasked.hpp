@@ -30,6 +30,7 @@ class unmasked {
   /// The name for this shape
   static constexpr std::string_view name = "unmasked";
 
+  /// Boundary array layout; this shape has one placeholder entry.
   enum boundaries : unsigned int { e_size = 1u };
 
   /// Container definition for the shape boundary values
@@ -51,9 +52,6 @@ class unmasked {
   ///
   /// @note the point is expected to be given in local coordinates by the
   /// caller.
-  ///
-  /// @param bounds the boundary values for this shape
-  /// @param loc_p the point to be checked in the local coordinate system
   ///
   /// @return the minimum distance.
   template <concepts::scalar scalar_t, concepts::point point_t>
@@ -80,6 +78,10 @@ class unmasked {
     return true;
   }
 
+  /// Always accept a point supplied in local coordinates.
+  /// @param tol Tolerance argument retained for the shape interface.
+  /// @param edge_tol Edge tolerance argument retained for the shape interface.
+  /// @returns True.
   template <concepts::scalar scalar_t, concepts::point point_t>
   DETRAY_HOST_DEVICE constexpr auto check_boundaries(
       const bounds_type<scalar_t>& /*bounds*/, const point_t& /*loc_p*/,
@@ -106,8 +108,6 @@ class unmasked {
 
   /// @brief The area of a the shape
   ///
-  /// @param bounds the boundary values for this shape
-  ///
   /// @returns the stereo annulus area.
   template <concepts::scalar scalar_t>
   DETRAY_HOST_DEVICE constexpr scalar_t area(
@@ -117,8 +117,6 @@ class unmasked {
 
   /// @brief The volume of a the shape
   ///
-  /// @param bounds the boundary values for this shape
-  ///
   /// @returns Inf.
   template <concepts::scalar scalar_t>
   DETRAY_HOST_DEVICE constexpr scalar_t volume(
@@ -127,9 +125,6 @@ class unmasked {
   }
 
   /// @brief Merge two unmasked shapes
-  ///
-  /// @param bounds the boundary values for this shape
-  /// @param o_bounds the boundary values for the other shape
   ///
   /// @returns merged bound values
   template <concepts::scalar scalar_t>
@@ -142,9 +137,6 @@ class unmasked {
   /// @brief Lower and upper point for minimal axis aligned bounding box.
   ///
   /// Computes the min and max vertices in a local cartesian frame.
-  ///
-  /// @param bounds the boundary values for this shape
-  /// @param env dynamic envelope around the shape
   ///
   /// @returns and array of coordinates that contains the lower point (first
   /// three values) and the upper point (latter three values) .
@@ -169,7 +161,6 @@ class unmasked {
   /// Generate vertices in local cartesian frame
   ///
   /// @param bounds the boundary values
-  /// @param n_seg is the number of line segments
   ///
   /// @return a generated list of vertices
   template <concepts::algebra algebra_t>
@@ -179,9 +170,6 @@ class unmasked {
   }
 
   /// @brief Check consistency of boundary values.
-  ///
-  /// @param bounds the boundary values for this shape
-  /// @param os output stream for error messages
   ///
   /// @return true if the bounds are consistent.
   template <concepts::scalar scalar_t>

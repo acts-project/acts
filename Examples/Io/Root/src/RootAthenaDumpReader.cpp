@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/Zip.hpp"
 #include "ActsExamples/Digitization/MeasurementCreation.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
@@ -19,6 +20,7 @@
 #include "ActsExamples/EventData/SpacePoint.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <numeric>
 
 #include <TChain.h>
@@ -451,6 +453,19 @@ RootAthenaDumpReader::readMeasurements(
       const static std::array boundLoc = {Acts::eBoundLoc0, Acts::eBoundLoc1};
       auto i = CLbarrel_endcap[im] == 0 ? 0 : 1;
       digiPars.variances = {locCov[i]};
+      if (i == 1 && m_cfg.trackingGeometry) {
+        // The endcap covariance is a correlated 2x2 matrix in the Athena
+        // frame, but the measurement on the ACTS disc is phi: take the
+        // variance across the strips and divide by r^2
+        assert(locCov.size() == 4);
+        const double a = locCov[0];
+        const double b = locCov[1];
+        const double d = locCov[3];
+        const double maxEig =
+            0.5 * (a + d) + std::sqrt(0.25 * (a - d) * (a - d) + b * b);
+        const double minEig = (a * d - b * b) / maxEig;
+        digiPars.variances = {minEig / (localParams[0] * localParams[0])};
+      }
       digiPars.values = {localParams[i]};
       digiPars.indices = {boundLoc[i]};
     }
@@ -459,6 +474,7 @@ RootAthenaDumpReader::readMeasurements(
     ACTS_VERBOSE("Add measurement with index " << measIndex);
     imIdxMap.emplace(im, measIndex);
     createMeasurement(measurements, geoId, digiPars);
+    cluster.geometryId = geoId;
     clusters.push_back(cluster);
 
     if (!m_cfg.noTruth) {

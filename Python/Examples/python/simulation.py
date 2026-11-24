@@ -789,6 +789,7 @@ def addDigitization(
     doMerge: Optional[bool] = None,
     mergeCommonCorner: Optional[bool] = None,
     minEnergyDeposit: Optional[float] = None,
+    limitCylinderPathToChord: Optional[bool] = None,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> acts.examples.Sequencer:
     """This function steers the digitization step
@@ -807,6 +808,9 @@ def addDigitization(
         the output folder for the Root output, None triggers no output
     rnd : RandomNumbers, None
         random number generator
+    limitCylinderPathToChord : bool, None
+        on cylinder surfaces, limit the geometric path of a hit to the longest
+        chord through the curved layer (default: off)
     """
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
@@ -830,6 +834,7 @@ def addDigitization(
         **acts.examples.defaultKWArgs(
             doMerge=doMerge,
             mergeCommonCorner=mergeCommonCorner,
+            limitCylinderPathToChord=limitCylinderPathToChord,
         ),
     )
 
@@ -842,21 +847,30 @@ def addDigitization(
     s.addAlgorithm(digiAlg)
 
     if outputDirRoot is not None:
+        RootMeasurementWriter, RootClusterWriter, RootMeasurementPerformanceWriter = (
+            acts.examples._tryImportRoot(
+                "RootMeasurementWriter",
+                "RootClusterWriter",
+                "RootMeasurementPerformanceWriter",
+            )
+        )
         outputDirRoot = Path(outputDirRoot)
         if not outputDirRoot.exists():
             outputDirRoot.mkdir()
-        rmwConfig = acts.examples.root.RootMeasurementWriter.Config(
+        rmwConfig = RootMeasurementWriter.Config(
             inputMeasurements=digiAlg.config.outputMeasurements,
-            inputClusters=digiAlg.config.outputClusters,
             inputSimHits=digiAlg.config.inputSimHits,
             inputMeasurementSimHitsMap=digiAlg.config.outputMeasurementSimHitsMap,
             filePath=str(outputDirRoot / f"{digiAlg.config.outputMeasurements}.root"),
             surfaceByIdentifier=trackingGeometry.geoIdSurfaceMap(),
         )
-        s.addWriter(
-            acts.examples.root.RootMeasurementWriter(rmwConfig, customLogLevel())
+        s.addWriter(RootMeasurementWriter(rmwConfig, customLogLevel()))
+        rcwConfig = RootClusterWriter.Config(
+            inputClusters=digiAlg.config.outputClusters,
+            filePath=str(outputDirRoot / f"{digiAlg.config.outputClusters}.root"),
         )
-        rmpwConfig = acts.examples.root.RootMeasurementPerformanceWriter.Config(
+        s.addWriter(RootClusterWriter(rcwConfig, customLogLevel()))
+        rmpwConfig = RootMeasurementPerformanceWriter.Config(
             inputMeasurements=digiAlg.config.outputMeasurements,
             inputSimHits=digiAlg.config.inputSimHits,
             inputMeasurementSimHitsMap=digiAlg.config.outputMeasurementSimHitsMap,
@@ -866,11 +880,7 @@ def addDigitization(
                 outputDirRoot / f"performance_{digiAlg.config.outputMeasurements}.root"
             ),
         )
-        s.addWriter(
-            acts.examples.root.RootMeasurementPerformanceWriter(
-                rmpwConfig, customLogLevel()
-            )
-        )
+        s.addWriter(RootMeasurementPerformanceWriter(rmpwConfig, customLogLevel()))
 
     if outputDirCsv is not None:
         outputDirCsv = Path(outputDirCsv)

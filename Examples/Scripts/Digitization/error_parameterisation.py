@@ -14,8 +14,20 @@ import os
 from pathlib import Path
 
 
+def read_flat(tree):
+    """Read the scalar branches of a tree into a data frame, the per cell
+    branches are of no use here and would pull in awkward arrays"""
+    flat = [
+        key
+        for key in tree.keys()
+        if not isinstance(tree[key].interpretation, uproot.AsJagged)
+    ]
+    return tree.arrays(flat, library="pd")
+
+
 def run_error_parametriation(
     rfile,
+    cfile,
     digi_cfg,
     volumes,
     output_dir=Path.cwd(),
@@ -47,16 +59,27 @@ def run_error_parametriation(
 
     var_entries = []
 
-    measurements = rfile["measurements"].arrays(library="pd")
+    # Measurements and clusters are written into separate trees, a measurement
+    # is formed from the cluster of the same index within the event
+    measurements = read_flat(rfile["measurements"])
+    clusters = read_flat(cfile["clusters"]).rename(
+        columns={"cluster_id": "measurement_id"}
+    )
+    measurements = measurements.merge(
+        clusters.drop(columns=["volume_id", "layer_id", "surface_id", "extra_id"]),
+        on=["event_nr", "measurement_id"],
+        validate="one_to_one",
+    )
+
     # Make a new column with g_r = sqrt(x^2+y^2)
-    measurements["rec_gr"] = np.sqrt(
-        measurements["rec_gx"] ** 2 + measurements["rec_gy"] ** 2
+    measurements["clus_gr"] = np.sqrt(
+        measurements["clus_gx"] ** 2 + measurements["clus_gy"] ** 2
     )
     measurements["true_r"] = np.sqrt(
         measurements["true_x"] ** 2 + measurements["true_y"] ** 2
     )
 
-    plt.scatter(x=measurements["rec_gz"], y=measurements["rec_gr"], s=1, alpha=0.1)
+    plt.scatter(x=measurements["clus_gz"], y=measurements["clus_gr"], s=1, alpha=0.1)
     plt.xlabel("z [mm]")
     plt.ylabel("r [mm]")
     plt.title("Reconstructed hit positions")
@@ -382,6 +405,7 @@ if "__main__" == __name__:
     # Parse the command line arguments
     p = argparse.ArgumentParser(description="Hit parameterisation")
     p.add_argument("--root")
+    p.add_argument("--clusters")
     p.add_argument("--json-in")
     p.add_argument("--json-out")
     p.add_argument("--plot-pulls", action="store_true")
@@ -409,8 +433,9 @@ if "__main__" == __name__:
     )
     args = p.parse_args()
 
-    # Open the root file
+    # Open the root files
     rfile = uproot.open(args.root)
+    cfile = uproot.open(args.clusters)
 
     # For the current ODD this would be
     if len(args.volumes_ids) != len(args.volume_names):
@@ -432,6 +457,7 @@ if "__main__" == __name__:
 
     run_error_parametriation(
         rfile,
+        cfile,
         digi_cfg,
         volumes,
         Path.cwd() / "output",

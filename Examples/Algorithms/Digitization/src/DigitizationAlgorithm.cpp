@@ -91,8 +91,9 @@ DigitizationAlgorithm::DigitizationAlgorithm(
 
   m_inputHits.initialize(m_cfg.inputSimHits);
 
-  // Create the digitizers from the configuration
-  std::vector<std::pair<Acts::GeometryIdentifier, Digitizer>> digitizerInput;
+  std::vector<std::pair<Acts::GeometryIdentifier,
+                        std::shared_ptr<const DigitizationDesign>>>
+      designInput;
 
   for (std::size_t i = 0; i < m_cfg.digitizationConfigs.size(); ++i) {
     GeometricConfig geoCfg;
@@ -100,6 +101,15 @@ DigitizationAlgorithm::DigitizationAlgorithm(
 
     const auto& digiCfg = m_cfg.digitizationConfigs.valueAt(i);
     geoCfg = digiCfg.geometricDigiConfig;
+
+    if (geoCfg.chargeQuantization) {
+      geoCfg.chargeQuantization->validate();
+      if (!m_cfg.doMerge || geoCfg.digital || geoCfg.indices.empty()) {
+        throw std::invalid_argument(
+            "Charge quantization requires geometric digitization, "
+            "doMerge=true and digital=false");
+      }
+    }
 
     if (!geoCfg.indices.empty() && geoCfg.segmentation == nullptr) {
       throw std::invalid_argument(
@@ -123,33 +133,41 @@ DigitizationAlgorithm::DigitizationAlgorithm(
       throw std::invalid_argument(
           "Digitization configuration contains duplicate parameter indices");
     }
-
+    std::shared_ptr<const DigitizationDesign> design;
     switch (smCfg.params.size()) {
       case 0u:
-        digitizerInput.emplace_back(geoId, makeDigitizer<0u>(digiCfg));
+        design =
+            std::make_shared<DigitizationDesign>(makeDigitizer<0u>(digiCfg));
         break;
       case 1u:
-        digitizerInput.emplace_back(geoId, makeDigitizer<1u>(digiCfg));
+        design =
+            std::make_shared<DigitizationDesign>(makeDigitizer<1u>(digiCfg));
         break;
       case 2u:
-        digitizerInput.emplace_back(geoId, makeDigitizer<2u>(digiCfg));
+        design =
+            std::make_shared<DigitizationDesign>(makeDigitizer<2u>(digiCfg));
         break;
       case 3u:
-        digitizerInput.emplace_back(geoId, makeDigitizer<3u>(digiCfg));
+        design =
+            std::make_shared<DigitizationDesign>(makeDigitizer<3u>(digiCfg));
         break;
       case 4u:
-        digitizerInput.emplace_back(geoId, makeDigitizer<4u>(digiCfg));
+        design =
+            std::make_shared<DigitizationDesign>(makeDigitizer<4u>(digiCfg));
         break;
       default:
         throw std::invalid_argument("Unsupported smearer size");
     }
+    designInput.emplace_back(geoId, std::move(design));
   }
 
-  m_digitizers = Acts::GeometryHierarchyMap<Digitizer>(digitizerInput);
+  m_designs =
+      Acts::GeometryHierarchyMap<std::shared_ptr<const DigitizationDesign>>(
+          std::move(designInput));
 
   for (const auto& [geoId, surfacePtr] : m_cfg.surfaceByIdentifier) {
-    auto digitizerItr = m_digitizers.find(geoId);
-    if (digitizerItr == m_digitizers.end()) {
+    auto designItr = m_designs.find(geoId);
+    if (designItr == m_designs.end()) {
       continue;
     }
 
@@ -163,8 +181,7 @@ DigitizationAlgorithm::DigitizationAlgorithm(
     if (holder == nullptr) {
       continue;
     }
-    auto design = std::make_shared<DigitizationDesign>(&(*digitizerItr));
-    holder->assignSensorDesign(design);
+    holder->assignSensorDesign(*designItr);
   }
 }
 
@@ -232,12 +249,12 @@ ProcessCode DigitizationAlgorithm::execute(const AlgorithmContext& ctx) const {
 
     // Fallback for non-DD4hep surfaces (generic detector etc.)
     if (digitizerPtr == nullptr) {
-      auto digitizerItr = m_digitizers.find(moduleGeoId);
-      if (digitizerItr == m_digitizers.end()) {
+      auto designItr = m_designs.find(moduleGeoId);
+      if (designItr == m_designs.end()) {
         ACTS_VERBOSE("No digitizer present for module " << moduleGeoId);
         continue;
       }
-      digitizerPtr = &(*digitizerItr);
+      digitizerPtr = &(*designItr)->digitizer();
     }
 
     // Run the digitizer. Iterate over the hits for this surface inside the
@@ -246,7 +263,8 @@ ProcessCode DigitizationAlgorithm::execute(const AlgorithmContext& ctx) const {
         [&](const auto& digitizer) {
           ModuleClusters moduleClusters(
               digitizer.geometric.segmentation, digitizer.geometric.indices,
-              m_cfg.doMerge, m_cfg.mergeNsigma, m_cfg.mergeCommonCorner);
+              m_cfg.doMerge, m_cfg.mergeNsigma, m_cfg.mergeCommonCorner,
+              digitizer.geometric.chargeQuantization);
 
           for (auto h = moduleSimHits.begin(); h != moduleSimHits.end(); ++h) {
             const auto& simHit = *h;
@@ -268,7 +286,8 @@ ProcessCode DigitizationAlgorithm::execute(const AlgorithmContext& ctx) const {
               Acts::Vector3 driftDir = cfg.drift(simHit.position(), rng);
               auto channelsRes = m_channelizer.channelize(
                   simHit, *surfacePtr, ctx.simGeoContext, driftDir,
-                  *cfg.segmentation, cfg.thickness);
+                  *cfg.segmentation, cfg.thickness, 0.001,
+                  m_cfg.limitCylinderPathToChord);
               if (!channelsRes.ok() || channelsRes->empty()) {
                 ACTS_DEBUG(
                     "Geometric channelization did not work, skipping this "
@@ -335,6 +354,7 @@ ProcessCode DigitizationAlgorithm::execute(const AlgorithmContext& ctx) const {
               auto measurement =
                   createMeasurement(measurements, moduleGeoId, dParameters);
 
+              dParameters.cluster.geometryId = moduleGeoId;
               dParameters.cluster.globalPosition = measurementGlobalPosition(
                   dParameters, *surfacePtr, ctx.simGeoContext);
               clusters.emplace_back(std::move(dParameters.cluster));
