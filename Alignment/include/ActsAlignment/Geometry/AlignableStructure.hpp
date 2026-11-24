@@ -166,6 +166,13 @@ class AlignableStructure {
   /// @return A dereferencing range yielding @c const Acts::Surface&
   SurfaceRange surfaces() const { return SurfaceRange{m_surfaces}; }
 
+  /// Access direct member pointers, including any null entries.
+  /// @return Read-only view of the stored surface pointers
+  /// @note Keep the structure alive and obtain a new view after addSurface().
+  std::span<const std::shared_ptr<Acts::Surface>> surfacePointers() const {
+    return m_surfaces;
+  }
+
   /// @brief Access the list of child structures
   /// @return A read-only view of the shared pointers to child structures
   std::span<const std::shared_ptr<AlignableStructure>> children() const {
