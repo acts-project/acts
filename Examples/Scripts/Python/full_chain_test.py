@@ -12,6 +12,26 @@ PROVISIONAL_GEN3_MATERIAL_MAP_URL = (
 )
 
 
+def volumeIdsWhere(trackingGeometry, predicate):
+    """Collect geometryId.volume for every TrackingVolume whose name matches
+    predicate(name). Used to derive CKF volume lists (pixelVolumes,
+    stripVolumes, constrainToVolumes) by name instead of hardcoding numeric
+    GeometryIdentifiers, which shift whenever the blueprint gains or loses
+    volumes (e.g. passive elements, material collectors, gap fillers)."""
+    import acts
+
+    ids = set()
+
+    class _Visitor(acts.TrackingGeometryMutableVisitor):
+        def visitVolume(self, volume: acts.Volume):
+            name = volume.volumeName if isinstance(volume, acts.TrackingVolume) else ""
+            if predicate(name):
+                ids.add(volume.geometryId.volume)
+
+    trackingGeometry.apply(_Visitor())
+    return sorted(ids)
+
+
 def parse_args():
     from acts.examples.reconstruction import SeedingAlgorithm
 
@@ -352,6 +372,16 @@ def full_chain(args):
             materialDecorator=acts.IMaterialDecorator.fromFile(args.material_config),
         )
         trackingGeometry = detector.trackingGeometry()
+        # CKF volume lists derived by name: the Gen1 literal IDs do not exist in
+        # the Gen3 geometry (see full_chain_odd.py).
+        pixelVolumes = volumeIdsWhere(trackingGeometry, lambda n: "Pixel" in n)
+        # short strips only, as in the Gen1 lists ([23, 24, 25]): long-strip holes
+        # are not counted towards maxStripHoles
+        stripVolumes = volumeIdsWhere(trackingGeometry, lambda n: "ShortStrip" in n)
+        constrainToVolumes = volumeIdsWhere(
+            trackingGeometry,
+            lambda n: n != "World" and not n.startswith("CaloMaterialCollector"),
+        )
         decorators = detector.contextDecorators()
     elif args.itk:
         import acts.examples.itk as itk
@@ -715,27 +745,11 @@ def full_chain(args):
 
     if args.odd:
         ckfConfig = ckfConfig._replace(
-            pixelVolumes=[16, 17, 18],
-            stripVolumes=[23, 24, 25],
+            pixelVolumes=pixelVolumes,
+            stripVolumes=stripVolumes,
             maxPixelHoles=1,
             maxStripHoles=2,
-            constrainToVolumes=[
-                2,  # beam pipe
-                32,
-                4,  # beam pip gap
-                16,
-                17,
-                18,  # pixel
-                20,  # PST
-                23,
-                24,
-                25,  # short strip
-                26,
-                8,  # long strip gap
-                28,
-                29,
-                30,  # long strip
-            ],
+            constrainToVolumes=constrainToVolumes,
         )
     elif args.itk:
         ckfConfig = ckfConfig._replace(

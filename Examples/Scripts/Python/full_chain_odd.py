@@ -492,7 +492,9 @@ if args.reco:
         # and finds zero tracks without raising an error. Name-based lookup
         # survives future geometry changes.
         pixelVolumes = volumeIdsWhere(trackingGeometry, lambda n: "Pixel" in n)
-        stripVolumes = volumeIdsWhere(trackingGeometry, lambda n: "Strip" in n)
+        # short strips only, as in the Gen1 lists ([23, 24, 25]): long-strip holes
+        # are not counted towards maxStripHoles
+        stripVolumes = volumeIdsWhere(trackingGeometry, lambda n: "ShortStrip" in n)
         constrainToVolumes = volumeIdsWhere(
             trackingGeometry,
             lambda n: n != "World" and not n.startswith("CaloMaterialCollector"),
