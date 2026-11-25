@@ -66,16 +66,17 @@ class material_validation_impl : public test::fixture_base<> {
   /// Run the check
   void TestBody() override {
     // Fetch the input data
-    const auto &scan_data = m_whiteboard->template get<
-        material_validator::material_scan_data<algebra_t>>(m_scan_data_name);
+    const auto &scan_data =
+        m_whiteboard
+            ->template get<material_validator::material_scan_data<algebra_t>>(
+                m_scan_data_name);
 
     const auto result =
         material_validator::material_validation<material_validator_t>(
             &m_host_mr, m_det, m_names, scan_data, m_cfg);
 
-    EXPECT_TRUE(result.passed())
-        << result.n_failed << " of " << result.n_tracks
-        << " tracks have a material discrepancy";
+    EXPECT_TRUE(result.passed()) << result.n_failed << " of " << result.n_tracks
+                                 << " tracks have a material discrepancy";
   }
 
  private:

@@ -83,7 +83,7 @@ int main(int argc, char **argv) {
     mat_scan_cfg.overlaps_tol(vm["overlaps_tol"].as<float>());
   }
   mat_val_cfg.step_contingency(vm["step_contingency"].as<std::size_t>());
-  mat_scan_cfg.truth_from_file(vm.count("truth_from_file") != 0u);
+  mat_scan_cfg.read_from_file(vm.count("truth_from_file") != 0u);
   const auto data_dir{vm["data_dir"].as<std::string>()};
 
   /// Vecmem memory resource for the device allocations

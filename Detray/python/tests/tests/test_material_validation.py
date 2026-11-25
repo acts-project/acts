@@ -19,7 +19,12 @@ import detray.tests
 def test_material_scan_config():
     cfg = detray.tests.MaterialScanConfig()
     cfg.track_generator.eta_steps = 9
+
+    assert cfg.name == "material_scan"
     assert cfg.track_generator.eta_steps == 9
+
+    cfg.name = "specific_material_scan"
+    assert cfg.name == "specific_material_scan"
 
 
 def test_material_validation_config():
@@ -28,9 +33,13 @@ def test_material_validation_config():
     cfg.n_tracks = 42
     cfg.propagation.stepping.path_limit = 1234.0
 
+    assert cfg.name == "material_validation"
     assert cfg.material_file == "navigation_output"
     assert cfg.n_tracks == 42
     assert cfg.propagation.stepping.path_limit == pytest.approx(1234.0, rel=1e-6)
+
+    cfg.name = "specific_material_validation"
+    assert cfg.name == "specific_material_validation"
 
 
 def _material_validation_configs(datadir):
@@ -65,7 +74,7 @@ def test_material_validation_end_to_end(toy_detector, tmp_path):
     assert os.path.getsize(trace_csv) > 0
 
 
-def test_material_validation_truth_from_file(toy_detector, tmp_path):
+def test_material_validation_read_from_file(toy_detector, tmp_path):
     det, names = toy_detector
     datadir = str(tmp_path)
 
@@ -78,10 +87,8 @@ def test_material_validation_truth_from_file(toy_detector, tmp_path):
     os.rename(trace_csv, first_trace_csv)
 
     # Read the truth material back from file (in the same process)
-    scan_cfg.truth_from_file = True
-    second = detray.tests.run_material_validation(
-        det, names, scan_cfg, validation_cfg
-    )
+    scan_cfg.read_from_file = True
+    second = detray.tests.run_material_validation(det, names, scan_cfg, validation_cfg)
 
     assert second.passed
     assert second.n_tracks == first.n_tracks

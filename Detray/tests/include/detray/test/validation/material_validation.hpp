@@ -41,10 +41,12 @@
 
 namespace detray::test {
 
-/// Run the material validation on the host
+/// Functor that run the material validation on the host
 struct run_material_validation {
+  /// Test name suffix
   static constexpr std::string_view name{"cpu"};
 
+  /// Run the material validation
   template <concepts::detector detector_t>
   auto operator()(
       vecmem::memory_resource *host_mr, vecmem::memory_resource * /*mr*/,
@@ -115,9 +117,9 @@ struct material_validation_result {
 /// @param suffix optional suffix, e.g. the name of the compute backend
 ///
 /// @returns the full path to the material data file
-inline std::filesystem::path material_file_path(const std::string &det_name,
-                                                const std::string &material_file,
-                                                std::string_view suffix = {}) {
+inline std::filesystem::path material_file_path(
+    const std::string &det_name, const std::string &material_file,
+    std::string_view suffix = {}) {
   const std::filesystem::path mat_path{material_file};
 
   std::string file_name{det_name + "_" + mat_path.stem().string()};
@@ -154,11 +156,11 @@ inline auto read_material_scan(const std::string &det_name,
 
   auto ray_generator = track_generator_t(cfg.track_generator());
   if (scan_data.material.size() > ray_generator.size()) {
-    throw std::invalid_argument(
-        "Material file " + file_name.string() + " contains more tracks (" +
-        std::to_string(scan_data.material.size()) +
-        ") than the material scan configuration (" +
-        std::to_string(ray_generator.size()) + ")");
+    throw std::invalid_argument("Material file " + file_name.string() +
+                                " contains more tracks (" +
+                                std::to_string(scan_data.material.size()) +
+                                ") than the material scan configuration (" +
+                                std::to_string(ray_generator.size()) + ")");
   }
 
   scan_data.tracks.reserve(scan_data.material.size());
@@ -215,7 +217,7 @@ inline auto material_scan(
 
   const std::string det_name{det.name(names)};
 
-  if (cfg.truth_from_file()) {
+  if (cfg.read_from_file()) {
     return read_material_scan(det_name, cfg);
   }
 
@@ -307,15 +309,15 @@ inline auto material_scan(
         track_mat.sX0 += seg / mx0;
         track_mat.tX0 += t / mx0;
       } else {
-        DETRAY_ERROR_HOST("Encountered invalid X_0: " << mx0
-                                                      << "\nOn surface: " << sf);
+        DETRAY_ERROR_HOST(
+            "Encountered invalid X_0: " << mx0 << "\nOn surface: " << sf);
       }
       if (ml0 > 0.f) {
         track_mat.sL0 += seg / ml0;
         track_mat.tL0 += t / ml0;
       } else {
-        DETRAY_ERROR_HOST("Encountered invalid L_0: " << ml0
-                                                      << "\nOn surface: " << sf);
+        DETRAY_ERROR_HOST(
+            "Encountered invalid L_0: " << ml0 << "\nOn surface: " << sf);
       }
     }
 

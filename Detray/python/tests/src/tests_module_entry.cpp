@@ -62,6 +62,36 @@ std::string to_string(const T &obj) {
   return os.str();
 }
 
+/// Bind the specific type of the CRTP test configuration base
+/// @tparam derived_cfg_t the derived config type for which we need the base
+/// @tparam module_t type of the python module the binding should be added to
+/// @param m the python module the binding should be added to
+/// @param py_name name prefix for the base class bindings
+template <typename derived_cfg_t, typename module_t>
+void bind_crtp_base_config(module_t &m, const char *py_name) {
+  using base_t = detray::test::configuration<scalar_t, derived_cfg_t>;
+
+  py::class_<base_t>(m, (std::string(py_name) + "TestConfig").c_str())
+      .def_property(
+          "name", [](const derived_cfg_t &c) { return c.name(); },
+          [](derived_cfg_t &c, std::string &n) { return c.name(n); },
+          py::return_value_policy::reference_internal, "Name of the test")
+      .def_property(
+          "tol", [](const derived_cfg_t &c) { return c.tol(); },
+          [](derived_cfg_t &c, scalar_t t) { c.tol(t); },
+          "Tolerance to compare two floating point values")
+      .def_property(
+          "propagation",
+          [](derived_cfg_t &c) -> propagation_config_t & {
+            return c.propagation();
+          },
+          [](derived_cfg_t &c, const propagation_config_t &v) {
+            c.propagation() = v;
+          },
+          py::return_value_policy::reference_internal,
+          "Propagation configuration");
+}
+
 /// Run the CPU material validation for the given detector.
 ///
 /// Same sequence as the material scan and material validation test fixtures.
@@ -262,7 +292,12 @@ PYBIND11_MODULE(detray_tests_python_bindings, m) {
           "Whether the momentum magnitude is interpreted as transverse")
       .def("__repr__", &to_string<uniform_track_generator_config_t>);
 
+  // Bind test config as standalone type
   py::class_<test_config_t>(m, "TestConfig")
+      .def_property(
+          "name", [](const test_config_t &c) { return c.name(); },
+          [](test_config_t &c, const std::string &n) { return c.name(n); },
+          py::return_value_policy::reference_internal, "Name of the test")
       .def_property(
           "tol", [](const test_config_t &c) { return c.tol(); },
           [](test_config_t &c, scalar_t t) { c.tol(t); },
@@ -278,80 +313,13 @@ PYBIND11_MODULE(detray_tests_python_bindings, m) {
           py::return_value_policy::reference_internal,
           "Propagation configuration");
 
-  py::class_<material_validation_config_t, test_config_t>(
-      m, "MaterialValidationConfig")
-      .def(py::init<>())
-      .def_property(
-          "name",
-          [](const material_validation_config_t &c) { return c.name(); },
-          [](material_validation_config_t &c, const std::string &n) {
-            c.name(n);
-          },
-          "Name of the test")
-      .def_property(
-          "material_file",
-          [](const material_validation_config_t &c) {
-            return c.material_file();
-          },
-          [](material_validation_config_t &c, const std::string &f) {
-            c.material_file(f);
-          },
-          "Name of the output file with the navigation material traces")
-      .def_property(
-          "n_tracks",
-          [](const material_validation_config_t &c) { return c.n_tracks(); },
-          [](material_validation_config_t &c, std::size_t n) { c.n_tracks(n); },
-          "Maximal number of test tracks to run")
-      .def_property(
-          "relative_error",
-          [](const material_validation_config_t &c) {
-            return c.relative_error();
-          },
-          [](material_validation_config_t &c, scalar_t re) {
-            c.relative_error(re);
-          },
-          "Allowed relative discrepancy between truth and navigation material")
-      .def_property(
-          "step_contingency",
-          [](const material_validation_config_t &c) {
-            return c.step_contingency();
-          },
-          [](material_validation_config_t &c, std::size_t n) {
-            c.step_contingency(n);
-          },
-          "Additional material steps per track on top of the steps found by "
-          "the material scan (device buffer capacity)")
-      .def("__repr__", &to_string<material_validation_config_t>);
+  // Base test bindings for the material scan config
+  bind_crtp_base_config<material_scan_config_t>(m, "MaterialScanConfig");
 
-  py::class_<material_scan_config_t, test_config_t>(m, "MaterialScanConfig")
+  py::class_<material_scan_config_t,
+             detray::test::configuration<scalar_t, material_scan_config_t>>(
+      m, "MaterialScanConfig")
       .def(py::init<>())
-      .def_property(
-          "name", [](const material_scan_config_t &c) { return c.name(); },
-          [](material_scan_config_t &c, const std::string &n) { c.name(n); },
-          "Name of the test")
-      .def_property(
-          "material_file",
-          [](const material_scan_config_t &c) { return c.material_file(); },
-          [](material_scan_config_t &c, const std::string &f) {
-            c.material_file(f);
-          },
-          "Name of the output file with the material traces")
-      .def_property(
-          "overlaps_removal",
-          [](const material_scan_config_t &c) { return c.overlaps_removal(); },
-          [](material_scan_config_t &c, bool o) { c.overlaps_removal(o); },
-          "Perform overlaps removal")
-      .def_property(
-          "overlaps_tol",
-          [](const material_scan_config_t &c) { return c.overlaps_tol(); },
-          [](material_scan_config_t &c, scalar_t t) { c.overlaps_tol(t); },
-          "Tolerance for considering surfaces to be overlapping")
-      .def_property(
-          "truth_from_file",
-          [](const material_scan_config_t &c) { return c.truth_from_file(); },
-          [](material_scan_config_t &c, bool b) { c.truth_from_file(b); },
-          "Read the truth material from the material file instead of "
-          "running the ray scan")
       .def_property(
           "track_generator",
           [](material_scan_config_t &c) -> uniform_track_generator_config_t & {
@@ -363,7 +331,74 @@ PYBIND11_MODULE(detray_tests_python_bindings, m) {
           },
           py::return_value_policy::reference_internal,
           "Track generator configuration")
+      .def_property(
+          "material_file",
+          [](const material_scan_config_t &c) { return c.material_file(); },
+          [](material_scan_config_t &c, const std::string &f) {
+            c.material_file(f);
+          },
+          "Name of the output file with the material traces")
+      .def_property(
+          "overlaps_tol",
+          [](const material_scan_config_t &c) { return c.overlaps_tol(); },
+          [](material_scan_config_t &c, scalar_t t) { c.overlaps_tol(t); },
+          "Tolerance for considering surfaces to be overlapping")
+      .def_property(
+          "overlaps_removal",
+          [](const material_scan_config_t &c) { return c.overlaps_removal(); },
+          [](material_scan_config_t &c, bool o) { c.overlaps_removal(o); },
+          "Perform overlaps removal")
+      .def_property(
+          "read_from_file",
+          [](const material_scan_config_t &c) { return c.read_from_file(); },
+          [](material_scan_config_t &c, bool b) { c.read_from_file(b); },
+          "Read the truth material from the material file instead of "
+          "running the ray scan")
       .def("__repr__", &to_string<material_scan_config_t>);
+
+  // Base test bindings for the material scan config
+  bind_crtp_base_config<material_validation_config_t>(
+      m, "MaterialValidationConfig");
+
+  py::class_<
+      material_validation_config_t,
+      detray::test::configuration<scalar_t, material_validation_config_t>>(
+      m, "MaterialValidationConfig")
+      .def(py::init<>())
+      .def_property(
+          "material_file",
+          [](const material_validation_config_t &c) {
+            return c.material_file();
+          },
+          [](material_validation_config_t &c, const std::string &f) {
+            c.material_file(f);
+          },
+          "Name of the output file with the navigation material traces")
+      .def_property(
+          "relative_error",
+          [](const material_validation_config_t &c) {
+            return c.relative_error();
+          },
+          [](material_validation_config_t &c, scalar_t re) {
+            c.relative_error(re);
+          },
+          "Allowed relative discrepancy between truth and navigation material")
+      .def_property(
+          "n_tracks",
+          [](const material_validation_config_t &c) { return c.n_tracks(); },
+          [](material_validation_config_t &c, std::size_t n) { c.n_tracks(n); },
+          "Maximal number of test tracks to run")
+      .def_property(
+          "step_contingency",
+          [](const material_validation_config_t &c) {
+            return c.step_contingency();
+          },
+          [](material_validation_config_t &c, std::size_t n) {
+            c.step_contingency(n);
+          },
+          "Additional material steps per track on top of the steps found by "
+          "the material scan (device buffer capacity)")
+      .def("__repr__", &to_string<material_validation_config_t>);
 
   py::class_<material_validation_result_t>(m, "MaterialValidationResult")
       .def_readonly("n_tracks", &material_validation_result_t::n_tracks,

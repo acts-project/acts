@@ -32,9 +32,17 @@ class material_scan : public test::fixture_base<> {
   using algebra_t = typename detector_t::algebra_type;
 
  public:
+  /// Test fixture base type
   using fixture_type = test::fixture_base<>;
+  /// Material scan configuration type
   using config = material_scan_config<algebra_t>;
 
+  /// Parameterized constructor
+  /// @param det the detector to be scanned
+  /// @param name name map of the detector
+  /// @param cfg the scan config
+  /// @param wb pointer to the whiteboard the data will be pinned to
+  /// @param gctx geometry context
   explicit material_scan(const detector_t &det,
                          const typename detector_t::name_map &names,
                          const config &cfg = {},
