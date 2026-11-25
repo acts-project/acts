@@ -1326,7 +1326,14 @@ jobs:
           access-key-id: ${{ secrets.S3_ACCESS_KEY_ID }}
           secret-access-key: ${{ secrets.S3_SECRET_ACCESS_KEY }}
 
+      - name: Install Geant4 nuclide data for unit tests
+        run: >
+          CI/dependencies/run.sh .env
+          uv run CI/dependencies/download_geant4_datasets.py --dataset G4ENSDFSTATE
+
       - name: Unit tests
+        env:
+          GEANT4_DATA_DIR: ${{ github.workspace }}/dependencies/view/share/Geant4/data
         run: >
           CI/dependencies/run.sh .env
           cmake --build build --target test
