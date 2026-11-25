@@ -138,7 +138,7 @@ constexpr double mrad = 1e-3;
 /// Radian - native unit for angle
 constexpr double rad = 1.0;
 /// Degree - pi/180 radians
-constexpr double degree = std::numbers::pi / 180. / rad;
+constexpr double degree = std::numbers::pi / 180. * rad;
 /// Gigaelectronvolt - native unit for energy/mass/momentum
 constexpr double GeV = 1.0;
 /// Electronvolt - 1e-9 GeV

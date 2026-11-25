@@ -12,6 +12,7 @@
 #include "ActsPlugins/Gnn/detail/NvtxUtils.hpp"
 
 #include <optional>
+#include <stdexcept>
 
 #ifdef ACTS_GNN_WITH_CUDA
 #include "ActsPlugins/Gnn/detail/async_device_memory_resource.hpp"
@@ -50,6 +51,12 @@ std::vector<std::vector<int>> GnnPipeline::run(
     std::vector<float> &features, const std::vector<std::uint64_t> &moduleIds,
     std::vector<int> &spacePointIds, Device device, const GnnHook &hook,
     GnnTiming *timing) const {
+  if (device.isMps()) {
+    throw std::invalid_argument(
+        "MPS cannot be the pipeline device: the pipeline tensors have to be on "
+        "CPU or CUDA. Configure it as the model device of a stage instead");
+  }
+
   ExecutionContext ctx;
   ctx.device = device;
 #ifdef ACTS_GNN_WITH_CUDA

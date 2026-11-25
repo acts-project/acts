@@ -64,9 +64,6 @@ class hough_transform_seeding_algorithm
       const compute_cottheta_matrix_payload& payload) const;
   void select_hits_kernel(const select_hits_payload& payload) const;
   void make_seeds_kernel(const make_seeds_payload& payload) const;
-
-  /// Wait for outstanding work on the algorithm stream or queue.
-  void synchronize() const override;
 };
 
 }  // namespace traccc::cuda

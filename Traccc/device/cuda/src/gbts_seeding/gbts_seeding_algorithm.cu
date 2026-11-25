@@ -331,8 +331,4 @@ void gbts_seeding_algorithm::gbts_convert_seeds_kernel(
   TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
 }
 
-void gbts_seeding_algorithm::synchronize() const {
-  stream().synchronize();
-}
-
 }  // namespace traccc::cuda

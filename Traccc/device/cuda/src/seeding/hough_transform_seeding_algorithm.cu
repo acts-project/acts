@@ -383,8 +383,4 @@ void hough_transform_seeding_algorithm::make_seeds_kernel(
           payload.best_matches, payload.filtered_hits, payload.seeds);
 }
 
-void hough_transform_seeding_algorithm::synchronize() const {
-  stream().synchronize();
-}
-
 }  // namespace traccc::cuda

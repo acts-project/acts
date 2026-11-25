@@ -88,9 +88,6 @@ class triplet_seeding_algorithm
           strip_calibrations) const;
 
  protected:
-  /// Wait for outstanding device work before releasing local buffers.
-  virtual void synchronize() const = 0;
-
   /// @name Function(s) to be implemented by derived classes
   /// @{
 
