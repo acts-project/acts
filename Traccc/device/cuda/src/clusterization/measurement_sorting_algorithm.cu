@@ -84,8 +84,4 @@ void measurement_sorting_algorithm::sorting_kernel(
   TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
 }
 
-void measurement_sorting_algorithm::synchronize() const {
-  stream().synchronize();
-}
-
 }  // namespace traccc::cuda

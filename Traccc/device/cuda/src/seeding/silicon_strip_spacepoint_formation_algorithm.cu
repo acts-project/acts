@@ -127,7 +127,6 @@ void silicon_strip_spacepoint_formation_algorithm::form_spacepoints_kernel(
       payload.measurements, payload.pairs, payload.surface_infos,
       payload.beam_spot, payload.accepted, payload.spacepoints, payload.shapes);
   TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
-  stream().synchronize();
 }
 
 void silicon_strip_spacepoint_formation_algorithm::scan_offsets(
@@ -156,8 +155,6 @@ void silicon_strip_spacepoint_formation_algorithm::gather_spacepoints_kernel(
       payload.candidates, payload.offsets, payload.spacepoints,
       payload.candidate_shapes, payload.shapes);
   TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
-  // The base class destroys candidate and flag buffers after this call.
-  stream().synchronize();
 }
 
 }  // namespace traccc::cuda
