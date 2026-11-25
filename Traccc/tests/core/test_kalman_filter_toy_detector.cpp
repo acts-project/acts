@@ -12,7 +12,9 @@
 #include "traccc/geometry/detector.hpp"
 #include "traccc/io/detector.hpp"
 #include "traccc/io/utils.hpp"
+#ifdef TRACCC_HAVE_KALMAN_FILTER_COMPARISON
 #include "traccc/performance/kalman_filter_comparison.hpp"
+#endif
 #include "traccc/simulation/event_generators.hpp"
 #include "traccc/simulation/simulator.hpp"
 #include "traccc/utils/fill_track_container.hpp"
@@ -32,6 +34,7 @@
 
 using namespace traccc;
 
+#ifdef TRACCC_HAVE_KALMAN_FILTER_COMPARISON
 constexpr std::size_t n_events{1u};
 #ifdef NDEBUG
 constexpr std::size_t n_tracks{1000u};
@@ -44,6 +47,7 @@ constexpr detray::pdg_particle ptc_type{detray::muon<scalar>()};
 // Truth particle cuts
 constexpr scalar min_p{50.f * traccc::unit<traccc::scalar>::MeV};
 constexpr scalar max_r{75.f * traccc::unit<traccc::scalar>::mm};
+#endif
 
 /// Test suite for navigation tests for the CKF
 class KF_integration_test_toy_detector
@@ -53,6 +57,10 @@ class KF_integration_test_toy_detector
 
 /// Test the detray navigation on simulated tracks
 TEST_P(KF_integration_test_toy_detector, toy_detector) {
+#ifndef TRACCC_HAVE_KALMAN_FILTER_COMPARISON
+  GTEST_SKIP() << "The Kalman filter comparison needs the detray validation "
+                  "tools (DETRAY_BUILD_VALIDATION_TOOLS=ON), which need actsvg";
+#else
   using detector_t = traccc::default_detector_traits::host;
   using algebra_t = typename detector_t::algebra_type;
   using b_field_t = covfie::field<traccc::const_bfield_backend_t<scalar>>;
@@ -207,6 +215,7 @@ TEST_P(KF_integration_test_toy_detector, toy_detector) {
       truth_traces_fw_KF, device_measurements, track_container);
 
   ASSERT_TRUE(success);
+#endif
 }
 
 // Parameters:

@@ -22,9 +22,19 @@ traccc_add_test(core
    "particle.cpp"
    LINK_LIBRARIES GTest::gtest_main vecmem::core traccc_tests_common
    traccc::core traccc::io traccc::performance traccc::simulation
-   detray::core detray::io detray::test_common detray::validation_utils
+   detray::core detray::io detray::test_common
    covfie::core
 )
+
+# The Kálmán filter test needs the Kálmán filter comparison, which is only
+# built if the detray validation tools are available. Otherwise the test skips.
+if(TARGET detray::validation_utils)
+    target_link_libraries(traccc_test_core PRIVATE detray::validation_utils)
+    target_compile_definitions(
+        traccc_test_core
+        PRIVATE TRACCC_HAVE_KALMAN_FILTER_COMPARISON
+    )
+endif()
 
 # Test the host-side strip inputs and the device-common Strip SP kernels
 # independently of a concrete accelerator backend.
