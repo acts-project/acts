@@ -19,7 +19,7 @@
 namespace ActsExamples {
 
 DD4hepPodioConversionHelper::DD4hepPodioConversionHelper(
-    const DD4hepDetector& detector,
+    const DD4hepDetectorBase& detector,
     const ActsPodioEdm::TrackerHitLocalCollection& trackerHitLocalCollection)
     : m_detector(&detector),
       m_trackerHitLocalCollection(&trackerHitLocalCollection) {}

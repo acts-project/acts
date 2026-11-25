@@ -30,7 +30,7 @@ namespace detail {
 struct ParticleInfo;
 }
 
-class DD4hepDetector;
+class DD4hepDetectorBase;
 
 using EDM4hepSimHitAssociation = std::vector<edm4hep::SimTrackerHit>;
 
@@ -61,7 +61,7 @@ class EDM4hepSimInputConverter final : public PodioInputConverter {
     std::string outputSimVertices;
 
     /// DD4hep detector for cellID resolution.
-    std::shared_ptr<DD4hepDetector> dd4hepDetector;
+    std::shared_ptr<DD4hepDetectorBase> dd4hepDetector;
 
     /// Tracking geometry for cellID resolution.
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
