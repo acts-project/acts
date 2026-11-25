@@ -49,9 +49,9 @@ TensorPtr cloneTensorMemory(const TensorPtr &ptr, std::size_t nbytes,
 
 }  // namespace detail
 
-void sigmoid(Tensor<float> &tensor, std::optional<cudaStream_t> stream) {
+void sigmoid(Tensor<float> &tensor, const ExecutionContext &execContext) {
   if (tensor.device().type == Device::Type::eCUDA) {
-    return detail::cudaSigmoid(tensor, stream.value());
+    return detail::cudaSigmoid(tensor, execContext);
   }
 
   for (auto it = tensor.data(); it != tensor.data() + tensor.size(); ++it) {
@@ -62,7 +62,7 @@ void sigmoid(Tensor<float> &tensor, std::optional<cudaStream_t> stream) {
 std::pair<Tensor<std::int64_t>, std::optional<Tensor<float>>> applyEdgeLimit(
     const Tensor<std::int64_t> &edgeIndex,
     const std::optional<Tensor<float>> &edgeFeatures, std::size_t maxEdges,
-    std::optional<cudaStream_t> stream) {
+    const ExecutionContext &execContext) {
   if (edgeFeatures.has_value() &&
       edgeIndex.device() != edgeFeatures->device()) {
     throw std::invalid_argument(
@@ -82,10 +82,9 @@ std::pair<Tensor<std::int64_t>, std::optional<Tensor<float>>> applyEdgeLimit(
 
   if (nEdgesOld <= maxEdges) {
     // No need to limit edges, just clone the original tensors
-    newEdgeIndexTensor = edgeIndex.clone({edgeIndex.device(), stream});
+    newEdgeIndexTensor = edgeIndex.clone(execContext);
     if (edgeFeatures.has_value()) {
-      newEdgeFeatureTensor =
-          edgeFeatures->clone({edgeFeatures->device(), stream});
+      newEdgeFeatureTensor = edgeFeatures->clone(execContext);
     }
   } else if (edgeIndex.device().isCpu()) {
     ExecutionContext cpuCtx{Device::Cpu(), {}};
@@ -108,24 +107,24 @@ std::pair<Tensor<std::int64_t>, std::optional<Tensor<float>>> applyEdgeLimit(
                 newEdgeFeatureTensor->data());
     }
   } else {
-    ExecutionContext gpuCtx{edgeIndex.device(), stream};
     const Device devFrom = edgeIndex.device();
 
-    newEdgeIndexTensor = Tensor<std::int64_t>::Create({2, maxEdges}, gpuCtx);
+    newEdgeIndexTensor =
+        Tensor<std::int64_t>::Create({2, maxEdges}, execContext);
     detail::cudaCopyTensorMemory(newEdgeIndexTensor->data(), edgeIndex.data(),
                                  maxEdges * sizeof(std::int64_t), devFrom,
-                                 gpuCtx);
+                                 execContext);
     detail::cudaCopyTensorMemory(
         newEdgeIndexTensor->data() + maxEdges, edgeIndex.data() + nEdgesOld,
-        maxEdges * sizeof(std::int64_t), devFrom, gpuCtx);
+        maxEdges * sizeof(std::int64_t), devFrom, execContext);
 
     if (edgeFeatures.has_value()) {
       newEdgeFeatureTensor =
-          Tensor<float>::Create({maxEdges, nEdgeFeatures}, gpuCtx);
+          Tensor<float>::Create({maxEdges, nEdgeFeatures}, execContext);
 
       detail::cudaCopyTensorMemory(
           newEdgeFeatureTensor->data(), edgeFeatures->data(),
-          maxEdges * nEdgeFeatures * sizeof(float), devFrom, gpuCtx);
+          maxEdges * nEdgeFeatures * sizeof(float), devFrom, execContext);
     }
   }
 
@@ -134,14 +133,13 @@ std::pair<Tensor<std::int64_t>, std::optional<Tensor<float>>> applyEdgeLimit(
 }
 
 Tensor<bool> scoreMask(const Tensor<float> &scores, float cut,
-                       std::optional<cudaStream_t> stream) {
+                       const ExecutionContext &execContext) {
   if (scores.shape()[1] != 1) {
     throw std::invalid_argument("scoreMask: scores must have shape [N, 1]");
   }
-  ExecutionContext execContext{scores.device(), stream};
 
   if (scores.device().type == Device::Type::eCUDA) {
-    return detail::cudaScoreMask(scores, cut, stream.value());
+    return detail::cudaScoreMask(scores, cut, execContext);
   }
 
   auto mask = Tensor<bool>::Create(scores.shape(), execContext);

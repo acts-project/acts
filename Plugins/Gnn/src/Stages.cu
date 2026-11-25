@@ -8,14 +8,16 @@
 
 #include "ActsPlugins/Gnn/Stages.hpp"
 #include "ActsPlugins/Gnn/detail/CudaUtils.hpp"
-#include "ActsPlugins/Gnn/detail/async_device_memory_resource.hpp"
 
+#include <cassert>
 #include <memory_resource>
 
 #include <thrust/copy.h>
 #include <thrust/execution_policy.h>
 #include <thrust/sort.h>
 #include <thrust/unique.h>
+
+#include "CudaStream.hpp"
 
 namespace {
 
@@ -55,10 +57,9 @@ namespace ActsPlugins::detail {
 PipelineTensors cudaRemoveUnusedNodes(PipelineTensors &&tensors,
                                       std::vector<int> &spacePointIds,
                                       const ExecutionContext &execCtx) {
-  const auto stream = execCtx.stream.value();
-  async_device_memory_resource streamMr(stream);
-  std::pmr::memory_resource &mr =
-      execCtx.memoryResource != nullptr ? *execCtx.memoryResource : streamMr;
+  const auto stream = getCudaStream(execCtx);
+  assert(execCtx.memoryResource != nullptr);
+  std::pmr::memory_resource &mr = *execCtx.memoryResource;
   const auto nNodes = tensors.nodeFeatures.shape()[0];
   const auto nEdges = tensors.edgeIndex.shape()[1];
 

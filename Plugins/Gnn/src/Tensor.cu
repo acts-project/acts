@@ -8,7 +8,6 @@
 
 #include "ActsPlugins/Gnn/Tensor.hpp"
 #include "ActsPlugins/Gnn/detail/CudaUtils.hpp"
-#include "ActsPlugins/Gnn/detail/async_device_memory_resource.hpp"
 
 #include <memory_resource>
 
@@ -17,6 +16,7 @@
 #include <thrust/execution_policy.h>
 #include <thrust/iterator/counting_iterator.h>
 
+#include "CudaStream.hpp"
 #include "DeviceOps.hpp"
 
 namespace {
@@ -113,22 +113,15 @@ namespace ActsPlugins::detail {
 
 TensorPtr cudaCreateTensorMemory(std::size_t nbytes,
                                  const ExecutionContext &ctx) {
-  assert(ctx.stream.has_value());
-  if (ctx.memoryResource != nullptr) {
-    auto *mr = ctx.memoryResource;
-    return TensorPtr(mr->allocate(nbytes),
-                     [mr, nbytes](void *p) { mr->deallocate(p, nbytes); });
-  }
-  auto stream = *ctx.stream;
-  void *ptr{};
-  ACTS_CUDA_CHECK(cudaMallocAsync(&ptr, nbytes, stream));
-  return TensorPtr(
-      ptr, [stream](void *p) { ACTS_CUDA_CHECK(cudaFreeAsync(p, stream)); });
+  assert(ctx.stream != nullptr);
+  assert(ctx.memoryResource != nullptr);
+  auto *mr = ctx.memoryResource;
+  return TensorPtr(mr->allocate(nbytes),
+                   [mr, nbytes](void *p) { mr->deallocate(p, nbytes); });
 }
 
 void cudaCopyTensorMemory(void *dst, const void *src, std::size_t nbytes,
                           Device from, const ExecutionContext &to) {
-  assert(to.stream.has_value());
   cudaMemcpyKind kind = cudaMemcpyHostToHost;
   if (from.isCuda() && to.device.isCuda()) {
     kind = cudaMemcpyDeviceToDevice;
@@ -137,10 +130,11 @@ void cudaCopyTensorMemory(void *dst, const void *src, std::size_t nbytes,
   } else if (from.isCuda() && to.device.isCpu()) {
     kind = cudaMemcpyDeviceToHost;
   }
-  ACTS_CUDA_CHECK(cudaMemcpyAsync(dst, src, nbytes, kind, *to.stream));
+  ACTS_CUDA_CHECK(cudaMemcpyAsync(dst, src, nbytes, kind, getCudaStream(to)));
 }
 
-void cudaSigmoid(Tensor<float> &tensor, cudaStream_t stream) {
+void cudaSigmoid(Tensor<float> &tensor, const ExecutionContext &execContext) {
+  const auto stream = getCudaStream(execContext);
   dim3 blockDim = 1024;
   dim3 gridDim = (tensor.size() + blockDim.x - 1) / blockDim.x;
   sigmoidImpl<<<gridDim, blockDim, 0, stream>>>(tensor.size(), tensor.data());
@@ -148,8 +142,8 @@ void cudaSigmoid(Tensor<float> &tensor, cudaStream_t stream) {
 }
 
 Tensor<bool> cudaScoreMask(const Tensor<float> &scores, float cut,
-                           cudaStream_t stream) {
-  ExecutionContext execContext{scores.device(), stream};
+                           const ExecutionContext &execContext) {
+  const auto stream = getCudaStream(execContext);
   auto mask = Tensor<bool>::Create(scores.shape(), execContext);
 
   dim3 blockDim = 1024;
@@ -165,11 +159,9 @@ Tensor<T> cudaSelectRows(const Tensor<T> &tensor, const Tensor<bool> &mask,
                          const ExecutionContext &execContext) {
   const auto nCols = tensor.shape()[1];
   const auto nRows = tensor.shape()[0];
-  const auto stream = execContext.stream.value();
-  async_device_memory_resource streamMr(stream);
-  std::pmr::memory_resource &mr = execContext.memoryResource != nullptr
-                                      ? *execContext.memoryResource
-                                      : streamMr;
+  const auto stream = getCudaStream(execContext);
+  assert(execContext.memoryResource != nullptr);
+  std::pmr::memory_resource &mr = *execContext.memoryResource;
 
   auto pred = [] __device__(bool x) { return x; };
   const std::size_t nSelected = thrust::count(
@@ -213,11 +205,9 @@ Tensor<T> cudaSelectCols(const Tensor<T> &tensor, const Tensor<bool> &mask,
                          const ExecutionContext &execContext) {
   const auto nRows = tensor.shape()[0];
   const auto nColsSrc = tensor.shape()[1];
-  const auto stream = execContext.stream.value();
-  async_device_memory_resource streamMr(stream);
-  std::pmr::memory_resource &mr = execContext.memoryResource != nullptr
-                                      ? *execContext.memoryResource
-                                      : streamMr;
+  const auto stream = getCudaStream(execContext);
+  assert(execContext.memoryResource != nullptr);
+  std::pmr::memory_resource &mr = *execContext.memoryResource;
 
   auto pred = [] __device__(bool x) { return x; };
   const std::size_t nSelected = thrust::count(
@@ -255,7 +245,7 @@ Tensor<T> cudaGatherCols(const Tensor<T> &tensor,
   const auto nColsSrc = tensor.shape()[1];
   const auto nColsDst = indices.size();
   const auto total = nRows * nColsDst;
-  const auto stream = execContext.stream.value();
+  const auto stream = getCudaStream(execContext);
 
   auto result = Tensor<T>::Create({nRows, nColsDst}, execContext);
 
@@ -283,7 +273,7 @@ Tensor<T> cudaMulPerColumn(const Tensor<T> &src, const Tensor<T> &scales,
   const auto rows = src.shape()[0];
   const auto cols = src.shape()[1];
   const auto total = rows * cols;
-  const auto stream = execContext.stream.value();
+  const auto stream = getCudaStream(execContext);
 
   auto result = Tensor<T>::Create({rows, cols}, execContext);
 

@@ -27,9 +27,9 @@
 #include <vecmem/memory/memory_resource.hpp>
 #include <vecmem/utils/copy.hpp>
 
-/// Forward declare cuda stream, to be able to use the header without cuda
-struct CUstream_st;
-using cudaStream_t = CUstream_st *;
+namespace vecmem::cuda {
+class stream_wrapper;
+}
 
 namespace ActsPlugins {
 
@@ -98,9 +98,9 @@ inline std::ostream &operator<<(std::ostream &os, Device device) {
 struct ExecutionContext {
   /// Target device for execution
   Device device{Device::Type::eCPU};
-  /// CUDA stream for asynchronous execution
-  std::optional<cudaStream_t> stream;
-  /// Device memory resource of the CUDA stages. Memory is released while
+  /// CUDA stream for asynchronous execution, required for CUDA
+  const vecmem::cuda::stream_wrapper *stream = nullptr;
+  /// Device memory resource, required for CUDA. Memory is released while
   /// work on the stream may still use it, so it must be stream-ordered.
   vecmem::memory_resource *memoryResource = nullptr;
   /// vecmem copy object for the stream
@@ -218,28 +218,28 @@ void checkMaskCompatibility(const Tensor<T> &tensor, const Tensor<bool> &mask,
 
 /// Element-wise sigmoid function for float cpu tensors
 /// @param tensor The tensor to apply the sigmoid function to
-/// @param stream The stream to use for the operation in case of CUDA
-void sigmoid(Tensor<float> &tensor, std::optional<cudaStream_t> stream = {});
+/// @param execContext Device and stream for the operation
+void sigmoid(Tensor<float> &tensor, const ExecutionContext &execContext);
 
 /// Apply a limit on the number of edges consistently on edgeIndex and
 /// edgeFeatures.
 /// @param edgeIndex The edge index tensor
 /// @param edgeFeatures The edge feature tensor
 /// @param maxEdges The edge limit to apply
-/// @param stream The stream to use for operation in case of CUDA
+/// @param execContext Device and stream for output allocation
 /// @return Pair of limited edge index tensor and optional limited edge features tensor
 std::pair<Tensor<std::int64_t>, std::optional<Tensor<float>>> applyEdgeLimit(
     const Tensor<std::int64_t> &edgeIndex,
     const std::optional<Tensor<float>> &edgeFeatures, std::size_t maxEdges,
-    std::optional<cudaStream_t> stream);
+    const ExecutionContext &execContext);
 
 /// Compute a boolean mask from a score tensor: mask[i] = (scores[i] > cut).
 /// @param scores The edge score tensor [N, 1]
 /// @param cut The score threshold
-/// @param stream The stream to use for the operation in case of CUDA
+/// @param execContext Device and stream for output allocation
 /// @return Boolean tensor [N, 1] where true means the edge passes the cut
 Tensor<bool> scoreMask(const Tensor<float> &scores, float cut,
-                       std::optional<cudaStream_t> stream = {});
+                       const ExecutionContext &execContext);
 
 /// Select rows from a 2D row-major tensor where the mask element is true.
 /// @param tensor Source tensor [N, F] in row-major layout

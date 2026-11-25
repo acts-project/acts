@@ -12,6 +12,7 @@
 #include "ActsPlugins/Gnn/detail/ModuleMapUtils.cuh"
 
 #include <algorithm>
+#include <cassert>
 #include <chrono>
 #include <cstddef>
 #include <map>
@@ -35,6 +36,8 @@
 #include <vecmem/containers/data/vector_view.hpp>
 #include <vecmem/memory/cuda/device_memory_resource.hpp>
 #include <vecmem/utils/cuda/copy.hpp>
+
+#include "CudaStream.hpp"
 
 using Clock = std::chrono::high_resolution_clock;
 
@@ -200,14 +203,11 @@ PipelineTensors ModuleMapCuda::operator()(
   ACTS_VERBOSE("gridDimHits: " << gridDimHits.x
                                << ", blockDim: " << blockDim.x);
 
-  if (execContext.memoryResource == nullptr || execContext.copy == nullptr) {
-    throw std::invalid_argument(
-        "The CUDA execution context needs a memory resource and a copy "
-        "object");
-  }
+  assert(execContext.memoryResource != nullptr);
+  assert(execContext.copy != nullptr);
   vecmem::memory_resource &mr = *execContext.memoryResource;
   const vecmem::copy &copy = *execContext.copy;
-  const cudaStream_t stream = execContext.stream.value_or(cudaStreamLegacy);
+  const cudaStream_t stream = detail::getCudaStream(execContext);
   ACTS_DEBUG("Got stream " << stream);
 
   /////////////////////////

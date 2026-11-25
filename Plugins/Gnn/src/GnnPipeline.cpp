@@ -67,9 +67,9 @@ std::vector<std::vector<int>> GnnPipeline::run(
   std::optional<vecmem::cuda::async_copy> copy;
   if (ctx.device.type == Device::Type::eCUDA) {
     stream.emplace();
-    deviceMr.emplace(static_cast<cudaStream_t>(stream->stream()));
+    deviceMr.emplace(*stream);
     copy.emplace(*stream);
-    ctx.stream = static_cast<cudaStream_t>(stream->stream());
+    ctx.stream = &*stream;
     ctx.memoryResource = &*deviceMr;
     ctx.copy = &*copy;
   }

@@ -9,14 +9,16 @@
 #include "ActsPlugins/Gnn/EdgeLayerConnector.hpp"
 #include "ActsPlugins/Gnn/detail/CudaUtils.hpp"
 
+#include <cassert>
 #include <memory_resource>
-#include <stdexcept>
 
 #include <MMG/CUDA_edge_layer_connector>
 #include <thrust/copy.h>
 #include <thrust/execution_policy.h>
 #include <vecmem/containers/data/vector_view.hpp>
 #include <vecmem/utils/copy.hpp>
+
+#include "CudaStream.hpp"
 
 using namespace Acts;
 
@@ -30,14 +32,11 @@ std::vector<std::vector<int>> EdgeLayerConnector::operator()(
   const auto numEdges = static_cast<int>(tensors.edgeIndex.shape().at(1));
   const auto numSpacepoints = static_cast<int>(spacepointIDs.size());
 
-  if (execContext.memoryResource == nullptr || execContext.copy == nullptr) {
-    throw std::invalid_argument(
-        "The CUDA execution context needs a memory resource and a copy "
-        "object");
-  }
+  assert(execContext.memoryResource != nullptr);
+  assert(execContext.copy != nullptr);
   vecmem::memory_resource& mr = *execContext.memoryResource;
   const vecmem::copy& copy = *execContext.copy;
-  const cudaStream_t stream = execContext.stream.value_or(cudaStreamLegacy);
+  const cudaStream_t stream = detail::getCudaStream(execContext);
 
   // Convert std::int64_t edge indices to int using Tensor for memory management
   auto srcInt64Ptr = tensors.edgeIndex.data();

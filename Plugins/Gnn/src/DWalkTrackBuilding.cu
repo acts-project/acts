@@ -30,6 +30,8 @@
 #include <thrust/sort.h>
 #include <thrust/tuple.h>
 
+#include "CudaStream.hpp"
+
 namespace {
 
 constexpr int kBlockSize = 256;
@@ -1511,7 +1513,7 @@ std::vector<std::vector<int>> DWalkTrackBuilding::operator()(
     return {};
   }
 
-  auto stream = execContext.stream.value();
+  auto stream = detail::getCudaStream(execContext);
   std::vector<int> initialLabels;
   DeviceOrientedEdges deviceGraph;
   int *cudaInitialLabels{};

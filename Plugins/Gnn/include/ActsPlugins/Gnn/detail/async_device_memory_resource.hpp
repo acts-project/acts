@@ -14,6 +14,7 @@
 
 #include <cuda_runtime_api.h>
 #include <vecmem/memory/memory_resource.hpp>
+#include <vecmem/utils/cuda/stream_wrapper.hpp>
 
 namespace ActsPlugins::detail {
 
@@ -22,8 +23,9 @@ namespace ActsPlugins::detail {
 /// ordered after the free, and the driver pool is thread safe.
 class async_device_memory_resource final : public vecmem::memory_resource {
  public:
-  explicit async_device_memory_resource(cudaStream_t stream)
-      : m_stream(stream) {}
+  explicit async_device_memory_resource(
+      const vecmem::cuda::stream_wrapper &stream)
+      : m_stream(static_cast<cudaStream_t>(stream.stream())) {}
 
   cudaStream_t stream() const { return m_stream; }
 
