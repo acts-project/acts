@@ -7,33 +7,44 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 set(_python_dir "${CMAKE_BINARY_DIR}/python")
-set(_pkg_dir ${_python_dir}/detray/io)
+set(_pkg_dir ${_python_dir}/detray/tests)
+
+if(NOT TARGET detray::svgtools)
+    message(
+        STATUS
+        "Skipping 'detray.tests' python module: 'detray::svgtools' not available"
+    )
+    return()
+endif()
+
 file(MAKE_DIRECTORY ${_pkg_dir})
 
-pybind11_add_module(DetrayIoPythonBindings src/IoModuleEntry.cpp)
+pybind11_add_module(detray_tests_python_bindings src/tests_module_entry.cpp)
 
 target_link_libraries(
-    DetrayIoPythonBindings
+    detray_tests_python_bindings
     PRIVATE
         detray::core_array
         detray::io
-        detray::detectors
+        detray::test_common
+        detray::svgtools
+        GTest::gtest
         vecmem::core
         covfie::core
 )
 
-# Place the compiled module inside the `detray.io` package.
+# Place the compiled module inside the `detray.tests` package.
 set_target_properties(
-    DetrayIoPythonBindings
+    detray_tests_python_bindings
     PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${_pkg_dir}
 )
 install(
-    TARGETS DetrayIoPythonBindings
-    DESTINATION ${DETRAY_PYTHON_INSTALL_DIR}/io
+    TARGETS detray_tests_python_bindings
+    DESTINATION ${DETRAY_PYTHON_INSTALL_DIR}/tests
 )
 
 # Generate the package __init__ that re-exports the compiled module.
-set(BINDINGS_MODULE DetrayIoPythonBindings)
+set(BINDINGS_MODULE detray_tests_python_bindings)
 configure_file(
     ${CMAKE_CURRENT_SOURCE_DIR}/module_init.py.in
     ${_pkg_dir}/__init__.py
@@ -41,7 +52,7 @@ configure_file(
 )
 install(
     FILES ${_pkg_dir}/__init__.py
-    DESTINATION ${DETRAY_PYTHON_INSTALL_DIR}/io
+    DESTINATION ${DETRAY_PYTHON_INSTALL_DIR}/tests
 )
 
-acts_pybind_generate_stubs(detray.io DetrayIoPythonBindings)
+acts_pybind_generate_stubs(detray.tests detray_tests_python_bindings)

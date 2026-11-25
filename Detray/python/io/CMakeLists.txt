@@ -7,41 +7,36 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 set(_python_dir "${CMAKE_BINARY_DIR}/python")
-set(_pkg_dir ${_python_dir}/detray/core)
+set(_pkg_dir ${_python_dir}/detray/io)
 file(MAKE_DIRECTORY ${_pkg_dir})
 
-pybind11_add_module(DetrayPythonBindings src/CoreModuleEntry.cpp)
+pybind11_add_module(detray_io_python_bindings src/io_module_entry.cpp)
 
 target_link_libraries(
-    DetrayPythonBindings
-    PRIVATE
-        detray::core_array
-        detray::io
-        detray::detectors
-        vecmem::core
-        covfie::core
+    detray_io_python_bindings
+    PRIVATE detray::core_array detray::io detray::detectors
 )
 
-# Place the compiled module inside the `detray.core` package.
+# Place the compiled module inside the `detray.io` package.
 set_target_properties(
-    DetrayPythonBindings
+    detray_io_python_bindings
     PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${_pkg_dir}
 )
 install(
-    TARGETS DetrayPythonBindings
-    DESTINATION ${DETRAY_PYTHON_INSTALL_DIR}/core
+    TARGETS detray_io_python_bindings
+    DESTINATION ${DETRAY_PYTHON_INSTALL_DIR}/io
 )
 
 # Generate the package __init__ that re-exports the compiled module.
-set(BINDINGS_MODULE DetrayPythonBindings)
+set(BINDINGS_MODULE detray_io_python_bindings)
 configure_file(
-    ${CMAKE_CURRENT_SOURCE_DIR}/../module_init.py.in
+    ${CMAKE_CURRENT_SOURCE_DIR}/module_init.py.in
     ${_pkg_dir}/__init__.py
     @ONLY
 )
 install(
     FILES ${_pkg_dir}/__init__.py
-    DESTINATION ${DETRAY_PYTHON_INSTALL_DIR}/core
+    DESTINATION ${DETRAY_PYTHON_INSTALL_DIR}/io
 )
 
-acts_pybind_generate_stubs(detray.core DetrayPythonBindings)
+acts_pybind_generate_stubs(detray.io detray_io_python_bindings)

@@ -48,23 +48,25 @@ def run_cpu_material_validation(args, datadir, logging):
 
     # Configure material scan
     scan_cfg = detray.tests.MaterialScanConfig()
-    fill_track_generator_config(args, scan_cfg.trackGenerator)
-    scan_cfg.trackGenerator.uniformEta = True
-    scan_cfg.overlapsTol = args.overlaps_tol
-    scan_cfg.materialFile = os.path.join(datadir, "material_scan")
+    fill_track_generator_config(args, scan_cfg.track_generator)
+    scan_cfg.track_generator.uniform_eta = True
+    scan_cfg.overlaps_tol = args.overlaps_tol
+    scan_cfg.material_file = os.path.join(datadir, "material_scan")
     logging.info("Material scan config\n\n" + str(scan_cfg))
 
     # Configure material validation
     val_cfg = detray.tests.MaterialValidationConfig()
     fill_propagation_config(args, val_cfg.propagation)
-    val_cfg.relativeError = args.material_tol / 100.0
-    val_cfg.materialFile = os.path.join(datadir, "navigation_material_trace")
+    val_cfg.relative_error = args.material_tol / 100.0
+    val_cfg.material_file = os.path.join(datadir, "navigation_material_trace")
     logging.info("Material validation config\n\n" + str(val_cfg))
 
     # Read the detector
-    det, names = detray.io.readDetector(detray.core.HostMemoryResource(), reader_cfg)
+    det, names = detray.io.read_detector_json(
+        detray.core.HostMemoryResource(), reader_cfg
+    )
 
-    detray.tests.runMaterialValidation(det, names, scan_cfg, val_cfg)
+    detray.tests.run_material_validation(det, names, scan_cfg, val_cfg)
 
 
 def __main__():
