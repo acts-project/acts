@@ -173,7 +173,7 @@ void GbtsNodeStorage::finalize() {
     // every node in a bin is on the same layer, so any of them will do
     const GbtsLayerDescription& description =
         m_geometry->layerDescription(m_staged[staged.front()].layer);
-    binInfo.barrelOrder = description.barrelOrder;
+    binInfo.depth = description.depth;
     binInfo.type = description.type;
     binInfo.technology = description.technology;
   }
