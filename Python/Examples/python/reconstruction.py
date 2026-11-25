@@ -191,6 +191,8 @@ CkfConfig = namedtuple(
         "constrainToVolumes",
         "endOfWorldVolumes",
         "seedDeduplicatorConfig",
+        # False para cósmicos: ninguna pasada se detiene en el perigeo en
+        # (0,0,0) (TrackFindingAlgorithm::Config::stopAtPerigee)
         "stopAtPerigee",
     ],
     defaults=[

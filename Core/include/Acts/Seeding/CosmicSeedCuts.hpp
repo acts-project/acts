@@ -10,114 +10,139 @@
 
 #include <array>
 #include <cstdint>
+#include <utility>
+#include <vector>
 
 namespace Acts {
 
-/// Detector region of a space point, as seen by the cosmic seed finder.
-///
-/// It selects the covariance scale factor and tells pixel space points from
-/// strip space points for the subdetector cuts.
+// class of a space point for the purpose of covariance scaling
 enum class CosmicSpacePointClass : std::uint8_t {
-  BarrelPixel = 0,  ///< Pixel space point in the barrel
-  EndcapPixel = 1,  ///< Pixel space point in an endcap
-  BarrelStrip = 2,  ///< Strip space point in the barrel
-  EndcapStrip = 3,  ///< Strip space point in an endcap
+  BarrelPixel = 0,
+  EndcapPixel = 1,
+  BarrelStrip = 2,
+  EndcapStrip = 3,
 };
 
-/// @brief Cuts applied by CosmicTripletSeedFinder when it forms
-/// top-middle-bottom triplets from cosmic-ray space points.
-///
-/// Cosmic muons cross the detector from top to bottom, so the seed finder
-/// orders and separates space points along the global y axis instead of the
-/// radius. Lengths are in mm, momenta in MeV and the magnetic field in T.
+// cuts applied by CosmicTripletSeedFinder when forming top-middle-bottom
+// triplets from cosmic ray space points
 struct CosmicSeedCuts {
-  /// Require the vertical order top.y > middle.y > bottom.y.
+  // order: top.y() > middle.y() > bottom.y()
   bool requireTopMiddleBottom = true;
-  /// Maximum kink angle between the two segments of a triplet [rad]. With
-  /// useSubdetectorAngularCuts it applies only to triplets with a strip middle
-  /// space point; pixel ones are cut by pixelMinCosDeltaPhi instead.
+  // with useSubdetectorAngularCuts, it is the maximum kink for strip SPs
+  // and pixel SPs are cut by pixelMinCosDeltaPhi instead
   double maxKinkAngle = 0.05;
-  /// Minimum vertical separation of each segment [mm]: |y_top - y_middle| and
-  /// |y_middle - y_bottom| must lie in [minDeltaY, maxDeltaY]. Together with
-  /// maxDeltaY it plays the role of mindRadius/maxdRadius in Athena's
-  /// SiSpacePointsSeedMaker_Cosmic, where dR is dy.
+  // vertical separation for each segment [mm], for any middle SP (pixel or
+  // strip): |y_top - y_middle| and |y_middle - y_bottom| in [minDeltaY,
+  // maxDeltaY] these are mindRadius/maxdRadius of SiSpacePointsSeedMaker_Cosmic
+  // (m_drmin = 5, m_drmax = 1000), where dR is dy, and the deltaRMin/deltaRMax
+  // of the Acts::DoubletSeedFinder that makes the doublets (its r is y for
+  // cosmics, see CosmicTripletSeedFinder)
   double minDeltaY = 5.0;
-  /// Maximum vertical separation of each segment [mm], see minDeltaY.
   double maxDeltaY = 1000.0;
-  /// Minimum alignment of each segment with the y axis, |dy| / |dr| with
-  /// |dr| = sqrt(dx^2 + dy^2 + dz^2).
+  // minimal alignment with the y direction: |dy| / |dr|, where dr = sqrt(dx^2 +
+  // dy^2 + dz^2)
   double minCosThetaY = 0.3;
-  /// Maximum distance of the middle space point to the top-bottom line [mm].
-  /// With usePtDependentKinkResidual it is the lower bound of the tolerance on
-  /// the component out of the transverse plane. A negative value disables the
-  /// cut.
+  // maximal distance of the middle SP to the line top-bottom [mm]
+  // with usePtDependentKinkResidual it is the floor of the tolerance of the
+  // component out of the transverse plane (see passGeometricCuts)
+  // negative = no cut
   double maxResidual = 5.0;
-  /// Minimum z of the space points used for seeding [mm].
+  // zMin/zMax [mm] of the space points to be considered for seeding
   double zMin = -3000.0;
-  /// Maximum z of the space points used for seeding [mm].
   double zMax = 3000.0;
-  /// Acceptance |eta| < maxAbsEta, applied as a window in dz/dr.
+  // Athena's binning, used only with useCartesianGridBinning = false:
+  // bins in z [mm]: the middle SP is taken from one bin and its top and bottom
+  // candidates from the neighbouring bins (buildFrameWork() / production3Sp of
+  // SiSpacePointsSeedMaker_Cosmic). zBinEdges are the boundaries between bins,
+  // strictly increasing: N edges give N + 1 bins, the first and last open and
+  // bounded only by zMin/zMax. A z exactly on an edge belongs to the bin
+  // farther from z = 0, as in Athena. The default is Athena's binning.
+  std::vector<double> zBinEdges = {-2500., -1400., -925., -450., -250.,
+                                   250.,   450.,   925.,  1400., 2500.};
+  // neighbouring bins of each bin
+  std::vector<std::pair<int, int>> zBinNeighbors = {
+      {0, 1},  {-1, 1}, {-1, 1}, {-1, 2}, {-1, 1}, {-1, 1},
+      {-1, 1}, {-2, 1}, {-1, 1}, {-1, 1}, {-1, 0}};
+  // binning of the space points (zBinEdges and zBinNeighbors are then not
+  // used): equidistant bins in x, y and z [mm] of an
+  // Acts::CartesianSpacePointGrid, gridBins = {nx, ny, nz} bins over
+  // [gridXMin, gridXMax], [gridYMin, gridYMax] and [zMin, zMax]. The middle SP
+  // is taken from one bin and its top and bottom candidates from the bins up
+  // to gridNeighbors = {x, y, z} bins away on each side, per axis. A space
+  // point outside the x or y range takes no part. Neighbours that do not reach
+  // maxDeltaY in y, or the x and z separation of the doublets of an inclined
+  // muon, lose seeds. The default x/y range covers the ODD (r < 1080 mm).
+  // The default bins only z, 12 bins with 3 neighbours on each side: it finds
+  // every muon that Athena's z bins find, and more of the muons inclined in z
+  // (Athena's central bin reaches only 200 mm in z)
+  bool useCartesianGridBinning = true;
+  std::array<std::uint32_t, 3> gridBins = {1, 1, 12};
+  double gridXMin = -1100.0;
+  double gridXMax = 1100.0;
+  double gridYMin = -1100.0;
+  double gridYMax = 1100.0;
+  std::array<int, 3> gridNeighbors = {0, 0, 3};
+  // acceptance in |eta| < maxAbsEta
   double maxAbsEta = 2.3;
-  /// Minimum transverse momentum [MeV], used only with usePtCut and a
-  /// non-zero magneticFieldBz.
+  // momentum cut: pT > minPtFactor * minPt [MeV] (requires
+  // magneticFieldBz != 0), done by Acts::TripletSeedFinder (minHelixDiameter2)
   double minPt = 300.0;
-  /// Apply the minPt cut, with pT estimated from the triplet curvature.
   bool usePtCut = false;
-  /// Magnetic field along z used to estimate pT [T].
-  double magneticFieldBz = 2.0;
-  /// Multiple scattering coefficient used in the longitudinal compatibility
-  /// and in the pT-dependent tolerances.
+  double magneticFieldBz = 2.0;  // T
+  // the pT cut is pT > minPtFactor * minPt, and without pT cut the scattering
+  // term uses pT = minPtFactor * minPt: Athena's 0.9 (m_ipt = 1 / (0.9 ptmin)
+  // in SiSpacePointsSeedMaker_Cosmic)
+  double minPtFactor = 0.9;
+  // pT [MeV] = ptPerFieldRadius * Bz [T] * R [mm], used for the pT cut, the
+  // pT-dependent kink/residual and the field given to Acts::TripletSeedFinder
+  // (bFieldInZ). Athena's 0.3 (K = 2 / (300 Bz[kT])) instead of the exact
+  // 0.299792458, so that the pT cut is the same as in Athena
+  double ptPerFieldRadius = 0.3;  // MeV / (T mm)
+  // the scattering term of dT is COF (1 + cot^2) / pT^2
   double multipleScatteringCof = 60.3;
-  /// Reject triplets whose longitudinal discriminant dT is positive, i.e.
-  /// incompatible with a straight (or curved) trajectory within the errors.
+  // if true, rejects triplets whose longitudinal discriminant dT is positive,
+  // i.e. incompatible with a straight (or curved) trajectory within the errors.
+  // The cut is the one of Acts::TripletSeedFinder; if false, its scattering
+  // terms are opened so that it does not cut on dT
   bool useLongitudinalCompatibility = false;
-  /// Cut on the polar kink and on the residual out of the transverse plane,
-  /// with tolerances widened by multiple scattering at the estimated pT.
-  /// Requires usePtCut, minPt > 0 and magneticFieldBz != 0.
   bool usePtDependentKinkResidual = false;
-  /// Largest pT used in the scattering term [MeV]: a higher estimate is
-  /// replaced by this value, as in Athena.
+  // maximum pT for scattering: if the estimated pT is above this value,
+  // it is replaced by this value in the scattering term (same as in Athena)
   double maxPtForScattering = 5000.0;
 
-  /// Scale the space point variances with covarianceScale. On by default, as
-  /// in Athena; it can be disabled for tests.
+  // active by default, but can be disabled for testing
   bool useCovarianceScale = true;
-  /// Variance scale factor per CosmicSpacePointClass, indexed by its value.
-  /// Only the dominant coordinate is scaled: z in the barrel, r in the
-  /// endcaps.
   std::array<double, 4> covarianceScale = {16., 16., 100., 16.};
 
-  /// Require all space points of a seed to be of the same type, all pixel or
-  /// all strip. Needs the space point classes.
   bool requireSameSubdetector = false;
 
-  /// Reject seeds in which top and middle, or middle and bottom, lie on the
-  /// same surface (module). Needs the surface of each space point in
-  /// CosmicTripletSeedFinder::createSeeds().
+  // if true, the top-middle and middle-bottom SPs cannot be on the same surface
+  // (module) this requires passing the surface of each SP to createSeeds()
   bool rejectSameSurface = true;
 
-  /// Choose the angular cut between the two segments by the type of the
-  /// middle space point: maxKinkAngle for strips, pixelMinCosDeltaPhi for
-  /// pixels. Needs the space point classes.
+  // if true, the cuts on the angular separation of the segments are applied
+  // depending on the subdetector type (pixel or strip)
   bool useSubdetectorAngularCuts = false;
-  /// Minimum cosine of the transverse angle between the two segments of a
-  /// triplet with a pixel middle space point, see useSubdetectorAngularCuts.
   double pixelMinCosDeltaPhi = 0.96;
 
-  /// Recompute the position of the strip space points in the seeds with the
-  /// direction of their best seed. Needs a copy of the space points with the
-  /// same indices in CosmicTripletSeedFinder::createSeeds().
+  // if true, the positions of strip space points in the seeds are recalculated
+  // with the direction of their best seed this requires passing a copy of the
+  // space points with the same indices to createSeeds()
   bool useStripCalibration = false;
-  /// Tolerance on the position along the strips when a strip space point is
-  /// recomputed, relative to the strip half length (1 means inside the strip).
   double stripCalibrationTolerance = 1.1;
+  // the recalculation is iterative: crossing with the triplet direction, new
+  // direction from the new crossings, and so on, at most
+  // stripCalibrationMaxIterations times, until no space point moves more than
+  // stripCalibrationConvergence [mm]; without convergence the triplet is
+  // rejected. It is also rejected when |cos| between the triplet direction and
+  // the normal of a strip module is below stripCalibrationMinCosToNormal (a
+  // direction almost parallel to the module crosses the strips far away)
+  int stripCalibrationMaxIterations = 50;
+  double stripCalibrationConvergence = 1e-3;
+  double stripCalibrationMinCosToNormal = 1e-6;
 
-  /// Compute the seed quality from dT and the segment lengths. Otherwise every
-  /// seed gets seedQuality. The quality is used to sort and filter seeds in
-  /// the CKF.
+  // quality assigned to the seeds, used for sorting and filtering in the CKF
   bool useSeedQuality = true;
-  /// Quality of the seeds when useSeedQuality is false, and of all two space
-  /// point seeds.
   float seedQuality = 0.0f;
 };
 

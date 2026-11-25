@@ -178,7 +178,7 @@ std::vector<Acts::CosmicSpacePointClass> SimHitSpacePointMaker::classifyHits(
     const Config& cfg, const SimHitContainer& simHits) {
   std::vector<Acts::CosmicSpacePointClass> classes;
   classes.reserve(simHits.size());
-  // volumes lists are used to classify hits; if a volume is not in any list, it
+  // volume lists are used to classify hits; if a volume is not in any list, it
   // is an error
   std::set<std::uint32_t> unmapped;
   const bool byVolume = hasVolumeLists(cfg);
@@ -243,7 +243,7 @@ ProcessCode SimHitSpacePointMaker::execute(const AlgorithmContext& ctx) const {
     m_outputSpacePointClasses(ctx, std::move(classes));
   }
   if (m_outputSpacePointSurfaces.isInitialized()) {
-    // space point index it is the position of the hit in the SimHitContainer
+    // the space point index is the position of the hit in the SimHitContainer
     std::vector<Acts::GeometryIdentifier> surfaces;
     surfaces.reserve(simHits.size());
     for (const SimHit& hit : simHits) {

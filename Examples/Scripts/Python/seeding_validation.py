@@ -202,7 +202,6 @@ class EfficiencyRootWriter(acts.examples.IAlgorithm):
         reconstructibleGeometry=None,
         possibleSpacePoints=None,
         inputSeeds="seeds",
-        seedSize=3,
         name="EfficiencyRootWriter",
         level=acts.logging.INFO,
     ):
@@ -211,7 +210,6 @@ class EfficiencyRootWriter(acts.examples.IAlgorithm):
         self.seedWriter = seedWriter
         self.eventWriter = eventWriter
         self.minHits = minHits
-        self.seedSize = seedSize
         self.barcodeOf = barcodeOf or (lambda pid: pid.particle)
         self.minCosThetaY = minCosThetaY
         self.keepOutOfAcceptance = keepOutOfAcceptance
@@ -317,7 +315,7 @@ class EfficiencyRootWriter(acts.examples.IAlgorithm):
         nSeeds = 0
         nPureSeeds = 0
         if len(seeds) > 0:
-            idx = seeds.indexArrays(self.seedSize)[0]
+            idx = seeds.tripletArrays()[0]
             idx = idx[(idx >= 0).all(axis=1)]
             nSeeds = len(idx)
         if nSeeds > 0:
@@ -407,6 +405,17 @@ def make_cosmic_seed_cuts(args):
     cuts.covarianceScale = [16.0, 16.0, 100.0, 16.0]
     cuts.useSubdetectorAngularCuts = args.subdetector_angular_cuts
     cuts.pixelMinCosDeltaPhi = args.pixel_min_cos_dphi
+    # binning of the space points (cosmic_particle_gun.py --binning, whose
+    # default is the grid): without that option (this script's command line,
+    # used by run_athena_cosmics_chain.sh) Athena's z bins
+    if getattr(args, "binning", "athena") == "grid":
+        cuts.useCartesianGridBinning = True
+        cuts.gridBins = list(args.grid_bins)
+        cuts.gridNeighbors = list(args.grid_neighbors)
+        cuts.gridXMin, cuts.gridXMax = args.grid_x_range
+        cuts.gridYMin, cuts.gridYMax = args.grid_y_range
+    else:
+        cuts.useCartesianGridBinning = False
     return cuts
 
 
@@ -575,7 +584,7 @@ def main():
         "--bz",
         type=float,
         default=2.0,
-        help="T; assumed Bz",
+        help="T; ASSUMED Bz (not in the Athena ntuple)",
     )
     p.add_argument("--max-kink", type=float, default=0.05)
     p.add_argument("--max-residual", type=float, default=5.0)
@@ -583,13 +592,13 @@ def main():
         "--min-delta-y",
         type=float,
         default=5.0,
-        help="mm; minimum |dy| per segment",
+        help="mm; minimum |dy| per segment (Athena's mindRadius)",
     )
     p.add_argument(
         "--max-delta-y",
         type=float,
         default=1000.0,
-        help="mm; maximum |dy| per segment",
+        help="mm; maximum |dy| per segment (Athena's maxdRadius)",
     )
     p.add_argument(
         "--min-cos-theta-y",
@@ -653,7 +662,7 @@ def main():
         "--strip-min-radius",
         type=float,
         default=350.0,
-        help="r [mm] from which a hit is strip",
+        help="r [mm] from which a hit is strip (default 350)",
     )
     p.add_argument(
         "--pixel-barrel-max-abs-z",
@@ -719,7 +728,7 @@ def main():
                     f"had a 'pure' seed: the cut applied to the two extreme hits "
                     f"is stricter than the one used by the finder for the triplet. If this "
                     f"fraction is large, the acceptance proxy is not suitable for "
-                    f"this dataset."
+                    f"this dataset (see the module's docstring)."
                 )
         if seedTreeWriter.totalDropped > 0:
             print(

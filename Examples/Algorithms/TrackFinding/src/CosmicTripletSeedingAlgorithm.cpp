@@ -10,7 +10,6 @@
 
 #include "Acts/Utilities/Logger.hpp"
 
-#include <cstdint>
 #include <memory>
 #include <stdexcept>
 #include <utility>
@@ -44,15 +43,9 @@ CosmicTripletSeedingAlgorithm::CosmicTripletSeedingAlgorithm(
     throw std::invalid_argument(
         "outputSpacePoints requires cuts.useStripCalibration");
   }
-  if (m_cfg.twoSpacePointSeedsFromUnused &&
-      m_cfg.outputTwoSpacePointSeeds.empty()) {
-    throw std::invalid_argument(
-        "twoSpacePointSeedsFromUnused requires outputTwoSpacePointSeeds");
-  }
 
   m_inputSpacePoints.initialize(m_cfg.inputSpacePoints);
-  // handle opciotional, which initialize only if the corresponding input is not
-  // empty
+  // optional handles, initialized only if the corresponding input is not empty
   if (!m_cfg.inputSpacePointClasses.empty()) {
     m_inputSpacePointClasses.initialize(m_cfg.inputSpacePointClasses);
   }
@@ -62,9 +55,6 @@ CosmicTripletSeedingAlgorithm::CosmicTripletSeedingAlgorithm(
   m_outputSeeds.initialize(m_cfg.outputSeeds);
   if (!m_cfg.outputSpacePoints.empty()) {
     m_outputSpacePoints.initialize(m_cfg.outputSpacePoints);
-  }
-  if (!m_cfg.outputTwoSpacePointSeeds.empty()) {
-    m_outputTwoSpacePointSeeds.initialize(m_cfg.outputTwoSpacePointSeeds);
   }
 }
 
@@ -107,37 +97,6 @@ ProcessCode CosmicTripletSeedingAlgorithm::execute(
   ACTS_DEBUG("CosmicTripletSeedingAlgorithm: " << spacePoints.size()
                                                << " space points -> "
                                                << seeds.size() << " seeds");
-
-  if (m_outputTwoSpacePointSeeds.isInitialized()) {
-    Acts::SeedContainer doublets;
-    if (calibrated != nullptr) {
-      doublets.assignSpacePointContainer(
-          std::shared_ptr<const Acts::SpacePointContainer>(calibrated));
-    }
-    // SPs used by any triplet seed are marked as used,
-    // and only the unused SPs are considered for doublet seeds
-    std::vector<std::uint8_t> used;
-    if (m_cfg.twoSpacePointSeedsFromUnused) {
-      used.assign(spacePoints.size(), 0);
-      const Acts::SeedContainer& triplets = seeds;
-      for (Acts::ConstSeedProxy seed : triplets) {
-        for (Acts::SpacePointIndex i : seed.spacePointIndices()) {
-          used[i] = 1;
-        }
-      }
-    }
-    try {
-      m_finder.createTwoSpacePointSeeds(spacePoints, doublets, classes,
-                                        used.empty() ? nullptr : &used,
-                                        surfaces);
-    } catch (const std::invalid_argument& e) {
-      ACTS_ERROR("CosmicTripletSeedingAlgorithm: " << e.what());
-      return ProcessCode::ABORT;
-    }
-    ACTS_DEBUG("CosmicTripletSeedingAlgorithm: " << doublets.size()
-                                                 << " two space point seeds");
-    m_outputTwoSpacePointSeeds(ctx, std::move(doublets));
-  }
 
   if (m_outputSpacePoints.isInitialized()) {
     m_outputSpacePoints(ctx, calibrated != nullptr

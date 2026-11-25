@@ -7,7 +7,6 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
-
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
@@ -46,7 +45,7 @@ class SimHitSpacePointMaker final : public IAlgorithm {
     // with the class of each space point (same index as the space point)
     std::string outputSpacePointClasses;
     // optional: if not empty, writes a std::vector<Acts::GeometryIdentifier>
-    // with the geometryID() of SimHit of each space point
+    // with the geometryID() of the SimHit of each space point
     std::string outputSpacePointSurfaces;
 
     // volume classification

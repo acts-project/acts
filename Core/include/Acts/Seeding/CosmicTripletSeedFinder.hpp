@@ -12,61 +12,30 @@
 #include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/EventData/StripSpacePointCalibrationDetails.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Seeding/CartesianSpacePointGrid.hpp"
 #include "Acts/Seeding/CosmicSeedCuts.hpp"
+#include "Acts/Seeding/DoubletSeedFinder.hpp"
+#include "Acts/Seeding/TripletSeedFinder.hpp"
 
 #include <array>
+#include <cmath>
 #include <cstdint>
+#include <limits>
+#include <memory>
 #include <vector>
 
 namespace Acts {
 
-/// @brief Seed finder for cosmic-ray tracks.
-///
-/// Builds top-middle-bottom triplets ordered along the global y axis and keeps
-/// those that pass the configured CosmicSeedCuts. It can also build two space
-/// point seeds (bottom, top) for tracks with too few hits for a triplet.
+// finds triplet seeds from cosmic ray space points, applying the configured
+// cuts
 class CosmicTripletSeedFinder {
  public:
-  /// Check the cuts and precompute the quantities derived from them.
-  /// @param cuts Cuts applied to the seeds
-  /// @throws std::invalid_argument if the cuts are inconsistent
   explicit CosmicTripletSeedFinder(const CosmicSeedCuts& cuts = {});
 
-  /// Create triplet seeds from the space points of one event.
-  /// @param spacePoints Input space points
-  /// @param outputSeeds Container the seeds are appended to. If it has no
-  ///        space point container yet, @p spacePoints is assigned to it.
-  /// @param spClasses One class per space point, same indices as
-  ///        @p spacePoints. Required with useCovarianceScale,
-  ///        requireSameSubdetector or useSubdetectorAngularCuts.
-  /// @param calibratedSpacePoints Copy of @p spacePoints with the same
-  ///        indices. With useStripCalibration, each strip space point used in a
-  ///        seed is moved to the position computed with the direction of its
-  ///        best seed. May be null.
-  /// @param spSurfaces Sensitive surface of each space point, same indices as
-  ///        @p spacePoints. Required with rejectSameSurface.
   void createSeeds(
       const SpacePointContainer& spacePoints, SeedContainer& outputSeeds,
       const std::vector<CosmicSpacePointClass>* spClasses = nullptr,
       SpacePointContainer* calibratedSpacePoints = nullptr,
-      const std::vector<GeometryIdentifier>* spSurfaces = nullptr) const;
-
-  /// Create two space point seeds (bottom, top), like the find2Sp strategy of
-  /// Athena. The kink cut is not applied, since there is no third point.
-  /// @param spacePoints Input space points
-  /// @param outputSeeds Container the seeds are appended to. If it has no
-  ///        space point container yet, @p spacePoints is assigned to it.
-  /// @param spClasses One class per space point, same indices as
-  ///        @p spacePoints. Required with requireSameSubdetector.
-  /// @param skipSpacePoints One flag per space point; space points with a
-  ///        non-zero flag are not used (for example those already in a
-  ///        triplet seed). May be null.
-  /// @param spSurfaces Sensitive surface of each space point, same indices as
-  ///        @p spacePoints. Required with rejectSameSurface.
-  void createTwoSpacePointSeeds(
-      const SpacePointContainer& spacePoints, SeedContainer& outputSeeds,
-      const std::vector<CosmicSpacePointClass>* spClasses = nullptr,
-      const std::vector<std::uint8_t>* skipSpacePoints = nullptr,
       const std::vector<GeometryIdentifier>* spSurfaces = nullptr) const;
 
  private:
@@ -82,49 +51,125 @@ class CosmicTripletSeedFinder {
   // classes
   struct EventData {
     const SpacePointContainer* spacePoints = nullptr;
-    const double* covR = nullptr;
-    const double* covZ = nullptr;
-    const std::uint8_t* isStrip = nullptr;
-    const std::uint8_t* isCalibratable = nullptr;
-    const OuterStripSpacePointCalibrationDetailsDerived* stripDetails = nullptr;
-    const GeometryIdentifier* surfaces = nullptr;
-  };
-
-  struct EventBuffers {
-    std::vector<double> covR;
-    std::vector<double> covZ;
+    // what the doublet and triplet finders read, with the indices of
+    // spacePoints: x, y, z and the variances (scaled with covarianceScale if
+    // useCovarianceScale). The "r" of its zr column is y (see prepareEvent)
+    SpacePointContainer seeding;
+    // the same with -y as "r", only without requireTopMiddleBottom: a
+    // candidate below the middle SP is then also a top and one above it also
+    // a bottom
+    SpacePointContainer reflected;
+    // positions in double precision, and the z bin (kNoZBin: not used)
+    std::vector<Point> points;
+    std::vector<std::uint32_t> zBin;
     std::vector<std::uint8_t> isStrip;
     std::vector<std::uint8_t> isCalibratable;
     std::vector<OuterStripSpacePointCalibrationDetailsDerived> stripDetails;
+    const GeometryIdentifier* surfaces = nullptr;
     // the extent to which the y-coordinate of a strip SP changes upon
     // recalculation [mm]
     double stripShiftY = 0.0;
+    bool anyCalibratable = false;
+
+    bool strip(std::size_t index) const {
+      return !isStrip.empty() && isStrip[index] != 0;
+    }
+    bool calibratable(std::size_t index) const {
+      return anyCalibratable && isCalibratable[index] != 0;
+    }
   };
 
-  // fill buffers() with the necessary information for each space point,
-  // depending on the cuts that are enabled
-  EventData prepareEvent(const SpacePointContainer& spacePoints,
-                         const std::vector<CosmicSpacePointClass>* spClasses,
-                         const std::vector<GeometryIdentifier>* spSurfaces,
-                         bool needCovariance, bool needType,
-                         EventBuffers& buffers) const;
+  // doublet cuts of the cosmic seeding, given to Acts::DoubletSeedFinder as
+  // its experimentCuts
+  struct DoubletCuts {
+    const CosmicTripletSeedFinder* finder = nullptr;
+    const EventData* ev = nullptr;
+    // the y window of the candidates is wider than [minDeltaY, maxDeltaY]
+    // because of the recalculated strip SPs: cut it again on the others
+    bool exactDeltaY = false;
 
-  bool calibrateStripSpacePoints(Point& top, Point* middle, Point& bottom,
+    // doublets of the container positions
+    bool operator()(const ConstSpacePointProxy& middle,
+                    const ConstSpacePointProxy& other, float cotTheta,
+                    bool isBottomCandidate) const;
+    // doublets of a triplet with recalculated strip SPs, whose other cuts
+    // were done on the triplet
+    bool recalculated(const ConstSpacePointProxy& middle,
+                      const ConstSpacePointProxy& other, float cotTheta,
+                      bool isBottomCandidate) const;
+  };
+
+  // fill ev with the necessary information for each space point, depending on
+  // the cuts that are enabled
+  void prepareEvent(const SpacePointContainer& spacePoints,
+                    const std::vector<CosmicSpacePointClass>* spClasses,
+                    const std::vector<GeometryIdentifier>* spSurfaces,
+                    EventData& ev) const;
+
+  // index of the z bin of z (see CosmicSeedCuts::zBinEdges)
+  std::size_t zBin(double z) const;
+
+  // a doublet finder of the cosmic seeding: candidates ordered in y,
+  // |dy| in [deltaYMin, deltaYMax], no collision region or cotTheta cut
+  // (they are cut on dz/dr by the experimentCuts)
+  static std::unique_ptr<DoubletSeedFinder> makeDoubletFinder(
+      bool bottom, double deltaYMin, double deltaYMax,
+      const DoubletSeedFinder::Config::ExperimentCuts& experimentCuts);
+
+  // the Athena quality (dT weighted by the segment lengths) of a triplet that
+  // passed the TripletSeedFinder, from its two doublets and its curvature
+  float seedQuality(const DoubletsForMiddleSp::Proxy& bottom,
+                    const DoubletsForMiddleSp::Proxy& top,
+                    const ConstSpacePointProxy& middle, float curvature) const;
+
+  bool calibrateStripSpacePoints(Point& top, Point& middle, Point& bottom,
                                  const EventData& ev) const;
-
-  bool passDoubletCuts(const Point& top, const Point& bottom) const;
 
   bool tripletDirections(const Point& top, const Point& middle,
                          const Point& bottom,
                          std::array<std::array<float, 3>, 3>& dirs) const;
 
-  bool passCosmicCuts(const Point& top, const Point& middle,
-                      const Point& bottom, float& quality,
-                      const EventData& ev) const;
+  // a segment of a triplet: d1 = middle - top or d2 = bottom - middle, with
+  // what the triplet cuts compute from it alone. A doublet is a segment of
+  // every triplet it is part of, so this is computed once per doublet (the
+  // transverse length and the polar angle only if a cut asks for them)
+  struct Segment {
+    double dx = 0., dy = 0., dz = 0.;
+    double length = 0.;  // |d|
 
-  bool passCurvatureAndQuality(const Point& top, const Point& middle,
-                               const Point& bottom, float& quality,
-                               const EventData& ev) const;
+    // |d| in xy (pT-dependent and pixel cuts)
+    double transverse() const {
+      if (std::isnan(m_transverse)) {
+        m_transverse = std::hypot(dx, dy);
+      }
+      return m_transverse;
+    }
+    // atan2(|d| in xy, dz) (pT-dependent cuts)
+    double polar() const {
+      if (std::isnan(m_polar)) {
+        m_polar = std::atan2(transverse(), dz);
+      }
+      return m_polar;
+    }
+
+   private:
+    mutable double m_transverse = std::numeric_limits<double>::quiet_NaN();
+    mutable double m_polar = std::numeric_limits<double>::quiet_NaN();
+  };
+  // the segment d = to - from
+  static Segment segment(const Point& from, const Point& to);
+
+  // cuts of the triplet that the TripletSeedFinder does not have: order in y,
+  // z range, kink (or cos(dphi) for pixels), |dy| per segment, cosThetaY of
+  // the top-bottom chord and residual of the middle SP to that chord
+  bool passGeometricCuts(const Point& top, const Point& middle,
+                         const Point& bottom, const EventData& ev) const;
+  // the same with the two segments already computed:
+  // top = segment(top, middle), bottom = segment(middle, bottom)
+  bool passGeometricCuts(const Point& top, const Point& middle,
+                         const Point& bottom, const Segment& topSegment,
+                         const Segment& bottomSegment,
+                         const EventData& ev) const;
 
   struct PtDependentTerms {
     double polarKink = 0.;         // |theta1 - theta2| [rad]
@@ -132,25 +177,44 @@ class CosmicTripletSeedFinder {
     double parallelResidual = 0.;  // residual out of the transverse plane [mm]
     double residualSlack = 0.;     // multiple scattering in residual [mm]
   };
-  bool ptDependentTerms(const Point& top, const Point& middle,
-                        const Point& bottom, PtDependentTerms& out) const;
-
-  static double residualToTopBottomLine(const Point& top, const Point& middle,
-                                        const Point& bottom);
-
-  static float estimateVertexZ(const Point& top, const Point& middle,
-                               const Point& bottom);
+  // residual = distance of the middle SP to the top-bottom chord
+  bool ptDependentTerms(const Segment& topSegment, const Segment& bottomSegment,
+                        double residual, PtDependentTerms& out) const;
 
   CosmicSeedCuts m_cuts;
   double m_dzdrMax = 0.0;
+  // the grid of the space points of an event (built in createSeeds)
+  // with CosmicSeedCuts::useCartesianGridBinning (the default), equidistant
+  // bins in x, y and z [mm], the space point at (x, y, z)
+  CartesianSpacePointGrid::Config m_gridConfig;
+
+  // the triplet compatibility and curvature cuts (see makeTripletFinderConfig
+  // in the cpp)
+  std::shared_ptr<const TripletSeedFinder> m_tripletFinder;
+  // the TripletSeedFinder has a cut to make (dT with
+  // useLongitudinalCompatibility, or the pT cut) without them it would let
+  // every triplet through and is not called
+  bool m_useTripletFinder = false;
+  // multiple scattering terms of the quality, the same as in the dT of Athena:
+  // without pT cut, (1 + cot^2) * scatteringMinPt2; with pT cut,
+  // (1 + cot^2) * curvature^2 * scatteringPerCurvature2
+  double m_scatteringMinPt2 = 0.0;
+  double m_scatteringPerCurvature2 = 0.0;
+  bool m_ptCut = false;
 
   bool m_ptDependent = false;
-  bool m_ptPrefilter = false;
-  // minimal radius of curvature for the prefilter: 0.9 minPt / (0.3 |Bz|) [mm]
-  double m_rhoMin = 0.0;
-  // cosine of the maximum kink angle for the prefilter: 1 - k^2/2 <= cos(k)
-  // for every k in [0, maxKinkAngle]
-  double m_kinkCosThreshold = -1.0;
+  // constants of the pT-dependent kink and residual:
+  // sqrt(multipleScatteringCof), pT per mm of radius, 1 / (minPtFactor minPt)
+  // and 1 / maxPtForScattering
+  double m_sqrtScatteringCof = 0.0;
+  double m_ptPerRadius = 0.0;
+  double m_maxInvPt = 0.0;
+  double m_minInvPtScattering = 0.0;
+  // the kink cut acos(cos(kink)) > maxKinkAngle without the acos: certain below
+  // cos(maxKinkAngle) - kKinkCosBand (rejected) and above cos(maxKinkAngle) +
+  // kKinkCosBand (kept)
+  double m_cosKinkReject = -2.0;
+  double m_cosKinkAccept = -2.0;
   // lower limit of the cosine of the angle between each segment and the y-axis
   // for the prefilter
   double m_segCosThetaYMin = 0.0;

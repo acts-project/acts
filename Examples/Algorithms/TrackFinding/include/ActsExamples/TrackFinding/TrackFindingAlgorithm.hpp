@@ -138,6 +138,11 @@ class TrackFindingAlgorithm final : public IAlgorithm {
     /// parameters are used as they are, so they must lie on the last space
     /// point.
     bool reverseSearch = false;
+    /// Si la pasada hacia adentro (la segunda, o la primera con reverseSearch)
+    /// se detiene en el perigeo en (0,0,0). Un rayo cósmico no viene del
+    /// origen y deja medidas a los dos lados del seed: con false ninguna
+    /// pasada tiene superficie objetivo y las dos siguen hasta el final del
+    /// detector. Las trazas se extrapolan igual a ese perigeo al final.
     bool stopAtPerigee = true;
     /// Run the reverse search for a seed whose last space point lies beyond
     /// this transverse radius or this absolute z, so that the first pass

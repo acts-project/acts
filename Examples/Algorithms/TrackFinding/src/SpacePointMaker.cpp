@@ -47,12 +47,15 @@ namespace {
 
 static constexpr float nanf = std::numeric_limits<float>::quiet_NaN();
 
+// Las cuatro listas de volúmenes de la Config, en el orden de
+// Acts::CosmicSpacePointClass.
 std::array<const std::vector<std::uint32_t>*, 4> classVolumeLists(
     const SpacePointMaker::Config& cfg) {
   return {&cfg.pixelBarrelVolumes, &cfg.pixelEndcapVolumes,
           &cfg.stripBarrelVolumes, &cfg.stripEndcapVolumes};
 }
 
+// Clase de un volumen según las listas; false si no está en ninguna.
 bool classByVolume(const SpacePointMaker::Config& cfg, std::uint32_t volume,
                    Acts::CosmicSpacePointClass& out) {
   const auto lists = classVolumeLists(cfg);
@@ -145,6 +148,7 @@ Acts::Result<void> createStripSpacePoint(
   const Acts::StripSpacePointBuilder::StripEnds stripEnds2 =
       getStripEnds(gctx, surface2, measurement2);
 
+  // cosmicOptions != nullptr: formación sin vértice (Config::cosmicStrip...)
   Acts::Result<Acts::Vector3> spacePoint =
       cosmicOptions != nullptr
           ? Acts::StripSpacePointBuilder::computeCosmicSpacePoint(
@@ -155,6 +159,7 @@ Acts::Result<void> createStripSpacePoint(
     return spacePoint.error();
   }
   if (clampToStrip) {
+    // cosmicStripKeepAllPairs: punto de partida dentro de la strip 1
     const Acts::Vector3 btmToTop = stripEnds1.top - stripEnds1.bottom;
     const double lambda =
         std::clamp((*spacePoint - stripEnds1.bottom).dot(btmToTop) /
@@ -285,6 +290,7 @@ SpacePointMaker::SpacePointMaker(Config cfg,
         *m_cfg.trackingGeometry, m_cfg.stripGeometrySelection, this->logger());
   }
 
+  // --- modo cósmico (opcional) ---
   if (!(m_cfg.cosmicStripTolerance >= 0.0)) {
     throw std::invalid_argument("cosmicStripTolerance must be non-negative");
   }
@@ -292,7 +298,9 @@ SpacePointMaker::SpacePointMaker(Config cfg,
     throw std::invalid_argument(
         "cosmicStripKeepAllPairs requires cosmicStripSpacePoints");
   }
+  // handle opcional: clases de space point para CosmicTripletSeedingAlgorithm
   if (!m_cfg.outputSpacePointClasses.empty()) {
+    // un volumen no puede estar en dos listas distintas
     std::map<std::uint32_t, std::size_t> listOf;
     const auto lists = classVolumeLists(m_cfg);
     for (std::size_t i = 0; i < lists.size(); ++i) {
@@ -310,9 +318,11 @@ SpacePointMaker::SpacePointMaker(Config cfg,
     }
     m_outputSpacePointClasses.initialize(m_cfg.outputSpacePointClasses);
   }
+  // handle opcional: superficie de cada space point (rejectSameSurface)
   if (!m_cfg.outputSpacePointSurfaces.empty()) {
     m_outputSpacePointSurfaces.initialize(m_cfg.outputSpacePointSurfaces);
   }
+  // handles opcionales: partículas de cada space point (sólo juntos)
   if (m_cfg.inputMeasurementParticlesMap.empty() !=
       m_cfg.outputSpacePointParticlesMap.empty()) {
     throw std::invalid_argument(
@@ -439,6 +449,9 @@ ProcessCode SpacePointMaker::execute(const AlgorithmContext& ctx) const {
         }
 
         if (m_cfg.cosmicStripSpacePoints) {
+          // Sin vértice no hay dirección de la traza con la que elegir el
+          // mejor compañero: van todos los pairs y computeCosmicSpacePoint
+          // descarta los que no se cruzan dentro de las dos strips.
           for (const IndexSourceLink& sourceLink2 : *mod2SourceLinks) {
             if (!measurements.getMeasurement(sourceLink2.index())
                      .contains(Acts::eBoundLoc0)) {
@@ -536,6 +549,7 @@ ProcessCode SpacePointMaker::execute(const AlgorithmContext& ctx) const {
           m_cfg.cosmicStripSpacePoints ? &cosmicOptions : nullptr,
           m_cfg.cosmicStripKeepAllPairs, spacePoints);
       if (!spResult.ok()) {
+        // en modo cósmico se prueban todos los pairs, así que es lo normal
         if (m_cfg.cosmicStripSpacePoints) {
           ACTS_VERBOSE("Skipping strip space point: " << spResult.error());
         } else {
@@ -552,12 +566,17 @@ ProcessCode SpacePointMaker::execute(const AlgorithmContext& ctx) const {
                         << " strip space points");
   ACTS_DEBUG("Created " << spacePoints.size() << " space points");
 
+  // Salidas opcionales del modo cósmico, por índice de space point. Se
+  // calculan antes de escribir nada: si una medida no se puede clasificar se
+  // aborta sin dejar salidas a medias.
   std::vector<Acts::CosmicSpacePointClass> classes;
   if (m_outputSpacePointClasses.isInitialized()) {
     classes.reserve(spacePoints.size());
+    // se reúnen todos los volúmenes sin mapear y se informan juntos
     std::set<std::uint32_t> unmapped;
     std::array<std::size_t, 4> counts{};
     for (const auto& sp : spacePoints) {
+      // los dos lados de un space point de strips están en el mismo volumen
       const auto volume = static_cast<std::uint32_t>(
           sp.sourceLinks()[0].get<IndexSourceLink>().geometryId().volume());
       Acts::CosmicSpacePointClass cls =
@@ -582,6 +601,7 @@ ProcessCode SpacePointMaker::execute(const AlgorithmContext& ctx) const {
                << counts[2] << " strip endcap=" << counts[3]);
   }
 
+  // superficie de la primera medida, como sur() de Athena (primer cluster)
   std::vector<Acts::GeometryIdentifier> surfaces;
   if (m_outputSpacePointSurfaces.isInitialized()) {
     surfaces.reserve(spacePoints.size());

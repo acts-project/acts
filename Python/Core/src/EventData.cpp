@@ -133,6 +133,10 @@ auto guardedWrite(SpacePointColumns requiredColumn,
   };
 }
 
+/// Acceso en bloque para leer muchos seeds desde Python sin crear un proxy
+/// por seed: (indices (N, size) int64, quality (N,) float32, vertexZ (N,)
+/// float32), con -1 en las filas de seeds que no tienen exactamente `size`
+/// space points. Copia los datos.
 py::tuple seedIndexArrays(const SeedContainer& self, py::ssize_t size) {
   const auto n = static_cast<py::ssize_t>(self.size());
   py::array_t<std::int64_t> indices({n, size});
@@ -488,11 +492,11 @@ void addEventData(py::module_& m) {
                 self.assignSpacePointContainer(sp);
               },
               py::keep_alive<1, 2>())
-          .def("tripletArrays",
-               [](const SeedContainer& self) {
-                 return seedIndexArrays(self, 3);
-               })
-          .def("indexArrays", &seedIndexArrays, py::arg("size"));
+          // Acceso en bloque (ver seedIndexArrays) a los seeds de 3 space
+          // points.
+          .def("tripletArrays", [](const SeedContainer& self) {
+            return seedIndexArrays(self, 3);
+          });
 
   WhiteBoardRegistry::registerClass(seedContainer);
 

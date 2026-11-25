@@ -45,6 +45,9 @@ void addTrackFinding(py::module& mex) {
                                 inputMeasurementSubset, outputMeasurementSubset,
                                 includeOutliers);
 
+  // cosmicStripSpacePoints ... outputSpacePointParticlesMap: modo cósmico
+  // (formación de strips sin vértice, clases, superficies y partículas por
+  // space point) para CosmicTripletSeedingAlgorithm con geometría ACTS.
   ACTS_PYTHON_DECLARE_ALGORITHM(
       SpacePointMaker, mex, "SpacePointMaker", inputMeasurements,
       outputSpacePoints, trackingGeometry, geometrySelection,
@@ -87,10 +90,22 @@ void addTrackFinding(py::module& mex) {
         .def_readwrite("maxResidual", &Config::maxResidual)
         .def_readwrite("zMin", &Config::zMin)
         .def_readwrite("zMax", &Config::zMax)
+        .def_readwrite("zBinEdges", &Config::zBinEdges)
+        .def_readwrite("zBinNeighbors", &Config::zBinNeighbors)
+        .def_readwrite("useCartesianGridBinning",
+                       &Config::useCartesianGridBinning)
+        .def_readwrite("gridBins", &Config::gridBins)
+        .def_readwrite("gridXMin", &Config::gridXMin)
+        .def_readwrite("gridXMax", &Config::gridXMax)
+        .def_readwrite("gridYMin", &Config::gridYMin)
+        .def_readwrite("gridYMax", &Config::gridYMax)
+        .def_readwrite("gridNeighbors", &Config::gridNeighbors)
         .def_readwrite("maxAbsEta", &Config::maxAbsEta)
         .def_readwrite("minPt", &Config::minPt)
         .def_readwrite("usePtCut", &Config::usePtCut)
         .def_readwrite("magneticFieldBz", &Config::magneticFieldBz)
+        .def_readwrite("minPtFactor", &Config::minPtFactor)
+        .def_readwrite("ptPerFieldRadius", &Config::ptPerFieldRadius)
         .def_readwrite("multipleScatteringCof", &Config::multipleScatteringCof)
         .def_readwrite("useLongitudinalCompatibility",
                        &Config::useLongitudinalCompatibility)
@@ -108,6 +123,12 @@ void addTrackFinding(py::module& mex) {
         .def_readwrite("useStripCalibration", &Config::useStripCalibration)
         .def_readwrite("stripCalibrationTolerance",
                        &Config::stripCalibrationTolerance)
+        .def_readwrite("stripCalibrationMaxIterations",
+                       &Config::stripCalibrationMaxIterations)
+        .def_readwrite("stripCalibrationConvergence",
+                       &Config::stripCalibrationConvergence)
+        .def_readwrite("stripCalibrationMinCosToNormal",
+                       &Config::stripCalibrationMinCosToNormal)
         .def_readwrite("useSeedQuality", &Config::useSeedQuality)
         .def_readwrite("seedQuality", &Config::seedQuality);
   }
@@ -115,9 +136,12 @@ void addTrackFinding(py::module& mex) {
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::CosmicTripletSeedingAlgorithm, mex,
       "CosmicTripletSeedingAlgorithm", inputSpacePoints, outputSeeds, cuts,
-      inputSpacePointClasses, inputSpacePointSurfaces, outputSpacePoints,
-      outputTwoSpacePointSeeds, twoSpacePointSeedsFromUnused);
+      inputSpacePointClasses, inputSpacePointSurfaces, outputSpacePoints);
 
+  // outputSpacePointClasses + la clasificación (listas de volúmenes o los tres
+  // umbrales geométricos) son la entrada de CosmicSeedCuts::useCovarianceScale
+  // y ::requireSameSubdetector, que necesitan una clase por space point;
+  // outputSpacePointSurfaces, la de CosmicSeedCuts::rejectSameSurface.
   ACTS_PYTHON_DECLARE_ALGORITHM(
       SimHitSpacePointMaker, mex, "SimHitSpacePointMaker", inputSimHits,
       outputSpacePoints, outputParticleIds, sigmaR, sigmaZ,

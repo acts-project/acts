@@ -3,21 +3,24 @@ Examples:
   cosmic_particle_gun.py --events 1000 --generate-only
   cosmic_particle_gun.py --events 1000 --simulate --output cosmics
   cosmic_particle_gun.py --simulate --bz 2 --space-points measurements --ckf
+  cosmic_particle_gun.py --events 10000 --simulate --bz 2 --seeding-output-only
+
 """
 
 import argparse
 import gc
+import sys
+import tempfile
 from pathlib import Path
 
 import numpy as np
 
-MUON_MASS = 0.1056584  # GeV
-CSV_HEADER = (
-    "particle_id_pv,particle_id_sv,particle_id_part,particle_id_gen,"
-    "particle_id_subpart,particle_type,process,vx,vy,vz,vt,px,py,pz,m,q"
-)
+# no __pycache__ next to the scripts (seeding_validation.py is imported from here)
+sys.dont_write_bytecode = True
 
-# Space point class, surfaces of ODD:
+MUON_MASS = 0.1056584  # GeV
+
+# space point class, surfaces of ODD:
 # 17: pixel barrel, 16/18: pixel endcap, 24/29: strip barrel, 23/25/28/30: strip endcap
 ODD_PIXEL_BARREL_VOLUMES = [17]
 ODD_PIXEL_ENDCAP_VOLUMES = [16, 18]
@@ -37,7 +40,7 @@ def odd_possible_space_points(volumes, layers, sensitives):
     return int((~isLong).sum()) + sum(len(x) == 2 for x in sides.values())
 
 
-# cosmic muons functions: sample_energy, sample_cos_zenith, generate_batch, generate_accepted, write_csv_events, inspect_input_particles
+# cosmic muon functions: sample_energy, sample_cos_zenith, generate_batch, generate_accepted, make_muon_reader, inspect_input_particles
 def sample_energy(rng, n, emin, emax, gamma):
     if abs(gamma - 1.0) < 1e-9:
         return emin * (emax / emin) ** rng.random(n)
@@ -73,7 +76,7 @@ def generate_batch(rng, n, a):
     }
 
 
-# geometric filtering: entry_cylinder, entry_sphere, generate_accepted, write_csv_events, inspect_input_particles
+# geometric filtering: entry_cylinder, entry_sphere, generate_accepted
 def entry_cylinder(pos, d, radius, halfz):
     a = d[:, 0] ** 2 + d[:, 1] ** 2
     b = 2.0 * (pos[:, 0] * d[:, 0] + pos[:, 1] * d[:, 1])
@@ -136,27 +139,61 @@ def generate_accepted(rng, a, n_needed, batch=200_000, min_acceptance=1e-5):
     return muons, got / tried
 
 
-def write_csv_events(outdir, muons, per_event):
-    """One CSV per event (event%09d-particles.csv)"""
-    outdir = Path(outdir)
-    outdir.mkdir(parents=True, exist_ok=True)
-    n = len(muons["p"])
-    for ev in range(n // per_event):
-        rows = []
-        for j in range(per_event):
-            i = ev * per_event + j
-            px, py, pz = muons["p"][i] * muons["dir"][i]
-            vx, vy, vz = muons["pos"][i]
-            # each muon = its own primary vertex (pv >= 1, part >= 1)
-            rows.append(
-                f"{j + 1},0,1,0,0,{int(muons['pdg'][i])},0,"
-                f"{vx:.4f},{vy:.4f},{vz:.4f},0,"
-                f"{px:.6f},{py:.6f},{pz:.6f},{MUON_MASS},{muons['q'][i]:.0f}"
+def make_muon_reader(muons, per_event, outputParticles="particles_generated"):
+    """Reader that gives the generated muons to the Sequencer from memory,
+    per_event muons per event, instead of a CSV file per event.
+
+    Each muon is its own primary vertex (vertexPrimary = 1, 2, ...,
+    particle = 1), and its final state is its initial state, as
+    CsvParticleReader does. The positions and momenta keep double precision
+    (the CSV files had 4 decimals in mm and 6 in GeV).
+    """
+    import acts
+    import acts.examples
+
+    u = acts.UnitConstants
+
+    class CosmicMuonReader(acts.examples.IReader):
+        def __init__(self):
+            acts.examples.IReader.__init__(self, "CosmicMuonReader", acts.logging.INFO)
+            self.nEvents = len(muons["p"]) // per_event
+            self.outputParticles = acts.examples.WriteDataHandle(
+                self, acts.examples.SimParticleContainer, "OutputParticles"
             )
-        (outdir / f"event{ev:09d}-particles.csv").write_text(
-            CSV_HEADER + "\n" + "\n".join(rows) + "\n"
-        )
-    return n // per_event
+            self.outputParticles.initialize(outputParticles)
+
+        def availableEvents(self):
+            return (0, self.nEvents)
+
+        def read(self, context):
+            particles = acts.examples.SimParticleContainer()
+            first = int(context.eventNumber) * per_event
+            for j in range(per_event):
+                i = first + j
+                barcode = acts.examples.SimBarcode()
+                barcode.vertexPrimary = j + 1
+                barcode.particle = 1
+                muon = acts.examples.SimParticle(
+                    barcode,
+                    (
+                        acts.PdgParticle.eAntiMuon
+                        if muons["pdg"][i] < 0
+                        else acts.PdgParticle.eMuon
+                    ),
+                    float(muons["q"][i]) * u.e,
+                    MUON_MASS * u.GeV,
+                )
+                x, y, z = muons["pos"][i]
+                muon.fourPosition = acts.Vector4(x * u.mm, y * u.mm, z * u.mm, 0.0)
+                muon.direction = acts.Vector3(*muons["dir"][i])
+                muon.absoluteMomentum = float(muons["p"][i]) * u.GeV
+                particles.insert(
+                    acts.examples.SimParticle(muon.initialState, muon.initialState)
+                )
+            self.outputParticles(context, particles)
+            return acts.examples.ProcessCode.SUCCESS
+
+    return CosmicMuonReader()
 
 
 def inspect_input_particles(path, max_events):
@@ -171,13 +208,11 @@ def inspect_input_particles(path, max_events):
 
 # cosmic seeding
 class CosmicSeedingOutput:
-    def __init__(self, path, rootFile, writers, effAlg, seedSize=3, tripletPath=None):
+    def __init__(self, path, rootFile, writers, effAlg):
         self.path = path
         self.rootFile = rootFile
         self.writers = writers
         self.effAlg = effAlg
-        self.seedSize = seedSize
-        self.tripletPath = tripletPath
 
     def finish(self):
         nOut = int(self.effAlg.nOutOfAcceptance)
@@ -189,7 +224,7 @@ class CosmicSeedingOutput:
 
         import uproot
 
-        tag = "[seeding]" if self.seedSize == 3 else f"[seeding {self.seedSize}SP]"
+        tag = "[seeding]"
         f = uproot.open(self.path)
         eff = f["Efficiency"].arrays(
             ["event", "barcode", "matched", "nPossibleSP"], library="np"
@@ -206,36 +241,13 @@ class CosmicSeedingOutput:
                 f"{tag} efficiency (pure seed per particle) = "
                 f"{int(matched.sum())}/{len(matched)} = {100 * matched.mean():.1f}%"
             )
-            seedable = eff["nPossibleSP"] >= self.seedSize
+            seedable = eff["nPossibleSP"] >= 3
             if seedable.any() and not seedable.all():
                 m = matched[seedable]
                 print(
                     f"{tag} efficiency over particles with >= "
-                    f"{self.seedSize} possible space points = "
+                    f"3 possible space points = "
                     f"{int(m.sum())}/{len(m)} = {100 * m.mean():.1f}%"
-                )
-            if self.tripletPath is not None:
-                # same particles in both ROOT files (same denominator), but with multiple threads,
-                # they are not in the same order: they are cross-referenced by (event, barcode)
-                tri = uproot.open(self.tripletPath)["Efficiency"].arrays(
-                    ["event", "barcode", "matched"], library="np"
-                )
-                byParticle = dict(
-                    zip(
-                        zip(tri["event"].tolist(), tri["barcode"].tolist()),
-                        tri["matched"].tolist(),
-                    )
-                )
-                either = matched | np.array(
-                    [
-                        bool(byParticle.get(key, 0))
-                        for key in zip(eff["event"].tolist(), eff["barcode"].tolist())
-                    ]
-                )
-                print(
-                    f"{tag} efficiency with triplets or doublets = "
-                    f"{int(either.sum())}/{len(either)} = "
-                    f"{100 * either.mean():.1f}%"
                 )
         nSeeds = int(events["nSeeds"].sum())
         if nSeeds > 0:
@@ -359,8 +371,6 @@ def add_cosmic_seeding(s, args, outputDir, trackingGeometry):
             inputSpacePointClasses="spacepointclasses",
             inputSpacePointSurfaces="spacepointsurfaces",
             outputSpacePoints="spacepoints_calibrated" if calibrate else "",
-            outputTwoSpacePointSeeds="seeds_2sp" if args.two_sp_seeds else "",
-            twoSpacePointSeedsFromUnused=args.two_sp_seeds == "unused",
         )
     )
 
@@ -391,7 +401,7 @@ def add_cosmic_seeding(s, args, outputDir, trackingGeometry):
     else:
         perVertex = 1 if args.mode == "cosmic" else args.gun_particles
 
-    def add_efficiency(fileName, inputSeeds, seedSize, name, tripletPath=None):
+    def add_efficiency(fileName, inputSeeds, name):
         path = outputDir / fileName
         rootFile = uproot.recreate(path)
         writers = cse.make_efficiency_writers(
@@ -404,30 +414,14 @@ def add_cosmic_seeding(s, args, outputDir, trackingGeometry):
             keepOutOfAcceptance=args.keep_out_of_acceptance,
             barcodeOf=lambda pid: (pid.vertexPrimary - 1) * perVertex + pid.particle,
             inputSeeds=inputSeeds,
-            seedSize=seedSize,
             name=name,
             level=acts.logging.INFO,
             **effInputs,
         )
         s.addAlgorithm(effAlg)
-        return CosmicSeedingOutput(
-            path, rootFile, writers, effAlg, seedSize, tripletPath
-        )
+        return CosmicSeedingOutput(path, rootFile, writers, effAlg)
 
-    outputs = [
-        add_efficiency("seeding_efficiency.root", "seeds", 3, "EfficiencyRootWriter")
-    ]
-    if args.two_sp_seeds:
-        outputs.append(
-            add_efficiency(
-                "seeding_efficiency_2sp.root",
-                "seeds_2sp",
-                2,
-                "EfficiencyRootWriter2SP",
-                tripletPath=outputs[0].path,
-            )
-        )
-    return outputs
+    return [add_efficiency("seeding_efficiency.root", "seeds", "EfficiencyRootWriter")]
 
 
 def add_cosmic_ckf(s, args, outputDir, trackingGeometry, field):
@@ -539,7 +533,7 @@ def add_cosmic_ckf(s, args, outputDir, trackingGeometry, field):
 
 
 # ACTS chain: particle generation, simulation, seeding, CKF
-def run_acts(args, csv_dir, n_events):
+def run_acts(args, muons, n_events):
     import acts
     import acts.examples
     import acts.examples.root
@@ -560,6 +554,14 @@ def run_acts(args, csv_dir, n_events):
 
     s = Sequencer(events=n_events, numThreads=args.jobs, outputDir=str(outputDir))
     s.config.logLevel = acts.logging.INFO
+    # with --seeding-output-only the ROOT files of the generation, simulation and digitization
+    # (particles, particles_simulation, hits, measurements) go to a temporary directory, deleted at the end (cleanupTemporary)
+    # the writers are not removed: the random numbers of an algorithm depend on its position in the sequence
+    # (RandomNumbers::generateSeed), so without them the same --seed would simulate other events
+    simOutputDir = outputDir
+    if args.seeding_output_only:
+        s.cosmicTemporaryDir = tempfile.TemporaryDirectory(prefix="cosmic_gun_")
+        simOutputDir = Path(s.cosmicTemporaryDir.name)
 
     if args.input_particles is not None:
         # generated by RootParticleWriter
@@ -573,14 +575,9 @@ def run_acts(args, csv_dir, n_events):
         s.addWhiteboardAlias("particles", "particles_generated")
         s.addWhiteboardAlias("particles_generated_selected", "particles_generated")
     elif args.mode == "cosmic":
-        s.addReader(
-            acts.examples.CsvParticleReader(
-                level=acts.logging.INFO,
-                inputDir=str(csv_dir),
-                inputStem="particles",
-                outputParticles="particles_generated",
-            )
-        )
+        reader = make_muon_reader(muons, args.muons_per_event)
+        s.addReader(reader)
+        s.cosmicMuonReader = reader
         s.addWhiteboardAlias("particles", "particles_generated")
         s.addWhiteboardAlias("particles_generated_selected", "particles_generated")
         if args.print_particles:
@@ -593,13 +590,13 @@ def run_acts(args, csv_dir, n_events):
             acts.examples.root.RootParticleWriter(
                 level=acts.logging.INFO,
                 inputParticles="particles_generated",
-                filePath=str(outputDir / "particles.root"),
+                filePath=str(simOutputDir / "particles.root"),
             )
         )
     else:  # particle_gun
         addParticleGun(
             s,
-            outputDirRoot=outputDir,
+            outputDirRoot=simOutputDir,
             momentumConfig=MomentumConfig(
                 args.gun_pt_range[0] * u.GeV,
                 args.gun_pt_range[1] * u.GeV,
@@ -618,7 +615,7 @@ def run_acts(args, csv_dir, n_events):
         )
 
     detector = None
-    seeding = []  # CosmicSeedingOutput of triplets (or doublets)
+    seeding = []  # CosmicSeedingOutput of the triplets
     if args.simulate:
         from acts.examples.odd import (
             getOpenDataDetector,
@@ -636,13 +633,13 @@ def run_acts(args, csv_dir, n_events):
             actsDir / "Examples/Configs/odd-digi-smearing-config.json"
         )
 
-        addFatras(s, trackingGeometry, field, rnd=rnd, outputDirRoot=outputDir)
+        addFatras(s, trackingGeometry, field, rnd=rnd, outputDirRoot=simOutputDir)
         addDigitization(
             s,
             trackingGeometry,
             field,
             digiConfigFile=digi_config,
-            outputDirRoot=outputDir,
+            outputDirRoot=simOutputDir,
             rnd=rnd,
         )
         if not args.no_seeding:
@@ -765,7 +762,18 @@ def build_parser():
         "--bz", type=float, default=0.0, help="constant Bz [T]; 0 = field off"
     )
     s.add_argument(
-        "--generate-only", action="store_true", help="only writes the particle CSVs"
+        "--generate-only",
+        action="store_true",
+        help="only generates the muons and writes particles.root (one file, "
+        "usable with --input-particles); no simulation",
+    )
+    s.add_argument(
+        "--seeding-output-only",
+        action="store_true",
+        help="particles.root, particles_simulation.root, hits.root and "
+        "measurements.root go to a temporary directory that is deleted at "
+        "the end: with --simulate only seeding_efficiency.root (and the "
+        "timing of the Sequencer) stays. Same events as without it",
     )
 
     q = p.add_argument_group("--mode particle_gun")
@@ -875,10 +883,6 @@ def build_parser():
         default=5.0,
         help="mm; minimum |dy| per segment (Athena's mindRadius)",
     )
-    # Athena's maxdRadius (1000 mm) is meant for the ID, where it also
-    # discards the SPs with r > 600 mm (radMax). In the ODD the long strips
-    # reach r = 1023 mm: a muon that only crosses them leaves two SPs above and
-    # two below, and with 1000 mm no triplet passes.
     k.add_argument(
         "--max-delta-y",
         type=float,
@@ -900,6 +904,55 @@ def build_parser():
         help="mm; maximum |z| of the three space points (zMin/zMax). "
         "Default: ODD envelope, whose long strip "
         "disks reach |z|=3025.5 mm",
+    )
+    # binning de los SP en el seeding
+    # by default, the grid (CartesianSpacePointGrid) is defined only along the z-axis—using `--grid-bins 1 1 12`
+    # and `--grid-neighbors 0 0 3`—which results in 12 bins, each with a size of (2 x --z-max) / 12 = 516.7 mm,
+    # and 3 neighboring bins on each side
+    k.add_argument(
+        "--binning",
+        choices=["athena", "grid"],
+        default="grid",
+        help="grid (default) = equidistant bins in x, y and z [mm] of the "
+        "CartesianSpacePointGrid (--grid-bins, --grid-neighbors, "
+        "--grid-x-range, --grid-y-range; z range = --z-max); "
+        "athena = Athena's z bins (CosmicSeedCuts::zBinEdges / "
+        "zBinNeighbors)",
+    )
+    # number of grid bins per axis (x, y, z)
+    k.add_argument(
+        "--grid-bins",
+        type=int,
+        nargs=3,
+        default=[1, 1, 12],
+        metavar=("NX", "NY", "NZ"),
+        help="with --binning grid: number of bins in x, y and z",
+    )
+    # neighboring bins on each side per axis; 3 in z by default
+    k.add_argument(
+        "--grid-neighbors",
+        type=int,
+        nargs=3,
+        default=[0, 0, 3],
+        metavar=("NX", "NY", "NZ"),
+        help="with --binning grid: neighbouring bins on each side per axis",
+    )
+    # x and y range of the grid [mm]
+    k.add_argument(
+        "--grid-x-range",
+        type=float,
+        nargs=2,
+        default=[-1100.0, 1100.0],
+        metavar=("MIN", "MAX"),
+        help="mm; with --binning grid (ODD: r < 1080 mm)",
+    )
+    k.add_argument(
+        "--grid-y-range",
+        type=float,
+        nargs=2,
+        default=[-1100.0, 1100.0],
+        metavar=("MIN", "MAX"),
+        help="mm; with --binning grid",
     )
     k.add_argument(
         "--field-cuts",
@@ -935,17 +988,6 @@ def build_parser():
         help="pixel: cos(dphi) > --pixel-min-cos-dphi instead of the kink",
     )
     k.add_argument("--pixel-min-cos-dphi", type=float, default=0.96)
-    k.add_argument(
-        "--two-sp-seeds",
-        choices=["all", "unused"],
-        default=None,
-        help="in addition to the triplets, seeds of two space points "
-        "(Athena's find2Sp strategy, see "
-        "CosmicTripletSeedFinder::createTwoSpacePointSeeds), "
-        "with their efficiency in seeding_efficiency_2sp.root: "
-        "all = with all the space points; unused = only with "
-        "those not used by any triplet (second pass)",
-    )
     k.add_argument("--min-hits-reconstructible", type=int, default=3)
     k.add_argument("--keep-out-of-acceptance", action="store_true")
     k.add_argument(
@@ -997,13 +1039,18 @@ def main():
                 "--ckf requires |--bz| >= 0.1 T: the ACTS parameter "
                 "estimation does not work without field"
             )
-    if args.two_sp_seeds and (not args.simulate or args.no_seeding):
-        raise SystemExit("--two-sp-seeds requires --simulate (without --no-seeding)")
+    if args.generate_only:
+        if args.seeding_output_only:
+            raise SystemExit(
+                "--generate-only writes particles.root, "
+                "--seeding-output-only does not"
+            )
+        args.simulate = False
     sequencer = None
     detector = None
     seeding = []
     try:
-        csv_dir, n_events = None, args.events
+        muons, n_events = None, args.events
         if args.input_particles is not None:
             n_events, args.input_particles_per_vertex = inspect_input_particles(
                 args.input_particles, args.events
@@ -1018,25 +1065,24 @@ def main():
             rng = np.random.default_rng(args.seed)
             n_muons = args.events * args.muons_per_event
             muons, eff = generate_accepted(rng, args, n_muons)
-            csv_dir = Path(args.output) / "cosmic_input"
-            n_events = write_csv_events(csv_dir, muons, args.muons_per_event)
             print(
                 f"[cosmic] acceptance efficiency = {100 * eff:.2f}% "
-                f"-> {n_muons} accepted muons; CSV in {csv_dir}"
+                f"-> {n_muons} accepted muons"
             )
-            if args.generate_only:
-                return
-        sequencer, detector, seeding = run_acts(args, csv_dir, n_events)
+        sequencer, detector, seeding = run_acts(args, muons, n_events)
         sequencer.run()
         for output in seeding:
             output.finish()
     finally:
         for output in seeding:
             output.close()
+        temporary = getattr(sequencer, "cosmicTemporaryDir", None)
         del sequencer
         gc.collect()
         del detector
         gc.collect()
+        if temporary is not None:
+            temporary.cleanup()
 
 
 if __name__ == "__main__":
