@@ -11,6 +11,8 @@
 #include "Acts/Utilities/Helpers.hpp"
 #include "ActsPlugins/Gnn/detail/NvtxUtils.hpp"
 
+#include <stdexcept>
+
 #ifdef ACTS_GNN_WITH_CUDA
 #include "ActsPlugins/Gnn/detail/CudaUtils.hpp"
 
@@ -40,8 +42,30 @@ GnnPipeline::GnnPipeline(
       m_edgeClassifiers(std::move(edgeClassifiers)),
       m_trackBuilder(std::move(trackBuilder)),
       m_shrinkNodes(shrinkNodes) {
-  if (!m_graphConstructor) {
+  validateStages();
+}
+
+GnnPipeline::GnnPipeline(
+    std::shared_ptr<SeededGraphConstructionBase> seededGraphConstructor,
+    std::vector<std::shared_ptr<EdgeClassificationBase>> edgeClassifiers,
+    std::shared_ptr<TrackBuildingBase> trackBuilder,
+    std::unique_ptr<const Logger> logger, bool shrinkNodes)
+    : m_logger(std::move(logger)),
+      m_seededGraphConstructor(std::move(seededGraphConstructor)),
+      m_edgeClassifiers(std::move(edgeClassifiers)),
+      m_trackBuilder(std::move(trackBuilder)),
+      m_shrinkNodes(shrinkNodes) {
+  validateStages();
+}
+
+void GnnPipeline::validateStages() const {
+  if (!m_graphConstructor && !m_seededGraphConstructor) {
     throw std::invalid_argument("Missing graph construction module");
+  }
+  if (m_graphConstructor && m_seededGraphConstructor) {
+    throw std::invalid_argument(
+        "Graph construction module must be either seeded or unseeded, not "
+        "both");
   }
   if (!m_trackBuilder) {
     throw std::invalid_argument("Missing track building module");
@@ -56,6 +80,40 @@ std::vector<std::vector<int>> GnnPipeline::run(
     std::vector<float> &features, const std::vector<std::uint64_t> &moduleIds,
     std::vector<int> &spacePointIds, Device device, const GnnHook &hook,
     GnnTiming *timing) const {
+  if (!m_graphConstructor) {
+    throw std::logic_error(
+        "GnnPipeline has a seeded graph construction module, use run() with "
+        "seeds");
+  }
+  return runPipeline(
+      [&](const ExecutionContext &ctx) {
+        return (*m_graphConstructor)(features, spacePointIds.size(), moduleIds,
+                                     ctx);
+      },
+      spacePointIds, device, hook, timing);
+}
+
+std::vector<std::vector<int>> GnnPipeline::run(
+    std::vector<float> &features, const std::vector<Seed> &seeds,
+    const std::vector<std::uint64_t> &moduleIds,
+    std::vector<int> &spacePointIds, Device device, const GnnHook &hook,
+    GnnTiming *timing) const {
+  if (!m_seededGraphConstructor) {
+    throw std::logic_error(
+        "GnnPipeline has an unseeded graph construction module, use run() "
+        "without seeds");
+  }
+  return runPipeline(
+      [&](const ExecutionContext &ctx) {
+        return (*m_seededGraphConstructor)(features, spacePointIds.size(),
+                                           seeds, moduleIds, ctx);
+      },
+      spacePointIds, device, hook, timing);
+}
+
+std::vector<std::vector<int>> GnnPipeline::runPipeline(
+    const GraphBuilder &buildGraph, std::vector<int> &spacePointIds,
+    Device device, const GnnHook &hook, GnnTiming *timing) const {
   ExecutionContext ctx;
   ctx.device = device;
 #ifdef ACTS_GNN_WITH_CUDA
@@ -69,8 +127,7 @@ std::vector<std::vector<int>> GnnPipeline::run(
   try {
     auto t0 = std::chrono::high_resolution_clock::now();
     ACTS_NVTX_START(graph_construction);
-    auto tensors =
-        (*m_graphConstructor)(features, spacePointIds.size(), moduleIds, ctx);
+    auto tensors = buildGraph(ctx);
     ACTS_NVTX_STOP(graph_construction);
     auto t1 = std::chrono::high_resolution_clock::now();
 
