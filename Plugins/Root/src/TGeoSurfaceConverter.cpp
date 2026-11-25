@@ -319,10 +319,11 @@ ActsPlugins::TGeoSurfaceConverter::planeComponents(
 
   // Check if it's a trapezoid2
   auto trapezoid1 = dynamic_cast<const TGeoTrd1*>(&tgShape);
-  if ((trapezoid1 != nullptr) && !boost::istarts_with(a, "XZ")) {
+  if ((trapezoid1 != nullptr) && !boost::istarts_with(a, "XZ") &&
+      !boost::istarts_with(a, "XY") && !boost::istarts_with(a, "YX")) {
     throw std::invalid_argument(
-        "TGeoTrd1 -> PlaneSurface: can only be converted with '(x/X)(z/Z)(*)' "
-        "axes");
+        "TGeoTrd1 -> PlaneSurface: can only be converted with '(x/X)(z/Z)(*)', "
+        "'(x/X)(y/Y)(*)' or '(y/Y)(x/X)(*)' axes");
   }
 
   // Check if it's a trapezoid2
@@ -373,7 +374,13 @@ ActsPlugins::TGeoSurfaceConverter::planeComponents(
   Vector3 cx = xs * ax;
   Vector3 cy = ys * ay;
   if (boost::istarts_with(a, "XY")) {
-    if (trapezoid2 != nullptr) {
+    if (trapezoid1 != nullptr) {
+      // Tapered along the normal: the mid-plane section is a rectangle
+      bounds = std::make_shared<const RectangleBounds>(
+          scalor * 0.5 * (trapezoid1->GetDx1() + trapezoid1->GetDx2()),
+          scalor * trapezoid1->GetDy());
+      thickness = 2 * scalor * trapezoid1->GetDz();
+    } else if (trapezoid2 != nullptr) {
       double dx1 = (ys < 0) ? trapezoid1->GetDx2() : trapezoid1->GetDx1();
       double dx2 = (ys < 0) ? trapezoid1->GetDx1() : trapezoid1->GetDx2();
       bounds = std::make_shared<const TrapezoidBounds>(
@@ -441,7 +448,13 @@ ActsPlugins::TGeoSurfaceConverter::planeComponents(
   } else if (boost::istarts_with(a, "YX")) {
     cx = xs * ay;
     cy = ys * ax;
-    if (trapezoid2 != nullptr) {
+    if (trapezoid1 != nullptr) {
+      // Tapered along the normal: the mid-plane section is a rectangle
+      bounds = std::make_shared<const RectangleBounds>(
+          scalor * trapezoid1->GetDy(),
+          scalor * 0.5 * (trapezoid1->GetDx1() + trapezoid1->GetDx2()));
+      thickness = 2 * scalor * trapezoid1->GetDz();
+    } else if (trapezoid2 != nullptr) {
       double dx1 = (ys < 0) ? trapezoid2->GetDy2() : trapezoid2->GetDy1();
       double dx2 = (ys < 0) ? trapezoid2->GetDy1() : trapezoid2->GetDy2();
       bounds = std::make_shared<const TrapezoidBounds>(
