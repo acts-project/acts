@@ -36,7 +36,7 @@ macro(detray_add_cpu_test algebra)
        "propagator/propagation_direct_navigator.cpp"
        "utils/type_registry.cpp"
        LINK_LIBRARIES GTest::gtest GTest::gtest_main detray::core_${algebra}
-                      vecmem::core detray::test_framework detray::test_common detray::validation_utils detray::test_utils
+                      vecmem::core detray::test_framework detray::test_tools detray::validation detray::test_utils
     )
 
     # Run integration tests only after unit tests passed
@@ -75,7 +75,7 @@ endif()
 detray_add_integration_test(telescope_detector
                             "detectors/telescope_detector_navigation.cpp"
                             LINK_LIBRARIES GTest::gtest GTest::gtest_main
-                            detray::test_cpu detray::io detray::test_framework detray::test_common
+                            detray::test_cpu detray::io detray::test_framework detray::test_tools
                             detray::core_array
 )
 
@@ -89,7 +89,7 @@ set_tests_properties(
 detray_add_integration_test(toy_detector
                             "detectors/toy_detector_navigation.cpp"
                             LINK_LIBRARIES GTest::gtest GTest::gtest_main
-                            detray::test_cpu detray::io detray::test_framework  detray::test_common
+                            detray::test_cpu detray::io detray::test_framework  detray::test_tools
                             detray::core_array
 )
 
@@ -103,7 +103,7 @@ set_tests_properties(
 detray_add_integration_test(wire_chamber
                             "detectors/wire_chamber_navigation.cpp"
                             LINK_LIBRARIES GTest::gtest GTest::gtest_main
-                            detray::test_cpu detray::io detray::test_framework detray::test_common
+                            detray::test_cpu detray::io detray::test_framework detray::test_tools
                             detray::core_array
 )
 
@@ -122,7 +122,7 @@ detray_add_integration_test(jacobian_validation
                             "propagator/jacobian_validation.cpp"
                             LINK_LIBRARIES GTest::gtest GTest::gtest_main
                             Boost::program_options detray::core_array
-                            detray::test_framework detray::test_common detray::test_utils detray::tools
+                            detray::test_framework detray::test_tools detray::test_utils detray::tools
 )
 
 set_tests_properties(

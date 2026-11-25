@@ -18,8 +18,8 @@
 // Detray test include(s)
 #include "detray/options/detector_io_options.hpp"
 #include "detray/options/parse_options.hpp"
-#include "detray/test/common/build_telescope_detector.hpp"
 #include "detray/test/framework/types.hpp"
+#include "detray/test/tools/build_telescope_detector.hpp"
 
 // Vecmem include(s)
 #include <vecmem/memory/host_memory_resource.hpp>

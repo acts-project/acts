@@ -32,7 +32,7 @@ foreach(algebra ${algebras})
        "detector_hip_kernel.hip"
 
        LINK_LIBRARIES GTest::gtest_main HIP::hiprt vecmem::hip detray::core
-       detray::algebra_${algebra} detray::test_common detray::test_utils
+       detray::algebra_${algebra} detray::test_tools detray::test_utils
     )
 
     # Make hipcc interpret .cpp files as .hip files to make linking work

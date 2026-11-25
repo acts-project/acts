@@ -9,5 +9,5 @@
 #pragma once
 
 // Detray test include(s)
-#include "detray/test/common/event_generator/random_track_generator.hpp"
-#include "detray/test/common/event_generator/uniform_track_generator.hpp"
+#include "detray/test/tools/event_generator/random_track_generator.hpp"
+#include "detray/test/tools/event_generator/uniform_track_generator.hpp"

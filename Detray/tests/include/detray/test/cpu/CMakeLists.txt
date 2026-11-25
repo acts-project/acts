@@ -18,7 +18,6 @@ add_library(
     "algebra_fixture.hpp"
     "detector_consistency.hpp"
     "detector_scan.hpp"
-    "material_scan.hpp"
     "material_validation.hpp"
     "navigation_validation.hpp"
     "toy_detector_test.hpp"
@@ -31,6 +30,6 @@ target_link_libraries(
     INTERFACE
         vecmem::core
         detray::core_array
-        detray::test_common
-        detray::validation_utils
+        detray::test_tools
+        detray::validation
 )

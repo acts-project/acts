@@ -17,8 +17,8 @@
 #include "detray/plugins/svgtools/writer.hpp"
 
 // Detray test include(s)
-#include "detray/test/common/build_toy_detector.hpp"
 #include "detray/test/framework/types.hpp"
+#include "detray/test/tools/build_toy_detector.hpp"
 #include "detray/test/validation/detector_scanner.hpp"
 #include "detray/test/validation/svg_display.hpp"
 

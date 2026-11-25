@@ -10,14 +10,13 @@
 #include "detray/definitions/units.hpp"
 
 // Detray test include(s)
-#include "detray/test/common/build_wire_chamber.hpp"
 #include "detray/test/cpu/detector_consistency.hpp"
 #include "detray/test/cpu/detector_scan.hpp"
-#include "detray/test/cpu/material_scan.hpp"
 #include "detray/test/cpu/material_validation.hpp"
 #include "detray/test/cpu/navigation_validation.hpp"
 #include "detray/test/framework/register_checks.hpp"
 #include "detray/test/framework/whiteboard.hpp"
+#include "detray/test/tools/build_wire_chamber.hpp"
 
 // Vecmem include(s)
 #include <vecmem/memory/host_memory_resource.hpp>
@@ -113,18 +112,18 @@ int main(int argc, char **argv) {
                                                 white_board);
 
   // Run the material validation
-  test::material_scan<wire_chamber_t>::config mat_scan_cfg{};
+  test::host::material_scan<wire_chamber_t>::config mat_scan_cfg{};
   mat_scan_cfg.name("wire_chamber_material_scan");
   mat_scan_cfg.track_generator().uniform_eta(true).eta_range(-1.f, 1.f);
   mat_scan_cfg.track_generator().phi_steps(100).eta_steps(100);
   mat_scan_cfg.overlaps_tol(min_stepsize);
 
   // Record the material using a ray scan
-  test::register_checks<test::material_scan>(det, names, mat_scan_cfg, ctx,
-                                             white_board);
+  test::register_checks<test::host::material_scan>(det, names, mat_scan_cfg,
+                                                   ctx, white_board);
 
   // Now trace the material during navigation and compare
-  test::material_validation<wire_chamber_t>::config mat_val_cfg{};
+  test::host::material_validation<wire_chamber_t>::config mat_val_cfg{};
   mat_val_cfg.name("wire_chamber_material_validaiton");
   // Reduce tolerance for single precision tests
   if constexpr (std::is_same_v<scalar, float>) {
@@ -133,8 +132,8 @@ int main(int argc, char **argv) {
   mat_val_cfg.propagation() = cfg_str_nav.propagation();
   mat_val_cfg.propagation().stepping.min_stepsize = min_stepsize;
 
-  test::register_checks<test::material_validation>(det, names, mat_val_cfg, ctx,
-                                                   white_board);
+  test::register_checks<test::host::material_validation>(
+      det, names, mat_val_cfg, ctx, white_board);
 
   // Run the checks
   return RUN_ALL_TESTS();

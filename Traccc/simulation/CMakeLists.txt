@@ -21,6 +21,6 @@ target_link_libraries(
         traccc::io
         detray::core
         detray::io
-        detray::test_common
+        detray::test_tools
         detray::test_utils
 )

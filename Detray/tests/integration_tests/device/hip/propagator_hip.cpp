@@ -7,8 +7,8 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // Detray test include(s)
-#include "detray/test/common/bfield.hpp"
-#include "detray/test/common/build_toy_detector.hpp"
+#include "detray/test/tools/bfield.hpp"
+#include "detray/test/tools/build_toy_detector.hpp"
 #include "propagator_hip_kernel.hpp"
 
 // Vecmem include(s)

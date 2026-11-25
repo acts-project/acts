@@ -13,13 +13,8 @@
 #include "detray/definitions/algebra.hpp"
 #include "detray/material/concepts.hpp"
 #include "detray/material/detail/material_accessor.hpp"
-#include "detray/navigation/caching_navigator.hpp"
-#include "detray/navigation/detail/print_state.hpp"
 #include "detray/propagator/actors.hpp"
-#include "detray/propagator/line_stepper.hpp"
-#include "detray/propagator/propagator.hpp"
 #include "detray/utils/logging.hpp"
-#include "detray/utils/type_list.hpp"
 
 // Detray IO include(s)
 #include "detray/io/utils/create_path.hpp"
@@ -38,25 +33,7 @@
 #include <stdexcept>
 #include <string>
 
-namespace detray::material_validator {
-
-/// @brief Record the total material budget per track
-struct track_material {
-  /// Phi and eta values of the track for which the material was recorded
-  /// @{
-  double phi{detail::invalid_value<double>()};
-  /// Eta of the track.
-  double eta{detail::invalid_value<double>()};
-  /// @}
-  /// Accumulated radiation length per pathlength through the material
-  double sX0{0.f};
-  /// Accumulated radiation length per thickness
-  double tX0{0.f};
-  /// Accumulated interaction length per pathlength through the material
-  double sL0{0.f};
-  /// Accumulated interaction length per thickness
-  double tL0{0.f};
-};
+namespace detray::validation {
 
 /// @brief Functor to retrieve the material parameters for a given local
 /// position
@@ -262,165 +239,31 @@ struct material_tracer : public detray::base_actor {
   }
 };
 
-/// Run the propagation and record test data along the way
-template <concepts::detector detector_t>
-inline auto record_material(
-    const typename detector_t::geometry_context /*gctx*/,
-    vecmem::memory_resource *host_mr, const detector_t &det,
-    const propagation::config &cfg,
-    const free_track_parameters<typename detector_t::algebra_type> &track) {
-  using algebra_t = typename detector_t::algebra_type;
-  using scalar_t = dscalar<algebra_t>;
-
-  using stepper_t = line_stepper<algebra_t>;
-  using navigator_t = caching_navigator<detector_t>;
-
-  // Propagator with pathlimit aborter
-  using material_tracer_t = material_validator::material_tracer<vecmem::vector>;
-  using pathlimit_aborter_t = actor::pathlimit_aborter<scalar_t>;
-  using parameter_updater_t =
-      actor::parameter_updater<algebra_t,
-                               actor::pointwise_material_interactor<algebra_t>,
-                               material_tracer_t>;
-  using actor_chain_t = actor_chain<pathlimit_aborter_t, parameter_updater_t>;
-  using propagator_t = propagator<stepper_t, navigator_t, actor_chain_t>;
-
-  // Propagator
-  propagator_t prop{cfg};
-
-  // Build actor and propagator states
-  typename pathlimit_aborter_t::state pathlimit_aborter_state{
-      cfg.stepping.path_limit};
-  actor::parameter_updater_state<algebra_t> updater_state{cfg, track};
-  typename actor::pointwise_material_interactor<algebra_t>::state
-      interactor_state{};
-  typename material_tracer_t::state mat_tracer_state{*host_mr};
-
-  auto actor_states = detray::tie(pathlimit_aborter_state, updater_state,
-                                  interactor_state, mat_tracer_state);
-
-  typename propagator_t::state propagation{track, det, cfg.context};
-
-  // Run the propagation
-  bool success = prop.propagate(propagation, actor_states);
-
-  return std::make_tuple(success,
-                         std::move(mat_tracer_state).release_track_material(),
-                         std::move(mat_tracer_state).release_material_steps());
-}
-
-/// Compare the result of two material tracers
+/// Name of a material data file: "<detector>_<file stem>[_<suffix>].csv"
 ///
-/// @param reference the reference trace to compare against
-/// @param ref_record the reference total material to compare against (s/X0)
-/// @param mat_trace the recoded material trace
-/// @param mat_record the recoded total material along the track (s/X0)
-/// @param trk_i the track index/identifier
-/// @param rel_tol the maximum allowed relative error for any parameters
-/// @param verbose debug output
+/// @param det_name the name of the detector
+/// @param material_file the configured output file (only the parent path and
+///                      the stem are used)
+/// @param suffix optional suffix, e.g. the name of the compute backend
 ///
-/// @returns if the traces contains matching material steps and if matching
-/// traces contain the same total material
-inline auto compare_traces(
-    const dvector<material_record> &reference, const track_material &ref_record,
-    const dvector<material_record> &mat_trace, const track_material &mat_record,
-    std::size_t trk_i = detail::invalid_value<std::size_t>(),
-    const double rel_tol = 0.01, const bool verbose = true) {
-  // Material traces contain records of different surfaces/material
-  bool is_bad_comp{reference.size() != mat_trace.size()};
-  // Overall recorded material is different (in case small errors accumulate)
-  bool is_diff_mat{false};
+/// @returns the full path to the material data file
+inline std::filesystem::path material_file_path(
+    const std::string &det_name, const std::string &material_file,
+    std::string_view suffix = {}) {
+  const std::filesystem::path mat_path{material_file};
 
-  std::stringstream debug_msg{};
-  debug_msg << "Track No. " << trk_i << ":\n----------------" << std::endl;
-
-  if (is_bad_comp) {
-    debug_msg << "-> Different no. of surfaces: " << mat_trace.size()
-              << " (ref.: " << reference.size() << ")\n"
-              << std::endl;
-  } else {
-    for (std::size_t j = 0u; j < math::min(reference.size(), mat_trace.size());
-         ++j) {
-      if (reference[j].geo_id != mat_trace[j].geo_id) {
-        is_bad_comp = true;
-        debug_msg << "-> Surfaces don't match: " << mat_trace[j].geo_id
-                  << " (ref.: " << reference[j].geo_id << ")" << std::endl;
-        continue;
-      }
-
-      // TODO: Use approx_equal from algebra-plugins
-      // Compare thickness of the surface material
-      if ((reference[j].thickness - mat_trace[j].thickness) /
-              reference[j].thickness >
-          rel_tol) {
-        is_bad_comp = true;
-        debug_msg << "-> On surface: " << reference[j].geo_id << ":"
-                  << std::endl;
-        debug_msg << "-> thickness: " << mat_trace[j].thickness
-                  << ", thickness ref.: " << reference[j].thickness
-                  << std::endl;
-      }
-
-      // Compare radiation length of the surface material
-      if ((reference[j].mat_X0 - mat_trace[j].mat_X0) / reference[j].mat_X0 >
-          rel_tol) {
-        is_bad_comp = true;
-        debug_msg << "-> On surface: " << reference[j].geo_id << ":"
-                  << std::endl;
-        debug_msg << "-> X0: " << mat_trace[j].mat_X0
-                  << ", X0 ref.: " << reference[j].mat_X0 << std::endl;
-      }
-
-      // Compare interaction length of the surface material
-      if ((reference[j].mat_L0 - mat_trace[j].mat_L0) / reference[j].mat_L0 >
-          rel_tol) {
-        is_bad_comp = true;
-        debug_msg << "-> On surface: " << reference[j].geo_id << ":"
-                  << std::endl;
-        debug_msg << "-> L0: " << mat_trace[j].mat_L0
-                  << ", L0 ref.: " << reference[j].mat_L0 << std::endl;
-      }
-
-      // Compare path of the track through the surface material
-      if ((reference[j].path - mat_trace[j].path) / reference[j].path >
-          rel_tol) {
-        is_bad_comp = true;
-        debug_msg << "-> On surface: " << reference[j].geo_id << ":"
-                  << std::endl;
-        debug_msg << "-> Mat. path: " << mat_trace[j].path / unit<double>::mm
-                  << " mm, mat. path ref.: "
-                  << reference[j].path / unit<double>::mm << " mm" << std::endl;
-      }
-    }
+  std::string file_name{det_name + "_" + mat_path.stem().string()};
+  if (!suffix.empty()) {
+    file_name += "_" + std::string(suffix);
   }
 
-  // Compare the total accumulated material along the track
-  const double rel_error{(ref_record.sX0 - mat_record.sX0) / ref_record.sX0};
-  const bool small_mat{ref_record.sX0 < rel_tol && mat_record.sX0 < rel_tol};
-
-  // If almost no material was collected, the relative error can be
-  // large, but also has little consequence for tracking
-  if (!(small_mat || (rel_error <= rel_tol))) {
-    // Already know that material cannot add up: Only flag the additional
-    // cases here
-    if (!is_bad_comp) {
-      is_diff_mat = true;
-    }
-    debug_msg << "\nTotal material discrepancy of " << 100. * rel_error << "%\n"
-              << std::endl;
-  }
-
-  if (verbose && (is_bad_comp || is_diff_mat)) {
-    DETRAY_INFO_HOST(debug_msg.str());
-  }
-
-  return std::make_tuple(is_bad_comp, is_diff_mat);
+  return mat_path.parent_path() / (file_name + ".csv");
 }
 
 /// Write the accumulated material of a track from @param mat_records to a csv
 /// file to the path @param mat_file_name
-inline auto write_material(const std::string &mat_file_name,
-                           const dvector<track_material> &mat_records) {
+inline auto write_track_material(const std::string &mat_file_name,
+                                 const dvector<track_material> &mat_records) {
   const auto file_path = std::filesystem::path{mat_file_name};
   assert(file_path.extension() == ".csv");
 
@@ -443,11 +286,7 @@ inline auto write_material(const std::string &mat_file_name,
 /// @param mat_file_name the path to the csv file
 ///
 /// @returns the accumulated material of every track in the file
-inline auto read_material(const std::string &mat_file_name) {
-  if (!io::file_exists(mat_file_name)) {
-    throw std::invalid_argument("Material file not found: " + mat_file_name);
-  }
-
+inline auto read_track_material(const std::string &mat_file_name) {
   detray::io::file_handle infile{mat_file_name, std::ios::in};
 
   dvector<track_material> mat_records{};
@@ -486,4 +325,4 @@ inline auto read_material(const std::string &mat_file_name) {
   return mat_records;
 }
 
-}  // namespace detray::material_validator
+}  // namespace detray::validation

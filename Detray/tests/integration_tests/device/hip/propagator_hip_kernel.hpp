@@ -14,8 +14,8 @@
 #include "detray/detectors/toy_metadata.hpp"
 
 // Detray test include(s)
-#include "detray/test/common/bfield.hpp"
 #include "detray/test/device/propagator_test.hpp"
+#include "detray/test/tools/bfield.hpp"
 
 // Vecmem include(s)
 #include <vecmem/memory/memory_resource.hpp>

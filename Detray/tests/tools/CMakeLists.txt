@@ -22,7 +22,7 @@ target_include_directories(
 
 target_link_libraries(
     detray_tools
-    INTERFACE Boost::program_options vecmem::core detray::io detray::test_common
+    INTERFACE Boost::program_options vecmem::core detray::io detray::test_tools
 )
 
 add_subdirectory(src)

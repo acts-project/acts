@@ -14,8 +14,8 @@
 #include "detray/tracks/tracks.hpp"
 
 // Detray test include(s)
-#include "detray/test/common/build_toy_detector.hpp"
-#include "detray/test/common/build_wire_chamber.hpp"
+#include "detray/test/tools/build_toy_detector.hpp"
+#include "detray/test/tools/build_wire_chamber.hpp"
 #include "detray/test/utils/inspectors.hpp"
 
 // Test include(s)

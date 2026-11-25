@@ -104,7 +104,7 @@ macro(detray_add_cpu_test algebra)
        "utils/root_finding.cpp"
        "utils/unit_vectors.cpp"
        LINK_LIBRARIES GTest::gtest GTest::gtest_main detray::core_${algebra}
-       covfie::core vecmem::core detray::io detray::test_common detray::test_utils
+       covfie::core vecmem::core detray::io detray::test_tools detray::test_utils
     )
 endmacro()
 
@@ -134,6 +134,6 @@ endif()
 if(DETRAY_VC_SOA_PLUGIN)
     detray_add_unit_test(cpu_vc_soa
         "algebra/vc_soa.cpp"
-        LINK_LIBRARIES GTest::gtest GTest::gtest_main detray::core_vc_soa  detray::test_common
+        LINK_LIBRARIES GTest::gtest GTest::gtest_main detray::core_vc_soa  detray::test_tools
     )
 endif()

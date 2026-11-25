@@ -9,6 +9,19 @@
 # Let the user know what's happening.
 message(STATUS "Building 'detray::svgtools' component")
 
+if(NOT (TARGET actsvg::core AND TARGET actsvg::meta))
+    message(
+        STATUS
+        "Detray SVG plugin ('detray::svgtools') is missing dependencies: 'actsvg::core' and/or 'actsvg::meta' not available!"
+    )
+    if(DETRAY_IS_ACTS_COMPONENT)
+        message(FATAL_ERROR "Configure ACTS with -DACTS_SETUP_ACTSVG=ON")
+    else()
+        message(FATAL_ERROR "Configure detray with -DDETRAY_SETUP_ACTSVG=ON")
+    endif()
+    return()
+endif()
+
 # Set up the library.
 file(
     GLOB _detray_svgtools_public_headers

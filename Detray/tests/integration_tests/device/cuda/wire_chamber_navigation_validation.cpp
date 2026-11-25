@@ -7,14 +7,14 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // Detray test include(s)
-#include "detray/test/common/bfield.hpp"
-#include "detray/test/common/build_wire_chamber.hpp"
 #include "detray/test/cpu/detector_scan.hpp"
-#include "detray/test/cpu/material_scan.hpp"
+#include "detray/test/cpu/material_validation.hpp"
 #include "detray/test/device/cuda/material_validation.hpp"
 #include "detray/test/device/cuda/navigation_validation.hpp"
 #include "detray/test/framework/register_checks.hpp"
 #include "detray/test/framework/whiteboard.hpp"
+#include "detray/test/tools/bfield.hpp"
+#include "detray/test/tools/build_wire_chamber.hpp"
 
 // Vecmem include(s)
 #include <vecmem/memory/cuda/device_memory_resource.hpp>
@@ -116,18 +116,18 @@ int main(int argc, char **argv) {
                                                         ctx, white_board);
 
   // Run the material validation
-  test::material_scan<wire_chamber_t>::config mat_scan_cfg{};
+  test::host::material_scan<wire_chamber_t>::config mat_scan_cfg{};
   mat_scan_cfg.name("wire_chamber_material_scan_for_cuda");
   mat_scan_cfg.track_generator().uniform_eta(true).eta_range(-1.f, 1.f);
   mat_scan_cfg.track_generator().phi_steps(100).eta_steps(100);
   mat_scan_cfg.overlaps_tol(min_stepsize);
 
   // Record the material using a ray scan
-  test::register_checks<test::material_scan>(det, names, mat_scan_cfg, ctx,
-                                             white_board);
+  test::register_checks<test::host::material_scan>(det, names, mat_scan_cfg,
+                                                   ctx, white_board);
 
   // Now trace the material during navigation and compare
-  detray::cuda::material_validation<wire_chamber_t>::config mat_val_cfg{};
+  detray::test::cuda::material_validation<wire_chamber_t>::config mat_val_cfg{};
   mat_val_cfg.name("wire_chamber_material_validaiton_cuda");
   mat_val_cfg.device_mr(&dev_mr);
   // Reduce tolerance for single precision tests
@@ -137,7 +137,7 @@ int main(int argc, char **argv) {
   mat_val_cfg.propagation() = cfg_str_nav.propagation();
   mat_val_cfg.propagation().stepping.min_stepsize = min_stepsize;
 
-  test::register_checks<detray::cuda::material_validation>(
+  test::register_checks<detray::test::cuda::material_validation>(
       det, names, mat_val_cfg, ctx, white_board);
 
   // Run the checks

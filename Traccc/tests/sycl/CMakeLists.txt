@@ -34,7 +34,7 @@ traccc_add_test(
     vecmem::sycl
     detray::core
     detray::io
-    detray::test_common
+    detray::test_tools
     traccc::core
     traccc::device_common
     traccc::sycl

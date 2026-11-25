@@ -26,7 +26,7 @@
 #include <detray/propagator/line_stepper.hpp>
 #include <detray/propagator/propagator.hpp>
 #include <detray/propagator/rk_stepper.hpp>
-#include <detray/test/common/bfield.hpp>
+#include <detray/test/tools/bfield.hpp>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <vecmem/memory/host_memory_resource.hpp>

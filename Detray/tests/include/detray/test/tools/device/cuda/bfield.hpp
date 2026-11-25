@@ -12,7 +12,7 @@
 #include "detray/definitions/algebra.hpp"
 
 // Detray test include(s)
-#include "detray/test/common/bfield.hpp"
+#include "detray/test/tools/bfield.hpp"
 
 // Covfie include(s)
 #include <covfie/core/backend/transformer/affine.hpp>

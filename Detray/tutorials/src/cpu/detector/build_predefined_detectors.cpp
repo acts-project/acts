@@ -10,8 +10,8 @@
 #include "detray/definitions/units.hpp"
 #include "detray/geometry/mask.hpp"
 #include "detray/navigation/volume_graph.hpp"
-#include "detray/test/common/build_telescope_detector.hpp"
-#include "detray/test/common/build_toy_detector.hpp"
+#include "detray/test/tools/build_telescope_detector.hpp"
+#include "detray/test/tools/build_toy_detector.hpp"
 #include "detray/tracks/tracks.hpp"
 #include "detray/tracks/trajectories.hpp"
 

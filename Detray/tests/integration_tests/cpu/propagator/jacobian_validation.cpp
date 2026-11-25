@@ -18,10 +18,10 @@
 #include "detray/propagator/rk_stepper.hpp"
 
 // Detray test include(s)
-#include "detray/test/common/bfield.hpp"
-#include "detray/test/common/build_telescope_detector.hpp"
-#include "detray/test/common/track_generators.hpp"
 #include "detray/test/framework/types.hpp"
+#include "detray/test/tools/bfield.hpp"
+#include "detray/test/tools/build_telescope_detector.hpp"
+#include "detray/test/tools/track_generators.hpp"
 #include "detray/test/utils/inspectors.hpp"
 #include "detray/test/utils/statistics.hpp"
 

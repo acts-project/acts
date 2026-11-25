@@ -80,7 +80,7 @@ target_link_libraries(
         traccc::io
         covfie::core
         detray::test_utils
-        detray::validation_utils
+        detray::validation
 )
 
 # Use ROOT in traccc::performance, if requested.

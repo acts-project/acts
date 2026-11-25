@@ -25,7 +25,6 @@ add_library(
     "cuda_test_fixture.hpp"
     "execute_cuda_test.cuh"
     "material_validation.hpp"
-    "material_validation.cu"
     "navigation_validation.hpp"
     "navigation_validation.cu"
 )
@@ -41,5 +40,5 @@ target_link_libraries(
         detray::core_array
         detray::test_device
         detray::test_cpu
-        detray::validation_utils
+        detray::validation
 )

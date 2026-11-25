@@ -23,7 +23,7 @@
 #include <detray/propagator/actor_chain.hpp>
 #include <detray/propagator/propagation_config.hpp>
 #include <detray/propagator/propagator.hpp>
-#include <detray/test/common/bfield.hpp>
+#include <detray/test/tools/bfield.hpp>
 #include <detray/test/utils/inspectors.hpp>
 #include <detray/test/validation/material_validation_utils.hpp>
 #include <vecmem/memory/memory_resource.hpp>
@@ -134,7 +134,7 @@ class DetrayConcretePropagator : public PropagatorInterface {
       using DIntersection =
           detray::intersection2D<typename detector_t::surface_type, DAlgebra>;
       using DMaterialTracer =
-          detray::material_validator::material_tracer<vecmem::vector>;
+          detray::validation::material_tracer<vecmem::vector>;
       using DObjectTracer = detray::navigation::object_tracer<
           detector_t, detray::dvector, detray::navigation::status::e_on_object,
           detray::navigation::status::e_on_portal>;

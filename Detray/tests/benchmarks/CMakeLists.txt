@@ -31,7 +31,7 @@ target_include_directories(
 
 target_link_libraries(
     detray_benchmarks
-    INTERFACE benchmark::benchmark vecmem::core detray::core detray::test_common
+    INTERFACE benchmark::benchmark vecmem::core detray::core detray::test_tools
 )
 
 unset(_detray_benchmarks_headers)

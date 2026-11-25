@@ -43,7 +43,7 @@ if(DETRAY_BUILD_BENCHMARKS)
     foreach(algebra ${algebra_plugins})
         detray_add_executable(propagation_benchmark_cuda_${algebra}
         "propagation_benchmark_cuda.cpp"
-        LINK_LIBRARIES detray::benchmark_cuda_${algebra} vecmem::cuda detray::tools detray::test_common
+        LINK_LIBRARIES detray::benchmark_cuda_${algebra} vecmem::cuda detray::tools detray::test_tools
         )
     endforeach()
 endif()

@@ -19,7 +19,7 @@
 #include "detray/utils/logging.hpp"
 
 // Detray test include(s)
-#include "detray/test/common/bfield.hpp"
+#include "detray/test/tools/bfield.hpp"
 
 // Detray benchmark include(s)
 #include "detray/benchmarks/benchmark_base.hpp"

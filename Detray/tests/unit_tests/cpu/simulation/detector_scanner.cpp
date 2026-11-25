@@ -14,9 +14,9 @@
 #include "detray/tracks/trajectories.hpp"
 
 // Detray test include(s)
-#include "detray/test/common/build_toy_detector.hpp"
-#include "detray/test/common/track_generators.hpp"
 #include "detray/test/framework/types.hpp"
+#include "detray/test/tools/build_toy_detector.hpp"
+#include "detray/test/tools/track_generators.hpp"
 
 // VecMem include(s).
 #include <vecmem/memory/host_memory_resource.hpp>

@@ -10,9 +10,9 @@
 #include "detector_cuda_kernel.hpp"
 #include "detray/core/detail/alignment.hpp"
 #include "detray/definitions/algebra.hpp"
-#include "detray/test/common/build_toy_detector.hpp"
 #include "detray/test/framework/assert.hpp"
 #include "detray/test/framework/types.hpp"
+#include "detray/test/tools/build_toy_detector.hpp"
 
 // Vecmem include(s)
 #include <vecmem/memory/cuda/device_memory_resource.hpp>

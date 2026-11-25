@@ -44,7 +44,7 @@ foreach(algebra ${algebra_plugins})
         PUBLIC
             vecmem::cuda
             detray::benchmarks
-            detray::test_common
+            detray::test_tools
             detray::core_${algebra}
     )
 endforeach()

@@ -27,7 +27,7 @@ foreach(algebra ${algebra_plugins})
 
     detray_add_executable(benchmark_cuda_propagation_${algebra}
       "propagation.cpp"
-       LINK_LIBRARIES detray::benchmark_cuda_${algebra} detray::core_${algebra} vecmem::cuda detray::test_common
+       LINK_LIBRARIES detray::benchmark_cuda_${algebra} detray::core_${algebra} vecmem::cuda detray::test_tools
     )
 
     target_compile_definitions(

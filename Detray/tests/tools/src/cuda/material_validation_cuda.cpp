@@ -18,9 +18,9 @@
 #include "detray/options/parse_options.hpp"
 #include "detray/options/propagation_options.hpp"
 #include "detray/options/track_generator_options.hpp"
-#include "detray/test/device/cuda/material_validation.hpp"
+#include "detray/test/validation/cuda/material_recorder.hpp"
+#include "detray/test/validation/material_scanner.hpp"
 #include "detray/test/validation/material_validation.hpp"
-#include "detray/test/validation/material_validation_config.hpp"
 
 // Vecmem include(s)
 #include <vecmem/memory/cuda/device_memory_resource.hpp>
@@ -61,15 +61,16 @@ int main(int argc, char **argv) {
       "Tolerance for considering surfaces to be overlapping [mm]")(
       "step_contingency",
       po::value<std::size_t>()->default_value(
-          test::material_validation_config<test::algebra>{}.step_contingency()),
+          validation::material_validation_config<test::algebra>{}
+              .step_contingency()),
       "Additional material steps per track on top of the material scan")(
       "truth_from_file",
       "Read the truth material from file instead of running the ray scan");
 
   // Configs to be filled
   detray::io::detector_reader_config reader_cfg{};
-  test::material_validation_config<test::algebra> mat_val_cfg{};
-  test::material_scan_config<test::algebra> mat_scan_cfg{};
+  validation::material_validation_config<test::algebra> mat_val_cfg{};
+  validation::material_scan_config<test::algebra> mat_scan_cfg{};
 
   po::variables_map vm = detray::options::parse_options(
       desc, argc, argv, reader_cfg, mat_scan_cfg.track_generator(),
@@ -83,7 +84,7 @@ int main(int argc, char **argv) {
     mat_scan_cfg.overlaps_tol(vm["overlaps_tol"].as<float>());
   }
   mat_val_cfg.step_contingency(vm["step_contingency"].as<std::size_t>());
-  mat_scan_cfg.truth_from_file(vm.count("truth_from_file") != 0u);
+  mat_scan_cfg.read_from_file(vm.count("truth_from_file") != 0u);
   const auto data_dir{vm["data_dir"].as<std::string>()};
 
   /// Vecmem memory resource for the device allocations
@@ -100,7 +101,7 @@ int main(int argc, char **argv) {
   mat_scan_cfg.track_generator().uniform_eta(true);
   mat_scan_cfg.material_file(data_dir + "/material_scan_for_cuda");
   const auto scan_data =
-      material_validator::material_scan(ctx, det, names, mat_scan_cfg);
+      validation::material_scanner::run(ctx, det, names, mat_scan_cfg);
 
   // Now trace the material during navigation and compare
   mat_val_cfg.name("material_validation_cuda");
@@ -108,7 +109,7 @@ int main(int argc, char **argv) {
   mat_val_cfg.device_mr(&dev_mr);
 
   const auto result =
-      material_validator::material_validation<cuda::run_material_validation>(
+      validation::material_validator::run<validation::cuda::material_recorder>(
           &host_mr, det, names, scan_data, mat_val_cfg);
 
   if (!result.passed()) {

@@ -19,13 +19,13 @@
 #include "detray/utils/logging.hpp"
 
 // Detray test include(s)
-#include "detray/test/common/bfield.hpp"
 #include "detray/test/framework/fixture_base.hpp"
 #include "detray/test/framework/whiteboard.hpp"
+#include "detray/test/tools/bfield.hpp"
 #include "detray/test/utils/inspectors.hpp"
 #include "detray/test/validation/detector_scan_utils.hpp"
 #include "detray/test/validation/detector_scanner.hpp"
-#include "detray/test/validation/material_validation_utils.hpp"
+#include "detray/test/validation/material_recording.hpp"
 #include "detray/test/validation/navigation_validation_config.hpp"
 #include "detray/test/validation/navigation_validation_utils.hpp"
 
@@ -58,8 +58,7 @@ void navigation_validation_device(
         &truth_intersection_traces_view,
     vecmem::data::jagged_vector_view<intersection_record<detector_t>>
         &recorded_intersections_view,
-    vecmem::data::vector_view<material_validator::track_material>
-        &track_mat_view,
+    vecmem::data::vector_view<track_material> &track_mat_view,
     vecmem::data::jagged_vector_view<material_record> &mat_steps_view);
 
 /// Prepare data for device navigation run
@@ -72,7 +71,7 @@ inline auto run_navigation_validation(
     const std::vector<dvector<intersection_record<detector_t>>>
         &truth_intersection_traces) {
   using material_record_t = material_record;
-  using track_material_t = material_validator::track_material;
+  using track_material_t = track_material;
 
   // Helper object for performing memory copies (to CUDA devices)
   vecmem::cuda::copy cuda_cpy;
@@ -423,7 +422,7 @@ class navigation_validation : public test::fixture_base<> {
                                           truth_intersection_traces);
     detector_scanner::write_intersections(intr_path.string(),
                                           recorded_intersections);
-    material_validator::write_material(mat_path.string(), track_mat);
+    detray::validation::write_track_material(mat_path.string(), track_mat);
 
     DETRAY_INFO_HOST("Wrote distance to boundary of missed intersections in: "
                      << missed_path);

@@ -16,7 +16,8 @@
 
 // Detray test include(s)
 #include "detray/test/utils/perigee_stopper.hpp"
-#include "detray/test/validation/material_validation_utils.hpp"
+#include "detray/test/validation/material_comparison.hpp"
+#include "detray/test/validation/material_recording.hpp"
 #include "detray/test/validation/navigation_validation_utils.hpp"
 
 // VecMem include(s).
@@ -276,7 +277,7 @@ bool propagation_validation(
     }
 
     // Compare the material traces and total integrated material per trk
-    const auto [is_bad_comp, is_diff_mat] = material_validator::compare_traces(
+    const auto [is_bad_comp, is_diff_mat] = validation::compare_material_traces(
         mat_steps_fw[i], track_mat_fw[i], inv_mat_trace_bw, track_mat_bw[i], i,
         rel_mat_error, test_cfg.verbose());
 

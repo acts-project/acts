@@ -22,7 +22,7 @@ traccc_add_test(core
    "particle.cpp"
    LINK_LIBRARIES GTest::gtest_main vecmem::core traccc_tests_common
    traccc::core traccc::io traccc::performance traccc::simulation
-   detray::core detray::io detray::test_common detray::validation_utils
+   detray::core detray::io detray::test_tools detray::validation
    covfie::core
 )
 

@@ -21,8 +21,7 @@ __global__ void navigation_validation_kernel(
         truth_intersection_traces_view,
     vecmem::data::jagged_vector_view<intersection_record<detector_t>>
         recorded_intersections_view,
-    vecmem::data::vector_view<material_validator::track_material>
-        track_mat_view,
+    vecmem::data::vector_view<track_material> track_mat_view,
     vecmem::data::jagged_vector_view<material_record> mat_steps_view) {
   using device_detector_t = device::detector<typename detector_t::metadata>;
   using algebra_t = typename device_detector_t::algebra_type;
@@ -55,7 +54,7 @@ __global__ void navigation_validation_kernel(
 
   // Propagator with pathlimit aborter
   using material_tracer_t =
-      material_validator::material_tracer<vecmem::device_vector>;
+      detray::validation::material_tracer<vecmem::device_vector>;
   using pathlimit_aborter_t = actor::pathlimit_aborter<scalar_t>;
   using actor_chain_t = actor_chain<pathlimit_aborter_t, material_tracer_t>;
   using propagator_t = propagator<stepper_t, navigator_t, actor_chain_t>;
@@ -136,8 +135,7 @@ void navigation_validation_device(
         &truth_intersection_traces_view,
     vecmem::data::jagged_vector_view<intersection_record<detector_t>>
         &recorded_intersections_view,
-    vecmem::data::vector_view<material_validator::track_material>
-        &track_mat_view,
+    vecmem::data::vector_view<track_material> &track_mat_view,
     vecmem::data::jagged_vector_view<material_record> &mat_steps_view) {
   constexpr int thread_dim = 64;
   int block_dim = truth_intersection_traces_view.size() / thread_dim + 1;
@@ -168,7 +166,7 @@ void navigation_validation_device(
           const detray::intersection_record<host::detector<METADATA>>> &,    \
       vecmem::data::jagged_vector_view<                                      \
           intersection_record<host::detector<METADATA>>> &,                  \
-      vecmem::data::vector_view<material_validator::track_material> &,       \
+      vecmem::data::vector_view<track_material> &,                           \
       vecmem::data::jagged_vector_view<material_record> &);                  \
                                                                              \
   template void navigation_validation_device<                                \
@@ -181,7 +179,7 @@ void navigation_validation_device(
           const detray::intersection_record<host::detector<METADATA>>> &,    \
       vecmem::data::jagged_vector_view<                                      \
           intersection_record<host::detector<METADATA>>> &,                  \
-      vecmem::data::vector_view<material_validator::track_material> &,       \
+      vecmem::data::vector_view<track_material> &,                           \
       vecmem::data::jagged_vector_view<material_record> &);
 
 DECLARE_NAVIGATION_VALIDATION(test::default_metadata)

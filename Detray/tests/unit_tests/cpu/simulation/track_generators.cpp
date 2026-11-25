@@ -7,7 +7,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // Project include(s)
-#include "detray/test/common/track_generators.hpp"
+#include "detray/test/tools/track_generators.hpp"
 
 #include "detray/definitions/units.hpp"
 #include "detray/tracks/tracks.hpp"

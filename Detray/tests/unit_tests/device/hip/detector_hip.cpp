@@ -9,9 +9,9 @@
 // Detray test include(s)
 #include "detector_hip_kernel.hpp"
 #include "detray/definitions/algebra.hpp"
-#include "detray/test/common/build_toy_detector.hpp"
 #include "detray/test/framework/assert.hpp"
 #include "detray/test/framework/types.hpp"
+#include "detray/test/tools/build_toy_detector.hpp"
 
 // Vecmem include(s)
 #include <vecmem/memory/hip/managed_memory_resource.hpp>

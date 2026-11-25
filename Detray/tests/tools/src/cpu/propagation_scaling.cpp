@@ -21,8 +21,8 @@
 #include "detray/benchmarks/types.hpp"
 
 // Detray test include(s)
-#include "detray/test/common/bfield.hpp"
-#include "detray/test/common/track_generators.hpp"
+#include "detray/test/tools/bfield.hpp"
+#include "detray/test/tools/track_generators.hpp"
 
 // Detray tools include(s)
 #include "detray/options/detector_io_options.hpp"

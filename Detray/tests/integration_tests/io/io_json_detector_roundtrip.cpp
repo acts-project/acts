@@ -21,10 +21,10 @@
 #include "detray/io/json/json_converter.hpp"
 
 // Detray test include(s)
-#include "detray/test/common/build_telescope_detector.hpp"
-#include "detray/test/common/build_toy_detector.hpp"
-#include "detray/test/common/build_wire_chamber.hpp"
 #include "detray/test/cpu/toy_detector_test.hpp"
+#include "detray/test/tools/build_telescope_detector.hpp"
+#include "detray/test/tools/build_toy_detector.hpp"
+#include "detray/test/tools/build_wire_chamber.hpp"
 
 // Vecmem include(s)
 #include <vecmem/memory/host_memory_resource.hpp>

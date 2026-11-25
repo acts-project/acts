@@ -13,8 +13,8 @@
 #include "detray/tracks/ray.hpp"
 
 // Detray test include(s)
-#include "detray/test/common/build_toy_detector.hpp"
 #include "detray/test/framework/types.hpp"
+#include "detray/test/tools/build_toy_detector.hpp"
 #include "detray/test/utils/planes_along_direction.hpp"
 
 // Vecmem include(s)

@@ -20,11 +20,11 @@
 #include "detray/utils/logging.hpp"
 
 // Detray test include(s)
-#include "detray/test/common/bfield.hpp"
-#include "detray/test/common/build_toy_detector.hpp"
-#include "detray/test/common/build_wire_chamber.hpp"
-#include "detray/test/common/track_generators.hpp"
 #include "detray/test/framework/types.hpp"
+#include "detray/test/tools/bfield.hpp"
+#include "detray/test/tools/build_toy_detector.hpp"
+#include "detray/test/tools/build_wire_chamber.hpp"
+#include "detray/test/tools/track_generators.hpp"
 #include "detray/test/utils/inspectors.hpp"
 
 // Vecmem include(s)

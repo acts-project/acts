@@ -13,7 +13,7 @@
 #include "detray/benchmarks/types.hpp"
 
 // Detray test include(s)
-#include "detray/test/common/build_toy_detector.hpp"
+#include "detray/test/tools/build_toy_detector.hpp"
 
 // VecMem include(s).
 #include <vecmem/memory/host_memory_resource.hpp>

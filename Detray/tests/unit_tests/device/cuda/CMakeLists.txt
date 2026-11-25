@@ -60,7 +60,7 @@ foreach(algebra ${algebras})
        "transform_store_cuda_kernel.cu"
        LINK_LIBRARIES GTest::gtest_main
         CUDA::cudart vecmem::cuda covfie::cuda detray::core
-       detray::algebra_${algebra} detray::test_common detray::test_utils
+       detray::algebra_${algebra} detray::test_tools detray::test_utils
     )
 
     target_compile_definitions(

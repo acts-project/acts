@@ -17,12 +17,12 @@
 #include "detray/utils/logging.hpp"
 
 // Detray test include(s)
-#include "detray/test/common/bfield.hpp"
 #include "detray/test/framework/fixture_base.hpp"
 #include "detray/test/framework/whiteboard.hpp"
+#include "detray/test/tools/bfield.hpp"
 #include "detray/test/validation/detector_scan_utils.hpp"
 #include "detray/test/validation/detector_scanner.hpp"
-#include "detray/test/validation/material_validation_utils.hpp"
+#include "detray/test/validation/material_recording.hpp"
 #include "detray/test/validation/navigation_validation_config.hpp"
 #include "detray/test/validation/navigation_validation_utils.hpp"
 
@@ -155,7 +155,7 @@ class navigation_validation : public test::fixture_base<> {
 
     // Keep a record of track positions and material along the track
     std::vector<dvector<intersection_record<detector_t>>> recorded_traces{};
-    dvector<material_validator::track_material> track_mat_vec{};
+    dvector<track_material> track_mat_vec{};
     std::vector<std::pair<trajectory_type, std::vector<intersection_t>>>
         missed_intersections{};
 
@@ -326,7 +326,7 @@ class navigation_validation : public test::fixture_base<> {
     detector_scanner::write_intersections(truth_intr_path.string(),
                                           truth_traces);
     detector_scanner::write_intersections(intr_path.string(), recorded_traces);
-    material_validator::write_material(mat_path.string(), track_mat_vec);
+    detray::validation::write_track_material(mat_path.string(), track_mat_vec);
 
     DETRAY_INFO_HOST("Wrote distance to boundary of missed intersections in: "
                      << missed_path);

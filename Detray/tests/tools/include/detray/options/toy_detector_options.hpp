@@ -13,7 +13,7 @@
 
 // Detray test include(s)
 #include "detray/options/options_handling.hpp"
-#include "detray/test/common/build_toy_detector.hpp"
+#include "detray/test/tools/build_toy_detector.hpp"
 
 // Boost
 #include "detray/options/boost_program_options.hpp"

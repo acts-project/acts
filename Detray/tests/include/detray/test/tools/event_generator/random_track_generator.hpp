@@ -18,7 +18,7 @@
 #include "detray/utils/ranges/ranges.hpp"
 
 // Detray test include(s)
-#include "detray/test/common/event_generator/random_track_generator_config.hpp"
+#include "detray/test/tools/event_generator/random_track_generator_config.hpp"
 
 // System include(s)
 #include <algorithm>

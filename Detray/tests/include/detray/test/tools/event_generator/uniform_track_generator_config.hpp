@@ -14,7 +14,7 @@
 #include "detray/definitions/units.hpp"
 
 // Detray test include(s)
-#include "detray/test/common/event_generator/random_numbers.hpp"
+#include "detray/test/tools/event_generator/random_numbers.hpp"
 
 // System include(s)
 #include <algorithm>

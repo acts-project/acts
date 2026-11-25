@@ -9,4 +9,4 @@
 #pragma once
 
 // Detray include(s).
-#include <detray/test/common/track_generators.hpp>
+#include <detray/test/tools/track_generators.hpp>

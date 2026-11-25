@@ -7,15 +7,15 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // Detray test include(s)
-#include "detray/test/common/bfield.hpp"
-#include "detray/test/common/build_toy_detector.hpp"
 #include "detray/test/cpu/detector_scan.hpp"
-#include "detray/test/cpu/material_scan.hpp"
+#include "detray/test/cpu/material_validation.hpp"
 #include "detray/test/device/cuda/material_validation.hpp"
 #include "detray/test/device/cuda/navigation_validation.hpp"
 #include "detray/test/framework/register_checks.hpp"
 #include "detray/test/framework/types.hpp"
 #include "detray/test/framework/whiteboard.hpp"
+#include "detray/test/tools/bfield.hpp"
+#include "detray/test/tools/build_toy_detector.hpp"
 
 // Vecmem include(s)
 #include <vecmem/memory/cuda/device_memory_resource.hpp>
@@ -115,25 +115,25 @@ int main(int argc, char **argv) {
       toy_det, toy_names, cfg_hel_nav, ctx, white_board);
 
   // Run the material validation - Material Maps
-  test::material_scan<toy_detector_t>::config mat_scan_cfg{};
+  test::host::material_scan<toy_detector_t>::config mat_scan_cfg{};
   mat_scan_cfg.name("toy_detector_material_scan_for_cuda");
   mat_scan_cfg.track_generator().uniform_eta(true).eta_range(-4.f, 4.f);
   mat_scan_cfg.track_generator().phi_steps(100).eta_steps(100);
   mat_scan_cfg.overlaps_tol(min_stepsize);
 
   // Record the material using a ray scan
-  test::register_checks<test::material_scan>(toy_det, toy_names, mat_scan_cfg,
-                                             ctx, white_board);
+  test::register_checks<test::host::material_scan>(
+      toy_det, toy_names, mat_scan_cfg, ctx, white_board);
 
   // Now trace the material during navigation and compare
-  detray::cuda::material_validation<toy_detector_t>::config mat_val_cfg{};
+  detray::test::cuda::material_validation<toy_detector_t>::config mat_val_cfg{};
   mat_val_cfg.name("toy_detector_material_validaiton_cuda");
   mat_val_cfg.device_mr(&dev_mr);
   mat_val_cfg.tol(1e-5f);  // < Reduce tolerance for single precision tests
   mat_val_cfg.propagation() = cfg_str_nav.propagation();
   mat_val_cfg.propagation().stepping.min_stepsize = min_stepsize;
 
-  test::register_checks<detray::cuda::material_validation>(
+  test::register_checks<detray::test::cuda::material_validation>(
       toy_det, toy_names, mat_val_cfg, ctx, white_board);
 
   // Run the material validation - Homogeneous material
@@ -151,7 +151,7 @@ int main(int argc, char **argv) {
 
   // Now trace the material during navigation and compare
   mat_val_cfg.name("toy_detector_hom_material_validaiton_cuda");
-  test::register_checks<detray::cuda::material_validation>(
+  test::register_checks<detray::test::cuda::material_validation>(
       toy_det_hom_mat, toy_names_hom_mat, mat_val_cfg, ctx, white_board);
 
   // Run the checks

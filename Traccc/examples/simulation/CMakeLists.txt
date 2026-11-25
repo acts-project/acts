@@ -15,15 +15,15 @@ traccc_add_executable(simulate "simulate.cpp"
 # Simulation with the detectors pre-built in detray
 traccc_add_executable(simulate_telescope "simulate_telescope.cpp"
     LINK_LIBRARIES vecmem::core traccc::io traccc::core
-    traccc::options traccc::simulation detray::core detray::io detray::test_common covfie::core Boost::filesystem
+    traccc::options traccc::simulation detray::core detray::io detray::test_tools covfie::core Boost::filesystem
 )
 
 traccc_add_executable(simulate_toy_detector "simulate_toy_detector.cpp"
     LINK_LIBRARIES vecmem::core traccc::io traccc::core
-    traccc::options traccc::simulation detray::io detray::test_common covfie::core Boost::filesystem
+    traccc::options traccc::simulation detray::io detray::test_tools covfie::core Boost::filesystem
 )
 
 traccc_add_executable(simulate_wire_chamber "simulate_wire_chamber.cpp"
     LINK_LIBRARIES vecmem::core traccc::io traccc::core
-    traccc::options traccc::simulation detray::io detray::test_common covfie::core Boost::filesystem
+    traccc::options traccc::simulation detray::io detray::test_tools covfie::core Boost::filesystem
 )

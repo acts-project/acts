@@ -18,10 +18,10 @@
 #include "detray/io/utils/create_path.hpp"
 
 // Detray test include(s)
-#include "detray/test/common/track_generators.hpp"
 #include "detray/test/framework/fixture_base.hpp"
 #include "detray/test/framework/types.hpp"
 #include "detray/test/framework/whiteboard.hpp"
+#include "detray/test/tools/track_generators.hpp"
 #include "detray/test/validation/detector_scan_config.hpp"
 #include "detray/test/validation/detector_scan_utils.hpp"
 #include "detray/test/validation/detector_scanner.hpp"

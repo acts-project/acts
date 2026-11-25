@@ -10,7 +10,7 @@
 #include "detector_construction.hpp"
 
 #include "detray/core/detail/alignment.hpp"
-#include "detray/test/common/build_toy_detector.hpp"
+#include "detray/test/tools/build_toy_detector.hpp"
 #include "detray/utils/logging.hpp"
 
 // Vecmem include(s)

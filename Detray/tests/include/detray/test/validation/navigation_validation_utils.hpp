@@ -30,7 +30,7 @@
 #include "detray/test/utils/inspectors.hpp"
 #include "detray/test/utils/step_tracer.hpp"
 #include "detray/test/validation/detector_scan_utils.hpp"
-#include "detray/test/validation/material_validation_utils.hpp"
+#include "detray/test/validation/material_recording.hpp"
 #include "detray/test/validation/navigation_validation_config.hpp"
 
 // Detray plugin include(s)
@@ -195,7 +195,7 @@ inline auto record_propagation(
   // Propagator with pathlimit aborter and validation actors
   using step_tracer_t = actor::step_tracer<algebra_t, dvector>;
   using pathlimit_aborter_t = actor::pathlimit_aborter<scalar_t>;
-  using material_tracer_t = material_validator::material_tracer<dvector>;
+  using material_tracer_t = validation::material_tracer<dvector>;
 
   using state_ref_tuple_t = typename actor_chain<actor_ts...>::state_ref_tuple;
   using actor_chain_t = actor_chain<pathlimit_aborter_t, actor_ts...,
@@ -1111,7 +1111,7 @@ auto compare_to_navigation(
   // Collect step and material traces for all tracks
   std::vector<dvector<step_record<algebra_t>>> step_traces{};
   std::vector<dvector<material_record>> mat_steps{};
-  std::vector<material_validator::track_material> track_mat_vec{};
+  std::vector<track_material> track_mat_vec{};
 
   mat_steps.reserve(n_samples);
   track_mat_vec.reserve(n_samples);

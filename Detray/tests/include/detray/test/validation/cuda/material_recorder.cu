@@ -6,22 +6,28 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+// Project include(s)
 #include "detray/core/concepts.hpp"
+#include "detray/core/detector.hpp"
 #include "detray/definitions/detail/cuda_definitions.hpp"
+#include "detray/navigation/caching_navigator.hpp"
 #include "detray/propagator/actors.hpp"
 #include "detray/propagator/line_stepper.hpp"
-#include "material_validation.hpp"
+#include "detray/propagator/propagator.hpp"
+
+// Validation include(s)
+#include "detray/test/framework/types.hpp"
+#include "material_recorder.hpp"
 
 namespace detray::cuda {
 
 template <concepts::detector detector_t>
-__global__ void material_validation_kernel(
+__global__ void material_recording_kernel(
     typename detector_t::view_type det_data, const propagation::config cfg,
     vecmem::data::vector_view<
         free_track_parameters<typename detector_t::algebra_type>>
         tracks_view,
-    vecmem::data::vector_view<material_validator::track_material>
-        track_mat_view,
+    vecmem::data::vector_view<track_material> track_mat_view,
     vecmem::data::jagged_vector_view<material_record> mat_steps_view) {
   using device_detector_t = device::detector<typename detector_t::metadata>;
   using algebra_t = typename device_detector_t::algebra_type;
@@ -32,7 +38,7 @@ __global__ void material_validation_kernel(
   // Propagator with full covariance transport, pathlimit aborter and
   // material tracer
   using material_tracer_t =
-      material_validator::material_tracer<vecmem::device_vector>;
+      detray::validation::material_tracer<vecmem::device_vector>;
   using pathlimit_aborter_t = actor::pathlimit_aborter<scalar_t>;
   using actor_chain_t = actor_chain<
       pathlimit_aborter_t,
@@ -79,18 +85,17 @@ __global__ void material_validation_kernel(
 
 /// Launch the device kernel
 template <concepts::detector detector_t>
-void material_validation_device(
+void record_material(
     typename detector_t::view_type det_view, const propagation::config &cfg,
     vecmem::data::vector_view<
         free_track_parameters<typename detector_t::algebra_type>> &tracks_view,
-    vecmem::data::vector_view<material_validator::track_material>
-        &track_mat_view,
+    vecmem::data::vector_view<track_material> &track_mat_view,
     vecmem::data::jagged_vector_view<material_record> &mat_steps_view) {
   constexpr int thread_dim = 64;
   int block_dim = tracks_view.size() / thread_dim + 1;
 
   // run the test kernel
-  material_validation_kernel<detector_t><<<block_dim, thread_dim>>>(
+  material_recording_kernel<detector_t><<<block_dim, thread_dim>>>(
       det_view, cfg, tracks_view, track_mat_view, mat_steps_view);
 
   // cuda error check
@@ -99,14 +104,14 @@ void material_validation_device(
 }
 
 /// Macro declaring the template instantiations for the different detector types
-#define DECLARE_MATERIAL_VALIDATION(METADATA)                          \
-                                                                       \
-  template void material_validation_device<host::detector<METADATA>>(  \
-      typename host::detector<METADATA>::view_type,                    \
-      const propagation::config &,                                     \
-      vecmem::data::vector_view<                                       \
-          free_track_parameters<typename METADATA::algebra_type>> &,   \
-      vecmem::data::vector_view<material_validator::track_material> &, \
+#define DECLARE_MATERIAL_VALIDATION(METADATA)                        \
+                                                                     \
+  template void record_material<host::detector<METADATA>>(           \
+      typename host::detector<METADATA>::view_type,                  \
+      const propagation::config &,                                   \
+      vecmem::data::vector_view<                                     \
+          free_track_parameters<typename METADATA::algebra_type>> &, \
+      vecmem::data::vector_view<track_material> &,                   \
       vecmem::data::jagged_vector_view<material_record> &);
 
 DECLARE_MATERIAL_VALIDATION(test::default_metadata)

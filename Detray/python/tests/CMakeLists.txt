@@ -26,8 +26,8 @@ target_link_libraries(
     PRIVATE
         detray::core_array
         detray::io
-        detray::test_common
-        detray::validation_utils
+        detray::test_tools
+        detray::validation
         vecmem::core
         covfie::core
 )

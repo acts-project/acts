@@ -12,8 +12,8 @@
 #include "detray/utils/logging.hpp"
 
 // Detray test include(s)
-#include "detray/test/common/build_toy_detector.hpp"
-#include "detray/test/common/track_generators.hpp"
+#include "detray/test/tools/build_toy_detector.hpp"
+#include "detray/test/tools/track_generators.hpp"
 #include "detray/test/utils/hash_tree.hpp"
 #include "detray/test/validation/detector_scan_utils.hpp"
 #include "detray/test/validation/detector_scanner.hpp"

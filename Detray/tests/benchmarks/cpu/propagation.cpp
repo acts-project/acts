@@ -18,10 +18,10 @@
 #include "detray/benchmarks/types.hpp"
 
 // Detray test include(s)
-#include "detray/test/common/bfield.hpp"
-#include "detray/test/common/build_toy_detector.hpp"
-#include "detray/test/common/build_wire_chamber.hpp"
-#include "detray/test/common/track_generators.hpp"
+#include "detray/test/tools/bfield.hpp"
+#include "detray/test/tools/build_toy_detector.hpp"
+#include "detray/test/tools/build_wire_chamber.hpp"
+#include "detray/test/tools/track_generators.hpp"
 
 // Vecmem include(s)
 #include <vecmem/memory/host_memory_resource.hpp>

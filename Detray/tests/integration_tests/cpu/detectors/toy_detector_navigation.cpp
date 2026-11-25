@@ -10,15 +10,14 @@
 #include "detray/definitions/units.hpp"
 
 // Detray test include(s)
-#include "detray/test/common/build_toy_detector.hpp"
 #include "detray/test/cpu/detector_consistency.hpp"
 #include "detray/test/cpu/detector_scan.hpp"
-#include "detray/test/cpu/material_scan.hpp"
 #include "detray/test/cpu/material_validation.hpp"
 #include "detray/test/cpu/navigation_validation.hpp"
 #include "detray/test/framework/register_checks.hpp"
 #include "detray/test/framework/types.hpp"
 #include "detray/test/framework/whiteboard.hpp"
+#include "detray/test/tools/build_toy_detector.hpp"
 
 // Vecmem include(s)
 #include <vecmem/memory/host_memory_resource.hpp>
@@ -111,18 +110,18 @@ int main(int argc, char **argv) {
                                                 ctx, white_board);
 
   // Run the material validation - Material Maps
-  test::material_scan<toy_detector_t>::config mat_scan_cfg{};
+  test::host::material_scan<toy_detector_t>::config mat_scan_cfg{};
   mat_scan_cfg.name("toy_detector_material_scan");
   mat_scan_cfg.track_generator().uniform_eta(true).eta_range(-4.f, 4.f);
   mat_scan_cfg.track_generator().phi_steps(100).eta_steps(100);
   mat_scan_cfg.overlaps_tol(min_stepsize);
 
   // Record the material using a ray scan
-  test::register_checks<test::material_scan>(toy_det, toy_names, mat_scan_cfg,
-                                             ctx, white_board);
+  test::register_checks<test::host::material_scan>(
+      toy_det, toy_names, mat_scan_cfg, ctx, white_board);
 
   // Now trace the material during navigation and compare
-  test::material_validation<toy_detector_t>::config mat_val_cfg{};
+  test::host::material_validation<toy_detector_t>::config mat_val_cfg{};
   mat_val_cfg.name("toy_detector_material_validaiton");
   // Reduce tolerance for single precision tests
   if constexpr (std::is_same_v<scalar, float>) {
@@ -132,7 +131,7 @@ int main(int argc, char **argv) {
   mat_val_cfg.propagation().stepping.min_stepsize = min_stepsize;
 
   // @TODO: Put material maps on all portals
-  test::register_checks<test::material_validation>(
+  test::register_checks<test::host::material_validation>(
       toy_det, toy_names, mat_val_cfg, ctx, white_board);
 
   // Run the material validation - Homogeneous material
@@ -152,12 +151,12 @@ int main(int argc, char **argv) {
 
   // Record the material using a ray scan
   mat_scan_cfg.name("toy_detector_hom_material_scan");
-  test::register_checks<test::material_scan>(toy_det_hom_mat, toy_names_hom_mat,
-                                             mat_scan_cfg, ctx, white_board);
+  test::register_checks<test::host::material_scan>(
+      toy_det_hom_mat, toy_names_hom_mat, mat_scan_cfg, ctx, white_board);
 
   // Now trace the material during navigation and compare
   mat_val_cfg.name("toy_detector_hom_material_validaiton");
-  test::register_checks<test::material_validation>(
+  test::register_checks<test::host::material_validation>(
       toy_det_hom_mat, toy_names_hom_mat, mat_val_cfg, ctx, white_board);
 
   // Run the checks

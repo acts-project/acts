@@ -44,7 +44,7 @@ foreach(algebra ${algebra_plugins})
             HIP::hiprt
             vecmem::hip
             detray::benchmarks
-            detray::test_common
+            detray::test_tools
             detray::core_${algebra}
     )
 endforeach()

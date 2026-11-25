@@ -36,7 +36,7 @@ foreach(algebra ${algebras})
        LINK_LIBRARIES GTest::gtest_main
         HIP::hiprt vecmem::hip #covfie::hip
         detray::core detray::algebra_${algebra} detray::test_device
-        detray::test_common
+        detray::test_tools
     )
     # Make hipcc interpret .cpp files as .hip files to make linking work
     # (only needed for the amd backend)

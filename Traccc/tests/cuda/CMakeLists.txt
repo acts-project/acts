@@ -58,7 +58,7 @@ traccc_add_test(
     vecmem::cuda
     detray::core
     detray::io
-    detray::test_common
+    detray::test_tools
     traccc::core
     traccc::device_common
     traccc::cuda_utils
@@ -90,5 +90,5 @@ traccc_add_test(
     CUDA::cudart GTest::gtest vecmem::cuda
     traccc::core traccc::device_common traccc::cuda_utils traccc::cuda
     traccc_tests_cuda_main traccc_tests_common
-    detray::core detray::io detray::test_common
+    detray::core detray::io detray::test_tools
 )

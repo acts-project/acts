@@ -25,7 +25,7 @@
 #include "detray/utils/print_detector.hpp"
 
 // Detray test include(s)
-#include "detray/test/common/factories/telescope_generator.hpp"
+#include "detray/test/tools/factories/telescope_generator.hpp"
 
 // Vecmem include(s)
 #include <vecmem/memory/memory_resource.hpp>

@@ -13,12 +13,13 @@
 #include "detray/propagator/propagation_config.hpp"
 
 // Detray test include(s)
-#include "detray/test/common/build_toy_detector.hpp"
-#include "detray/test/common/event_generator/uniform_track_generator_config.hpp"
 #include "detray/test/framework/test_configuration.hpp"
 #include "detray/test/framework/types.hpp"
+#include "detray/test/tools/build_toy_detector.hpp"
+#include "detray/test/tools/event_generator/uniform_track_generator_config.hpp"
+#include "detray/test/validation/cpu/material_recorder.hpp"
+#include "detray/test/validation/material_scanner.hpp"
 #include "detray/test/validation/material_validation.hpp"
-#include "detray/test/validation/material_validation_config.hpp"
 
 // Vecmem include(s)
 #include <vecmem/memory/host_memory_resource.hpp>
@@ -49,17 +50,48 @@ using toy_det_config_t = detray::toy_det_config<scalar_t>;
 using test_config_t = detray::test::configuration<scalar_t>;
 using uniform_track_generator_config_t =
     detray::uniform_track_generator_config<scalar_t>;
-using material_scan_config_t = detray::test::material_scan_config<algebra_t>;
+using material_scan_config_t =
+    detray::validation::material_scan_config<algebra_t>;
 using material_validation_result_t =
-    detray::material_validator::material_validation_result;
+    detray::validation::material_validator::result;
 using material_validation_config_t =
-    detray::test::material_validation_config<algebra_t>;
+    detray::validation::material_validation_config<algebra_t>;
 
 template <typename T>
 std::string to_string(const T &obj) {
   std::ostringstream os;
   os << obj;
   return os.str();
+}
+
+/// Bind the specific type of the CRTP test configuration base
+/// @tparam derived_cfg_t the derived config type for which we need the base
+/// @tparam module_t type of the python module the binding should be added to
+/// @param m the python module the binding should be added to
+/// @param py_name name prefix for the base class bindings
+template <typename derived_cfg_t, typename module_t>
+void bind_crtp_base_config(module_t &m, const char *py_name) {
+  using base_t = detray::test::configuration<scalar_t, derived_cfg_t>;
+
+  py::class_<base_t>(m, (std::string(py_name) + "TestConfig").c_str())
+      .def_property(
+          "name", [](const derived_cfg_t &c) { return c.name(); },
+          [](derived_cfg_t &c, std::string &n) { return c.name(n); },
+          py::return_value_policy::reference_internal, "Name of the test")
+      .def_property(
+          "tol", [](const derived_cfg_t &c) { return c.tol(); },
+          [](derived_cfg_t &c, scalar_t t) { c.tol(t); },
+          "Tolerance to compare two floating point values")
+      .def_property(
+          "propagation",
+          [](derived_cfg_t &c) -> propagation_config_t & {
+            return c.propagation();
+          },
+          [](derived_cfg_t &c, const propagation_config_t &v) {
+            c.propagation() = v;
+          },
+          py::return_value_policy::reference_internal,
+          "Propagation configuration");
 }
 
 /// Run the CPU material validation for the given detector.
@@ -73,11 +105,11 @@ material_validation_result_t run_material_validation(
   vecmem::host_memory_resource host_mr{};
 
   const auto scan_data =
-      detray::material_validator::material_scan(gctx, det, names, scan_cfg);
+      detray::validation::material_scanner::run(gctx, det, names, scan_cfg);
 
-  return detray::material_validator::material_validation<
-      detray::test::run_material_validation>(&host_mr, det, names, scan_data,
-                                             val_cfg);
+  return detray::validation::material_validator::run<
+      detray::validation::host::material_recorder>(&host_mr, det, names,
+                                                   scan_data, val_cfg);
 }
 
 /// Build a toy detector using @p mr as configured by @p cfg .
@@ -262,7 +294,12 @@ PYBIND11_MODULE(detray_tests_python_bindings, m) {
           "Whether the momentum magnitude is interpreted as transverse")
       .def("__repr__", &to_string<uniform_track_generator_config_t>);
 
+  // Bind test config as standalone type
   py::class_<test_config_t>(m, "TestConfig")
+      .def_property(
+          "name", [](const test_config_t &c) { return c.name(); },
+          [](test_config_t &c, const std::string &n) { return c.name(n); },
+          py::return_value_policy::reference_internal, "Name of the test")
       .def_property(
           "tol", [](const test_config_t &c) { return c.tol(); },
           [](test_config_t &c, scalar_t t) { c.tol(t); },
@@ -278,16 +315,58 @@ PYBIND11_MODULE(detray_tests_python_bindings, m) {
           py::return_value_policy::reference_internal,
           "Propagation configuration");
 
-  py::class_<material_validation_config_t, test_config_t>(
-      m, "MaterialValidationConfig")
+  // Base test bindings for the material scan config
+  bind_crtp_base_config<material_scan_config_t>(m, "MaterialScanConfig");
+
+  py::class_<material_scan_config_t,
+             detray::test::configuration<scalar_t, material_scan_config_t>>(
+      m, "MaterialScanConfig")
       .def(py::init<>())
       .def_property(
-          "name",
-          [](const material_validation_config_t &c) { return c.name(); },
-          [](material_validation_config_t &c, const std::string &n) {
-            c.name(n);
+          "track_generator",
+          [](material_scan_config_t &c) -> uniform_track_generator_config_t & {
+            return c.track_generator();
           },
-          "Name of the test")
+          [](material_scan_config_t &c,
+             const uniform_track_generator_config_t &v) {
+            c.track_generator() = v;
+          },
+          py::return_value_policy::reference_internal,
+          "Track generator configuration")
+      .def_property(
+          "material_file",
+          [](const material_scan_config_t &c) { return c.material_file(); },
+          [](material_scan_config_t &c, const std::string &f) {
+            c.material_file(f);
+          },
+          "Name of the output file with the material traces")
+      .def_property(
+          "overlaps_tol",
+          [](const material_scan_config_t &c) { return c.overlaps_tol(); },
+          [](material_scan_config_t &c, scalar_t t) { c.overlaps_tol(t); },
+          "Tolerance for considering surfaces to be overlapping")
+      .def_property(
+          "overlaps_removal",
+          [](const material_scan_config_t &c) { return c.overlaps_removal(); },
+          [](material_scan_config_t &c, bool o) { c.overlaps_removal(o); },
+          "Perform overlaps removal")
+      .def_property(
+          "read_from_file",
+          [](const material_scan_config_t &c) { return c.read_from_file(); },
+          [](material_scan_config_t &c, bool b) { c.read_from_file(b); },
+          "Read the truth material from the material file instead of "
+          "running the ray scan")
+      .def("__repr__", &to_string<material_scan_config_t>);
+
+  // Base test bindings for the material scan config
+  bind_crtp_base_config<material_validation_config_t>(
+      m, "MaterialValidationConfig");
+
+  py::class_<
+      material_validation_config_t,
+      detray::test::configuration<scalar_t, material_validation_config_t>>(
+      m, "MaterialValidationConfig")
+      .def(py::init<>())
       .def_property(
           "material_file",
           [](const material_validation_config_t &c) {
@@ -298,11 +377,6 @@ PYBIND11_MODULE(detray_tests_python_bindings, m) {
           },
           "Name of the output file with the navigation material traces")
       .def_property(
-          "n_tracks",
-          [](const material_validation_config_t &c) { return c.n_tracks(); },
-          [](material_validation_config_t &c, std::size_t n) { c.n_tracks(n); },
-          "Maximal number of test tracks to run")
-      .def_property(
           "relative_error",
           [](const material_validation_config_t &c) {
             return c.relative_error();
@@ -311,6 +385,11 @@ PYBIND11_MODULE(detray_tests_python_bindings, m) {
             c.relative_error(re);
           },
           "Allowed relative discrepancy between truth and navigation material")
+      .def_property(
+          "n_tracks",
+          [](const material_validation_config_t &c) { return c.n_tracks(); },
+          [](material_validation_config_t &c, std::size_t n) { c.n_tracks(n); },
+          "Maximal number of test tracks to run")
       .def_property(
           "step_contingency",
           [](const material_validation_config_t &c) {
@@ -323,60 +402,23 @@ PYBIND11_MODULE(detray_tests_python_bindings, m) {
           "the material scan (device buffer capacity)")
       .def("__repr__", &to_string<material_validation_config_t>);
 
-  py::class_<material_scan_config_t, test_config_t>(m, "MaterialScanConfig")
-      .def(py::init<>())
-      .def_property(
-          "name", [](const material_scan_config_t &c) { return c.name(); },
-          [](material_scan_config_t &c, const std::string &n) { c.name(n); },
-          "Name of the test")
-      .def_property(
-          "material_file",
-          [](const material_scan_config_t &c) { return c.material_file(); },
-          [](material_scan_config_t &c, const std::string &f) {
-            c.material_file(f);
-          },
-          "Name of the output file with the material traces")
-      .def_property(
-          "overlaps_removal",
-          [](const material_scan_config_t &c) { return c.overlaps_removal(); },
-          [](material_scan_config_t &c, bool o) { c.overlaps_removal(o); },
-          "Perform overlaps removal")
-      .def_property(
-          "overlaps_tol",
-          [](const material_scan_config_t &c) { return c.overlaps_tol(); },
-          [](material_scan_config_t &c, scalar_t t) { c.overlaps_tol(t); },
-          "Tolerance for considering surfaces to be overlapping")
-      .def_property(
-          "truth_from_file",
-          [](const material_scan_config_t &c) { return c.truth_from_file(); },
-          [](material_scan_config_t &c, bool b) { c.truth_from_file(b); },
-          "Read the truth material from the material file instead of "
-          "running the ray scan")
-      .def_property(
-          "track_generator",
-          [](material_scan_config_t &c) -> uniform_track_generator_config_t & {
-            return c.track_generator();
-          },
-          [](material_scan_config_t &c,
-             const uniform_track_generator_config_t &v) {
-            c.track_generator() = v;
-          },
-          py::return_value_policy::reference_internal,
-          "Track generator configuration")
-      .def("__repr__", &to_string<material_scan_config_t>);
-
   py::class_<material_validation_result_t>(m, "MaterialValidationResult")
       .def_readonly("n_tracks", &material_validation_result_t::n_tracks,
                     "Number of tracks that were compared")
-      .def_readonly("n_failed", &material_validation_result_t::n_failed,
-                    "Number of tracks with a material discrepancy")
+      .def_readonly(
+          "n_diff_total_mat", &material_validation_result_t::n_diff_total_mat,
+          "Number of tracks with a discrepancy in integrated material")
+      .def_readonly(
+          "n_diff_mat_steps", &material_validation_result_t::n_diff_mat_steps,
+          "Number of tracks with a discrepancy in at least one material step")
       .def_property_readonly("passed", &material_validation_result_t::passed,
                              "No material discrepancy was found")
       .def("__bool__", &material_validation_result_t::passed)
       .def("__repr__", [](const material_validation_result_t &r) {
         return "MaterialValidationResult(n_tracks=" +
                std::to_string(r.n_tracks) +
-               ", n_failed=" + std::to_string(r.n_failed) + ")";
+               ", n_diff_total_mat=" + std::to_string(r.n_diff_total_mat) +
+               ", n_diff_mat_steps=" + std::to_string(r.n_diff_mat_steps) + ")";
       });
 
   m.def("run_material_validation", &run_material_validation,

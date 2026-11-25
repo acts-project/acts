@@ -27,7 +27,7 @@ target_link_libraries(
         detray::core_array
         detray::test_framework
         detray::test_utils
-        detray::validation_utils
+        detray::validation
 )
 
 if(DETRAY_BUILD_CUDA)

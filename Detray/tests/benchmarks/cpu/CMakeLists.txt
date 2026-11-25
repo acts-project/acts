@@ -35,7 +35,7 @@ macro(detray_add_cpu_benchmark algebra)
        "intersect_surfaces.cpp"
        "masks.cpp"
        LINK_LIBRARIES benchmark::benchmark benchmark::benchmark_main vecmem::core detray::benchmarks
-                      detray::core_${algebra} detray::test_common
+                      detray::core_${algebra} detray::test_tools
     )
 
     target_compile_options(
@@ -62,7 +62,7 @@ macro(detray_add_cpu_benchmark algebra)
     detray_add_executable( benchmark_cpu_propagation_${algebra}
        "propagation.cpp"
        LINK_LIBRARIES detray::benchmark_cpu benchmark::benchmark_main
-                     vecmem::core detray::core_${algebra} detray::test_common
+                     vecmem::core detray::core_${algebra} detray::test_tools
     )
 
     target_compile_options(
@@ -124,7 +124,7 @@ if(DETRAY_VC_SOA_PLUGIN)
         detray_add_executable(benchmark_cpu_vc_soa_vs_${algebra}
          "soa/intersectors.cpp"
            LINK_LIBRARIES detray::benchmark_cpu benchmark::benchmark benchmark::benchmark_main vecmem::core detray::core_vc_soa detray::core_vc_aos detray::core_${algebra}
-           detray::test_common
+           detray::test_tools
         )
 
         target_compile_options(

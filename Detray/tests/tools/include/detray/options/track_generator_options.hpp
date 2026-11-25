@@ -14,8 +14,8 @@
 
 // Detray test include(s)
 #include "detray/options/options_handling.hpp"
-#include "detray/test/common/event_generator/random_track_generator_config.hpp"
-#include "detray/test/common/event_generator/uniform_track_generator_config.hpp"
+#include "detray/test/tools/event_generator/random_track_generator_config.hpp"
+#include "detray/test/tools/event_generator/uniform_track_generator_config.hpp"
 
 // Boost
 #include "detray/options/boost_program_options.hpp"

@@ -39,7 +39,7 @@ target_link_libraries(
         vecmem::core
         detray::core
         detray::io
-        detray::test_common
+        detray::test_tools
         covfie::core
         traccc::core
         traccc::io

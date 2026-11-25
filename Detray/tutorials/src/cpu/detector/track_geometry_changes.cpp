@@ -11,7 +11,7 @@
 #include "detray/utils/logging.hpp"
 
 // Detray test include(s)
-#include "detray/test/common/build_toy_detector.hpp"
+#include "detray/test/tools/build_toy_detector.hpp"
 #include "detray/test/utils/hash_tree.hpp"
 
 // Example linear algebra plugin: std::array

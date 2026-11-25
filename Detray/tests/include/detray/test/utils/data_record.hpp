@@ -313,6 +313,37 @@ struct material_record {
   double mat_L0{0.};
 };
 
+/// @brief Record the total material budget per track
+struct track_material {
+  /// Phi and eta values of the track for which the material was recorded
+  /// @{
+  double phi{detail::invalid_value<double>()};
+  /// Eta of the track.
+  double eta{detail::invalid_value<double>()};
+  /// @}
+  /// Accumulated radiation length per pathlength through the material
+  double sX0{0.f};
+  /// Accumulated radiation length per thickness
+  double tX0{0.f};
+  /// Accumulated interaction length per pathlength through the material
+  double sL0{0.f};
+  /// Accumulated interaction length per thickness
+  double tL0{0.f};
+};
+
+/// @brief Data collected by the material scan
+///
+/// @tparam algebra_t the algebra type of the scanned detector
+template <concepts::algebra algebra_t>
+struct material_trace_data {
+  /// Test tracks (initial free track parameters)
+  dvector<free_track_parameters<algebra_t>> tracks{};
+  /// Accumulated material per track
+  dvector<track_material> track_materials{};
+  /// Material steps per track
+  dvector<dvector<material_record>> material_steps{};
+};
+
 /// Data for a single step
 template <concepts::detector detector_t>
 struct propagation_record {

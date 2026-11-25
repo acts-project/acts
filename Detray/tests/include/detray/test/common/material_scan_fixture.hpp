@@ -14,8 +14,8 @@
 // Detray test include(s)
 #include "detray/test/framework/fixture_base.hpp"
 #include "detray/test/framework/whiteboard.hpp"
-#include "detray/test/validation/material_validation.hpp"
-#include "detray/test/validation/material_validation_config.hpp"
+#include "detray/test/utils/data_record.hpp"
+#include "detray/test/validation/material_scanner.hpp"
 
 // System include(s)
 #include <memory>
@@ -28,18 +28,25 @@ namespace detray::test {
 ///
 /// @note The lifetime of the detector needs to be guaranteed.
 template <concepts::detector detector_t>
-class material_scan : public test::fixture_base<> {
+class material_scan_fixture : public test::fixture_base<> {
   using algebra_t = typename detector_t::algebra_type;
 
  public:
+  /// Test fixture base type
   using fixture_type = test::fixture_base<>;
-  using config = material_scan_config<algebra_t>;
+  /// Material scan configuration type
+  using config = validation::material_scan_config<algebra_t>;
 
-  explicit material_scan(const detector_t &det,
-                         const typename detector_t::name_map &names,
-                         const config &cfg = {},
-                         std::shared_ptr<test::whiteboard> wb = nullptr,
-                         const typename detector_t::geometry_context &gctx = {})
+  /// Parameterized constructor
+  /// @param det the detector to be scanned
+  /// @param name name map of the detector
+  /// @param cfg the scan config
+  /// @param wb pointer to the whiteboard the data will be pinned to
+  /// @param gctx geometry context
+  explicit material_scan_fixture(
+      const detector_t &det, const typename detector_t::name_map &names,
+      const config &cfg = {}, std::shared_ptr<test::whiteboard> wb = nullptr,
+      const typename detector_t::geometry_context &gctx = {})
       : m_cfg{cfg},
         m_gctx{gctx},
         m_det{det},
@@ -47,14 +54,15 @@ class material_scan : public test::fixture_base<> {
         m_whiteboard{std::move(wb)} {
     if (!m_whiteboard) {
       throw std::invalid_argument("No white board was passed to " +
-                                  m_cfg.name());
+                                  m_cfg.name() + "(" + m_det.name(m_names) +
+                                  ")");
     }
   }
 
   /// Run the ray scan
   void TestBody() override {
-    auto scan_data =
-        material_validator::material_scan(m_gctx, m_det, m_names, m_cfg);
+    material_trace_data<algebra_t> scan_data =
+        validation::material_scanner::run(m_gctx, m_det, m_names, m_cfg);
 
     // Pin data to whiteboard
     m_whiteboard->add(m_det.name(m_names) + "_material_scan",

@@ -19,7 +19,7 @@
 #include "detray/benchmarks/types.hpp"
 
 // Detray test include(s)
-#include "detray/test/common/track_generators.hpp"
+#include "detray/test/tools/track_generators.hpp"
 #include "detray/test/utils/planes_along_direction.hpp"
 
 // Google Benchmark include(s)

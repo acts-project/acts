@@ -10,7 +10,7 @@
 #include "detray/io/json/detector_writer.hpp"
 
 // Detray test include(s)
-#include "detray/test/common/build_toy_detector.hpp"
+#include "detray/test/tools/build_toy_detector.hpp"
 
 // Example linear algebra plugin: std::array
 #include "detray/tutorial/types.hpp"
