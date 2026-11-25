@@ -177,7 +177,7 @@ triplet_seeding_algorithm::triplet_seeding_algorithm(
 
 void triplet_seeding_algorithm::count_grid_capacities_kernel(
     const count_grid_capacities_kernel_payload& payload) const {
-  const unsigned int n_threads = warp_size() * 8;
+  const unsigned int n_threads = 256;
   const unsigned int n_blocks =
       (payload.n_spacepoints + n_threads - 1) / n_threads;
   hipLaunchKernelGGL(kernels::count_grid_capacities, n_blocks, n_threads, 0,
@@ -189,7 +189,7 @@ void triplet_seeding_algorithm::count_grid_capacities_kernel(
 
 void triplet_seeding_algorithm::populate_grid_kernel(
     const populate_grid_kernel_payload& payload) const {
-  const unsigned int n_threads = warp_size() * 8;
+  const unsigned int n_threads = 256;
   const unsigned int n_blocks =
       (payload.n_spacepoints + n_threads - 1) / n_threads;
   hipLaunchKernelGGL(kernels::populate_grid, n_blocks, n_threads, 0,
@@ -201,7 +201,7 @@ void triplet_seeding_algorithm::populate_grid_kernel(
 
 void triplet_seeding_algorithm::count_doublets_kernel(
     const count_doublets_kernel_payload& payload) const {
-  const unsigned int n_threads = warp_size() * 2;
+  const unsigned int n_threads = 64;
   const unsigned int n_blocks =
       (payload.n_spacepoints + n_threads - 1) / n_threads;
   // The azimuthal separation cut is compiled into its own kernel instance
@@ -217,7 +217,7 @@ void triplet_seeding_algorithm::count_doublets_kernel(
 
 void triplet_seeding_algorithm::find_doublets_kernel(
     const find_doublets_kernel_payload& payload) const {
-  const unsigned int n_threads = warp_size() * 2;
+  const unsigned int n_threads = 64;
   const unsigned int n_blocks =
       (payload.n_doublets + n_threads - 1) / n_threads;
   // The azimuthal separation cut is compiled into its own kernel instance
@@ -233,7 +233,7 @@ void triplet_seeding_algorithm::find_doublets_kernel(
 
 void triplet_seeding_algorithm::count_triplets_kernel(
     const count_triplets_kernel_payload& payload) const {
-  const unsigned int n_threads = warp_size() * 2;
+  const unsigned int n_threads = 64;
   const unsigned int n_blocks = (payload.nMidBot + n_threads - 1) / n_threads;
   // The strip aware check is compiled into its own kernel instance
   const auto kernel = payload.config.useStripInfo
@@ -249,7 +249,7 @@ void triplet_seeding_algorithm::count_triplets_kernel(
 
 void triplet_seeding_algorithm::triplet_counts_reduction_kernel(
     const triplet_counts_reduction_kernel_payload& payload) const {
-  const unsigned int n_threads = warp_size() * 2;
+  const unsigned int n_threads = 64;
   const unsigned int n_blocks =
       (payload.n_doublets + n_threads - 1) / n_threads;
   hipLaunchKernelGGL(kernels::reduce_triplet_counts, n_blocks, n_threads, 0,
@@ -260,7 +260,7 @@ void triplet_seeding_algorithm::triplet_counts_reduction_kernel(
 
 void triplet_seeding_algorithm::find_triplets_kernel(
     const find_triplets_kernel_payload& payload) const {
-  const unsigned int n_threads = warp_size() * 2;
+  const unsigned int n_threads = 64;
   const unsigned int n_blocks = (payload.nMidBot + n_threads - 1) / n_threads;
   // The strip aware check is compiled into its own kernel instance
   const auto kernel = payload.finding_config.useStripInfo
@@ -276,7 +276,7 @@ void triplet_seeding_algorithm::find_triplets_kernel(
 
 void triplet_seeding_algorithm::update_triplet_weights_kernel(
     const update_triplet_weights_kernel_payload& payload) const {
-  const unsigned int n_threads = warp_size() * 2;
+  const unsigned int n_threads = 64;
   const unsigned int n_blocks =
       (payload.n_triplets + n_threads - 1) / n_threads;
   hipLaunchKernelGGL(
@@ -289,7 +289,7 @@ void triplet_seeding_algorithm::update_triplet_weights_kernel(
 
 void triplet_seeding_algorithm::select_seeds_kernel(
     const select_seeds_kernel_payload& payload) const {
-  const unsigned int n_threads = warp_size() * 2;
+  const unsigned int n_threads = 64;
   const unsigned int n_blocks =
       (payload.n_doublets + n_threads - 1) / n_threads;
   hipLaunchKernelGGL(kernels::select_seeds, n_blocks, n_threads,
