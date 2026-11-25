@@ -152,7 +152,7 @@ auto hough_transform_seeding_algorithm::operator()(
   vecmem::data::jagged_vector_buffer<global_index_t> maxima_global_index(
       maxima_sizes_host, mr().main, mr().host,
       vecmem::data::buffer_type::resizable);
-  copy().setup(maxima_global_index)->ignore();
+  copy().setup(vecmem::ignore_event, maxima_global_index);
 
   find_maxima_kernel(
       {m_config, houghplane_entries, thresholds, maxima_global_index});
@@ -166,7 +166,7 @@ auto hough_transform_seeding_algorithm::operator()(
 
   copy().setup(vecmem::ignore_event, maxima_x_value);
   copy().memset(vecmem::ignore_event, maxima_x_value, 0);
-  copy().setup(images)->ignore();
+  copy().setup(vecmem::ignore_event, images);
 
   take_picture_kernel({m_config, total_maxima, houghplane_entries, edges_x,
                        maxima_global_index, images, maxima_x_value});
@@ -200,7 +200,7 @@ auto hough_transform_seeding_algorithm::operator()(
   vecmem::data::jagged_vector_buffer<global_index_t> hits(
       hits_sizes_host, mr().main, mr().host,
       vecmem::data::buffer_type::resizable);
-  copy().setup(hits)->ignore();
+  copy().setup(vecmem::ignore_event, hits);
 
   find_contributing_hits_kernel(
       {m_config, total_maxima, bfield, edges_x, edges_y, spacepoint_r,
@@ -215,7 +215,7 @@ auto hough_transform_seeding_algorithm::operator()(
   vecmem::data::jagged_vector_buffer<scalar> matrices(
       matrices_sizes, mr().main, mr().host,
       vecmem::data::buffer_type::resizable);
-  copy().setup(matrices)->ignore();
+  copy().setup(vecmem::ignore_event, matrices);
 
   unsigned int max_hits = 0u;
   for (unsigned int value : hits_sizes_host)
@@ -227,7 +227,7 @@ auto hough_transform_seeding_algorithm::operator()(
   // Filter hits
   vecmem::data::jagged_vector_buffer<unsigned int> iotas(matrices_sizes,
                                                          mr().main, mr().host);
-  copy().setup(iotas)->ignore();
+  copy().setup(vecmem::ignore_event, iotas);
 
   vecmem::data::vector_buffer<unsigned int> n_filtered_hits(total_maxima,
                                                             mr().main);
@@ -254,7 +254,7 @@ auto hough_transform_seeding_algorithm::operator()(
   vecmem::data::jagged_vector_buffer<global_index_t> selected_hits(
       n_filtered_hits_host, mr().main, mr().host,
       vecmem::data::buffer_type::resizable);
-  copy().setup(selected_hits)->ignore();
+  copy().setup(vecmem::ignore_event, selected_hits);
 
   // count how many valid seeds we have
   // - nn outcome is 1

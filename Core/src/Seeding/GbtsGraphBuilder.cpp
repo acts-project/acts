@@ -18,7 +18,6 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
-#include <limits>
 #include <numbers>
 #include <ranges>
 #include <span>
@@ -414,14 +413,8 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(
       window.technology = B2.technology;
       window.minRadius = B2.minRadius;
       window.maxRadius = B2.maxRadius;
-      // the bin keeps its radial extent but not its z extent
-      window.minZ = std::numeric_limits<float>::max();
-      window.maxZ = std::numeric_limits<float>::lowest();
-      for (SpacePointIndex n2Idx = B2.nodes.first; n2Idx < B2.nodes.second;
-           ++n2Idx) {
-        window.minZ = std::min(window.minZ, params[n2Idx].z);
-        window.maxZ = std::max(window.maxZ, params[n2Idx].z);
-      }
+      window.minZ = B2.minZ;
+      window.maxZ = B2.maxZ;
 
       // Isolated n2 nodes are skipped below for every n1 of this group, and
       // the branch is unpredictable. Filter them out of the window once
@@ -564,9 +557,9 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(
       float x1 = 0.f;
       float y1 = 0.f;
       if (calibrate) {
-        const std::array<float, 4>& position = nodeView.positions[n1Idx];
-        x1 = position[0];
-        y1 = position[1];
+        const detail::GbtsNodePosition& position = nodeView.positions[n1Idx];
+        x1 = position.x;
+        y1 = position.y;
       }
 
       // the intermediate loop over sliding windows
@@ -662,9 +655,10 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(
 
             // A circle's chord bisects the tangent directions, so turning the
             // chord by the pair's own azimuth difference gives each tangent.
-            const std::array<float, 4>& position = nodeView.positions[n2Idx];
-            const float dx = position[0] - x1;
-            const float dy = position[1] - y1;
+            const detail::GbtsNodePosition& position =
+                nodeView.positions[n2Idx];
+            const float dx = position.x - x1;
+            const float dy = position.y - y1;
             const float dzc = z2 - z1;
             const float turn = phi2 - phi1;
 

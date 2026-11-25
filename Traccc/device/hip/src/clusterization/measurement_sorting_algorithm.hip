@@ -78,7 +78,7 @@ void measurement_sorting_algorithm::sorting_kernel(
 #error "Unrecognised HIP platform."
 #endif
 
-  const unsigned int num_threads = warp_size() * 8;
+  const unsigned int num_threads = 256;
   const unsigned int num_blocks =
       (n_measurements + num_threads - 1) / num_threads;
 
@@ -96,10 +96,6 @@ void measurement_sorting_algorithm::sorting_kernel(
                      0, str, payload.measurements, payload.output,
                      payload.indices);
   TRACCC_HIP_ERROR_CHECK(hipGetLastError());
-}
-
-void measurement_sorting_algorithm::synchronize() const {
-  stream().synchronize();
 }
 
 }  // namespace traccc::hip

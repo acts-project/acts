@@ -28,6 +28,7 @@
 #include <ranges>
 #include <sstream>
 #include <string>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -658,6 +659,71 @@ BOOST_AUTO_TEST_CASE(NodeOrderIgnoresInsertionOrderAtEqualPhi) {
   const std::vector<SpacePointIndex> forward = nodeOrder(false);
   BOOST_CHECK_EQUAL(forward.size(), zs.size());
   BOOST_CHECK(forward == nodeOrder(true));
+}
+
+// Exercise both sorting paths, buffer reuse, empty bins and stable ties.
+BOOST_AUTO_TEST_CASE(NodeOrderMatchesStableSortAcrossBins) {
+  const ToyDetector detector = barrelDetector();
+  const SeederSetup setup = makeSeeder(detector);
+  Experimental::GbtsNodeStorage storage = setup.seeder.makeNodeStorage();
+
+  struct Node {
+    SpacePointIndex index;
+    std::uint32_t bin;
+    float phi;
+    float z;
+    float r;
+  };
+  std::vector<Node> expected;
+  constexpr std::array<std::uint32_t, 4> counts{33, 0, 32, 65};
+  for (std::uint32_t k = 0; k < 65; ++k) {
+    // Interleave layers and repeat positions, with distinct caller indices.
+    for (std::size_t layer = 0; layer < counts.size(); ++layer) {
+      if (k >= counts[layer]) {
+        continue;
+      }
+      const auto index =
+          static_cast<SpacePointIndex>(1000 + 3 * expected.size());
+      const float phi = 0.1f - 0.2f * (k % 2);
+      const float z = 1.f + 0.1f * ((k / 2) % 2);
+      const float r = detector.layers[layer].refCoord + 0.1f * ((k / 4) % 2);
+      const auto bin =
+          storage.insert(index, r * std::cos(phi), r * std::sin(phi), z, r, phi,
+                         static_cast<Experimental::GbtsLayerIndex>(layer));
+      BOOST_REQUIRE(bin.has_value());
+      expected.push_back({index, *bin, phi, z, r});
+    }
+  }
+  storage.finalize();
+
+  std::ranges::stable_sort(expected, {}, [](const Node& node) {
+    return std::tuple(node.bin, node.phi, node.z, node.r);
+  });
+  BOOST_REQUIRE_EQUAL(storage.numberOfNodes(), expected.size());
+  for (std::uint32_t node = 0; node < storage.numberOfNodes(); ++node) {
+    BOOST_CHECK_EQUAL(storage.spacePointIndex(node), expected[node].index);
+  }
+}
+
+// A slightly curved track crosses the phi seam in either direction.
+BOOST_AUTO_TEST_CASE(SeedsAcrossPhiWrapAround) {
+  const ToyDetector detector = barrelDetector();
+  const std::vector<Track> tracks{{.phi = 0.f, .tau = 0.2f}};
+  for (const float rotation : {0.f, std::numbers::pi_v<float>}) {
+    for (const float direction : {-1.f, 1.f}) {
+      SpacePointContainer spacePoints = makeSpacePoints(detector, tracks);
+      for (auto sp : spacePoints) {
+        const float phi =
+            rotation +
+            direction * 0.0002f * (static_cast<float>(sp.index()) - 1.5f);
+        sp.x() = sp.r() * std::cos(phi);
+        sp.y() = sp.r() * std::sin(phi);
+        sp.phi() = std::atan2(sp.y(), sp.x());
+      }
+      const SeedContainer seeds = runSeeding(detector, spacePoints);
+      checkOneSeedPerTrack(seeds, spacePoints, tracks);
+    }
+  }
 }
 
 // An edge keeps every inner neighbour that passes the linking cuts, however

@@ -31,7 +31,7 @@ def run_generate_toy_detector(args):
 
     # Build the geometry
     toy_cfg = fill_toy_detector_config(args, detray.tests.ToyDetectorConfig())
-    det, names = detray.tests.buildToyDetector(
+    det, names = detray.tests.build_toy_detector(
         detray.core.HostMemoryResource(), toy_cfg
     )
 
@@ -39,11 +39,11 @@ def run_generate_toy_detector(args):
     writer_cfg = fill_writer_config(args, detray.io.DetectorWriterConfig())
 
     # Make sure material is written to file, if it was requested
-    writer_cfg.writeMaterial = (
+    writer_cfg.write_material = (
         args.homogeneous_material or args.material_maps or args.write_material
     )
 
-    detray.io.writeDetector(det, names, writer_cfg)
+    detray.io.write_detector_json(det, names, writer_cfg)
 
 
 def __main__():

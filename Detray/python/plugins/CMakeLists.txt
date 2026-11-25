@@ -7,44 +7,37 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 set(_python_dir "${CMAKE_BINARY_DIR}/python")
-set(_pkg_dir ${_python_dir}/detray/tests)
+set(_pkg_dir ${_python_dir}/detray/svgtools)
 
 if(NOT TARGET detray::svgtools)
     message(
         STATUS
-        "Skipping 'detray.tests' python module: 'detray::svgtools' not available"
+        "Skipping 'detray.svgtools' python module: 'detray::svgtools' not available"
     )
     return()
 endif()
 
 file(MAKE_DIRECTORY ${_pkg_dir})
 
-pybind11_add_module(DetrayTestsPythonBindings src/TestsModuleEntry.cpp)
+pybind11_add_module(detray_svgtools_python_bindings src/svgtools.cpp)
 
 target_link_libraries(
-    DetrayTestsPythonBindings
-    PRIVATE
-        detray::core_array
-        detray::io
-        detray::test_common
-        detray::svgtools
-        GTest::gtest
-        vecmem::core
-        covfie::core
+    detray_svgtools_python_bindings
+    PRIVATE detray::core_array detray::detectors detray::svgtools vecmem::core
 )
 
-# Place the compiled module inside the `detray.tests` package.
+# Place the compiled module inside the `detray.svgtools` package.
 set_target_properties(
-    DetrayTestsPythonBindings
+    detray_svgtools_python_bindings
     PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${_pkg_dir}
 )
 install(
-    TARGETS DetrayTestsPythonBindings
-    DESTINATION ${DETRAY_PYTHON_INSTALL_DIR}/tests
+    TARGETS detray_svgtools_python_bindings
+    DESTINATION ${DETRAY_PYTHON_INSTALL_DIR}/svgtools
 )
 
 # Generate the package __init__ that re-exports the compiled module.
-set(BINDINGS_MODULE DetrayTestsPythonBindings)
+set(BINDINGS_MODULE detray_svgtools_python_bindings)
 configure_file(
     ${CMAKE_CURRENT_SOURCE_DIR}/module_init.py.in
     ${_pkg_dir}/__init__.py
@@ -52,7 +45,7 @@ configure_file(
 )
 install(
     FILES ${_pkg_dir}/__init__.py
-    DESTINATION ${DETRAY_PYTHON_INSTALL_DIR}/tests
+    DESTINATION ${DETRAY_PYTHON_INSTALL_DIR}/svgtools
 )
 
-acts_pybind_generate_stubs(detray.tests DetrayTestsPythonBindings)
+acts_pybind_generate_stubs(detray.svgtools detray_svgtools_python_bindings)

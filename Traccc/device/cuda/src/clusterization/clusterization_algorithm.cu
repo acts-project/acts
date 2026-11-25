@@ -85,12 +85,6 @@ void clusterization_algorithm::ccl_kernel(
       payload.adjc_backup, payload.adjv_backup, payload.backup_mutex,
       payload.disjoint_set, payload.cluster_sizes);
   TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
-  // With sorting enabled, the kernel reads from sorted cell and permutation
-  // map buffers that the base class destroys without any further
-  // synchronization, so the kernel must finish before returning.
-  if (payload.config.sort_cells) {
-    stream().synchronize();
-  }
 }
 
 void clusterization_algorithm::cluster_maker_kernel(
@@ -99,15 +93,12 @@ void clusterization_algorithm::cluster_maker_kernel(
     edm::silicon_cluster_collection::view& cluster_data,
     const vecmem::data::vector_view<const unsigned int>& permutation_map_view)
     const {
-  const unsigned int num_threads = warp_size() * 16u;
+  const unsigned int num_threads = 512u;
   const unsigned int num_blocks = (num_cells + num_threads - 1) / num_threads;
   kernels::reify_cluster_data<<<num_blocks, num_threads, 0,
                                 details::get_stream(stream())>>>(
       disjoint_set, permutation_map_view, cluster_data);
   TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
-  // The base class destroys the input buffers right after this call, so
-  // the kernel must finish before returning.
-  stream().synchronize();
 }
 
 }  // namespace traccc::cuda

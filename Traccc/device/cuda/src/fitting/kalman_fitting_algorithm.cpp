@@ -39,7 +39,7 @@ void kalman_fitting_algorithm::fit_prelude_kernel(
   assert(n_tracks == copy().get_size(payload.output_tracks.tracks));
 
   // Launch parameters for the kernel.
-  const unsigned int nThreads = warp_size() * 4;
+  const unsigned int nThreads = 128;
   const unsigned int nBlocks = (n_tracks + nThreads - 1) / nThreads;
 
   // Run the fitting, using the sorted parameter IDs.
@@ -67,7 +67,7 @@ void kalman_fitting_algorithm::fit_forward_kernel(
         assert(n_tracks == copy().get_size(payload.payload.tracks.tracks));
 
         // Launch parameters for the kernel.
-        const unsigned int nThreads = warp_size() * 4;
+        const unsigned int nThreads = 128;
         const unsigned int nBlocks = (n_tracks + nThreads - 1) / nThreads;
 
         // Fitter type to use.
@@ -93,7 +93,7 @@ void kalman_fitting_algorithm::fit_backward_kernel(
         assert(n_tracks == copy().get_size(payload.payload.tracks.tracks));
 
         // Launch parameters for the kernel.
-        const unsigned int nThreads = warp_size() * 4;
+        const unsigned int nThreads = 128;
         const unsigned int nBlocks = (n_tracks + nThreads - 1) / nThreads;
 
         // Fitter type to use.
@@ -105,10 +105,6 @@ void kalman_fitting_algorithm::fit_backward_kernel(
             nBlocks, nThreads, 0, details::get_stream(stream()), config,
             payload.payload, payload.get_tpayload<fitter_t>());
       });
-}
-
-void kalman_fitting_algorithm::synchronize() const {
-  stream().synchronize();
 }
 
 }  // namespace traccc::cuda

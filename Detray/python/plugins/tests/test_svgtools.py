@@ -28,41 +28,41 @@ VIEWS = [
 
 
 @pytest.fixture
-def illustrator(detector):
-    det, names = detector
+def illustrator(toy_detector):
+    det, names = toy_detector
     return detray.svgtools.Illustrator(
-        det, names, detray.svgtools.tableauColorblindStyle()
+        det, names, detray.svgtools.tableau_colorblind_style()
     )
 
 
 def test_write_svg(tmp_path):
-    axes = detray.svgtools.drawAxes("axes", [-1.0, 1.0], [-1.0, 1.0], "x", "y", 12)
+    axes = detray.svgtools.draw_axes("axes", [-1.0, 1.0], [-1.0, 1.0], "x", "y", 12)
     assert axes.id == "axes"
 
     path = os.path.join(str(tmp_path), axes.id)
-    detray.svgtools.writeSvg(path, [axes])
+    detray.svgtools.write_svg(path, [axes])
 
     ElementTree.parse(path + ".svg")
 
 
 def test_style_properties():
-    style = detray.svgtools.tableauColorblindStyle()
-    style.fontSize = 20
-    style.materialGradientPos = [800.0, -200.0]
+    style = detray.svgtools.tableau_colorblind_style()
+    style.font_size = 20
+    style.material_gradient_pos = [800.0, -200.0]
 
-    assert style.fontSize == 20
-    assert style.materialGradientPos == pytest.approx([800.0, -200.0], rel=1e-6)
+    assert style.font_size == 20
+    assert style.material_gradient_pos == pytest.approx([800.0, -200.0], rel=1e-6)
 
 
 @pytest.mark.parametrize("view, suffix", VIEWS)
 def test_draw_detector(illustrator, view, suffix):
-    svg = illustrator.drawDetector(view(), detray.core.GeometryContext())
+    svg = illustrator.draw_detector(view(), detray.core.GeometryContext())
 
     assert svg.id == f"toy_detector_{suffix}"
 
 
 def test_draw_volumes_by_index(illustrator):
-    svg, grids = illustrator.drawVolumes(
+    svg, grids = illustrator.draw_volumes(
         [0, 1], detray.svgtools.ViewXY(), detray.core.GeometryContext()
     )
 
@@ -71,9 +71,9 @@ def test_draw_volumes_by_index(illustrator):
     assert len(grids) == 2
 
 
-def test_draw_volumes_by_name(illustrator, detector):
-    _, names = detector
-    svg, _ = illustrator.drawVolumes(
+def test_draw_volumes_by_name(illustrator, toy_detector):
+    _, names = toy_detector
+    svg, _ = illustrator.draw_volumes(
         [names[0], names[1]], detray.svgtools.ViewXY(), detray.core.GeometryContext()
     )
 
@@ -81,7 +81,7 @@ def test_draw_volumes_by_name(illustrator, detector):
 
 
 def test_draw_surfaces(illustrator):
-    svg, material = illustrator.drawSurfaces(
+    svg, material = illustrator.draw_surfaces(
         [0, 1], detray.svgtools.ViewXY(), detray.core.GeometryContext()
     )
 
@@ -90,18 +90,18 @@ def test_draw_surfaces(illustrator):
 
 
 def test_illustrator_keeps_detector_and_names_alive(toy_detector_files):
-    reader_config = detray.io.DetectorReaderConfig().addFile(
+    reader_config = detray.io.DetectorReaderConfig().add_file(
         toy_detector_files["geometry"]
     )
     memory_resource = detray.core.HostMemoryResource()
-    det, names = detray.io.readDetector(memory_resource, reader_config)
+    det, names = detray.io.read_detector_json(memory_resource, reader_config)
 
     mr_ref = weakref.ref(memory_resource)
     det_ref = weakref.ref(det)
     names_ref = weakref.ref(names)
 
     il = detray.svgtools.Illustrator(
-        det, names, detray.svgtools.tableauColorblindStyle()
+        det, names, detray.svgtools.tableau_colorblind_style()
     )
 
     del memory_resource, det, names
@@ -110,7 +110,7 @@ def test_illustrator_keeps_detector_and_names_alive(toy_detector_files):
     assert mr_ref() is not None
     assert det_ref() is not None
     assert names_ref() is not None
-    assert il.detName == "toy_detector"
+    assert il.det_name == "toy_detector"
 
     del il
     gc.collect()

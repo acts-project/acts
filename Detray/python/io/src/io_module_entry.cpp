@@ -8,18 +8,15 @@
 
 // Detray core include(s)
 #include "detray/core/detector.hpp"
+#include "detray/definitions/algebra.hpp"
+#include "detray/detectors/default_metadata.hpp"
+#include "detray/detectors/toy_metadata.hpp"
 
 // Detray IO include(s)
 #include "detray/io/frontend/detector_reader_config.hpp"
 #include "detray/io/frontend/detector_writer_config.hpp"
 #include "detray/io/json/detector_reader.hpp"
 #include "detray/io/json/detector_writer.hpp"
-
-// Detray algebra plugin + detector metadata
-#include "algebra/array.hpp"
-#include "detray/definitions/algebra.hpp"
-#include "detray/detectors/default_metadata.hpp"
-#include "detray/detectors/toy_metadata.hpp"
 
 // Vecmem include(s)
 #include <vecmem/memory/memory_resource.hpp>
@@ -38,12 +35,12 @@ namespace py = pybind11;
 
 namespace {
 
-using reader_config_t = detray::io::detector_reader_config;
 using scalar_t = DETRAY_CUSTOM_SCALARTYPE;
 using algebra_t = detray::array<scalar_t>;
 using detector_t = detray::host::detector<detray::default_metadata<algebra_t>>;
-using writer_config_t = detray::io::detector_writer_config;
 using toy_detector_t = detray::host::detector<detray::toy_metadata<algebra_t>>;
+using reader_config_t = detray::io::detector_reader_config;
+using writer_config_t = detray::io::detector_writer_config;
 
 template <typename T>
 std::string to_string(const T &obj) {
@@ -68,18 +65,18 @@ std::pair<py::object, detray::name_map> read_detector(
 
 }  // namespace
 
-PYBIND11_MODULE(DetrayIoPythonBindings, m) {
+PYBIND11_MODULE(detray_io_python_bindings, m) {
   m.doc() = "Detray io bindings";
 
   py::class_<reader_config_t>(m, "DetectorReaderConfig")
       .def(py::init<>())
       .def_property_readonly("files", &reader_config_t::files, "Input files")
       .def_property(
-          "doCheck", [](const reader_config_t &c) { return c.do_check(); },
+          "do_check", [](const reader_config_t &c) { return c.do_check(); },
           [](reader_config_t &c, bool v) { c.do_check(v); },
           "Do detector consistency check")
       .def_property(
-          "verboseCheck",
+          "verbose_check",
           [](const reader_config_t &c) { return c.verbose_check(); },
           [](reader_config_t &c, bool v) { c.verbose_check(v); },
           "Verbosity of the detector consistency check")
@@ -88,21 +85,27 @@ PYBIND11_MODULE(DetrayIoPythonBindings, m) {
           [](const reader_config_t &c) { return c.deduplicate(); },
           [](reader_config_t &c, bool v) { c.deduplicate(v); },
           "Data deduplication in the detector")
-      .def_property(
-          "verboseCheck",
-          [](const reader_config_t &c) { return c.verbose_check(); },
-          [](reader_config_t &c, bool v) { c.verbose_check(v); },
-          "Verbosity of the detector consistency check")
       .def(
-          "addFile",
+          "add_file",
           [](reader_config_t &c, const std::string &f) -> reader_config_t & {
             return c.add_file(f);
           },
-          py::arg("fileName"), py::return_value_policy::reference_internal,
+          py::arg("file_name"), py::return_value_policy::reference_internal,
           "Add an input file")
+      .def(
+          "add_files",
+          [](reader_config_t &c, const py::args &args) -> reader_config_t & {
+            std::vector<std::string> files{};
+            for (const auto &arg : args) {
+              files.push_back(arg.cast<std::string>());
+            }
+            return c.add_files(std::move(files));
+          },
+          py::return_value_policy::reference_internal,
+          "Append multiple input files")
       .def("__repr__", &to_string<reader_config_t>);
 
-  m.def("readDetector", &read_detector, py::arg("memoryResource"),
+  m.def("read_detector_json", &read_detector, py::arg("memory_resource"),
         py::arg("config"),
         "Read a detector using the given memory resource as configured by a "
         "DetectorReaderConfig. The returned detector keeps the memory resource "
@@ -115,29 +118,29 @@ PYBIND11_MODULE(DetrayIoPythonBindings, m) {
           [](writer_config_t &c, const std::string &p) { c.path(p); },
           "Path to the output files")
       .def_property(
-          "replaceFiles",
+          "replace_files",
           [](const writer_config_t &c) { return c.replace_files(); },
           [](writer_config_t &c, bool b) { c.replace_files(b); },
           "Replace files in case they already exist")
       .def_property(
-          "compactifyJson",
+          "compactify_json",
           [](const writer_config_t &c) { return c.compactify_json(); },
           [](writer_config_t &c, bool b) { c.compactify_json(b); },
           "Compactify the json output")
       .def_property(
-          "writeMaterial",
+          "write_material",
           [](const writer_config_t &c) { return c.write_material(); },
           [](writer_config_t &c, bool b) { c.write_material(b); },
           "Whether to write the material to file")
       .def_property(
-          "writeGrids",
+          "write_grids",
           [](const writer_config_t &c) { return c.write_grids(); },
           [](writer_config_t &c, bool b) { c.write_grids(b); },
           "Whether to write the accelerator grids to file")
       .def("__repr__", &to_string<writer_config_t>);
 
   m.def(
-      "writeDetector",
+      "write_detector_json",
       [](toy_detector_t &det, const typename toy_detector_t::name_map &names,
          writer_config_t &cfg) {
         detray::io::write_detector_json(det, names, cfg);

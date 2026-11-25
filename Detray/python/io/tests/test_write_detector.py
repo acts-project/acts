@@ -16,32 +16,32 @@ import detray.tests
 def test_detector_writer_config():
     config = detray.io.DetectorWriterConfig()
     config.path = "./json_writer_test/"
-    config.replaceFiles = True
-    config.compactifyJson = True
-    config.writeMaterial = False
-    config.writeGrids = False
+    config.replace_files = True
+    config.compactify_json = True
+    config.write_material = False
+    config.write_grids = False
 
     assert config.path == "./json_writer_test/"
-    assert config.replaceFiles
-    assert config.compactifyJson
-    assert not config.writeMaterial
-    assert not config.writeGrids
+    assert config.replace_files
+    assert config.compactify_json
+    assert not config.write_material
+    assert not config.write_grids
 
 
 def test_write_geometry_only(tmp_path):
     """Both writer flags reach the C++ writer and suppress their output."""
     out_dir = str(tmp_path) + os.sep
 
-    det, names = detray.tests.buildToyDetector(
+    det, names = detray.tests.build_toy_detector(
         detray.core.HostMemoryResource(), detray.tests.ToyDetectorConfig()
     )
 
     config = detray.io.DetectorWriterConfig()
     config.path = out_dir
 
-    config.writeMaterial = False
-    config.writeGrids = False
+    config.write_material = False
+    config.write_grids = False
 
-    detray.io.writeDetector(det, names, config)
+    detray.io.write_detector_json(det, names, config)
 
     assert os.listdir(out_dir) == ["toy_detector_geometry.json"]
