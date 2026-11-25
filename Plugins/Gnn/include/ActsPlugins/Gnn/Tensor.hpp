@@ -34,10 +34,15 @@ namespace ActsPlugins {
 /// @{
 
 /// A simple device description struct
+///
+/// @note Tensors can live on CPU and CUDA devices. MPS (Apple's Metal
+/// Performance Shaders) describes only where a stage runs its model: the Torch
+/// stages can run on it while the pipeline tensors stay on the host, so
+/// creating a tensor on an MPS device throws.
 struct Device {
   /// Device type enumeration
-  enum class Type { eCPU, eCUDA };
-  /// Device type (CPU or CUDA)
+  enum class Type { eCPU, eCUDA, eMPS };
+  /// Device type (CPU, CUDA or MPS)
   Type type = Type::eCPU;
   /// Device index for multi-GPU systems
   std::size_t index = 0;
@@ -49,6 +54,9 @@ struct Device {
   /// @param index GPU device index for multi-GPU systems (default: 0)
   /// @return Device object configured for CUDA execution on specified GPU
   static Device Cuda(std::size_t index = 0) { return {Type::eCUDA, index}; }
+  /// @brief Create an MPS (Apple GPU) device descriptor
+  /// @return Device object configured for MPS execution
+  static Device Mps() { return {Type::eMPS, 0}; }
 
   /// @brief Check if device is configured for CPU execution
   /// @return True if device type is CPU, false otherwise
@@ -56,6 +64,9 @@ struct Device {
   /// @brief Check if device is configured for CUDA execution
   /// @return True if device type is CUDA, false otherwise
   bool isCuda() const { return type == Type::eCUDA; }
+  /// @brief Check if device is configured for MPS execution
+  /// @return True if device type is MPS, false otherwise
+  bool isMps() const { return type == Type::eMPS; }
 
   /// @brief Compare two device descriptors for equality
   /// @return True if both devices have same type and index
@@ -72,6 +83,8 @@ struct Device {
 inline std::ostream &operator<<(std::ostream &os, Device device) {
   if (device.type == Device::Type::eCPU) {
     os << "CPU";
+  } else if (device.type == Device::Type::eMPS) {
+    os << "MPS";
   } else {
     os << "CUDA(" << device.index << ")";
   }
