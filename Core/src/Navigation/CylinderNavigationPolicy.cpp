@@ -14,6 +14,7 @@
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
+#include "Acts/Utilities/Enumerate.hpp"
 
 #include <algorithm>
 #include <numbers>
@@ -99,9 +100,13 @@ CylinderNavigationPolicy::CylinderNavigationPolicy(const GeometryContext& gctx,
       dynamic_cast<const CylinderVolumeBounds&>(m_volume->volumeBounds());
 
   double rMin = bounds.get(CylinderVolumeBounds::eMinR);
+  m_rMin = rMin;
   m_rMin2 = rMin * rMin;
   double rMax = bounds.get(CylinderVolumeBounds::eMaxR);
+  m_rMax = rMax;
   m_rMax2 = rMax * rMax;
+  m_alignable = volume.isAlignable();
+  m_center = volume.center(gctx);
   m_halfLengthZ = bounds.get(CylinderVolumeBounds::eHalfLengthZ);
 
   ACTS_VERBOSE("CylinderNavigationPolicy created for volume "
@@ -111,6 +116,8 @@ CylinderNavigationPolicy::CylinderNavigationPolicy(const GeometryContext& gctx,
           SquareMatrix3::Identity())) {
     m_itransform = volume.globalToLocalTransform(gctx);
   }
+
+  m_shifted = !m_alignable && !m_itransform.has_value();
 
   // Since the volume does not store the shell assignment, we have to recover
   // this from the raw portals
@@ -315,5 +322,121 @@ void CylinderNavigationPolicy::initializeCandidates(
 
 void CylinderNavigationPolicy::connect(NavigationDelegate& delegate) const {
   connectDefault<CylinderNavigationPolicy>(delegate);
+}
+
+Vector3 CylinderNavigationPolicy::toLocal(const GeometryContext& gctx,
+                                          const Vector3& global) const {
+  if (m_shifted) {
+    return global - m_center;
+  }
+  if (m_alignable) {
+    return m_volume->globalToLocalTransform(gctx) * global;
+  }
+  return *m_itransform * global;
+}
+
+Vector3 CylinderNavigationPolicy::toLocalDirection(
+    const GeometryContext& gctx, const Vector3& global) const {
+  if (m_shifted) {
+    return global;
+  }
+  if (m_alignable) {
+    return m_volume->globalToLocalTransform(gctx).linear() * global;
+  }
+  return m_itransform->linear() * global;
+}
+
+bool CylinderNavigationPolicy::onFace(const Vector3& local,
+                                      double tolerance) const {
+  const double r2 = local.x() * local.x() + local.y() * local.y();
+  const double rMin = std::max(0., m_rMin - tolerance);
+  const double rMax = m_rMax + tolerance;
+  return r2 >= rMin * rMin && r2 <= rMax * rMax &&
+         std::abs(local.z()) <= m_halfLengthZ + tolerance;
+}
+
+bool CylinderNavigationPolicy::checkVolumeExit(const GeometryContext& gctx,
+                                               const VolumeExitArguments& args,
+                                               NavigationTarget& exit,
+                                               const Logger& logger) const {
+  const Vector3 local = toLocal(gctx, args.position);
+  const bool inside = onFace(local, args.tolerance);
+  if (inside && (m_rMin == 0. || args.previousPosition == nullptr)) {
+    return false;
+  }
+
+  // A step that passed the closest approach to the axis can have dipped into
+  // the inner cylinder and come back out, also before ending up beyond another
+  // face. Along the chord c of the step, that is the case if 0 < p.c < c.c in
+  // the transverse plane.
+  if (m_rMin > 0. && args.previousPosition != nullptr) {
+    const Vector3 chord =
+        toLocalDirection(gctx, args.position - *args.previousPosition);
+    const double along = local.x() * chord.x() + local.y() * chord.y();
+    if (along > 0. && along < chord.x() * chord.x() + chord.y() * chord.y()) {
+      if (NavigationTarget crossing = findExit(gctx, args, true);
+          !crossing.isNone()) {
+        ACTS_VERBOSE("Dipped out of " << m_volume->volumeName());
+        exit = crossing;
+        return true;
+      }
+    }
+  }
+  if (inside) {
+    return false;
+  }
+
+  NavigationTarget crossing = findExit(gctx, args, false);
+  ACTS_VERBOSE("Left " << m_volume->volumeName() << ": "
+                       << (crossing.isNone() ? "no crossing" : "crossing"));
+  if (crossing.isNone()) {
+    return false;
+  }
+  exit = crossing;
+  return true;
+}
+
+NavigationTarget CylinderNavigationPolicy::findExit(
+    const GeometryContext& gctx, const VolumeExitArguments& args,
+    bool dipped) const {
+  using enum CylinderVolumeBounds::Face;
+
+  // Look back along the straight line for the last crossing onto this volume.
+  // After a dip, the trajectory came back in through the inner cylinder and
+  // left through it right before, within the step.
+  const double range =
+      dipped ? (args.position - *args.previousPosition).norm() : 0.;
+
+  NavigationTarget last = NavigationTarget::None();
+  NavigationTarget secondToLast = NavigationTarget::None();
+  for (const Portal* portal : m_portals) {
+    if (portal == nullptr ||
+        (dipped && portal != m_portals.at(toUnderlying(InnerCylinder)))) {
+      continue;
+    }
+    const MultiIntersection3D intersections = portal->surface().intersect(
+        gctx, args.position, args.direction, BoundaryTolerance::None(),
+        s_onSurfaceTolerance);
+    for (const auto [index, intersection] : enumerate(intersections)) {
+      if (intersection.status() != IntersectionStatus::reachable ||
+          intersection.pathLength() >= 0. ||
+          (dipped && -intersection.pathLength() > range) ||
+          !onFace(toLocal(gctx, intersection.position()), args.tolerance)) {
+        continue;
+      }
+      NavigationTarget crossing(intersection,
+                                static_cast<IntersectionIndex>(index), *portal,
+                                BoundaryTolerance::None());
+      if (last.isNone() || crossing.pathLength() > last.pathLength()) {
+        secondToLast = last;
+        last = crossing;
+      } else if (secondToLast.isNone() ||
+                 crossing.pathLength() > secondToLast.pathLength()) {
+        secondToLast = crossing;
+      }
+    }
+  }
+
+  return dipped ? secondToLast : last;
 }
 }  // namespace Acts

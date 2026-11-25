@@ -74,6 +74,12 @@ class MultiNavigationPolicy final : public INavigationPolicy {
                NavigationPolicyState& state,
                const Logger& logger) const override;
 
+  /// The first child policy that checks volume exits
+  /// @return The policy, or none
+  const INavigationPolicy* volumeExitPolicy() const override {
+    return m_volumeExitPolicy;
+  }
+
   /// Create and initialize states for this policy and all child policies
   /// @param gctx The geometry context
   /// @param args The navigation arguments
@@ -108,5 +114,8 @@ class MultiNavigationPolicy final : public INavigationPolicy {
 
   /// Vector of navigation delegates, one for each policy
   std::vector<NavigationDelegate> m_delegates;
+
+  /// The first child policy that checks volume exits
+  const INavigationPolicy* m_volumeExitPolicy = nullptr;
 };
 }  // namespace Acts

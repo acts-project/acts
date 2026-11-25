@@ -21,6 +21,9 @@ MultiNavigationPolicy::MultiNavigationPolicy(
       throw std::runtime_error(
           "Failed to connect policy in MultiNavigationPolicyDynamic");
     }
+    if (m_volumeExitPolicy == nullptr) {
+      m_volumeExitPolicy = policy->volumeExitPolicy();
+    }
   }
 }
 
