@@ -94,6 +94,8 @@ EXCLUDE_FILES = (
     "Detray/codegen/detray-sympy/uv.lock",
     # Generated PyPI readme, checked by Python/Examples/tests/test_pypi_readme.py
     "CI/pypi_readme.md",
+    # Remove once the first in-tree user includes this header.
+    "Core/include/Acts/Utilities/CompilerAttributes.hpp",
     # TODO: remove after file is gone
     "Core/include/Acts/Utilities/ProtoAxisHelpers.hpp",
 )
