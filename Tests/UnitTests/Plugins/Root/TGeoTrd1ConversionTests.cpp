@@ -22,6 +22,7 @@
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <algorithm>
+#include <cctype>
 #include <cstddef>
 #include <memory>
 #include <stdexcept>
@@ -51,7 +52,7 @@ BOOST_AUTO_TEST_SUITE(RootSuite)
 
 /// @brief Unit test to convert a TGeoTrd1 into a Plane
 ///
-/// * The TGeoTrd1 can only have (x/X)(z/Z) orientation
+/// * A TGeoTrd1 tapered within the surface needs (x/X)(z/Z) orientation
 BOOST_AUTO_TEST_CASE(TGeoTrd1_to_PlaneSurface) {
   ObjVisualization3D objVis;
 
@@ -132,27 +133,41 @@ BOOST_AUTO_TEST_CASE(TGeoTrd1_tapered_along_normal_to_PlaneSurface) {
   TGeoVolume *vol = gGeoManager->MakeTrd1("Trd1", med, hxin, hxout, hy, ht);
   gGeoManager->CloseGeometry();
 
+  // Signed unit vector of an axis character, lower case = negative direction
+  auto direction = [](char c) -> Vector3 {
+    double sign = std::islower(c) != 0 ? -1. : 1.;
+    return sign *
+           (std::toupper(c) == 'X' ? Vector3::UnitX() : Vector3::UnitY());
+  };
+
+  double scale = 10.;
   std::vector<TGeoAxes> allowedAxes = {"XYZ", "xYZ", "xyZ", "XyZ",
                                        "YXZ", "yXZ", "yxZ", "YxZ"};
   for (const auto &axes : allowedAxes) {
     auto [plane, thickness] = TGeoSurfaceConverter::toSurface(
-        *vol->GetShape(), *gGeoIdentity, axes, 1);
+        *vol->GetShape(), *gGeoIdentity, axes, scale);
     BOOST_REQUIRE_NE(plane, nullptr);
     BOOST_CHECK_EQUAL(plane->type(), Surface::Plane);
-    CHECK_CLOSE_ABS(thickness, 2 * ht, s_epsilon);
+    CHECK_CLOSE_ABS(thickness, scale * 2 * ht, s_epsilon);
 
     auto bounds = dynamic_cast<const RectangleBounds *>(&(plane->bounds()));
     BOOST_REQUIRE_NE(bounds, nullptr);
     double hxMid = 0.5 * (hxin + hxout);
-    bool xFirst = axes.value()[0] == 'X' || axes.value()[0] == 'x';
-    CHECK_CLOSE_ABS(bounds->halfLengthX(), xFirst ? hxMid : hy, s_epsilon);
-    CHECK_CLOSE_ABS(bounds->halfLengthY(), xFirst ? hy : hxMid, s_epsilon);
+    bool xFirst = std::toupper(axes.value()[0]) == 'X';
+    CHECK_CLOSE_ABS(bounds->halfLengthX(), scale * (xFirst ? hxMid : hy),
+                    s_epsilon);
+    CHECK_CLOSE_ABS(bounds->halfLengthY(), scale * (xFirst ? hy : hxMid),
+                    s_epsilon);
 
-    // The surface sits at the mid-plane with the normal along the local z
+    // The surface sits at the mid-plane, its local axes follow the requested
+    // (signed) axes and the normal completes them to a right-handed frame
     CHECK_CLOSE_ABS(plane->center(tgContext).norm(), 0., s_epsilon);
     auto rotation = plane->localToGlobalTransform(tgContext).rotation();
-    CHECK_CLOSE_ABS(std::abs(rotation.col(2).dot(Vector3::UnitZ())), 1.,
-                    s_epsilon);
+    Vector3 expectedX = direction(axes.value()[0]);
+    Vector3 expectedY = direction(axes.value()[1]);
+    CHECK_CLOSE_ABS(rotation.col(0), expectedX, s_epsilon);
+    CHECK_CLOSE_ABS(rotation.col(1), expectedY, s_epsilon);
+    CHECK_CLOSE_ABS(rotation.col(2), expectedX.cross(expectedY), s_epsilon);
   }
 }
 
