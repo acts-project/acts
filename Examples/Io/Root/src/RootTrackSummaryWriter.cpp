@@ -26,6 +26,7 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <format>
 #include <ios>
 #include <limits>
 #include <numbers>
@@ -232,6 +233,19 @@ ProcessCode RootTrackSummaryWriter::finalize() {
 
 ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
                                            const ConstTrackContainer& tracks) {
+  // Check fitted reference surfaces before modifying any event buffers.
+  for (const auto& track : tracks) {
+    if (track.hasReferenceSurface() &&
+        !track.referenceSurface()
+             .boundParametrization(ctx.recoGeoContext)
+             .isGlobalSpherical()) {
+      throw std::invalid_argument(std::format(
+          "RootTrackSummaryWriter requires global-spherical fitted parameters "
+          "for its angular errors and pulls; surface {} uses the telescope "
+          "chart",
+          track.referenceSurface().geometryId()));
+    }
+  }
   // In case we do not have truth info, we bind to a empty collection
   const static SimParticleContainer emptyParticles;
   const static TrackParticleMatching emptyTrackParticleMatching;
@@ -472,9 +486,9 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
       res = {param[Acts::eBoundLoc0] - t_d0,
              param[Acts::eBoundLoc1] - t_z0,
              Acts::detail::difference_periodic(
-                 param[Acts::eBoundPhi], t_phi,
+                 param[Acts::eBoundDir0], t_phi,
                  static_cast<float>(2 * std::numbers::pi)),
-             param[Acts::eBoundTheta] - t_theta,
+             param[Acts::eBoundDir1] - t_theta,
              param[Acts::eBoundQOverP] - t_qop,
              param[Acts::eBoundTime] - t_time};
 
@@ -487,29 +501,29 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
     // Always push back even if no fitted track parameters
     m_eLOC0_fit.push_back(param[Acts::eBoundLoc0]);
     m_eLOC1_fit.push_back(param[Acts::eBoundLoc1]);
-    m_ePHI_fit.push_back(param[Acts::eBoundPhi]);
-    m_eTHETA_fit.push_back(param[Acts::eBoundTheta]);
+    m_ePHI_fit.push_back(param[Acts::eBoundDir0]);
+    m_eTHETA_fit.push_back(param[Acts::eBoundDir1]);
     m_eQOP_fit.push_back(param[Acts::eBoundQOverP]);
     m_eT_fit.push_back(param[Acts::eBoundTime]);
 
     m_res_eLOC0_fit.push_back(res[Acts::eBoundLoc0]);
     m_res_eLOC1_fit.push_back(res[Acts::eBoundLoc1]);
-    m_res_ePHI_fit.push_back(res[Acts::eBoundPhi]);
-    m_res_eTHETA_fit.push_back(res[Acts::eBoundTheta]);
+    m_res_ePHI_fit.push_back(res[Acts::eBoundDir0]);
+    m_res_eTHETA_fit.push_back(res[Acts::eBoundDir1]);
     m_res_eQOP_fit.push_back(res[Acts::eBoundQOverP]);
     m_res_eT_fit.push_back(res[Acts::eBoundTime]);
 
     m_err_eLOC0_fit.push_back(error[Acts::eBoundLoc0]);
     m_err_eLOC1_fit.push_back(error[Acts::eBoundLoc1]);
-    m_err_ePHI_fit.push_back(error[Acts::eBoundPhi]);
-    m_err_eTHETA_fit.push_back(error[Acts::eBoundTheta]);
+    m_err_ePHI_fit.push_back(error[Acts::eBoundDir0]);
+    m_err_eTHETA_fit.push_back(error[Acts::eBoundDir1]);
     m_err_eQOP_fit.push_back(error[Acts::eBoundQOverP]);
     m_err_eT_fit.push_back(error[Acts::eBoundTime]);
 
     m_pull_eLOC0_fit.push_back(pull[Acts::eBoundLoc0]);
     m_pull_eLOC1_fit.push_back(pull[Acts::eBoundLoc1]);
-    m_pull_ePHI_fit.push_back(pull[Acts::eBoundPhi]);
-    m_pull_eTHETA_fit.push_back(pull[Acts::eBoundTheta]);
+    m_pull_ePHI_fit.push_back(pull[Acts::eBoundDir0]);
+    m_pull_eTHETA_fit.push_back(pull[Acts::eBoundDir1]);
     m_pull_eQOP_fit.push_back(pull[Acts::eBoundQOverP]);
     m_pull_eT_fit.push_back(pull[Acts::eBoundTime]);
 

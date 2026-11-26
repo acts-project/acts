@@ -42,7 +42,7 @@ ProcessCode MaterialValidation::execute(const AlgorithmContext& context) const {
     auto rMaterial = m_cfg.materialValidator->recordMaterial(
         context.recoGeoContext, context.magFieldContext,
         parameters.position(context.recoGeoContext),
-        parameters.momentum().normalized());
+        parameters.momentum(context.recoGeoContext).normalized());
 
     recordedMaterialTracks.try_emplace(recordedMaterialTracks.end(), it,
                                        rMaterial);

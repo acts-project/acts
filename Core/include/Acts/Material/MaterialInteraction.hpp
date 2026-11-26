@@ -61,9 +61,10 @@ struct MaterialInteraction {
   Vector3 direction = Vector3(0., 0., 0);
   /// The momentum change due to the interaction.
   double deltaP = 0.0;
-  /// Expected phi variance due to the interactions.
+  /// Expected global phi variance due to the interactions.
+  /// Infinite at a global pole for nonzero pointwise scattering.
   double sigmaPhi2 = 0.0;
-  /// Expected theta variance due to the interactions.
+  /// Expected global theta variance due to the interactions.
   double sigmaTheta2 = 0.0;
   /// Expected q/p variance due to the interactions.
   double sigmaQoP2 = 0.0;

@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/EventData/BoundParametrization.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfacePlacementBase.hpp"
@@ -48,10 +49,13 @@ class TelescopeDetectorElement : public Acts::SurfacePlacementBase {
   /// @param pBounds is the planar bounds for the planar detector element
   /// @param thickness is the module thickness
   /// @param material is the (optional) Surface material associated to it
+  /// @param parametrization is the bound direction chart of the plane
   TelescopeDetectorElement(
       const Identifier ID, std::shared_ptr<const Acts::Transform3> transform,
       std::shared_ptr<const Acts::PlanarBounds> pBounds, double thickness,
-      std::shared_ptr<const Acts::ISurfaceMaterial> material = nullptr);
+      std::shared_ptr<const Acts::ISurfaceMaterial> material = nullptr,
+      Acts::BoundParametrization parametrization =
+          Acts::BoundParametrization::globalSpherical());
 
   /// Constructor for single sided detector element
   /// - bound to a Disc Surface

@@ -76,8 +76,8 @@ class ConcretePropagator : public PropagatorInterface {
 
     PropagatorOptions options(context.recoGeoContext, context.magFieldContext);
     // Activate loop protection at some pt value
-    options.loopProtection =
-        startParameters.transverseMomentum() < cfg.ptLoopers;
+    options.loopProtection = startParameters.transverseMomentum(
+                                 context.recoGeoContext) < cfg.ptLoopers;
 
     // Switch the material interaction on/off & eventually into logging mode
     auto& mInteractor = options.actor.template get<MaterialInteractor>();

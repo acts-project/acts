@@ -382,8 +382,8 @@ BOOST_AUTO_TEST_CASE(generic_runge_kutta_stepper_constant_field) {
 
   // The reference projects the jacobian of the direction onto the unit sphere
   // after each step, so compare the curvilinear jacobians.
-  const BoundMatrix refJac = reference.transportToCurvilinear(state);
-  const BoundMatrix helixJac = helix.transportToCurvilinear(helixState);
+  const BoundMatrix refJac = reference.transportToCurvilinear(state).value();
+  const BoundMatrix helixJac = helix.transportToCurvilinear(helixState).value();
   CHECK_CLOSE_OR_SMALL(refJac, helixJac, 1e-8, 1e-8);
 }
 

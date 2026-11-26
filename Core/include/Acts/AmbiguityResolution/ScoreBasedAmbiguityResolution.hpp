@@ -13,6 +13,7 @@
 #include "Acts/EventData/TrackContainerFrontendConcept.hpp"
 #include "Acts/EventData/TrackProxyConcept.hpp"
 #include "Acts/EventData/TrackStateProxy.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -194,26 +195,32 @@ class ScoreBasedAmbiguityResolution {
   /// @param tracks is the input track container
   /// @param trackFeaturesVectors is the trackFeatures map from detector ID to trackFeatures
   /// @param optionals is the user defined optional cuts to be applied.
+  /// @param gctx geometry context for track momenta
   /// @return a vector of scores for each track
   template <TrackContainerFrontend track_container_t>
   std::vector<double> simpleScore(
       const track_container_t& tracks,
       const std::vector<std::vector<TrackFeatures>>& trackFeaturesVectors,
       const Optionals<typename track_container_t::ConstTrackProxy>& optionals =
-          {}) const;
+          {},
+      const GeometryContext& gctx =
+          GeometryContext::dangerouslyDefaultConstruct()) const;
 
   /// Compute the score of each track based on the ambiguity function.
   ///
   /// @param tracks is the input track container
   /// @param trackFeaturesVectors is the trackFeatures map from detector ID to trackFeatures
   /// @param optionals is the user defined optional cuts to be applied.
+  /// @param gctx geometry context for track momenta
   /// @return a vector of scores for each track
   template <TrackContainerFrontend track_container_t>
   std::vector<double> ambiguityScore(
       const track_container_t& tracks,
       const std::vector<std::vector<TrackFeatures>>& trackFeaturesVectors,
       const Optionals<typename track_container_t::ConstTrackProxy>& optionals =
-          {}) const;
+          {},
+      const GeometryContext& gctx =
+          GeometryContext::dangerouslyDefaultConstruct()) const;
 
   /// Rejects Tracks based on eta dependent cuts.
   ///
@@ -252,6 +259,7 @@ class ScoreBasedAmbiguityResolution {
   /// @param sourceLinkHash is the  source links
   /// @param sourceLinkEquality is the equality function for the source links
   /// @param optionals are the optional cuts and score modifiers to be applied
+  /// @param gctx geometry context for track momenta
   /// @return a vector of IDs of the tracks we want to keep
   template <TrackContainerFrontend track_container_t,
             typename source_link_hash_t, typename source_link_equality_t>
@@ -259,7 +267,9 @@ class ScoreBasedAmbiguityResolution {
       const track_container_t& tracks, source_link_hash_t sourceLinkHash,
       source_link_equality_t sourceLinkEquality,
       const Optionals<typename track_container_t::ConstTrackProxy>& optionals =
-          {}) const;
+          {},
+      const GeometryContext& gctx =
+          GeometryContext::dangerouslyDefaultConstruct()) const;
 
  private:
   Config m_cfg;

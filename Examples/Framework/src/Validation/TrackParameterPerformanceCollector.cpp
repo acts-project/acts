@@ -148,7 +148,7 @@ void TrackParameterPerformanceCollector::fill(
     if (fromTrackStates) {
       const TrackStateTruth truth{geoContext, *ip, *simHits,
                                   *measurementSimHitsMap};
-      fillTrackStates(track, &truth);
+      fillTrackStates(geoContext, track, &truth);
       continue;
     }
 
@@ -159,9 +159,10 @@ void TrackParameterPerformanceCollector::fill(
     m_resPlotTool.fill(geoContext, ip->initialState(), fittedParameters);
 
     // Fill track summary info
-    m_trackSummaryPlotTool.fill(fittedParameters, track.nTrackStates(),
-                                track.nMeasurements(), track.nOutliers(),
-                                track.nHoles(), track.nSharedHits());
+    m_trackSummaryPlotTool.fill(geoContext, fittedParameters,
+                                track.nTrackStates(), track.nMeasurements(),
+                                track.nOutliers(), track.nHoles(),
+                                track.nSharedHits());
   }
 
   // Fill the efficiency
@@ -193,6 +194,7 @@ void TrackParameterPerformanceCollector::fill(
 }
 
 void TrackParameterPerformanceCollector::fill(
+    const Acts::GeometryContext& geoContext,
     const ConstTrackContainer& tracks) {
   if (m_cfg.reference != TrackParameterReference::Measurement) {
     throw std::invalid_argument(
@@ -202,12 +204,13 @@ void TrackParameterPerformanceCollector::fill(
   for (const auto& track : tracks) {
     ++m_stats.nTotalTracks;
 
-    fillTrackStates(track, nullptr);
+    fillTrackStates(geoContext, track, nullptr);
   }
 }
 
 void TrackParameterPerformanceCollector::fillTrackStates(
-    const ConstTrackProxy& track, const TrackStateTruth* truth) {
+    const Acts::GeometryContext& geoContext, const ConstTrackProxy& track,
+    const TrackStateTruth* truth) {
   using Acts::VectorHelpers::eta;
   using Acts::VectorHelpers::phi;
 
@@ -243,9 +246,9 @@ void TrackParameterPerformanceCollector::fillTrackStates(
       }
 
       // without truth the binning comes off the reconstructed side
-      const ResPlotTool::Binning binning{eta(reco->direction()),
-                                         phi(reco->direction()),
-                                         reco->transverseMomentum()};
+      const ResPlotTool::Binning binning{eta(reco->direction(geoContext)),
+                                         phi(reco->direction(geoContext)),
+                                         reco->transverseMomentum(geoContext)};
 
       m_resPlotTool.fill(binning, residual->subspace, residual->residual,
                          residual->covariance);
@@ -270,7 +273,7 @@ void TrackParameterPerformanceCollector::fillTrackStates(
       continue;
     }
 
-    m_resPlotTool.fill(truthParameters.value(), reco.value());
+    m_resPlotTool.fill(geoContext, truthParameters.value(), reco.value());
   }
 }
 

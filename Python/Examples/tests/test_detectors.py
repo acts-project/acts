@@ -1,6 +1,8 @@
-import pytest
+import math
 import warnings
 from pathlib import Path
+
+import pytest
 
 from helpers import dd4hepEnabled, geant4Enabled, rootEnabled
 
@@ -99,6 +101,98 @@ def test_telescopeGen3_geometry():
     assert contextDecorators is not None
 
     assert count_surfaces(trackingGeometry) == n_surfaces
+
+
+@pytest.mark.parametrize("gen3", [False, True])
+@pytest.mark.parametrize("rotated", [False, True])
+def test_telescope_direction_chart(gen3, rotated):
+    config = acts.examples.TelescopeDetector.Config(
+        gen3=gen3, positions=[10, 20, 30], stereos=[0, 0, 0]
+    )
+    assert config.useTelescopeChart is False
+    config.useTelescopeChart = rotated
+    detector = acts.examples.TelescopeDetector(config)
+    gctx = acts.GeometryContext.dangerouslyDefaultConstruct()
+    field = acts.ConstantBField(acts.Vector3(0, 0, 0))
+    propagator = acts.EigenVoidPropagator(
+        acts.EigenStepper(field), acts.VoidNavigator()
+    )
+    mctx = acts.MagneticFieldContext()
+    options = acts.PropagatorPlainOptions(gctx, mctx)
+    start = acts.BoundTrackParameters.createCurvilinear(
+        acts.Vector4(0, 0, 0, 0),
+        acts.Vector3(0, 1, 1),
+        1.0,
+        None,
+        acts.ParticleHypothesis.pion,
+    )
+    expected = [math.pi / 4, math.pi / 2] if rotated else [math.pi / 2, math.pi / 4]
+
+    def check_surface(surface):
+        result = propagator.propagateToSurface(start, surface, options)
+        assert list(result.parameters)[2:4] == pytest.approx(expected)
+        assert list(result.direction(gctx)) == pytest.approx(
+            [0.0, 1 / math.sqrt(2), 1 / math.sqrt(2)]
+        )
+
+    detector.trackingGeometry().visitSurfaces(check_surface)
+    check_surface(detector.getReferenceSurface(acts.Vector3(0, 0, 4), 10, 10))
+
+
+@pytest.mark.parametrize("gen3", [False, True])
+def test_axial_telescope_seed_with_covariance(gen3):
+    positions = [10, 20, 30]
+    detector = acts.examples.TelescopeDetector(
+        gen3=gen3, useTelescopeChart=True, positions=positions, stereos=[0] * 3
+    )
+    gctx = acts.GeometryContext.dangerouslyDefaultConstruct()
+    mctx = acts.MagneticFieldContext()
+    source = detector.getReferenceSurface(acts.Vector3(0, 0, 0), 10, 10)
+    start = acts.BoundTrackParameters.create(
+        gctx=gctx,
+        surface=source,
+        pos4=acts.Vector4(0, 0, 0, 0),
+        dir=acts.Vector3(0, 0, 1),
+        qOverP=1.0,
+        cov=acts.BoundMatrix.Identity(),
+        particleHypothesis=acts.ParticleHypothesis.pion,
+    )
+    assert list(start.parameters)[2:4] == pytest.approx([math.pi / 2] * 2)
+    propagator = acts.EigenVoidPropagator(
+        acts.EigenStepper(acts.ConstantBField(acts.Vector3(0, 0, 0))),
+        acts.VoidNavigator(),
+    )
+    options = acts.PropagatorPlainOptions(gctx, mctx)
+    position_variances = []
+
+    def propagate(surface):
+        result = propagator.propagateToSurface(start, surface, options)
+        assert list(result.direction(gctx)) == pytest.approx([0, 0, 1])
+        cov = result.covariance
+        assert cov is not None
+        assert cov[1, 1] == pytest.approx(cov[0, 0])
+        position_variances.append(cov[0, 0])
+
+    detector.trackingGeometry().visitSurfaces(propagate)
+    # At normal incidence both angular derivatives have unit norm, so
+    # straight-line transport of an identity seed gives var(x) = 1 + dz².
+    assert sorted(position_variances) == pytest.approx([1 + z**2 for z in positions])
+
+    with pytest.raises(RuntimeError, match="Direction must be finite"):
+        acts.BoundTrackParameters.create(
+            gctx,
+            source,
+            acts.Vector4(0, 0, 0, 0),
+            acts.Vector3(0, 0, 0),
+            1.0,
+            None,
+            acts.ParticleHypothesis.pion,
+        )
+
+
+def test_telescope_direction_chart_rejects_disc():
+    with pytest.raises(ValueError, match="requires plane surfaces"):
+        acts.examples.TelescopeDetector(surfaceType=1, useTelescopeChart=True)
 
 
 @pytest.mark.skipif(not geant4Enabled, reason="Geant4 is not set up")

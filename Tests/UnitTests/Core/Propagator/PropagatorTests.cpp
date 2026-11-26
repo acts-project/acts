@@ -617,7 +617,8 @@ BOOST_AUTO_TEST_CASE(TargetCrossedByTheLastStep) {
     auto result = propagator.propagate(start, options);
     BOOST_REQUIRE(result.ok());
     const BoundTrackParameters& parameters = result->endParameters.value();
-    return CurvilinearSurface(parameters.position(gctx), parameters.direction())
+    return CurvilinearSurface(parameters.position(gctx),
+                              parameters.direction(gctx))
         .planeSurface();
   };
 

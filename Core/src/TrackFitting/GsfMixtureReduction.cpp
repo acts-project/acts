@@ -20,7 +20,8 @@ namespace Acts::detail::Gsf {
 
 namespace {
 
-void reduceWithKLDistanceImpl(std::vector<GsfComponent> &cmpCache,
+void reduceWithKLDistanceImpl(const GeometryContext &gctx,
+                              std::vector<GsfComponent> &cmpCache,
                               std::size_t maxCmpsAfterMerge,
                               const Surface &surface) {
   SymmetricKLDistanceMatrix distances(cmpCache);
@@ -32,7 +33,7 @@ void reduceWithKLDistanceImpl(std::vector<GsfComponent> &cmpCache,
 
     // Set one component and compute associated distances
     cmpCache[minI] =
-        mergeTwoComponents(cmpCache[minI], cmpCache[minJ], surface);
+        mergeTwoComponents(gctx, cmpCache[minI], cmpCache[minJ], surface);
 
     // Set weight of the other component to -1 so we can remove it later, and
     // remove it from the active set (this must happen before recomputing
@@ -59,7 +60,8 @@ void reduceWithKLDistanceImpl(std::vector<GsfComponent> &cmpCache,
 
 }  // namespace Acts::detail::Gsf
 
-void Acts::reduceMixtureLargestWeights(std::vector<GsfComponent> &cmpCache,
+void Acts::reduceMixtureLargestWeights(const GeometryContext & /*gctx*/,
+                                       std::vector<GsfComponent> &cmpCache,
                                        std::size_t maxCmpsAfterMerge,
                                        const Surface & /*surface*/) {
   if (cmpCache.size() <= maxCmpsAfterMerge) {
@@ -72,18 +74,20 @@ void Acts::reduceMixtureLargestWeights(std::vector<GsfComponent> &cmpCache,
   cmpCache.resize(maxCmpsAfterMerge);
 }
 
-void Acts::reduceMixtureWithKLDistance(std::vector<GsfComponent> &cmpCache,
+void Acts::reduceMixtureWithKLDistance(const GeometryContext &gctx,
+                                       std::vector<GsfComponent> &cmpCache,
                                        std::size_t maxCmpsAfterMerge,
                                        const Surface &surface) {
   if (cmpCache.size() <= maxCmpsAfterMerge) {
     return;
   }
-  detail::Gsf::reduceWithKLDistanceImpl(cmpCache, maxCmpsAfterMerge, surface);
+  detail::Gsf::reduceWithKLDistanceImpl(gctx, cmpCache, maxCmpsAfterMerge,
+                                        surface);
 }
 
 void Acts::reduceMixtureWithKLDistanceNaive(
-    std::vector<Acts::GsfComponent> &cmpCache, std::size_t maxCmpsAfterMerge,
-    const Surface &surface) {
+    const GeometryContext &gctx, std::vector<Acts::GsfComponent> &cmpCache,
+    std::size_t maxCmpsAfterMerge, const Surface &surface) {
   if (cmpCache.size() <= maxCmpsAfterMerge) {
     return;
   }
@@ -107,7 +111,7 @@ void Acts::reduceMixtureWithKLDistanceNaive(
     }
 
     // Merge the two closest components
-    cmpCache[minI] = detail::Gsf::mergeTwoComponents(cmpCache[minI],
+    cmpCache[minI] = detail::Gsf::mergeTwoComponents(gctx, cmpCache[minI],
                                                      cmpCache[minJ], surface);
 
     // Remove the merged component immediately

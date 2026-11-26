@@ -82,8 +82,8 @@ void Acts::EventDataView3D::drawTrack(IVisualization3D& helper,
                                       const AnyConstTrackProxy& track,
                                       const GeometryContext& gctx) {
   auto tparams = track.parameters();
-  auto tphi = tparams[eBoundPhi];
-  auto ttheta = tparams[eBoundTheta];
+  auto tphi = tparams[eBoundDir0];
+  auto ttheta = tparams[eBoundDir1];
   Vector2 tlocpos{tparams[eBoundLoc0], tparams[eBoundLoc1]};
   Vector3 tlocdir{std::sin(ttheta) * std::cos(tphi),
                   std::sin(ttheta) * std::sin(tphi), std::cos(ttheta)};
@@ -95,8 +95,8 @@ void Acts::EventDataView3D::drawTrack(IVisualization3D& helper,
 
   for (auto ts : track.trackStatesReversed()) {
     auto params = ts.parameters();
-    auto phi = params[eBoundPhi];
-    auto theta = params[eBoundTheta];
+    auto phi = params[eBoundDir0];
+    auto theta = params[eBoundDir1];
     Vector2 locpos{params[eBoundLoc0], params[eBoundLoc1]};
     Vector3 locdir{std::sin(theta) * std::cos(phi),
                    std::sin(theta) * std::sin(phi), std::cos(theta)};

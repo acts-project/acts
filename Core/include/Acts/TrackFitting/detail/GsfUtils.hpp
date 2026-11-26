@@ -343,18 +343,17 @@ double applyBetheHeitler(
 
 /// Apply the multiple scattering to the state
 template <typename propagator_state_t, typename stepper_t>
-Result<void> applyMultipleScattering(propagator_state_t &state,
-                                     const stepper_t &stepper,
-                                     const Surface &surface,
-                                     const MaterialUpdateMode &updateMode,
-                                     const Logger &logger) {
+Result<void> applyMultipleScattering(
+    propagator_state_t &state, const stepper_t &stepper, const Surface &surface,
+    const BoundParametrization &parametrization,
+    const MaterialUpdateMode &updateMode, const Logger &logger) {
   for (auto cmp : stepper.componentIterable(state.stepping)) {
     auto singleState = cmp.singleState(state);
     const auto &singleStepper = cmp.singleStepper(stepper);
 
     const Result<detail::PointwiseMaterialEffects> materialInteractionRes =
         detail::performMaterialInteraction(
-            singleState, singleStepper, surface, updateMode,
+            singleState, singleStepper, surface, parametrization, updateMode,
             NoiseUpdateMode::addNoise, true, false, logger);
     if (!materialInteractionRes.ok()) {
       ACTS_DEBUG("Error performing material interaction: "

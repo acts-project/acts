@@ -72,20 +72,40 @@ class BoundTrackParameters {
                                 particleHypothesis};
   }
 
-  /// Construct from four-position, direction, and qOverP.
+  /// Construct canonical curvilinear parameters from a Cartesian direction.
   ///
   /// @param pos4 Track position/time four-vector
   /// @param dir Track direction three-vector; normalization is ignored.
   /// @param qOverP Charge over momentum
-  /// @param cov Curvilinear bound parameters covariance matrix
+  /// @param cov Covariance in the canonical curvilinear basis
   /// @param particleHypothesis Particle hypothesis
   /// @return Curvilinear bound track parameters
   static BoundTrackParameters createCurvilinear(
       const Vector4& pos4, const Vector3& dir, double qOverP,
       std::optional<BoundMatrix> cov, ParticleHypothesis particleHypothesis) {
+    return createCurvilinear(pos4, dir, qOverP, std::move(cov),
+                             particleHypothesis,
+                             BoundParametrization::globalSpherical());
+  }
+
+  /// Construct curvilinear parameters with a selected direction chart.
+  ///
+  /// @param pos4 Track position/time four-vector
+  /// @param dir Track direction three-vector; normalization is ignored.
+  /// @param qOverP Charge over momentum
+  /// @param cov Covariance in the specified curvilinear basis
+  /// @param particleHypothesis Particle hypothesis
+  /// @param parametrization Direction chart for the parameters and covariance
+  /// @return Curvilinear bound track parameters
+  static BoundTrackParameters createCurvilinear(
+      const Vector4& pos4, const Vector3& dir, double qOverP,
+      std::optional<BoundMatrix> cov, ParticleHypothesis particleHypothesis,
+      BoundParametrization parametrization) {
     return BoundTrackParameters(
-        CurvilinearSurface(pos4.segment<3>(ePos0), dir).surface(),
-        transformFreeToCurvilinearParameters(pos4[eTime], dir, qOverP),
+        CurvilinearSurface(pos4.segment<3>(ePos0), dir, parametrization)
+            .surface(),
+        transformFreeToCurvilinearParameters(pos4[eTime], dir, qOverP,
+                                             parametrization),
         std::move(cov), particleHypothesis);
   }
 
@@ -129,11 +149,17 @@ class BoundTrackParameters {
         m_cov(std::move(cov)),
         m_surface(std::move(surface)),
         m_particleHypothesis(particleHypothesis) {
-    // TODO set `validateAngleRange` to `true` after fixing caller code
-    assert(isBoundVectorValid(m_params, false) &&
-           "Invalid bound parameters vector");
     assert(m_surface != nullptr && "Reference surface must not be null");
-    normalizePhiTheta();
+    const auto chart = m_surface->boundParametrization(
+        GeometryContext::dangerouslyDefaultConstruct());
+    // TODO set `validateAngleRange` to `true` after fixing caller code
+    assert(chart.isValid(m_params, false) && "Invalid bound parameters vector");
+    if (m_cov && detail::radian_pos(m_params[eBoundDir1]) > std::numbers::pi) {
+      // Folding over a chart pole can reverse a covariance axis.
+      chart.canonicalizeInPlace(m_params, *m_cov).value();
+    } else {
+      m_params = chart.canonicalize(m_params);
+    }
   }
 
   /// Parameters vector.
@@ -189,7 +215,8 @@ class BoundTrackParameters {
     return ipCov;
   }
 
-  /// Access a single parameter value identified by its index.
+  /// Access a raw coordinate identified by its index, not a physical
+  /// observable.
   ///
   /// @tparam kIndex Track parameter index
   /// @return The parameter value at the specified index
@@ -215,7 +242,7 @@ class BoundTrackParameters {
   Vector4 fourPosition(const GeometryContext& geoCtx) const {
     Vector4 pos4;
     pos4.segment<3>(ePos0) =
-        m_surface->localToGlobal(geoCtx, localPosition(), direction());
+        m_surface->localToGlobal(geoCtx, localPosition(), direction(geoCtx));
     pos4[eTime] = m_params[eBoundTime];
     return pos4;
   }
@@ -231,7 +258,7 @@ class BoundTrackParameters {
   /// select the appropriate transformation and might be a computationally
   /// expensive operation.
   Vector3 position(const GeometryContext& geoCtx) const {
-    return m_surface->localToGlobal(geoCtx, localPosition(), direction());
+    return m_surface->localToGlobal(geoCtx, localPosition(), direction(geoCtx));
   }
   /// Time coordinate.
   /// @return The time coordinate value
@@ -239,10 +266,18 @@ class BoundTrackParameters {
 
   /// Phi direction.
   /// @return The azimuthal angle phi in radians
-  double phi() const { return m_params[eBoundPhi]; }
+  /// @deprecated Use phi(gctx) instead.
+  [[deprecated("Use phi(gctx) instead")]]
+  double phi() const {
+    return phi(GeometryContext::dangerouslyDefaultConstruct());
+  }
   /// Theta direction.
   /// @return The polar angle theta in radians
-  double theta() const { return m_params[eBoundTheta]; }
+  /// @deprecated Use theta(gctx) instead.
+  [[deprecated("Use theta(gctx) instead")]]
+  double theta() const {
+    return theta(GeometryContext::dangerouslyDefaultConstruct());
+  }
   /// Charge over momentum.
   /// @return The charge over momentum ratio
   double qOverP() const { return m_params[eBoundQOverP]; }
@@ -250,9 +285,10 @@ class BoundTrackParameters {
   /// Unit direction three-vector, i.e. the normalized momentum
   /// three-vector.
   /// @return Normalized direction vector
+  /// @deprecated Use direction(gctx) instead.
+  [[deprecated("Use direction(gctx) instead")]]
   Vector3 direction() const {
-    return makeDirectionFromPhiTheta(m_params[eBoundPhi],
-                                     m_params[eBoundTheta]);
+    return direction(GeometryContext::dangerouslyDefaultConstruct());
   }
   /// Absolute momentum.
   /// @return The absolute momentum magnitude
@@ -261,12 +297,50 @@ class BoundTrackParameters {
   }
   /// Transverse momentum.
   /// @return The transverse momentum magnitude
+  /// @deprecated Use transverseMomentum(gctx) instead.
+  [[deprecated("Use transverseMomentum(gctx) instead")]]
   double transverseMomentum() const {
-    return std::sin(m_params[eBoundTheta]) * absoluteMomentum();
+    return transverseMomentum(GeometryContext::dangerouslyDefaultConstruct());
   }
   /// Momentum three-vector.
   /// @return Three-dimensional momentum vector
-  Vector3 momentum() const { return absoluteMomentum() * direction(); }
+  /// @deprecated Use momentum(gctx) instead.
+  [[deprecated("Use momentum(gctx) instead")]]
+  Vector3 momentum() const {
+    return momentum(GeometryContext::dangerouslyDefaultConstruct());
+  }
+
+  /// Global azimuthal direction angle in radians.
+  /// @param geoCtx Geometry context for direction interpretation
+  /// @return Global phi
+  double phi(const GeometryContext& geoCtx) const {
+    return m_surface->boundParametrization(geoCtx).phi(m_params);
+  }
+  /// Global polar direction angle in radians.
+  /// @param geoCtx Geometry context for direction interpretation
+  /// @return Global theta
+  double theta(const GeometryContext& geoCtx) const {
+    return m_surface->boundParametrization(geoCtx).theta(m_params);
+  }
+  /// Global unit direction vector.
+  /// @param geoCtx Geometry context for direction interpretation
+  /// @return Normalized global direction
+  Vector3 direction(const GeometryContext& geoCtx) const {
+    return m_surface->boundParametrization(geoCtx).direction(m_params);
+  }
+  /// Global momentum vector.
+  /// @param geoCtx Geometry context for direction interpretation
+  /// @return Global momentum
+  Vector3 momentum(const GeometryContext& geoCtx) const {
+    return absoluteMomentum() * direction(geoCtx);
+  }
+  /// Transverse momentum relative to the global z axis.
+  /// @param geoCtx Geometry context for direction interpretation
+  /// @return Transverse momentum magnitude
+  double transverseMomentum(const GeometryContext& geoCtx) const {
+    return m_surface->boundParametrization(geoCtx).sinTheta(m_params) *
+           absoluteMomentum();
+  }
 
   /// Particle electric charge.
   /// @return The particle electric charge
@@ -313,7 +387,8 @@ class BoundTrackParameters {
   /// rotation matrix. For non-planar surfaces, it is the local-to-global
   /// rotation matrix of the tangential plane at the track position.
   RotationMatrix3 referenceFrame(const GeometryContext& geoCtx) const {
-    return m_surface->referenceFrame(geoCtx, position(geoCtx), momentum());
+    return m_surface->referenceFrame(geoCtx, position(geoCtx),
+                                     momentum(geoCtx));
   }
 
   /// Reflect the parameters in place.
@@ -334,14 +409,6 @@ class BoundTrackParameters {
   std::shared_ptr<const Surface> m_surface;
   // TODO use [[no_unique_address]] once we switch to C++20
   ParticleHypothesis m_particleHypothesis;
-
-  /// Ensure phi and theta angles are within bounds.
-  void normalizePhiTheta() {
-    auto [phi, theta] =
-        detail::normalizePhiTheta(m_params[eBoundPhi], m_params[eBoundTheta]);
-    m_params[eBoundPhi] = phi;
-    m_params[eBoundTheta] = theta;
-  }
 
   /// Compare two bound track parameters for bitwise equality.
   ///

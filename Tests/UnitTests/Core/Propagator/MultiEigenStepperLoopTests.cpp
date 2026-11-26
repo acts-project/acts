@@ -67,6 +67,37 @@ BOOST_AUTO_TEST_CASE(propagator_instatiation_test) {
   tester.propagator_instatiation_test_function();
 }
 
+BOOST_AUTO_TEST_CASE(mixture_rejects_telescope_components) {
+  using Multi = MultiStepperLoop<MyEigenStepper>;
+  const Multi stepper(tester.defaultNullBField);
+  const Multi::Options options(tester.geoCtx, tester.magCtx);
+  const auto plane = Surface::makeShared<PlaneSurface>(
+      Transform3::Identity(), nullptr, BoundParametrization::telescope());
+  const auto unsupported = [](const std::system_error& error) {
+    return error.code() == MultiStepperError::UnsupportedBoundParametrization;
+  };
+  for (bool withCovariance : {false, true}) {
+    auto state = stepper.makeState(options);
+    const auto canonical = tester.makeDefaultBoundPars(withCovariance, 1);
+    stepper.initialize(state, canonical);
+    const auto& [weight, seed] = canonical[0];
+    MultiComponentBoundTrackParameters telescope(plane, withCovariance,
+                                                 tester.particleHypothesis);
+    telescope.pushComponent(weight, seed.parameters(), seed.covariance());
+    BOOST_CHECK_EXCEPTION(stepper.initialize(state, telescope),
+                          std::system_error, unsupported);
+    BOOST_CHECK_EXCEPTION(
+        static_cast<void>(stepper.transportToBound(state, *plane)),
+        std::system_error, unsupported);
+    BOOST_CHECK_EXCEPTION(
+        static_cast<void>(stepper.boundParameters(state, *plane)),
+        std::system_error, unsupported);
+    BOOST_CHECK_EXCEPTION(stepper.addComponent(state, telescope[0].second, 1.),
+                          std::system_error, unsupported);
+    BOOST_CHECK_EQUAL(stepper.numberComponents(state), 1u);
+  }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace ActsTests

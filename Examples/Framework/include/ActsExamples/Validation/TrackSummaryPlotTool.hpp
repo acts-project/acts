@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/EventData/BoundTrackParameters.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/Histogram.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -45,13 +46,15 @@ class TrackSummaryPlotTool {
 
   /// @brief fill reco track info w.r.t. fitted track parameters
   ///
+  /// @param gctx the geometry context of the parameters
   /// @param fittedParameters fitted track parameters of this track
   /// @param nStates number of track states
   /// @param nMeasurements number of measurements
   /// @param nOutliers number of outliers
   /// @param nHoles number of holes
   /// @param nSharedHits number of shared hits
-  void fill(const Acts::BoundTrackParameters& fittedParameters,
+  void fill(const Acts::GeometryContext& gctx,
+            const Acts::BoundTrackParameters& fittedParameters,
             std::size_t nStates, std::size_t nMeasurements,
             std::size_t nOutliers, std::size_t nHoles, std::size_t nSharedHits);
 

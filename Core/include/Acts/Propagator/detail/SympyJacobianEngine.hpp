@@ -9,11 +9,19 @@
 #pragma once
 
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/BoundParametrization.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Utilities/Result.hpp"
 
 namespace Acts {
 class Surface;
 }  // namespace Acts
+
+/// @file
+/// Internal covariance-transport implementation shared by steppers.
+/// These helpers are not public API; see @ref versioning. Custom steppers may
+/// use them, but must not expose their implementation types in public
+/// interfaces.
 
 namespace Acts::detail::sympy {
 
@@ -41,13 +49,14 @@ namespace Acts::detail::sympy {
 ///
 /// @note jac(locA->locB) = jac(gloB->locB)*(1+
 ///       pathCorrectionFactor(gloB))*jac(locA->gloB)
-void boundToBoundTransportJacobian(const GeometryContext& geoContext,
-                                   const Surface& surface,
-                                   const FreeVector& freeParameters,
-                                   const BoundToFreeMatrix& boundToFreeJacobian,
-                                   FreeToBoundMatrix& freeToBoundJacobian,
-                                   const FreeVector& freeToPathDerivatives,
-                                   BoundMatrix& fullTransportJacobian);
+/// @return Success, or a chart-domain error without modifying the outputs
+Result<void> boundToBoundTransportJacobian(
+    const GeometryContext& geoContext, const Surface& surface,
+    const FreeVector& freeParameters,
+    const BoundToFreeMatrix& boundToFreeJacobian,
+    FreeToBoundMatrix& freeToBoundJacobian,
+    const FreeVector& freeToPathDerivatives,
+    BoundMatrix& fullTransportJacobian);
 
 /// @brief This function calculates the full jacobian from a given
 /// bound/curvilinear parameterisation from a surface to new curvilinear
@@ -59,6 +68,7 @@ void boundToBoundTransportJacobian(const GeometryContext& geoContext,
 /// the end parameters, these need to be propagated onto the target surface.
 /// This is an approximated approach to treat the (assumed) small change.
 ///
+/// @param parametrization Direction chart of the curvilinear covariance anchor
 /// @param [in] direction Normalised direction vector
 /// @param [in] boundToFreeJacobian Jacobian from the bound parameters at the
 ///        start surface to the free parameters here
@@ -68,10 +78,12 @@ void boundToBoundTransportJacobian(const GeometryContext& geoContext,
 /// @note The parameter @p surface is only required if projected to bound
 /// parameters. In the case of curvilinear parameters the geometry and the
 /// position is known and the calculation can be simplified
-void boundToCurvilinearTransportJacobian(
+/// @return Success, or a chart-domain error without modifying the outputs
+Result<void> boundToCurvilinearTransportJacobian(
     const Vector3& direction, const BoundToFreeMatrix& boundToFreeJacobian,
     FreeToBoundMatrix& freeToBoundJacobian,
-    const FreeVector& freeToPathDerivatives,
-    BoundMatrix& fullTransportJacobian);
+    const FreeVector& freeToPathDerivatives, BoundMatrix& fullTransportJacobian,
+    BoundParametrization parametrization =
+        BoundParametrization::globalSpherical());
 
 }  // namespace Acts::detail::sympy

@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/EventData/BoundParametrization.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 
@@ -36,6 +37,7 @@ enum class TelescopeSurfaceType {
 /// @param bounds is the surface bound values, i.e. halfX and halfY if plane
 ///               surface, and minR and maxR if disc surface
 /// @param thickness is the material thickness of each layer
+/// @param parametrization is the bound direction chart for telescope planes
 /// @param surfaceType is the detector surface type
 /// @param rotDirection indicates which axis the detector surface normals are
 /// parallel to
@@ -47,7 +49,9 @@ std::unique_ptr<const Acts::TrackingGeometry> buildTelescopeDetector(
     const std::vector<double>& stereoAngles,
     const std::array<double, 2>& offsets, const std::array<double, 2>& bounds,
     double thickness, TelescopeSurfaceType surfaceType,
-    Acts::AxisDirection rotDirection = Acts::AxisDirection::AxisZ);
+    Acts::AxisDirection rotDirection = Acts::AxisDirection::AxisZ,
+    Acts::BoundParametrization parametrization =
+        Acts::BoundParametrization::globalSpherical());
 
 /// Global method to build the telescope Gen3 tracking geometry
 ///
@@ -62,6 +66,7 @@ std::unique_ptr<const Acts::TrackingGeometry> buildTelescopeDetector(
 /// @param bounds is the surface bound values, i.e. halfX and halfY if plane
 ///               surface, and minR and maxR if disc surface
 /// @param thickness is the material thickness of each layer
+/// @param parametrization is the bound direction chart for telescope planes
 /// @param surfaceType is the detector surface type
 /// @param rotDirection indicates which axis the detector surface normals are
 ///                     parallel to
@@ -80,6 +85,8 @@ std::unique_ptr<const Acts::TrackingGeometry> buildTelescopeDetectorGen3(
     double thickness, TelescopeSurfaceType surfaceType,
     Acts::AxisDirection rotDirection, const std::array<double, 2>& envelope_x,
     const std::array<double, 2>& envelope_y,
-    const std::array<double, 2>& envelope_z, const Acts::Logger& logger);
+    const std::array<double, 2>& envelope_z, const Acts::Logger& logger,
+    Acts::BoundParametrization parametrization =
+        Acts::BoundParametrization::globalSpherical());
 
 }  // namespace ActsExamples

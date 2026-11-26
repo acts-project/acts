@@ -26,6 +26,8 @@ enum class GlobalChiSquareFitterError {
   NotEnoughMeasurements = 3,
   /// Update pushed the parameters to a new volume.
   UpdatePushedToNewVolume = 4,
+  /// The GX2F model requires canonical global-spherical bound coordinates.
+  UnsupportedBoundParametrization = 5,
 
 };
 

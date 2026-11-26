@@ -13,6 +13,7 @@
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 
+#include <format>
 #include <random>
 #include <stdexcept>
 #include <utility>
@@ -85,11 +86,18 @@ ProcessCode TrackParameterSmearing::execute(const AlgorithmContext& ctx) const {
   std::normal_distribution<double> stdNormal(0.0, 1.0);
 
   for (const auto& inputTrackParameters : inputTrackParametersContainer) {
+    const auto& surface = inputTrackParameters.referenceSurface();
+    if (!surface.boundParametrization(ctx.recoGeoContext).isGlobalSpherical()) {
+      throw std::invalid_argument(std::format(
+          "TrackParameterSmearing requires global-spherical coordinates for "
+          "its angular resolutions; surface {} uses the telescope chart",
+          surface.geometryId()));
+    }
     const auto position = inputTrackParameters.localPosition();
     const auto time = inputTrackParameters.time();
-    const auto phi = inputTrackParameters.phi();
-    const auto theta = inputTrackParameters.theta();
-    const auto pt = inputTrackParameters.transverseMomentum();
+    const auto phi = inputTrackParameters.phi(ctx.recoGeoContext);
+    const auto theta = inputTrackParameters.theta(ctx.recoGeoContext);
+    const auto pt = inputTrackParameters.transverseMomentum(ctx.recoGeoContext);
     const auto qOverP = inputTrackParameters.qOverP();
     const auto particleHypothesis = m_cfg.particleHypothesis.value_or(
         inputTrackParameters.particleHypothesis());
@@ -118,8 +126,8 @@ ProcessCode TrackParameterSmearing::execute(const AlgorithmContext& ctx) const {
     // smear direction angles phi,theta ensuring correct bounds
     const auto [newPhi, newTheta] = Acts::detail::normalizePhiTheta(
         phi + sigmaPhi * stdNormal(rng), theta + sigmaTheta * stdNormal(rng));
-    params[Acts::eBoundPhi] = newPhi;
-    params[Acts::eBoundTheta] = newTheta;
+    params[Acts::eBoundDir0] = newPhi;
+    params[Acts::eBoundDir1] = newTheta;
     // compute smeared q/p
     params[Acts::eBoundQOverP] = qOverP + sigmaQOverP * stdNormal(rng);
 
@@ -167,8 +175,8 @@ ProcessCode TrackParameterSmearing::execute(const AlgorithmContext& ctx) const {
     ACTS_VERBOSE("   to: " << outputTrackParameters.position(ctx.recoGeoContext)
                                   .transpose()
                            << ", " << params[Acts::eBoundTime] << ", "
-                           << params[Acts::eBoundPhi] << ", "
-                           << params[Acts::eBoundTheta] << ", "
+                           << params[Acts::eBoundDir0] << ", "
+                           << params[Acts::eBoundDir1] << ", "
                            << params[Acts::eBoundQOverP]);
   }
 

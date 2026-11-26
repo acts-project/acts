@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/BoundParametrizationError.hpp"
 #include "Acts/EventData/MultiComponentTrackParameters.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
@@ -126,6 +127,8 @@ using MaxWeightReducerLoop =
 /// * There are certain redundancies between the global State and the
 /// component states
 /// * The components do not share a single magnetic-field-cache
+/// Consuming a noncanonical bound parametrization throws std::system_error
+/// with MultiStepperError::UnsupportedBoundParametrization.
 /// @tparam sstepper_t The single-component stepper type to use
 /// @tparam component_reducer_t How to map the multi-component state to a single
 /// component
@@ -277,9 +280,9 @@ class MultiStepperLoop final {
           "multi-component parameters");
     }
 
+    detail::requireMultiStepperParametrization(state.options.geoContext,
+                                               par.referenceSurface());
     state.particleHypothesis = par.particleHypothesis();
-
-    const auto surface = par.referenceSurface().getSharedPtr();
 
     state.components.clear();
     state.components.reserve(par.size());
@@ -435,6 +438,8 @@ class MultiStepperLoop final {
   /// @return ComponentProxy for the newly added component or error
   ComponentProxy addComponent(State& state, const BoundTrackParameters& pars,
                               double weight) const {
+    detail::requireMultiStepperParametrization(state.options.geoContext,
+                                               pars.referenceSurface());
     auto& cmp =
         state.components.emplace_back(m_singleStepper.makeState(state.options),
                                       weight, IntersectionStatus::onSurface);
@@ -783,17 +788,21 @@ class MultiStepperLoop final {
   /// @param [in,out] state State of the stepper
   /// @return The jacobian of the component the reducer selects, which also
   ///         provides the position and direction of the state
-  Jacobian transportToCurvilinear(State& state) const {
+  /// @note Chart-domain errors are returned when covariance transport fails.
+  Result<Jacobian> transportToCurvilinear(State& state) const {
     const std::size_t selected = Reducer::index(state);
     Jacobian jacobian = Jacobian::Identity();
     for (std::size_t i = 0; i < state.components.size(); ++i) {
-      Jacobian cmpJacobian =
+      const auto cmpJacobian =
           m_singleStepper.transportToCurvilinear(state.components[i].state);
+      if (!cmpJacobian.ok()) {
+        return Result<Jacobian>::failure(cmpJacobian.error());
+      }
       if (i == selected) {
-        jacobian = cmpJacobian;
+        jacobian = *cmpJacobian;
       }
     }
-    return jacobian;
+    return Result<Jacobian>::success(jacobian);
   }
 
   /// Put each component on a surface and transport its covariance there

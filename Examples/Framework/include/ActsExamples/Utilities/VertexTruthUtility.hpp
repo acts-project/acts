@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
@@ -26,7 +27,8 @@ std::uint32_t getNumberOfReconstructableVertices(
 std::uint32_t getNumberOfTruePriVertices(
     const SimParticleContainer& collection);
 
-double calcSumPt2(const Acts::Vertex& vtx, double minTrkWeight);
+double calcSumPt2(const Acts::GeometryContext& gctx, const Acts::Vertex& vtx,
+                  double minTrkWeight);
 
 double calculateTruthPrimaryVertexDensity(
     const SimVertexContainer& truthVertices, const Acts::Vertex& vtx,

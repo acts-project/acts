@@ -175,7 +175,8 @@ BOOST_AUTO_TEST_CASE(StructureResidualDerivative) {
                                  gctx, fixture.element.surface(),
                                  fixture.intersection(state), fixture.direction,
                                  fixture.pathDerivative, owner->alignmentMask(),
-                                 &frame);
+                                 &frame)
+                                 .value();
     for (double scale : std::array{1e-5, 2e-6}) {
       for (std::size_t parameter = 0; parameter < eAlignmentSize; ++parameter) {
         BOOST_TEST_CONTEXT("context=" << contextIndex << ", parameter="
@@ -203,7 +204,8 @@ BOOST_AUTO_TEST_CASE(StructureDerivativeMaskAfterConversion) {
   const AlignmentToBoundMatrix masked =
       ActsAlignment::detail::alignmentToBoundDerivative(
           gctx, surface, position, fixture.direction, fixture.pathDerivative,
-          mask, &frame);
+          mask, &frame)
+          .value();
   for (std::size_t parameter = 0; parameter < eAlignmentSize; ++parameter) {
     if (parameter == eAlignmentCenter0 || parameter == eAlignmentRotation2) {
       const double step =
@@ -221,13 +223,17 @@ BOOST_AUTO_TEST_CASE(StructureDerivativeMaskAfterConversion) {
   const AlignmentToBoundMatrix fixed =
       ActsAlignment::detail::alignmentToBoundDerivative(
           gctx, surface, position, fixture.direction, fixture.pathDerivative,
-          AlignmentMask::None, &frame);
+          AlignmentMask::None, &frame)
+          .value();
   BOOST_CHECK_EQUAL(fixed.squaredNorm(), 0.);
 
   // Verify that this rotated geometry distinguishes premature masking and
   // the obsolete conversion of surface translations to global coordinates.
-  const AlignmentToBoundMatrix raw = surface.alignmentToBoundDerivative(
-      gctx, position, fixture.direction, fixture.pathDerivative);
+  const AlignmentToBoundMatrix raw =
+      surface
+          .alignmentToBoundDerivative(gctx, position, fixture.direction,
+                                      fixture.pathDerivative)
+          .value();
   AlignmentToBoundMatrix prematureMask = raw;
   ActsAlignment::detail::resetAlignmentDerivative(prematureMask, mask);
   const AlignmentMatrix composite =
@@ -252,13 +258,17 @@ BOOST_AUTO_TEST_CASE(StandaloneDerivativeCompatibility) {
   for (AlignmentMask mask :
        {AlignmentMask::All, AlignmentMask::None,
         AlignmentMask::Center1 | AlignmentMask::Rotation0}) {
-    AlignmentToBoundMatrix expected = surface.alignmentToBoundDerivative(
-        gctx, position, fixture.direction, fixture.pathDerivative);
+    AlignmentToBoundMatrix expected =
+        surface
+            .alignmentToBoundDerivative(gctx, position, fixture.direction,
+                                        fixture.pathDerivative)
+            .value();
     ActsAlignment::detail::resetAlignmentDerivative(expected, mask);
     const AlignmentToBoundMatrix actual =
         ActsAlignment::detail::alignmentToBoundDerivative(
             gctx, surface, position, fixture.direction, fixture.pathDerivative,
-            mask);
+            mask)
+            .value();
     BOOST_CHECK_EQUAL((actual - expected).squaredNorm(), 0.);
   }
 }

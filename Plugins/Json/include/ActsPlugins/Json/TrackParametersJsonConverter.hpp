@@ -73,7 +73,12 @@ struct adl_serializer<parameters_t> {
   static void to_json(nlohmann::json& j, const parameters_t& t) {
     // Serialize parameters
     // common to all track parameters
-    j["direction"] = t.direction();
+    if constexpr (Acts::detail::isBoundTrackParams<parameters_t>) {
+      j["direction"] =
+          t.direction(Acts::GeometryContext::dangerouslyDefaultConstruct());
+    } else {
+      j["direction"] = t.direction();
+    }
     j["qOverP"] = t.qOverP();
     j["particleHypothesis"] = t.particleHypothesis().absolutePdg();
 

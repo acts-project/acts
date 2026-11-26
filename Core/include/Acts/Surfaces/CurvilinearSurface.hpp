@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/BoundParametrization.hpp"
 
 #include <iosfwd>
 #include <memory>
@@ -25,15 +26,23 @@ class PlaneSurface;
 class CurvilinearSurface final {
  public:
   /// Constructor with direction vector
+  /// @param parametrization Direction chart of this covariance anchor
   /// @param direction The direction vector of the curvilinear surface
-  explicit CurvilinearSurface(const Vector3& direction)
-      : m_direction{direction} {}
+  explicit CurvilinearSurface(const Vector3& direction,
+                              BoundParametrization parametrization =
+                                  BoundParametrization::globalSpherical())
+      : m_parametrization(parametrization), m_direction{direction} {}
 
   /// Constructor with direction vector
   /// @param position The position of the curvilinear surface
+  /// @param parametrization Direction chart of this covariance anchor
   /// @param direction The direction vector of the curvilinear surface
-  CurvilinearSurface(const Vector3& position, const Vector3& direction)
-      : m_position{position}, m_direction{direction} {}
+  CurvilinearSurface(const Vector3& position, const Vector3& direction,
+                     BoundParametrization parametrization =
+                         BoundParametrization::globalSpherical())
+      : m_parametrization(parametrization),
+        m_position{position},
+        m_direction{direction} {}
 
   /// Return method for the surface center by reference
   /// @note the center is always recalculated in order to not keep a cache
@@ -67,6 +76,12 @@ class CurvilinearSurface final {
   /// @return the contextual transform
   Transform3 transform() const;
 
+  /// Interpretation shared with the synthesized plane surface.
+  /// @return Direction chart, independent of the curvilinear position frame
+  BoundParametrization boundParametrization() const {
+    return m_parametrization;
+  }
+
   /// Calculate the jacobian from local to global which the surface knows best,
   /// hence the calculation is done here.
   ///
@@ -76,8 +91,10 @@ class CurvilinearSurface final {
   /// Calculate the jacobian from global to local which the surface knows best,
   /// hence the calculation is done here.
   ///
-  /// @return Jacobian from global to local
-  FreeToBoundMatrix freeToBoundJacobian() const;
+  /// @pre The direction is normalized.
+  /// @return Jacobian from global to local, or a chart-domain error for a
+  /// singular direction.
+  Result<FreeToBoundMatrix> freeToBoundJacobian() const;
 
   /// Calculate the derivative of path length at the geometry constraint or
   /// point-of-closest-approach w.r.t. free parameters. The calculation is
@@ -120,6 +137,7 @@ class CurvilinearSurface final {
                                   const CurvilinearSurface& surface);
 
  private:
+  BoundParametrization m_parametrization;
   Vector3 m_position = Vector3::Zero();
   Vector3 m_direction = Vector3::UnitZ();
 };

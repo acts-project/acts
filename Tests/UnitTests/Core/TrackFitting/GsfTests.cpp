@@ -94,7 +94,8 @@ struct MultiCmpsParsInterface : public BoundTrackParameters {
   MultiComponentBoundTrackParameters multi_pars;
 
   explicit MultiCmpsParsInterface(const MultiComponentBoundTrackParameters &p)
-      : BoundTrackParameters(p.merge(ComponentMergeMethod::eMean)),
+      : BoundTrackParameters(
+            p.merge(tester.geoCtx, ComponentMergeMethod::eMean)),
         multi_pars(p) {}
 
   explicit operator MultiComponentBoundTrackParameters() const {
@@ -108,8 +109,8 @@ auto makeParameters() {
   stddev[eBoundLoc0] = 100_um;
   stddev[eBoundLoc1] = 100_um;
   stddev[eBoundTime] = 25_ns;
-  stddev[eBoundPhi] = 2_degree;
-  stddev[eBoundTheta] = 2_degree;
+  stddev[eBoundDir0] = 2_degree;
+  stddev[eBoundDir1] = 2_degree;
   stddev[eBoundQOverP] = 1 / 100_GeV;
   BoundMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
 

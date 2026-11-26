@@ -13,6 +13,7 @@
 #include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/EventData/SpacePointProxy.hpp"
 #include "Acts/EventData/Types.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "ActsPython/Utilities/ProxyTether.hpp"
@@ -23,6 +24,7 @@
 #include <memory>
 #include <optional>
 #include <span>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -525,9 +527,29 @@ void addEventData(py::module_& m) {
             self.checked().assignSpacePointIndices(indices);
           });
 
-  // BoundTrackParameters (alias for
-  // GenericBoundTrackParameters<ParticleHypothesis>)
   py::class_<BoundTrackParameters>(m, "BoundTrackParameters")
+      .def_static(
+          "create",
+          [](const GeometryContext& gctx,
+             std::shared_ptr<const Surface> surface, const Vector4& pos4,
+             const Vector3& dir, double qOverP, std::optional<BoundMatrix> cov,
+             ParticleHypothesis particleHypothesis, double tolerance) {
+            auto result = BoundTrackParameters::create(
+                gctx, std::move(surface), pos4, dir, qOverP, std::move(cov),
+                particleHypothesis, tolerance);
+            if (!result.ok()) {
+              throw std::runtime_error(
+                  std::format("Creating bound track parameters failed: {}",
+                              result.error().message()));
+            }
+            return std::move(result).value();
+          },
+          py::arg("gctx"), py::arg("surface").none(false), py::arg("pos4"),
+          py::arg("dir"), py::arg("qOverP"), py::arg("cov"),
+          py::arg("particleHypothesis"),
+          py::arg("tolerance") = s_onSurfaceTolerance,
+          "Create a bound state from global position, time, and direction. "
+          "Supply the covariance in the surface's bound coordinates.")
       .def_static(
           "createCurvilinear",
           py::overload_cast<const Vector4&, const Vector3&, double,
@@ -561,9 +583,36 @@ void addEventData(py::module_& m) {
            &BoundTrackParameters::withParticleHypothesis,
            py::arg("particleHypothesis"))
       .def_property_readonly("position", &BoundTrackParameters::position)
-      .def_property_readonly("momentum", &BoundTrackParameters::momentum)
-      .def_property_readonly("transverseMomentum",
-                             &BoundTrackParameters::transverseMomentum);
+      .def(
+          "phi",
+          [](const BoundTrackParameters& self, const GeometryContext& gctx) {
+            return self.phi(gctx);
+          },
+          py::arg("gctx"))
+      .def(
+          "theta",
+          [](const BoundTrackParameters& self, const GeometryContext& gctx) {
+            return self.theta(gctx);
+          },
+          py::arg("gctx"))
+      .def(
+          "direction",
+          [](const BoundTrackParameters& self, const GeometryContext& gctx) {
+            return self.direction(gctx);
+          },
+          py::arg("gctx"))
+      .def(
+          "momentum",
+          [](const BoundTrackParameters& self, const GeometryContext& gctx) {
+            return self.momentum(gctx);
+          },
+          py::arg("gctx"))
+      .def(
+          "transverseMomentum",
+          [](const BoundTrackParameters& self, const GeometryContext& gctx) {
+            return self.transverseMomentum(gctx);
+          },
+          py::arg("gctx"));
 
   // SourceLink - type-erased wrapper (minimal binding for type identity)
   // Note: SourceLink has no default constructor; concrete types (e.g.

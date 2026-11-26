@@ -60,7 +60,7 @@ ProcessCode AmbiguityResolutionMLAlgorithm::execute(
   auto cluster = Acts::detail::clusterDuplicateTracks(trackMap);
   // Select the ID of the track we want to keep
   std::vector<std::size_t> goodTracks =
-      m_ambiML.solveAmbiguity(cluster, tracks);
+      m_ambiML.solveAmbiguity(cluster, tracks, ctx.recoGeoContext);
   // Prepare the output track collection from the IDs
   TrackContainer solvedTracks{std::make_shared<VectorTrackContainer>(),
                               std::make_shared<VectorMultiTrajectory>()};

@@ -78,7 +78,8 @@ ActsExamples::buildTelescopeDetectorGen3(
     double thickness, TelescopeSurfaceType surfaceType,
     Acts::AxisDirection rotDirection, const std::array<double, 2>& envelope_x,
     const std::array<double, 2>& envelope_y,
-    const std::array<double, 2>& envelope_z, const Acts::Logger& logger) {
+    const std::array<double, 2>& envelope_z, const Acts::Logger& logger,
+    Acts::BoundParametrization parametrization) {
   using namespace Acts::UnitLiterals;
   ACTS_INFO("Building telescope detector Gen3...");
 
@@ -147,7 +148,7 @@ ActsExamples::buildTelescopeDetectorGen3(
     if (surfaceType == TelescopeSurfaceType::Plane) {
       detElement = std::make_shared<TelescopeDetectorElement>(
           id, std::make_shared<Acts::Transform3>(trafo), pBounds, 1._um,
-          surfaceMaterial);
+          surfaceMaterial, parametrization);
     } else {
       throw std::invalid_argument(
           "Only TelescopeSurfaceType::Plane is currently supported, not "

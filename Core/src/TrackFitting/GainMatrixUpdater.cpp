@@ -17,6 +17,7 @@
 namespace Acts {
 
 Result<void> GainMatrixUpdater::visitMeasurement(
+    const BoundParametrization& parametrization,
     AnyMutableTrackStateProxy trackState, const Logger& logger) const {
   // default-constructed error represents success, i.e. an invalid error code
 
@@ -24,7 +25,7 @@ Result<void> GainMatrixUpdater::visitMeasurement(
       trackState.calibratedSize(),
       [&, this]<std::size_t N>(
           std::integral_constant<std::size_t, N>) -> Result<void> {
-        return visitMeasurementImpl<N>(trackState, logger);
+        return visitMeasurementImpl<N>(parametrization, trackState, logger);
       });
 }
 

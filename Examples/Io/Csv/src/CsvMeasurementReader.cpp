@@ -221,11 +221,11 @@ ProcessCode CsvMeasurementReader::read(const AlgorithmContext& ctx) {
             dParameters.values.push_back(m.local1);
             dParameters.variances.push_back(m.var_local1);
           }; break;
-          case static_cast<unsigned int>(Acts::eBoundPhi): {
+          case static_cast<unsigned int>(Acts::eBoundDir0): {
             dParameters.values.push_back(m.phi);
             dParameters.variances.push_back(m.var_phi);
           }; break;
-          case static_cast<unsigned int>(Acts::eBoundTheta): {
+          case static_cast<unsigned int>(Acts::eBoundDir1): {
             dParameters.values.push_back(m.theta);
             dParameters.variances.push_back(m.var_theta);
           }; break;

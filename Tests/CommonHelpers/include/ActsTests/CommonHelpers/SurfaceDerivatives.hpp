@@ -108,8 +108,8 @@ void checkSurfaceDerivatives(const Acts::GeometryContext& gctx,
     BoundVector bound = BoundVector::Zero();
     bound[eBoundLoc0] = local[0];
     bound[eBoundLoc1] = local[1];
-    bound[eBoundPhi] = VectorHelpers::phi(direction);
-    bound[eBoundTheta] = VectorHelpers::theta(direction);
+    bound[eBoundDir0] = VectorHelpers::phi(direction);
+    bound[eBoundDir1] = VectorHelpers::theta(direction);
     bound[eBoundQOverP] = kQOverP;
     bound[eBoundTime] = kTime;
     return bound;
@@ -140,10 +140,11 @@ void checkSurfaceDerivatives(const Acts::GeometryContext& gctx,
   const AlignmentToPathMatrix alignToPath =
       surface.alignmentToPathDerivative(gctx, position, direction);
   const FreeToBoundMatrix usedJac =
-      surface.freeToBoundJacobian(gctx, position, direction);
+      surface.freeToBoundJacobian(gctx, position, direction).value();
   const AlignmentToBoundMatrix alignToBound =
-      surface.alignmentToBoundDerivative(gctx, position, direction,
-                                         pathDerivative);
+      surface
+          .alignmentToBoundDerivative(gctx, position, direction, pathDerivative)
+          .value();
 
   // ds/da
   {

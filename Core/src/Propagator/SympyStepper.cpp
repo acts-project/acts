@@ -24,6 +24,12 @@
 
 namespace Acts {
 
+namespace {
+/// The q/p column of the bound-to-free jacobian that the sympy kernel keeps
+/// scaled by q/p, see SympyBoundToFreeScaling.hpp.
+using ScaledBoundToFreeColumn = Vector<eFreeQOverP>;
+}  // namespace
+
 SympyStepper::SympyStepper(std::shared_ptr<const MagneticFieldProvider> bField)
     : m_bField(std::move(bField)) {}
 
@@ -56,6 +62,8 @@ void SympyStepper::initialize(State& state, const BoundVector& boundParams,
   state.previousStepSize = 0;
   state.statistics = StepperStatistics();
 
+  state.anchorParametrization =
+      surface.boundParametrization(state.options.geoContext);
   state.pars = freeParams;
   state.field.reset();
   state.dtds = detail::sympyDtds(state);
@@ -87,13 +95,16 @@ bool SympyStepper::prepareCurvilinearState(State& state) const {
 SympyStepper::BoundParameters SympyStepper::curvilinearParameters(
     const State& state) const {
   return detail::curvilinearParameters(state.pars, state.cov,
-                                       state.particleHypothesis);
+                                       state.particleHypothesis,
+                                       state.anchorParametrization);
 }
 
 void SympyStepper::update(State& state, const FreeVector& freeParams,
                           const BoundVector& /*boundParams*/,
                           const Covariance& covariance,
                           const Surface& surface) const {
+  state.anchorParametrization =
+      surface.boundParametrization(state.options.geoContext);
   state.pars = freeParams;
   state.field.reset();
   state.dtds = detail::sympyDtds(state);
@@ -124,23 +135,32 @@ void SympyStepper::update(State& state, const Vector3& uposition,
   state.field.reset();
 }
 
-SympyStepper::Jacobian SympyStepper::transportToCurvilinear(
+Result<SympyStepper::Jacobian> SympyStepper::transportToCurvilinear(
     State& state) const {
   Jacobian jacobian = Jacobian::Identity();
   if (!state.cov.has_value()) {
     state.materialEffectsAccumulator.reset();
-    return jacobian;
+    return Result<Jacobian>::success(jacobian);
   }
   const std::optional<FreeMatrix> additionalFreeCovariance =
       state.materialEffectsAccumulator.computeAdditionalFreeCovariance(
           direction(state));
-  state.materialEffectsAccumulator.reset();
+  // The transport leaves its outputs untouched on failure. Only the unscaling
+  // of the q/p column needs to be undone, so save just that column.
+  const ScaledBoundToFreeColumn scaledColumn =
+      state.jacToGlobal.block<eFreeQOverP, 1>(0, eBoundQOverP);
   detail::sympy::fromScaledBoundToFree(state.jacToGlobal, qOverP(state));
-  detail::sympy::transportCovarianceToCurvilinear(
+  const auto transportResult = detail::sympy::transportCovarianceToCurvilinear(
       *state.cov, jacobian, state.derivative, state.jacToGlobal,
-      additionalFreeCovariance, state.pars.template segment<3>(eFreeDir0));
+      additionalFreeCovariance, state.pars.template segment<3>(eFreeDir0),
+      state.anchorParametrization);
+  if (!transportResult.ok()) {
+    state.jacToGlobal.block<eFreeQOverP, 1>(0, eBoundQOverP) = scaledColumn;
+    return Result<Jacobian>::failure(transportResult.error());
+  }
   detail::sympy::toScaledBoundToFree(state.jacToGlobal, qOverP(state));
-  return jacobian;
+  state.materialEffectsAccumulator.reset();
+  return Result<Jacobian>::success(jacobian);
 }
 
 Result<SympyStepper::Jacobian> SympyStepper::transportToBound(
@@ -154,18 +174,29 @@ Result<SympyStepper::Jacobian> SympyStepper::transportToBound(
   Jacobian jacobian = Jacobian::Identity();
   if (!state.cov.has_value()) {
     state.materialEffectsAccumulator.reset();
+    state.anchorParametrization =
+        surface.boundParametrization(state.options.geoContext);
     return Result<Jacobian>::success(jacobian);
   }
   const std::optional<FreeMatrix> additionalFreeCovariance =
       state.materialEffectsAccumulator.computeAdditionalFreeCovariance(
           direction(state));
-  state.materialEffectsAccumulator.reset();
+  // See transportToCurvilinear for why saving the q/p column is sufficient.
+  const ScaledBoundToFreeColumn scaledColumn =
+      state.jacToGlobal.block<eFreeQOverP, 1>(0, eBoundQOverP);
   detail::sympy::fromScaledBoundToFree(state.jacToGlobal, qOverP(state));
-  detail::sympy::transportCovarianceToBound(
+  const auto transportResult = detail::sympy::transportCovarianceToBound(
       state.options.geoContext, surface, *state.cov, jacobian, state.derivative,
       state.jacToGlobal, additionalFreeCovariance, state.pars,
       freeToBoundCorrection);
+  if (!transportResult.ok()) {
+    state.jacToGlobal.block<eFreeQOverP, 1>(0, eBoundQOverP) = scaledColumn;
+    return Result<Jacobian>::failure(transportResult.error());
+  }
   detail::sympy::toScaledBoundToFree(state.jacToGlobal, qOverP(state));
+  state.materialEffectsAccumulator.reset();
+  state.anchorParametrization =
+      surface.boundParametrization(state.options.geoContext);
   return Result<Jacobian>::success(jacobian);
 }
 

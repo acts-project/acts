@@ -83,12 +83,13 @@ TrackSummaryPlotTool::TrackSummaryPlotTool(
 }
 
 void TrackSummaryPlotTool::fill(
+    const Acts::GeometryContext& gctx,
     const Acts::BoundTrackParameters& fittedParameters, std::size_t nStates,
     std::size_t nMeasurements, std::size_t nOutliers, std::size_t nHoles,
     std::size_t nSharedHits) {
   using Acts::VectorHelpers::eta;
   using Acts::VectorHelpers::perp;
-  const auto momentum = fittedParameters.momentum();
+  const auto momentum = fittedParameters.momentum(gctx);
   const double fit_eta = eta(momentum);
   const double fit_pT = perp(momentum);
 

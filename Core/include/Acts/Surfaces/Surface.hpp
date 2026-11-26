@@ -13,6 +13,7 @@
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/BoundParametrization.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryObject.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
@@ -58,6 +59,15 @@ class Surface : public virtual GeometryObject,
  public:
   friend struct GeometryContextOstreamWrapper<Surface>;
 
+  /// Resolve the interpretation of bound coordinates on this surface.
+  /// @param gctx Geometry context for the interpretation
+  /// @return A self-contained, allocation-free parametrization value
+  /// @note Both supported direction frames are fixed in global space.
+  BoundParametrization boundParametrization(
+      [[maybe_unused]] const GeometryContext& gctx) const {
+    return m_boundParametrization;
+  }
+
   /// @enum SurfaceType
   ///
   /// This enumerator simplifies the persistency & calculations,
@@ -85,8 +95,11 @@ class Surface : public virtual GeometryObject,
   /// Constructor with Transform3 as a shared object
   ///
   /// @param transform Transform3 positions the surface in 3D global space
+  /// @param parametrization Direction chart of states bound to this surface
   /// @note also acts as default constructor
-  explicit Surface(const Transform3& transform = Transform3::Identity());
+  explicit Surface(const Transform3& transform = Transform3::Identity(),
+                   BoundParametrization parametrization =
+                       BoundParametrization::globalSpherical());
 
   /// Copy constructor
   ///
@@ -98,13 +111,16 @@ class Surface : public virtual GeometryObject,
 
   /// Constructor from SurfacePlacement: Element proxy
   ///
+  /// @param parametrization Direction chart of states bound to this surface
   /// @param placement Reference to the surface placement
   /// @note The Surface does not take any ownership over the
   ///       `SurfacePlacementBase` it is expected that the user
   ///        ensures the life-time of the `SurfacePlacementBase`
   ///        and that the `Surface` is actually owned by
   ///        the `SurfacePlacementBase` instance
-  explicit Surface(const SurfacePlacementBase& placement) noexcept;
+  explicit Surface(const SurfacePlacementBase& placement,
+                   BoundParametrization parametrization =
+                       BoundParametrization::globalSpherical()) noexcept;
 
   /// Copy constructor with optional shift
   ///
@@ -395,18 +411,14 @@ class Surface : public virtual GeometryObject,
                                          const Vector3& position,
                                          const Vector3& direction) const;
 
-  /// Calculate the jacobian from local to global which the surface knows best,
-  /// hence the calculation is done here.
+  /// Calculate the Jacobian from bound to free parameters.
   ///
-  /// @note In principle, the input could also be a free parameters
-  /// vector as it could be transformed to a bound parameters. But the transform
-  /// might fail in case the parameters is not on surface. To avoid the check
-  /// inside this function, it takes directly the bound parameters as input
-  /// (then the check might be done where this function is called).
+  /// This is a public extension point for surface implementations. Overrides
+  /// must combine the surface's local-position derivatives with direction
+  /// derivatives consistent with boundParametrization().
   ///
-  /// @todo this mixes track parameterisation and geometry
-  /// should move to :
-  /// "Acts/EventData/detail/coordinate_transformations.hpp"
+  /// @pre The position is on the surface and the direction is normalized.
+  /// No on-surface check is performed.
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position global 3D position
@@ -417,24 +429,25 @@ class Surface : public virtual GeometryObject,
                                                 const Vector3& position,
                                                 const Vector3& direction) const;
 
-  /// Calculate the jacobian from global to local which the surface knows best,
-  /// hence the calculation is done here.
+  /// Calculate the Jacobian from free to bound parameters.
   ///
-  /// @note It assumes the input free parameters is on surface, hence no
-  /// onSurface check is done inside this function.
+  /// This is a public extension point for surface implementations. Overrides
+  /// must use the same coordinate interpretation as boundParametrization() and
+  /// boundToFreeJacobian(), and propagate direction-parametrization failures
+  /// through the returned Result.
   ///
-  /// @todo this mixes track parameterisation and geometry
-  /// should move to :
-  /// "Acts/EventData/detail/coordinate_transformations.hpp"
+  /// @pre The position is on the surface. No on-surface check is performed.
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position global 3D position
   /// @param direction global 3D momentum direction
   ///
-  /// @return Jacobian from global to local
-  virtual FreeToBoundMatrix freeToBoundJacobian(const GeometryContext& gctx,
-                                                const Vector3& position,
-                                                const Vector3& direction) const;
+  /// @pre The direction is normalized.
+  /// @return Jacobian from global to local, or a chart-domain error for a
+  /// singular direction.
+  virtual Result<FreeToBoundMatrix> freeToBoundJacobian(
+      const GeometryContext& gctx, const Vector3& position,
+      const Vector3& direction) const;
 
   /// Calculate the derivative of path length at the geometry constraint or
   /// point-of-closest-approach w.r.t. free parameters. The calculation is
@@ -562,8 +575,8 @@ class Surface : public virtual GeometryObject,
   /// length
   ///
   /// @return Derivative of bound track parameters w.r.t. local frame
-  /// alignment parameters
-  AlignmentToBoundMatrix alignmentToBoundDerivative(
+  /// alignment parameters, or a chart-domain error for a singular direction
+  Result<AlignmentToBoundMatrix> alignmentToBoundDerivative(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction, const FreeVector& pathDerivative) const;
 
@@ -658,6 +671,8 @@ class Surface : public virtual GeometryObject,
   /// The associated layer Layer - layer in which the Surface is be embedded,
   /// nullptr if not associated
   const Layer* m_associatedLayer{nullptr};
+
+  BoundParametrization m_boundParametrization;
 
   /// Flag to indicate whether the surface is sensitive
   bool m_isSensitive{false};

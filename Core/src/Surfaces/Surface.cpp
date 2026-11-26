@@ -12,7 +12,6 @@
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/detail/AlignmentHelper.hpp"
-#include "Acts/Utilities/JacobianHelpers.hpp"
 #include "Acts/Utilities/detail/OstreamStateGuard.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
 
@@ -22,18 +21,25 @@
 
 namespace Acts {
 
-Surface::Surface(const Transform3& transform)
-    : GeometryObject(), m_transform(std::make_unique<Transform3>(transform)) {}
+Surface::Surface(const Transform3& transform,
+                 BoundParametrization parametrization)
+    : GeometryObject(),
+      m_transform(std::make_unique<Transform3>(transform)),
+      m_boundParametrization(parametrization) {}
 
-Surface::Surface(const SurfacePlacementBase& placement) noexcept
-    : GeometryObject(), m_placement(&placement) {}
+Surface::Surface(const SurfacePlacementBase& placement,
+                 BoundParametrization parametrization) noexcept
+    : GeometryObject(),
+      m_placement(&placement),
+      m_boundParametrization(parametrization) {}
 
 Surface::Surface(const GeometryContext& gctx, const Surface& other,
                  const Transform3& shift) noexcept
     : GeometryObject(),
       m_transform(std::make_unique<Transform3>(
           shift * other.localToGlobalTransform(gctx))),
-      m_surfaceMaterial(other.m_surfaceMaterial) {}
+      m_surfaceMaterial(other.m_surfaceMaterial),
+      m_boundParametrization(other.m_boundParametrization) {}
 
 Surface::~Surface() noexcept = default;
 
@@ -58,7 +64,7 @@ bool Surface::isOnSurface(const GeometryContext& gctx, const Vector3& position,
   return bounds().inside(lpResult.value(), boundaryTolerance);
 }
 
-AlignmentToBoundMatrix Surface::alignmentToBoundDerivative(
+Result<AlignmentToBoundMatrix> Surface::alignmentToBoundDerivative(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, const FreeVector& pathDerivative) const {
   assert(isOnSurface(gctx, position, direction, BoundaryTolerance::Infinite()));
@@ -71,13 +77,17 @@ AlignmentToBoundMatrix Surface::alignmentToBoundDerivative(
   const auto alignToPath = alignmentToPathDerivative(gctx, position, direction);
   // 3) Calculate the jacobian from free parameters to bound parameters
   const auto jacToLocal = freeToBoundJacobian(gctx, position, direction);
+  if (!jacToLocal.ok()) {
+    return Result<AlignmentToBoundMatrix>::failure(jacToLocal.error());
+  }
   // 4) The derivative of bound parameters w.r.t. alignment
   // parameters is alignToBoundWithoutCorrection +
   // jacToLocal*pathDerivative*alignToPath
   AlignmentToBoundMatrix alignToBound =
-      alignToBoundWithoutCorrection + jacToLocal * pathDerivative * alignToPath;
+      alignToBoundWithoutCorrection +
+      *jacToLocal * pathDerivative * alignToPath;
 
-  return alignToBound;
+  return Result<AlignmentToBoundMatrix>::success(alignToBound);
 }
 
 AlignmentToBoundMatrix Surface::alignmentToBoundDerivativeWithoutCorrection(
@@ -180,8 +190,7 @@ bool Surface::operator==(const Surface& other) const {
     return false;
   }
 
-  // we should be good
-  return true;
+  return m_boundParametrization == other.m_boundParametrization;
 }
 
 std::ostream& Surface::toStreamImpl(const GeometryContext& gctx,
@@ -267,15 +276,23 @@ BoundToFreeMatrix Surface::boundToFreeJacobian(const GeometryContext& gctx,
   // the time component
   jacToGlobal(eFreeTime, eBoundTime) = 1;
   // the momentum components
-  jacToGlobal.block<3, 2>(eFreeDir0, eBoundPhi) =
-      sphericalToFreeDirectionJacobian(direction);
+  jacToGlobal.block<3, 2>(eFreeDir0, eBoundDir0) =
+      boundParametrization(gctx).directionJacobianFromUnitDirection(direction);
   jacToGlobal(eFreeQOverP, eBoundQOverP) = 1;
   return jacToGlobal;
 }
 
-FreeToBoundMatrix Surface::freeToBoundJacobian(const GeometryContext& gctx,
-                                               const Vector3& position,
-                                               const Vector3& direction) const {
+Result<FreeToBoundMatrix> Surface::freeToBoundJacobian(
+    const GeometryContext& gctx, const Vector3& position,
+    const Vector3& direction) const {
+  // Preserve the existing domain without an additional conditioning cutoff.
+  const auto directionJacobian =
+      boundParametrization(gctx).directionCoordinatesJacobianFromUnitDirection(
+          direction, 0.);
+  if (!directionJacobian.ok()) {
+    return Result<FreeToBoundMatrix>::failure(directionJacobian.error());
+  }
+
   assert(isOnSurface(gctx, position, direction, BoundaryTolerance::Infinite()));
 
   // The measurement frame of the surface
@@ -289,10 +306,10 @@ FreeToBoundMatrix Surface::freeToBoundJacobian(const GeometryContext& gctx,
   // Time component
   jacToLocal(eBoundTime, eFreeTime) = 1;
   // Directional and momentum elements for reference frame surface
-  jacToLocal.block<2, 3>(eBoundPhi, eFreeDir0) =
-      freeToSphericalDirectionJacobian(direction);
+
+  jacToLocal.block<2, 3>(eBoundDir0, eFreeDir0) = *directionJacobian;
   jacToLocal(eBoundQOverP, eFreeQOverP) = 1;
-  return jacToLocal;
+  return Result<FreeToBoundMatrix>::success(jacToLocal);
 }
 
 FreeToPathMatrix Surface::freeToPathDerivative(const GeometryContext& gctx,

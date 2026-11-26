@@ -12,12 +12,16 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/BoundParametrizationError.hpp"
 #include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
+#include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <algorithm>
+#include <array>
 #include <limits>
 #include <numbers>
 #include <utility>
@@ -35,6 +39,81 @@ constexpr auto eps = std::numeric_limits<double>::epsilon();
 namespace ActsTests {
 
 BOOST_AUTO_TEST_SUITE(EventDataSuite)
+
+BOOST_AUTO_TEST_CASE(CanonicalDirectionUnderAlignment) {
+  class AlignedElement : public DetectorElementStub {
+   public:
+    using DetectorElementStub::DetectorElementStub;
+    const Transform3& localToGlobalTransform(
+        const GeometryContext& gctx) const override {
+      return gctx.get<Transform3>();
+    }
+  };
+  AlignedElement element(Transform3::Identity(),
+                         std::make_shared<RectangleBounds>(10., 10.), 0.1);
+  const auto& surface = element.surface();
+  Transform3 aligned = Transform3::Identity();
+  aligned.translate(Vector3(4., 5., 6.));
+  aligned.rotate(AngleAxis3(0.7, Vector3::UnitY()));
+  const BoundVector bound(1., 2., 0.3, 1.2, 0.01, 4.);
+  const Vector3 direction = makeDirectionFromPhiTheta(0.3, 1.2);
+  for (const Transform3& placement : {Transform3::Identity(), aligned}) {
+    const GeometryContext gctx{placement};
+    BOOST_CHECK(surface.boundParametrization(gctx).isGlobalSpherical());
+    const auto free = transformBoundToFreeParameters(surface, gctx, bound);
+    CHECK_CLOSE_ABS(free.segment<3>(eFreePos0), placement * Vector3(1., 2., 0.),
+                    1e-14);
+    CHECK_CLOSE_ABS(free.segment<3>(eFreeDir0), direction, 1e-14);
+    const auto forward = surface.boundToFreeJacobian(
+        gctx, free.segment<3>(eFreePos0), direction);
+    const auto inverse =
+        surface.freeToBoundJacobian(gctx, free.segment<3>(eFreePos0), direction)
+            .value();
+    CHECK_CLOSE_ABS((inverse * forward).eval(), BoundMatrix::Identity(), 1e-14);
+    constexpr double h = 1e-6;
+    for (int i = 0; i < static_cast<int>(eBoundSize); ++i) {
+      BoundVector plus = bound;
+      BoundVector minus = bound;
+      plus[i] += h;
+      minus[i] -= h;
+      const FreeVector numerical =
+          (transformBoundToFreeParameters(surface, gctx, plus) -
+           transformBoundToFreeParameters(surface, gctx, minus)) /
+          (2. * h);
+      CHECK_CLOSE_ABS(forward.col(i), numerical, 1e-8);
+    }
+    const auto restored = transformFreeToBoundParameters(free, surface, gctx);
+    BOOST_REQUIRE(restored.ok());
+    CHECK_CLOSE_ABS(*restored, bound, 1e-14);
+    const auto restoredComponents = transformFreeToBoundParameters(
+        free.segment<3>(eFreePos0), free[eFreeTime], direction,
+        free[eFreeQOverP], surface, gctx);
+    BOOST_REQUIRE(restoredComponents.ok());
+    CHECK_CLOSE_ABS(*restoredComponents, bound, 1e-14);
+  }
+}
+
+BOOST_AUTO_TEST_CASE(InvalidFreeDirection) {
+  DetectorElementStub element(Transform3::Identity(),
+                              std::make_shared<RectangleBounds>(10., 10.), 0.1);
+  const auto gctx = GeometryContext::dangerouslyDefaultConstruct();
+  const auto& surface = element.surface();
+  for (const Vector3& direction : std::array<Vector3, 4>{
+           Vector3::Zero(),
+           Vector3::Constant(std::numeric_limits<double>::max()),
+           Vector3(0., 0., std::numeric_limits<double>::infinity()),
+           Vector3(0., std::numeric_limits<double>::quiet_NaN(), 0.)}) {
+    FreeVector free = FreeVector::Zero();
+    free.segment<3>(eFreeDir0) = direction;
+    const auto packed = transformFreeToBoundParameters(free, surface, gctx);
+    const auto components = transformFreeToBoundParameters(
+        Vector3::Zero(), 0., direction, 0., surface, gctx);
+    BOOST_REQUIRE(!packed.ok());
+    BOOST_REQUIRE(!components.ok());
+    BOOST_CHECK(packed.error() == BoundParametrizationError::InvalidDirection);
+    BOOST_CHECK(components.error() == packed.error());
+  }
+}
 
 BOOST_DATA_TEST_CASE(Parameters,
                      surfaces * posSymmetric * posSymmetric * ts * phis *
@@ -54,8 +133,8 @@ BOOST_DATA_TEST_CASE(Parameters,
   bv[eBoundLoc0] = l0;
   bv[eBoundLoc1] = l1;
   bv[eBoundTime] = time;
-  bv[eBoundPhi] = phi;
-  bv[eBoundTheta] = theta;
+  bv[eBoundDir0] = phi;
+  bv[eBoundDir1] = theta;
   bv[eBoundQOverP] = qOverP;
 
   // convert to free parameters
@@ -105,8 +184,8 @@ BOOST_DATA_TEST_CASE(GlobalToBoundTrackParameters,
     CHECK_CLOSE_OR_SMALL(bv[eBoundLoc0], l0, eps, eps);
     CHECK_CLOSE_OR_SMALL(bv[eBoundLoc1], l1, eps, eps);
     CHECK_CLOSE_OR_SMALL(bv[eBoundTime], time, eps, eps);
-    CHECK_CLOSE_OR_SMALL(bv[eBoundPhi], phi, eps, eps);
-    CHECK_CLOSE_OR_SMALL(bv[eBoundTheta], theta, eps, eps);
+    CHECK_CLOSE_OR_SMALL(bv[eBoundDir0], phi, eps, eps);
+    CHECK_CLOSE_OR_SMALL(bv[eBoundDir1], theta, eps, eps);
     CHECK_CLOSE_OR_SMALL(bv[eBoundQOverP], qOverP, eps, eps);
   }
 
@@ -140,8 +219,8 @@ BOOST_DATA_TEST_CASE(GlobalToBoundTrackParameters,
     CHECK_CLOSE_OR_SMALL(bv[eBoundLoc0], l0, eps, eps);
     CHECK_CLOSE_OR_SMALL(bv[eBoundLoc1], l1, eps, eps);
     CHECK_CLOSE_OR_SMALL(bv[eBoundTime], time, eps, eps);
-    CHECK_CLOSE_OR_SMALL(bv[eBoundPhi], phi, eps, eps);
-    CHECK_CLOSE_OR_SMALL(bv[eBoundTheta], theta, eps, eps);
+    CHECK_CLOSE_OR_SMALL(bv[eBoundDir0], phi, eps, eps);
+    CHECK_CLOSE_OR_SMALL(bv[eBoundDir1], theta, eps, eps);
     CHECK_CLOSE_OR_SMALL(bv[eBoundQOverP], qOverP, eps, eps);
   }
 
@@ -173,8 +252,8 @@ BOOST_DATA_TEST_CASE(GlobalToCurvilinearParameters,
     CHECK_SMALL(bv[eBoundLoc0], eps);
     CHECK_SMALL(bv[eBoundLoc1], eps);
     CHECK_CLOSE_OR_SMALL(bv[eBoundTime], time, eps, eps);
-    CHECK_CLOSE_OR_SMALL(bv[eBoundPhi], phi, eps, eps);
-    CHECK_CLOSE_OR_SMALL(bv[eBoundTheta], theta, eps, eps);
+    CHECK_CLOSE_OR_SMALL(bv[eBoundDir0], phi, eps, eps);
+    CHECK_CLOSE_OR_SMALL(bv[eBoundDir1], theta, eps, eps);
     CHECK_CLOSE_OR_SMALL(bv[eBoundQOverP], qOverP, eps, eps);
   }
   // convert w/ angles
@@ -184,8 +263,8 @@ BOOST_DATA_TEST_CASE(GlobalToCurvilinearParameters,
     CHECK_SMALL(bv[eBoundLoc0], eps);
     CHECK_SMALL(bv[eBoundLoc1], eps);
     CHECK_CLOSE_OR_SMALL(bv[eBoundTime], time, eps, eps);
-    CHECK_CLOSE_OR_SMALL(bv[eBoundPhi], phi, eps, eps);
-    CHECK_CLOSE_OR_SMALL(bv[eBoundTheta], theta, eps, eps);
+    CHECK_CLOSE_OR_SMALL(bv[eBoundDir0], phi, eps, eps);
+    CHECK_CLOSE_OR_SMALL(bv[eBoundDir1], theta, eps, eps);
     CHECK_CLOSE_OR_SMALL(bv[eBoundQOverP], qOverP, eps, eps);
   }
 }

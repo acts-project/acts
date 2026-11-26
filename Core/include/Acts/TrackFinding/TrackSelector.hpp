@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/EventData/TrackProxyConcept.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/AngleHelpers.hpp"
@@ -259,22 +260,32 @@ class TrackSelector {
   /// @tparam output_tracks_t is the type of the output track container
   /// @param inputTracks is the input track container
   /// @param outputTracks is the output track container
+  /// @param gctx geometry context for track observables
   template <typename input_tracks_t, typename output_tracks_t>
   void selectTracks(const input_tracks_t& inputTracks,
-                    output_tracks_t& outputTracks) const;
+                    output_tracks_t& outputTracks,
+                    const GeometryContext& gctx =
+                        GeometryContext::dangerouslyDefaultConstruct()) const;
 
   /// Helper function to check if a track is valid
   /// @tparam track_proxy_t is the type of the track proxy
+  /// @param gctx geometry context for track observables
   /// @param track is the track proxy
   /// @return true if the track is valid
   template <TrackProxyConcept track_proxy_t>
-  bool isValidTrack(const track_proxy_t& track) const;
+  bool isValidTrack(const track_proxy_t& track,
+                    const GeometryContext& gctx =
+                        GeometryContext::dangerouslyDefaultConstruct()) const;
 
   /// Get readonly access to the config parameters
   /// @return the config object
   const EtaBinnedConfig& config() const { return m_cfg; }
 
  private:
+  template <TrackProxyConcept track_proxy_t, typename... context_t>
+  bool isValidTrackImpl(const track_proxy_t& track,
+                        const context_t&... context) const;
+
   EtaBinnedConfig m_cfg;
   bool m_isUnbinned = false;
 };
@@ -432,9 +443,10 @@ inline std::ostream& operator<<(std::ostream& os,
 
 template <typename input_tracks_t, typename output_tracks_t>
 void TrackSelector::selectTracks(const input_tracks_t& inputTracks,
-                                 output_tracks_t& outputTracks) const {
+                                 output_tracks_t& outputTracks,
+                                 const GeometryContext& gctx) const {
   for (auto track : inputTracks) {
-    if (!isValidTrack(track)) {
+    if (!isValidTrack(track, gctx)) {
       continue;
     }
     auto destProxy = outputTracks.makeTrack();
@@ -443,14 +455,31 @@ void TrackSelector::selectTracks(const input_tracks_t& inputTracks,
 }
 
 template <TrackProxyConcept track_proxy_t>
-bool TrackSelector::isValidTrack(const track_proxy_t& track) const {
+bool TrackSelector::isValidTrack(const track_proxy_t& track,
+                                 const GeometryContext& gctx) const {
+  if constexpr (requires {
+                  track.theta(gctx);
+                  track.phi(gctx);
+                  track.transverseMomentum(gctx);
+                }) {
+    return isValidTrackImpl(track, gctx);
+  } else {
+    // TrackProxyConcept also accepts external proxies with context-free
+    // accessors.
+    return isValidTrackImpl(track);
+  }
+}
+
+template <TrackProxyConcept track_proxy_t, typename... context_t>
+bool TrackSelector::isValidTrackImpl(const track_proxy_t& track,
+                                     const context_t&... context) const {
   auto checkMin = [](auto x, auto min) { return min <= x; };
   auto checkMax = [](auto x, auto max) { return x <= max; };
   auto within = [](double x, double min, double max) {
     return (min <= x) && (x < max);
   };
 
-  const auto theta = track.theta();
+  const auto theta = track.theta(context...);
 
   constexpr double kUnset = -std::numeric_limits<double>::infinity();
 
@@ -480,11 +509,12 @@ bool TrackSelector::isValidTrack(const track_proxy_t& track) const {
   const Config& cuts = *cutsPtr;
 
   auto parameterCuts = [&]() {
-    return within(track.transverseMomentum(), cuts.ptMin, cuts.ptMax) &&
+    return within(track.transverseMomentum(context...), cuts.ptMin,
+                  cuts.ptMax) &&
            (!m_isUnbinned ||
             (within(absEta(), cuts.absEtaMin, cuts.absEtaMax) &&
              within(_eta, cuts.etaMin, cuts.etaMax))) &&
-           within(track.phi(), cuts.phiMin, cuts.phiMax) &&
+           within(track.phi(context...), cuts.phiMin, cuts.phiMax) &&
            within(track.loc0(), cuts.loc0Min, cuts.loc0Max) &&
            within(track.loc1(), cuts.loc1Min, cuts.loc1Max) &&
            within(track.time(), cuts.timeMin, cuts.timeMax);

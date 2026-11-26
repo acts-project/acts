@@ -16,11 +16,12 @@ namespace ActsExamples {
 TelescopeDetectorElement::TelescopeDetectorElement(
     const Identifier ID, std::shared_ptr<const Acts::Transform3> transform,
     std::shared_ptr<const Acts::PlanarBounds> pBounds, double thickness,
-    std::shared_ptr<const Acts::ISurfaceMaterial> material)
+    std::shared_ptr<const Acts::ISurfaceMaterial> material,
+    Acts::BoundParametrization parametrization)
     : m_elementIdentifier(ID),
       m_elementTransform(std::move(transform)),
-      m_elementSurface(
-          Acts::Surface::makeShared<Acts::PlaneSurface>(pBounds, *this)),
+      m_elementSurface(Acts::Surface::makeShared<Acts::PlaneSurface>(
+          pBounds, *this, parametrization)),
       m_elementThickness(thickness),
       m_elementPlanarBounds(std::move(pBounds)),
       m_elementDiscBounds(nullptr) {

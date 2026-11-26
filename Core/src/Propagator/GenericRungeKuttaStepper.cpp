@@ -142,6 +142,8 @@ void GenericRungeKuttaStepper::initialize(State& state,
   state.previousStepSize = 0;
   state.statistics = StepperStatistics();
 
+  state.anchorParametrization =
+      surface.boundParametrization(state.options.geoContext);
   state.pars = freeParams;
   state.field.reset();
 
@@ -186,7 +188,8 @@ bool GenericRungeKuttaStepper::prepareCurvilinearState(State& state) const {
 GenericRungeKuttaStepper::BoundParameters
 GenericRungeKuttaStepper::curvilinearParameters(const State& state) const {
   return detail::curvilinearParameters(state.pars, state.cov,
-                                       state.particleHypothesis);
+                                       state.particleHypothesis,
+                                       state.anchorParametrization);
 }
 
 void GenericRungeKuttaStepper::update(State& state,
@@ -194,6 +197,8 @@ void GenericRungeKuttaStepper::update(State& state,
                                       const BoundVector& /*boundParams*/,
                                       const Covariance& covariance,
                                       const Surface& surface) const {
+  state.anchorParametrization =
+      surface.boundParametrization(state.options.geoContext);
   state.pars = freeParams;
   state.field.reset();
   if (state.cov.has_value()) {
@@ -219,16 +224,20 @@ void GenericRungeKuttaStepper::update(State& state, const Vector3& uposition,
   state.pars[eFreeQOverP] = qop;
 }
 
-GenericRungeKuttaStepper::Jacobian
+Result<GenericRungeKuttaStepper::Jacobian>
 GenericRungeKuttaStepper::transportToCurvilinear(State& state) const {
   Jacobian jacobian = Jacobian::Identity();
   if (!state.cov.has_value()) {
-    return jacobian;
+    return Result<Jacobian>::success(jacobian);
   }
-  detail::transportCovarianceToCurvilinear(
+  const auto transportResult = detail::transportCovarianceToCurvilinear(
       *state.cov, jacobian, state.jacTransport, state.derivative,
-      state.jacToGlobal, std::nullopt, direction(state));
-  return jacobian;
+      state.jacToGlobal, std::nullopt, direction(state),
+      state.anchorParametrization);
+  if (!transportResult.ok()) {
+    return Result<Jacobian>::failure(transportResult.error());
+  }
+  return Result<Jacobian>::success(jacobian);
 }
 
 Result<GenericRungeKuttaStepper::Jacobian>
@@ -242,12 +251,19 @@ GenericRungeKuttaStepper::transportToBound(
 
   Jacobian jacobian = Jacobian::Identity();
   if (!state.cov.has_value()) {
+    state.anchorParametrization =
+        surface.boundParametrization(state.options.geoContext);
     return Result<Jacobian>::success(jacobian);
   }
-  detail::transportCovarianceToBound(
+  const auto transportResult = detail::transportCovarianceToBound(
       state.options.geoContext, surface, *state.cov, jacobian,
       state.jacTransport, state.derivative, state.jacToGlobal, std::nullopt,
       state.pars, freeToBoundCorrection);
+  if (!transportResult.ok()) {
+    return Result<Jacobian>::failure(transportResult.error());
+  }
+  state.anchorParametrization =
+      surface.boundParametrization(state.options.geoContext);
   return Result<Jacobian>::success(jacobian);
 }
 

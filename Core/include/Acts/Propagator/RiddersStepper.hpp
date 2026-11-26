@@ -18,9 +18,10 @@
 #include "Acts/Propagator/StepperStatistics.hpp"
 #include "Acts/Propagator/detail/SteppingHelper.hpp"
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
+#include "Acts/Surfaces/SurfaceError.hpp"
 #include "Acts/Utilities/Intersection.hpp"
-#include "Acts/Utilities/detail/periodic.hpp"
 
+#include <cmath>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -155,7 +156,7 @@ struct CovarianceBoundParameterVariationGenerator
 /// primary stepper to perform the nominal step and multiple secondary steppers
 /// with varied initial conditions to compute the Jacobian columns. The
 /// variations are generated based on the input covariance and a configurable
-/// variation generator.
+/// variation generator. Destination residuals use the surface parametrization.
 /// @tparam stepper_impl_t the type of the underlying stepper implementation
 template <Concepts::SingleStepper stepper_impl_t>
 class RiddersStepper final {
@@ -207,6 +208,9 @@ class RiddersStepper final {
     /// The covariance of the last known bound parameters, set if the
     /// covariance is transported
     std::optional<Covariance> cov;
+    /// Direction chart of the reference parameters used for the variations.
+    BoundParametrization anchorParametrization =
+        BoundParametrization::globalSpherical();
 
     /// The accumulated path length during the stepping process
     double pathAccumulated = 0;
@@ -274,6 +278,8 @@ class RiddersStepper final {
     m_stepperImpl.initialize(state.primaryStepperState, boundVector,
                              std::nullopt, particleHypothesis, surface);
 
+    state.anchorParametrization = surface.boundParametrization(
+        state.primaryStepperState.options.geoContext);
     state.cov = covariance;
     if (!state.cov.has_value()) {
       return;
@@ -595,20 +601,16 @@ class RiddersStepper final {
   /// @param state the state of the RiddersStepper
   /// @return the curvilinear parameters
   BoundParameters curvilinearParameters(const State& state) const {
-    BoundParameters result =
-        m_stepperImpl.curvilinearParameters(state.primaryStepperState);
-    if (!state.cov.has_value()) {
-      return result;
-    }
-    return BoundParameters(result.referenceSurface().getSharedPtr(),
-                           result.parameters(), *state.cov,
-                           particleHypothesis(state));
+    return BoundParameters::createCurvilinear(
+        VectorHelpers::makeVector4(position(state), time(state)),
+        direction(state), qOverP(state), state.cov, particleHypothesis(state),
+        state.anchorParametrization);
   }
 
   /// Transport the covariance to a surface
   ///
   /// The jacobian is computed from the differences of the secondary stepper
-  /// states. Without a covariance the state does not change.
+  /// states. Without a covariance only the reference chart changes.
   ///
   /// @param state the state of the RiddersStepper
   /// @param surface the surface
@@ -618,8 +620,25 @@ class RiddersStepper final {
       State& state, const Surface& surface,
       [[maybe_unused]] const FreeToBoundCorrection& freeToBoundCorrection =
           FreeToBoundCorrection(false)) const {
+    const auto parametrization = surface.boundParametrization(
+        state.primaryStepperState.options.geoContext);
     if (!state.cov.has_value()) {
+      // Give the primary stepper a chance to reject an unsupported chart.
+      if (parametrization != state.anchorParametrization) {
+        auto result =
+            m_stepperImpl.transportToBound(state.primaryStepperState, surface);
+        if (!result.ok()) {
+          return Result<Jacobian>::failure(result.error());
+        }
+        state.anchorParametrization = parametrization;
+      }
       return Result<Jacobian>::success(Jacobian::Identity());
+    }
+    const auto chartJacobian =
+        parametrization.directionCoordinatesJacobianFromUnitDirection(
+            direction(state), 0.);
+    if (!chartJacobian.ok()) {
+      return Result<Jacobian>::failure(chartJacobian.error());
     }
 
     Result<BoundParameters> primaryResult =
@@ -647,15 +666,8 @@ class RiddersStepper final {
       const auto& [index, delta] = state.variationMap[i];
       const auto& nudgedVector = boundVectors[i];
 
-      const auto diff = [&]() {
-        BoundVector d = nudgedVector - referenceVector;
-        d[eBoundPhi] = detail::difference_periodic(nudgedVector[eBoundPhi],
-                                                   referenceVector[eBoundPhi],
-                                                   2 * std::numbers::pi);
-        return d;
-      };
-
-      jacobian.col(index) += diff() / delta;
+      jacobian.col(index) +=
+          parametrization.difference(nudgedVector, referenceVector) / delta;
       ++numberOfVariationsPerParameter[index];
     }
     for (std::size_t i = 0; i < eBoundSize; ++i) {
@@ -667,6 +679,7 @@ class RiddersStepper final {
     // The secondary states restart on the surface, so the next jacobian starts
     // here as well
     resetSecondaryStates(state, referenceVector, surface);
+    state.anchorParametrization = parametrization;
     for (auto& secondaryState : state.secondaryStepperStates) {
       secondaryState.stepSize = state.primaryStepperState.stepSize;
     }
@@ -681,13 +694,23 @@ class RiddersStepper final {
   ///
   /// @param state the state of the RiddersStepper
   /// @return the jacobian
-  Jacobian transportToCurvilinear(State& state) const {
+  /// @note Chart-domain errors are returned when covariance transport fails.
+  Result<Jacobian> transportToCurvilinear(State& state) const {
     if (!state.cov.has_value()) {
-      return Jacobian::Identity();
+      return Result<Jacobian>::success(Jacobian::Identity());
+    }
+    const auto chartJacobian =
+        state.anchorParametrization
+            .directionCoordinatesJacobianFromUnitDirection(direction(state),
+                                                           0.);
+    if (!chartJacobian.ok()) {
+      return Result<Jacobian>::failure(chartJacobian.error());
     }
 
     const auto curvilinearSurface =
-        CurvilinearSurface(position(state), direction(state)).surface();
+        CurvilinearSurface(position(state), direction(state),
+                           state.anchorParametrization)
+            .surface();
 
     for (std::size_t i = 0; i < m_config.maxStepsToCurvilinearSurface; ++i) {
       const auto surfaceStatus = updateSurfaceStatus(
@@ -698,20 +721,17 @@ class RiddersStepper final {
         break;
       }
       if (surfaceStatus == IntersectionStatus::unreachable) {
-        throw std::runtime_error(
-            "RiddersStepper: Curvilinear surface is unreachable");
+        return Result<Jacobian>::failure(
+            SurfaceError::GlobalPositionNotOnSurface);
       }
       const auto stepResult = step(state, state.lastStepPropagationDirection,
                                    state.lastStepMaterial);
       if (!stepResult.ok()) {
-        throw std::runtime_error(
-            "RiddersStepper: Failed to step towards curvilinear surface: " +
-            stepResult.error().message());
+        return Result<Jacobian>::failure(stepResult.error());
       }
     }
 
-    // the surface is built at the current position, so this cannot fail
-    return transportToBound(state, *curvilinearSurface).value();
+    return transportToBound(state, *curvilinearSurface);
   }
 
   /// Update the state of the RiddersStepper
@@ -735,7 +755,8 @@ class RiddersStepper final {
   void update(State& state, const Vector3& position, const Vector3& direction,
               double qOverP, double time) const {
     const auto curvilinearSurface =
-        CurvilinearSurface(position, direction).surface();
+        CurvilinearSurface(position, direction, state.anchorParametrization)
+            .surface();
     const std::optional<BoundMatrix> cov = state.cov;
     initialize(state,
                transformFreeToBoundParameters(

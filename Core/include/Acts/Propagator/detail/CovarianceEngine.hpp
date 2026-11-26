@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/BoundParametrization.hpp"
 #include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -17,6 +18,12 @@
 #include "Acts/Utilities/Result.hpp"
 
 #include <optional>
+
+/// @file
+/// Internal covariance-transport implementation shared by steppers.
+/// These helpers are not public API; see @ref versioning. Custom steppers may
+/// use them, but must not expose their implementation types in public
+/// interfaces.
 
 namespace Acts::detail {
 
@@ -44,6 +51,7 @@ Result<BoundTrackParameters> boundParameters(
     const ParticleHypothesis& particleHypothesis);
 
 /// Create curvilinear parameters from free parameters
+/// @param parametrization Direction chart of the curvilinear covariance anchor
 ///
 /// @param [in] freeParameters The free parameters
 /// @param [in] covariance The optional curvilinear covariance
@@ -52,7 +60,9 @@ Result<BoundTrackParameters> boundParameters(
 /// @return The curvilinear parameters at the free position
 BoundTrackParameters curvilinearParameters(
     const FreeVector& freeParameters, std::optional<BoundMatrix> covariance,
-    const ParticleHypothesis& particleHypothesis);
+    const ParticleHypothesis& particleHypothesis,
+    BoundParametrization parametrization =
+        BoundParametrization::globalSpherical());
 
 /// @brief Method for on-demand covariance transport of a bound/curvilinear to
 ///        another bound representation.
@@ -70,7 +80,8 @@ BoundTrackParameters curvilinearParameters(
 ///        transform from free to bound
 ///
 /// @note The free parameters must be on the surface
-void transportCovarianceToBound(
+/// @return Success, or a chart-domain error without modifying the state
+Result<void> transportCovarianceToBound(
     const GeometryContext& geoContext, const Surface& surface,
     BoundMatrix& boundCovariance, BoundMatrix& fullTransportJacobian,
     FreeMatrix& freeTransportJacobian, FreeVector& freeToPathDerivatives,
@@ -88,14 +99,18 @@ void transportCovarianceToBound(
 /// @param [in, out] freeToPathDerivatives Path length derivatives
 /// @param [in, out] boundToFreeJacobian Projection jacobian of the last bound
 ///        parametrisation to free parameters
+/// @param parametrization Direction chart of the curvilinear covariance anchor
 /// @param [in] direction Normalised direction vector
 ///
-void transportCovarianceToCurvilinear(
+/// @return Success, or a chart-domain error without modifying the state
+Result<void> transportCovarianceToCurvilinear(
     BoundMatrix& boundCovariance, BoundMatrix& fullTransportJacobian,
     FreeMatrix& freeTransportJacobian, FreeVector& freeToPathDerivatives,
     BoundToFreeMatrix& boundToFreeJacobian,
     const std::optional<FreeMatrix>& additionalFreeCovariance,
-    const Vector3& direction);
+    const Vector3& direction,
+    BoundParametrization parametrization =
+        BoundParametrization::globalSpherical());
 
 /// Convert bound track parameters to another bound surface.
 /// @pre The @p targetSurface must intersect with the surface attached to

@@ -19,6 +19,8 @@
 #include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/Holders.hpp"
 
@@ -47,8 +49,8 @@ void fillTestTrack(typename track_container_t::TrackProxy track) {
   params[eBoundLoc0] = 1.0;
   params[eBoundLoc1] = 2.0;
   params[eBoundTime] = 3.0;
-  params[eBoundPhi] = 0.5;
-  params[eBoundTheta] = std::numbers::pi / 4.0;
+  params[eBoundDir0] = 0.5;
+  params[eBoundDir1] = std::numbers::pi / 4.0;
   params[eBoundQOverP] = 0.1;
 
   // Set covariance
@@ -183,14 +185,14 @@ BOOST_AUTO_TEST_CASE(AccessParameters) {
   BOOST_CHECK_CLOSE(anyTrack.parameter(eBoundLoc0), 1.0, 1e-6);
   BOOST_CHECK_CLOSE(anyTrack.parameter(eBoundLoc1), 2.0, 1e-6);
   BOOST_CHECK_CLOSE(anyTrack.parameter(eBoundTime), 3.0, 1e-6);
-  BOOST_CHECK_CLOSE(anyTrack.parameter(eBoundPhi), 0.5, 1e-6);
-  BOOST_CHECK_CLOSE(anyTrack.parameter(eBoundTheta), std::numbers::pi / 4.0,
+  BOOST_CHECK_CLOSE(anyTrack.parameter(eBoundDir0), 0.5, 1e-6);
+  BOOST_CHECK_CLOSE(anyTrack.parameter(eBoundDir1), std::numbers::pi / 4.0,
                     1e-6);
   BOOST_CHECK_CLOSE(anyTrack.parameter(eBoundQOverP), 0.1, 1e-6);
 
   // Check convenience accessors
-  BOOST_CHECK_CLOSE(anyTrack.phi(), 0.5, 1e-6);
-  BOOST_CHECK_CLOSE(anyTrack.theta(), std::numbers::pi / 4.0, 1e-6);
+  BOOST_CHECK_CLOSE(anyTrack.phi(gctx), 0.5, 1e-6);
+  BOOST_CHECK_CLOSE(anyTrack.theta(gctx), std::numbers::pi / 4.0, 1e-6);
   BOOST_CHECK_CLOSE(anyTrack.qOverP(), 0.1, 1e-6);
 
   // Verify parameters() map provides reference semantics
@@ -253,6 +255,30 @@ BOOST_AUTO_TEST_CASE(AccessDerivedQuantities) {
 
   AnyMutableTrackProxy anyTrack(track);
 
+  const auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
+  ACTS_PUSH_IGNORE_DEPRECATED()
+  auto checkContext = [&](const auto& proxy) {
+    BOOST_CHECK_EQUAL(proxy.phi(geoCtx), track.phi());
+    BOOST_CHECK_EQUAL(proxy.theta(geoCtx), track.theta());
+    BOOST_CHECK_EQUAL(proxy.direction(geoCtx), track.direction());
+    BOOST_CHECK_EQUAL(proxy.momentum(geoCtx), track.momentum());
+    BOOST_CHECK_EQUAL(proxy.transverseMomentum(geoCtx),
+                      track.transverseMomentum());
+    BOOST_CHECK_EQUAL(proxy.fourMomentum(geoCtx), track.fourMomentum());
+  };
+  ACTS_POP_IGNORE_DEPRECATED()
+  checkContext(track);
+  checkContext(anyTrack);
+  checkContext(AnyConstTrackProxy(track));
+
+  auto unanchored = tc.makeTrack();
+  unanchored.parameters() = track.parameters();
+  unanchored.setParticleHypothesis(track.particleHypothesis());
+  BOOST_REQUIRE(!unanchored.hasReferenceSurface());
+  checkContext(unanchored);
+  checkContext(AnyMutableTrackProxy(unanchored));
+  checkContext(AnyConstTrackProxy(unanchored));
+
   // Check charge
   double expectedCharge =
       ParticleHypothesis::pion().extractCharge(track.qOverP());
@@ -264,8 +290,48 @@ BOOST_AUTO_TEST_CASE(AccessDerivedQuantities) {
   BOOST_CHECK_CLOSE(anyTrack.absoluteMomentum(), expectedMomentum, 1e-6);
 
   // Check transverse momentum
-  double expectedPt = std::sin(track.theta()) * expectedMomentum;
-  BOOST_CHECK_CLOSE(anyTrack.transverseMomentum(), expectedPt, 1e-6);
+  double expectedPt = std::sin(track.theta(gctx)) * expectedMomentum;
+  BOOST_CHECK_CLOSE(anyTrack.transverseMomentum(gctx), expectedPt, 1e-6);
+}
+
+BOOST_AUTO_TEST_CASE(TelescopePhysicalAccessors) {
+  constexpr auto chart = BoundParametrization::telescope();
+  const auto plane =
+      Surface::makeShared<PlaneSurface>(Transform3::Identity(), nullptr, chart);
+  BoundVector coordinates = BoundVector::Zero();
+  coordinates.segment<2>(eBoundDir0) =
+      chart.directionCoordinates(-Vector3::UnitZ());
+  coordinates[eBoundQOverP] = 1.;
+  const BoundTrackParameters seed(plane, coordinates, std::nullopt,
+                                  ParticleHypothesis::pion());
+  TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
+  auto track = tc.makeTrack();
+  track.setReferenceSurface(plane);
+  track.parameters() = coordinates;
+  track.setParticleHypothesis(seed.particleHypothesis());
+
+  ACTS_PUSH_IGNORE_DEPRECATED()
+  const auto check = [&](const auto& parameters) {
+    BOOST_CHECK_EQUAL(parameters.direction(gctx), -Vector3::UnitZ());
+    BOOST_CHECK_EQUAL(parameters.direction(), parameters.direction(gctx));
+    BOOST_CHECK_EQUAL(parameters.phi(), 0.);
+    BOOST_CHECK_EQUAL(parameters.theta(), std::numbers::pi);
+    BOOST_CHECK_EQUAL(parameters.momentum(), parameters.momentum(gctx));
+    BOOST_CHECK_EQUAL(parameters.transverseMomentum(), 0.);
+  };
+  check(seed);
+  check(track);
+  check(AnyConstTrackProxy(track));
+  BOOST_CHECK_EQUAL(track.fourMomentum(), track.fourMomentum(gctx));
+  ACTS_POP_IGNORE_DEPRECATED()
+
+  coordinates[eBoundDir1] = -0.3;
+  BoundMatrix covariance = BoundMatrix::Identity();
+  covariance(eBoundDir1, eBoundLoc0) = covariance(eBoundLoc0, eBoundDir1) = .2;
+  const BoundTrackParameters folded(plane, coordinates, covariance,
+                                    ParticleHypothesis::pion());
+  BOOST_REQUIRE(folded.covariance().has_value());
+  BOOST_CHECK_EQUAL((*folded.covariance())(eBoundLoc0, eBoundDir1), -.2);
 }
 
 BOOST_AUTO_TEST_CASE(AccessStatistics) {

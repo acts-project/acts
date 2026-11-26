@@ -100,6 +100,10 @@ class StraightLineStepper final {
     /// Covariance matrix for track parameter uncertainties, set if the
     /// covariance is transported
     std::optional<Covariance> cov;
+    /// Direction chart of the last bound state, also used for curvilinear
+    /// anchors.
+    BoundParametrization anchorParametrization =
+        BoundParametrization::globalSpherical();
 
     /// accumulated path length state
     double pathAccumulated = 0.;
@@ -428,13 +432,14 @@ class StraightLineStepper final {
   ///
   /// @param [in,out] state State of the stepper
   /// @return The jacobian from the previous anchor to the curvilinear frame
-  Jacobian transportToCurvilinear(State& state) const;
+  /// @note Chart-domain errors are returned when covariance transport fails.
+  Result<Jacobian> transportToCurvilinear(State& state) const;
 
   /// Transport the covariance to a surface at the current position
   ///
-  /// This anchors the state on @p surface. Without a covariance the state
-  /// does not change. The state must be on @p surface, and it stays unchanged
-  /// if it is not.
+  /// This anchors the state on @p surface and remembers its direction chart
+  /// for subsequent curvilinear output, also in value-only propagation.
+  /// The state must be on @p surface.
   ///
   /// @param [in,out] state State of the stepper
   /// @param [in] surface The surface to transport the covariance to

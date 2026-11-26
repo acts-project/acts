@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/Histogram.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
@@ -58,9 +59,11 @@ class DuplicationPlotTool {
 
   /// @brief fill duplication ratio w.r.t. fitted track parameters
   ///
+  /// @param gctx the geometry context of the parameters
   /// @param fittedParameters fitted track parameters of this track
   /// @param status the (truth-matched) reconstructed track is duplicated or not
-  void fill(const Acts::BoundTrackParameters& fittedParameters, bool status);
+  void fill(const Acts::GeometryContext& gctx,
+            const Acts::BoundTrackParameters& fittedParameters, bool status);
 
   /// @brief fill number of duplicated tracks for a truth particle seed
   ///

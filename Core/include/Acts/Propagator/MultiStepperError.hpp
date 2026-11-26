@@ -31,7 +31,9 @@ enum class MultiStepperError {
   /// The conversion to the bound state failed for some components
   SomeComponentsConversionToBoundFailed = 6,
   /// No components are left
-  NoComponentsLeft = 7
+  NoComponentsLeft = 7,
+  /// The mixture assumes canonical global-spherical coordinates.
+  UnsupportedBoundParametrization = 8
 };
 
 /// Create error code from MultiStepperError

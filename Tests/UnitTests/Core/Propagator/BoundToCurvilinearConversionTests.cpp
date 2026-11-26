@@ -221,13 +221,16 @@ void test_bound_to_curvilinear(const std::vector<TestData> &test_data_list,
       // compute Jacobian for bound to curvilinear covariance transformation
       BoundMatrix b2c;
       FreeToBoundMatrix freeToBoundJacobian;
-      detail::boundToCurvilinearTransportJacobian(
-          direction, surface->boundToFreeJacobian(geoCtx, position, direction),
-          FreeMatrix::Identity(), freeToBoundJacobian,
-          computeFreeToPathDerivatives(
-              direction, params.parameters()[eBoundQOverP],
-              local_bfield.value(), ParticleHypothesis::pion()),
-          b2c);
+      BOOST_REQUIRE(
+          detail::boundToCurvilinearTransportJacobian(
+              direction,
+              surface->boundToFreeJacobian(geoCtx, position, direction),
+              FreeMatrix::Identity(), freeToBoundJacobian,
+              computeFreeToPathDerivatives(
+                  direction, params.parameters()[eBoundQOverP],
+                  local_bfield.value(), ParticleHypothesis::pion()),
+              b2c)
+              .ok());
 
       auto curvi_cov_alt = b2c * cov * b2c.transpose();
 

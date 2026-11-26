@@ -25,7 +25,6 @@
 #include "Acts/Utilities/AlgebraHelpers.hpp"
 #include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Intersection.hpp"
-#include "Acts/Utilities/JacobianHelpers.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
@@ -225,15 +224,23 @@ BoundToFreeMatrix DiscSurface::boundToFreeJacobian(
   // the time component
   jacToGlobal(eFreeTime, eBoundTime) = 1;
   // the momentum components
-  jacToGlobal.block<3, 2>(eFreeDir0, eBoundPhi) =
-      sphericalToFreeDirectionJacobian(direction);
+  jacToGlobal.block<3, 2>(eFreeDir0, eBoundDir0) =
+      boundParametrization(gctx).directionJacobianFromUnitDirection(direction);
   jacToGlobal(eFreeQOverP, eBoundQOverP) = 1;
   return jacToGlobal;
 }
 
-FreeToBoundMatrix DiscSurface::freeToBoundJacobian(
+Result<FreeToBoundMatrix> DiscSurface::freeToBoundJacobian(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction) const {
+  // Preserve the existing domain without an additional conditioning cutoff.
+  const auto directionJacobian =
+      boundParametrization(gctx).directionCoordinatesJacobianFromUnitDirection(
+          direction, 0.);
+  if (!directionJacobian.ok()) {
+    return Result<FreeToBoundMatrix>::failure(directionJacobian.error());
+  }
+
   using VectorHelpers::perp;
   using VectorHelpers::phi;
 
@@ -261,10 +268,10 @@ FreeToBoundMatrix DiscSurface::freeToBoundJacobian(
   // Time element
   jacToLocal(eBoundTime, eFreeTime) = 1;
   // Directional and momentum elements for reference frame surface
-  jacToLocal.block<2, 3>(eBoundPhi, eFreeDir0) =
-      freeToSphericalDirectionJacobian(direction);
+
+  jacToLocal.block<2, 3>(eBoundDir0, eFreeDir0) = *directionJacobian;
   jacToLocal(eBoundQOverP, eFreeQOverP) = 1;
-  return jacToLocal;
+  return Result<FreeToBoundMatrix>::success(jacToLocal);
 }
 
 namespace {

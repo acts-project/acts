@@ -91,6 +91,27 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceConstruction) {
       AssertionFailureException);
 }
 
+BOOST_AUTO_TEST_CASE(PlaneKeepsTelescopeChartUnderGeometryChanges) {
+  const auto chart = BoundParametrization::telescope();
+  const auto bounds = std::make_shared<const RectangleBounds>(1., 2.);
+  const auto plane =
+      Surface::makeShared<PlaneSurface>(Transform3::Identity(), bounds, chart);
+  const auto copy = Surface::makeShared<PlaneSurface>(*plane);
+  const auto rotated = Surface::makeShared<PlaneSurface>(
+      tgContext, *plane, Transform3(AngleAxis3(0.4, Vector3::UnitY())));
+  const auto adjacent = Surface::makeShared<PlaneSurface>(
+      tgContext, *plane, Transform3(Translation3(2., 0., 0.)));
+  const auto merged = plane->mergedWith(*adjacent, AxisDirection::AxisX).first;
+  for (const auto& surface : {copy, rotated, merged}) {
+    BOOST_CHECK(surface->boundParametrization(tgContext) == chart);
+  }
+  const auto canonical =
+      Surface::makeShared<PlaneSurface>(Transform3::Identity(), bounds);
+  BOOST_CHECK(*canonical != *plane);
+  BOOST_CHECK_THROW(canonical->mergedWith(*adjacent, AxisDirection::AxisX),
+                    SurfaceMergingException);
+}
+
 /// Unit test for testing PlaneSurface properties
 BOOST_AUTO_TEST_CASE(PlaneSurfaceProperties) {
   // bounds object, rectangle type
@@ -379,8 +400,10 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceAlignment) {
   FreeVector derivatives = FreeVector::Zero();
   derivatives.head<3>() = direction;
   const AlignmentToBoundMatrix& alignToBound =
-      planeSurfaceObject->alignmentToBoundDerivative(tgContext, globalPosition,
-                                                     direction, derivatives);
+      planeSurfaceObject
+          ->alignmentToBoundDerivative(tgContext, globalPosition, direction,
+                                       derivatives)
+          .value();
   const AlignmentToPathMatrix alignToloc0 =
       alignToBound.block<1, 6>(eBoundLoc0, eAlignmentCenter0);
   const AlignmentToPathMatrix alignToloc1 =

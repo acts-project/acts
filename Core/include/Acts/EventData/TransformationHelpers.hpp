@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/BoundParametrization.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
@@ -28,10 +29,10 @@ class Surface;
 inline BoundVector reflectBoundParameters(const BoundVector& boundParams) {
   BoundVector reflected = boundParams;
   auto [phi, theta] =
-      detail::normalizePhiTheta(boundParams[eBoundPhi] - std::numbers::pi,
-                                std::numbers::pi - boundParams[eBoundTheta]);
-  reflected[eBoundPhi] = phi;
-  reflected[eBoundTheta] = theta;
+      detail::normalizePhiTheta(boundParams[eBoundDir0] - std::numbers::pi,
+                                std::numbers::pi - boundParams[eBoundDir1]);
+  reflected[eBoundDir0] = phi;
+  reflected[eBoundDir1] = theta;
   reflected[eBoundQOverP] = -boundParams[eBoundQOverP];
   return reflected;
 }
@@ -66,7 +67,7 @@ FreeVector transformBoundToFreeParameters(const Surface& surface,
 /// @param geoCtx Geometry context for the global-to-local transformation
 /// @param tolerance Tolerance used for globalToLocal
 ///
-/// @return Bound track parameters vector on the given surface
+/// @return Bound parameters, or an error for an invalid direction or off-surface position
 Result<BoundVector> transformFreeToBoundParameters(
     const FreeVector& freeParams, const Surface& surface,
     const GeometryContext& geoCtx, double tolerance = s_onSurfaceTolerance);
@@ -81,13 +82,14 @@ Result<BoundVector> transformFreeToBoundParameters(
 /// @param geoCtx Geometry context for the global-to-local transformation
 /// @param tolerance Tolerance used for globalToLocal
 ///
-/// @return Equivalent bound parameters vector on the given surface
+/// @return Bound parameters, or an error for an invalid direction or off-surface position
 Result<BoundVector> transformFreeToBoundParameters(
     const Vector3& position, double time, const Vector3& direction,
     double qOverP, const Surface& surface, const GeometryContext& geoCtx,
     double tolerance = s_onSurfaceTolerance);
 
 /// Convert direction to curvilinear track parameters.
+/// @param parametrization Direction chart of the curvilinear surface
 ///
 /// @param time Global track time
 /// @param direction Global direction three-vector; normalization is ignored.
@@ -97,9 +99,10 @@ Result<BoundVector> transformFreeToBoundParameters(
 /// @note The parameters are assumed to be defined at the origin of the
 ///       curvilinear frame derived from the direction vector. The local
 ///       coordinates are zero by construction.
-BoundVector transformFreeToCurvilinearParameters(double time,
-                                                 const Vector3& direction,
-                                                 double qOverP);
+BoundVector transformFreeToCurvilinearParameters(
+    double time, const Vector3& direction, double qOverP,
+    BoundParametrization parametrization =
+        BoundParametrization::globalSpherical());
 
 /// Convert direction angles to curvilinear track parameters.
 ///

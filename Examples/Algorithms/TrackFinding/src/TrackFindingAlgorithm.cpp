@@ -78,7 +78,8 @@ class MeasurementSelector {
 
   Acts::Result<std::pair<std::vector<Traj::TrackStateProxy>::iterator,
                          std::vector<Traj::TrackStateProxy>::iterator>>
-  select(std::vector<Traj::TrackStateProxy>& candidates, bool& isOutlier,
+  select(const Acts::BoundParametrization& parametrization,
+         std::vector<Traj::TrackStateProxy>& candidates, bool& isOutlier,
          const Acts::Logger& logger) const {
     if (!m_seedIndices.empty()) {
       // the selector sorts by chi2 anyway, so partitioning in place is enough
@@ -90,8 +91,8 @@ class MeasurementSelector {
       }
     }
 
-    return m_selector.select<Acts::VectorMultiTrajectory>(candidates, isOutlier,
-                                                          logger);
+    return m_selector.select<Acts::VectorMultiTrajectory>(
+        parametrization, candidates, isOutlier, logger);
   }
 
  private:
@@ -206,7 +207,7 @@ class BranchStopper {
             return &config;
           } else if constexpr (std::is_same_v<
                                    T, Acts::TrackSelector::EtaBinnedConfig>) {
-            double theta = trackState.parameters()[Acts::eBoundTheta];
+            double theta = trackState.parameters()[Acts::eBoundDir1];
             double eta = Acts::AngleHelpers::etaFromTheta(theta);
             return config.hasCuts(eta) ? &config.getCuts(eta) : nullptr;
           }
@@ -490,7 +491,8 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
     }
     Acts::calculateTrackQuantities(track);
 
-    if (m_trackSelector.has_value() && !m_trackSelector->isValidTrack(track)) {
+    if (m_trackSelector.has_value() &&
+        !m_trackSelector->isValidTrack(track, ctx.recoGeoContext)) {
       return;
     }
 

@@ -617,9 +617,9 @@ ProcessCode ColliderMLRelease1InputConverter::execute(
             static_cast<double>(d0Arr->Value(trkOff + j));
         track.parameters()[Acts::eBoundLoc1] =
             static_cast<double>(z0Arr->Value(trkOff + j));
-        track.parameters()[Acts::eBoundPhi] =
+        track.parameters()[Acts::eBoundDir0] =
             static_cast<double>(phiArr->Value(trkOff + j));
-        track.parameters()[Acts::eBoundTheta] =
+        track.parameters()[Acts::eBoundDir1] =
             static_cast<double>(thetaArr->Value(trkOff + j));
         track.parameters()[Acts::eBoundQOverP] =
             static_cast<double>(qopArr->Value(trkOff + j));

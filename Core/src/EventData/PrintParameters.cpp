@@ -20,14 +20,15 @@ namespace Acts {
 
 namespace {
 
-constexpr std::array<const char*, eBoundSize> makeBoundNames() {
+constexpr std::array<const char*, eBoundSize> makeBoundNames(
+    bool globalSpherical = false) {
   std::array<const char*, eBoundSize> names = {nullptr};
   // must be set by index since the order is user-configurable
   names[eBoundLoc0] = "loc0:";
   names[eBoundLoc1] = "loc1:";
   names[eBoundTime] = "time:";
-  names[eBoundPhi] = "phi:";
-  names[eBoundTheta] = "theta:";
+  names[eBoundDir0] = globalSpherical ? "phi:" : "dir0:";
+  names[eBoundDir1] = globalSpherical ? "theta:" : "dir1:";
   names[eBoundQOverP] = "q/p:";
   return names;
 }
@@ -168,10 +169,13 @@ void detail::printBoundParameters(std::ostream& os, const Surface& surface,
                                   const ParticleHypothesis& particleHypothesis,
                                   const BoundVector& params,
                                   const BoundMatrix* cov) {
+  const auto chart = surface.boundParametrization(
+      GeometryContext::dangerouslyDefaultConstruct());
+  const auto names = makeBoundNames(chart.isGlobalSpherical());
   if (cov != nullptr) {
-    printParametersCovariance(os, makeBoundNames(), kMonotonic, params, *cov);
+    printParametersCovariance(os, names, kMonotonic, params, *cov);
   } else {
-    printParameters(os, makeBoundNames(), kMonotonic, params);
+    printParameters(os, names, kMonotonic, params);
   }
   os << "\non surface " << surface.geometryId() << " of type "
      << surface.name();

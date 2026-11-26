@@ -9,14 +9,17 @@
 #pragma once
 
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/BoundParametrization.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/Types.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilterError.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "Acts/Utilities/detail/AllFinite.hpp"
 
 #include <array>
 #include <cassert>
@@ -84,6 +87,10 @@ class MeasurementSelector {
   /// @brief Function that select the measurements compatible with
   /// the given track parameter on a surface
   ///
+  /// @param parametrization Bound parametrization of the candidates' common
+  ///        reference surface, used for physical theta and coordinate
+  ///        residuals. It must equal the surface's boundParametrization() in
+  ///        the current geometry context.
   /// @param candidates The track state candidates which already contain predicted parameters
   /// @param isOutlier The indicator for outlier or not
   /// @param logger The logger wrapper
@@ -95,7 +102,8 @@ class MeasurementSelector {
   Result<std::pair<
       typename std::vector<typename traj_t::TrackStateProxy>::iterator,
       typename std::vector<typename traj_t::TrackStateProxy>::iterator>>
-  select(std::vector<typename traj_t::TrackStateProxy>& candidates,
+  select(const BoundParametrization& parametrization,
+         std::vector<typename traj_t::TrackStateProxy>& candidates,
          bool& isOutlier, const Logger& logger) const;
 
  private:
@@ -122,8 +130,12 @@ class MeasurementSelector {
   static Cuts getCutsByTheta(const InternalCutBins& config, double theta);
   Result<Cuts> getCuts(const GeometryIdentifier& geoID, double theta) const;
 
+  /// Compute the chi2 of a candidate, or NaN for a non-finite measurement.
+  /// @pre @p predicted is finite, which the caller checks once per distinct
+  ///      prediction.
   double calculateChi2(
-      const double* fullCalibrated, const double* fullCalibratedCovariance,
+      const BoundParametrization& parametrization, const double* fullCalibrated,
+      const double* fullCalibratedCovariance,
       TrackStateTraits<kMeasurementSizeMax, false>::Parameters predicted,
       TrackStateTraits<kMeasurementSizeMax, false>::Covariance
           predictedCovariance,
