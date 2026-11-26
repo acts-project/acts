@@ -116,22 +116,23 @@ bool validateTriplet(const GbtsGraphBuilder::Config& cfg,
     return false;
   }
 
-  const float A = (v[0] - v[1]) / du;
+  const float conformalSlope = (v[0] - v[1]) / du;
 
-  const float B = v[1] - A * u[1];
+  const float conformalIntercept = v[1] - conformalSlope * u[1];
 
-  const float d0 = r0 * (B * r0 - A);
+  const float d0 = r0 * (conformalIntercept * r0 - conformalSlope);
 
   if (std::abs(d0) > cfg.d0Max) {
     return false;
   }
 
-  if (B != 0.0) {  // straight-line track is OK
+  if (conformalIntercept != 0.0) {  // straight-line track is OK
 
-    const float R = std::sqrt(1 + A * A) / B;
+    const float inverseCurvature =
+        std::sqrt(1 + conformalSlope * conformalSlope) / conformalIntercept;
 
     // 1T magnetic field used
-    const float pT = std::abs(bFieldInZ * R / 2);
+    const float pT = std::abs(bFieldInZ * inverseCurvature / 2);
 
     if (pT < tripletMinPt) {
       return false;
@@ -336,17 +337,17 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(
 
   // loop over bin groups
   for (const auto& bg : m_geometry->binGroups()) {
-    const detail::GbtsEtaBinInfo& B1 = nodeStorage.etaBin(bg.bin);
+    const detail::GbtsEtaBinInfo& innerBin = nodeStorage.etaBin(bg.bin);
 
-    if (B1.empty()) {
+    if (innerBin.empty()) {
       continue;
     }
 
-    const float rb1 = B1.minRadius;
+    const float rb1 = innerBin.minRadius;
 
-    const std::int32_t barrelOrder1 = B1.barrelOrder;
+    const std::int32_t barrelOrder1 = innerBin.barrelOrder;
 
-    const bool isPixel1 = B1.technology == GbtsLayerTechnology::Pixel;
+    const bool isPixel1 = innerBin.technology == GbtsLayerTechnology::Pixel;
     const bool isPixelBarrel1 = barrelOrder1 >= 0;
 
     const bool useZ0Histogram =
@@ -378,13 +379,13 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(
 
     // loop over n2 eta-bins in L2 layers
     for (const GbtsBinLink& link : bg.links) {
-      const detail::GbtsEtaBinInfo& B2 = nodeStorage.etaBin(link.bin);
+      const detail::GbtsEtaBinInfo& outerBin = nodeStorage.etaBin(link.bin);
 
-      if (B2.empty()) {
+      if (outerBin.empty()) {
         continue;
       }
 
-      const float rb2 = B2.maxRadius;
+      const float rb2 = outerBin.maxRadius;
 
       float deltaPhi = deltaPhi0;  // the default
 
@@ -400,21 +401,21 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(
         }
       }
 
-      kept.ensureSize(B2.phiNodes.size());
+      kept.ensureSize(outerBin.phiNodes.size());
 
       SlidingWindow& window = phiSlidingWindow.emplace_back();
-      window.phiNodes = B2.phiNodes.data();
-      window.numPhiNodes = static_cast<std::uint32_t>(B2.phiNodes.size());
+      window.phiNodes = outerBin.phiNodes.data();
+      window.numPhiNodes = static_cast<std::uint32_t>(outerBin.phiNodes.size());
       window.deltaPhi = deltaPhi;
-      window.barrelOrder = B2.barrelOrder;
+      window.barrelOrder = outerBin.barrelOrder;
       window.tauRatioCutInner = link.tauRatioCutInner;
       window.tauRatioCutOuter = link.tauRatioCutOuter;
-      window.type = B2.type;
-      window.technology = B2.technology;
-      window.minRadius = B2.minRadius;
-      window.maxRadius = B2.maxRadius;
-      window.minZ = B2.minZ;
-      window.maxZ = B2.maxZ;
+      window.type = outerBin.type;
+      window.technology = outerBin.technology;
+      window.minRadius = outerBin.minRadius;
+      window.maxRadius = outerBin.maxRadius;
+      window.minZ = outerBin.minZ;
+      window.maxZ = outerBin.maxZ;
 
       // Isolated n2 nodes are skipped below for every n1 of this group, and
       // the branch is unpredictable. Filter them out of the window once
@@ -432,7 +433,7 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(
         std::vector<std::pair<float, SpacePointIndex>>& connected =
             connectedPhiNodes[windowIdx];
         connected.clear();
-        for (const auto& phiNode : B2.phiNodes) {
+        for (const auto& phiNode : outerBin.phiNodes) {
           const detail::GbtsNodeEdgeInfo& n2Info = edgeInfo[phiNode.second];
           const bool keep =
               (!useZ0Histogram || n2Info.isConnected != 0) &&
@@ -448,8 +449,8 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(
     }
 
     // in GBTSv3 the outer loop goes over n1 nodes in the Layer 1 bin
-    for (SpacePointIndex n1Idx = B1.nodes.first; n1Idx < B1.nodes.second;
-         ++n1Idx) {
+    for (SpacePointIndex n1Idx = innerBin.nodes.first;
+         n1Idx < innerBin.nodes.second; ++n1Idx) {
       // initialization using the top watermark of the edge storage
       edgeInfo[n1Idx].firstEdge =
           static_cast<std::uint32_t>(edgeStorage.size());

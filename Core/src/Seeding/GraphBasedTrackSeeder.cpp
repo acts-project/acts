@@ -529,12 +529,12 @@ float GraphBasedTrackSeeder::estimateCurvature(
     return 0.0;
   }
 
-  const float A = (v[0] - v[1]) / du;
+  const float conformalSlope = (v[0] - v[1]) / du;
 
-  const float B = v[1] - A * u[1];
+  const float conformalIntercept = v[1] - conformalSlope * u[1];
 
   // curavture in units of 1/mm
-  return B / std::sqrt(1 + A * A);
+  return conformalIntercept / std::sqrt(1 + conformalSlope * conformalSlope);
 }
 
 }  // namespace Acts::Experimental

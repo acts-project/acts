@@ -32,10 +32,10 @@ void detail::GbtsEdgeState::initialize(const detail::GbtsEdge& pS,
 
   const float dx = n1.x() - n2.x();
   const float dy = n1.y() - n2.y();
-  const float L = std::sqrt(dx * dx + dy * dy);
+  const float length = std::sqrt(dx * dx + dy * dy);
 
-  s = dy / L;
-  c = dx / L;
+  s = dy / length;
+  c = dx / length;
 
   // transform for extrapolation and update
   //  x' =  x*c + y*s
@@ -110,10 +110,10 @@ bool GbtsTrackingFilter::update(const detail::GbtsNodeView& nodeView,
 
   // extrapolation
 
-  std::array<float, 3> X{};
-  std::array<float, 2> Y{};
-  std::array<std::array<float, 3>, 3> Cx{};
-  std::array<std::array<float, 2>, 2> Cy{};
+  std::array<float, 3> predictedX{};
+  std::array<float, 2> predictedY{};
+  std::array<std::array<float, 3>, 3> predictedCovX{};
+  std::array<std::array<float, 2>, 2> predictedCovY{};
 
   const float x = n1.x();
   const float y = n1.y();
@@ -121,47 +121,55 @@ bool GbtsTrackingFilter::update(const detail::GbtsNodeView& nodeView,
   const float r = n1.r();
 
   const float refX = x * ts.c + y * ts.s;
-  const float mx = -x * ts.s + y * ts.c;  // measured X[0]
+  const float mx = -x * ts.s + y * ts.c;  // measurement of the transverse state
   const float refY = r;
-  const float my = z;  // measured Y[0]
+  const float my = z;  // measurement of the longitudinal state
 
-  const float A = refX - ts.refX;
-  const float B = 0.5 * A * A;
+  const float deltaX = refX - ts.refX;
+  const float halfDeltaX2 = 0.5 * deltaX * deltaX;
   const float dr = refY - ts.refY;
 
-  X[0] = ts.x[0] + ts.x[1] * A + ts.x[2] * B;
-  X[1] = ts.x[1] + ts.x[2] * A;
-  X[2] = ts.x[2];
+  predictedX[0] = ts.x[0] + ts.x[1] * deltaX + ts.x[2] * halfDeltaX2;
+  predictedX[1] = ts.x[1] + ts.x[2] * deltaX;
+  predictedX[2] = ts.x[2];
 
-  Cx[0][0] = ts.cx[0][0] + 2 * ts.cx[0][1] * A + 2 * ts.cx[0][2] * B +
-             A * A * ts.cx[1][1] + 2 * A * B * ts.cx[1][2] +
-             B * B * ts.cx[2][2];
-  Cx[0][1] = Cx[1][0] = ts.cx[0][1] + ts.cx[1][1] * A + ts.cx[1][2] * B +
-                        ts.cx[0][2] * A + A * A * ts.cx[1][2] +
-                        A * B * ts.cx[2][2];
-  Cx[0][2] = Cx[2][0] = ts.cx[0][2] + ts.cx[1][2] * A + ts.cx[2][2] * B;
+  predictedCovX[0][0] =
+      ts.cx[0][0] + 2 * ts.cx[0][1] * deltaX + 2 * ts.cx[0][2] * halfDeltaX2 +
+      deltaX * deltaX * ts.cx[1][1] + 2 * deltaX * halfDeltaX2 * ts.cx[1][2] +
+      halfDeltaX2 * halfDeltaX2 * ts.cx[2][2];
+  predictedCovX[0][1] = predictedCovX[1][0] =
+      ts.cx[0][1] + ts.cx[1][1] * deltaX + ts.cx[1][2] * halfDeltaX2 +
+      ts.cx[0][2] * deltaX + deltaX * deltaX * ts.cx[1][2] +
+      deltaX * halfDeltaX2 * ts.cx[2][2];
+  predictedCovX[0][2] = predictedCovX[2][0] =
+      ts.cx[0][2] + ts.cx[1][2] * deltaX + ts.cx[2][2] * halfDeltaX2;
 
-  Cx[1][1] = ts.cx[1][1] + 2 * A * ts.cx[1][2] + A * A * ts.cx[2][2];
-  Cx[1][2] = Cx[2][1] = ts.cx[1][2] + ts.cx[2][2] * A;
+  predictedCovX[1][1] =
+      ts.cx[1][1] + 2 * deltaX * ts.cx[1][2] + deltaX * deltaX * ts.cx[2][2];
+  predictedCovX[1][2] = predictedCovX[2][1] =
+      ts.cx[1][2] + ts.cx[2][2] * deltaX;
 
-  Cx[2][2] = ts.cx[2][2];
+  predictedCovX[2][2] = ts.cx[2][2];
 
-  Y[0] = ts.y[0] + ts.y[1] * dr;
-  Y[1] = ts.y[1];
+  predictedY[0] = ts.y[0] + ts.y[1] * dr;
+  predictedY[1] = ts.y[1];
 
-  Cy[0][0] = ts.cy[0][0] + 2 * ts.cy[0][1] * dr + dr * dr * ts.cy[1][1];
-  Cy[0][1] = Cy[1][0] = ts.cy[0][1] + dr * ts.cy[1][1];
-  Cy[1][1] = ts.cy[1][1];
+  predictedCovY[0][0] =
+      ts.cy[0][0] + 2 * ts.cy[0][1] * dr + dr * dr * ts.cy[1][1];
+  predictedCovY[0][1] = predictedCovY[1][0] = ts.cy[0][1] + dr * ts.cy[1][1];
+  predictedCovY[1][1] = ts.cy[1][1];
 
   // chi2 test
 
-  const float resid_x = mx - X[0];
-  const float resid_y = my - Y[0];
+  const float residualX = mx - predictedX[0];
+  const float residualY = my - predictedY[0];
 
-  const std::array<float, 3> CHx = {Cx[0][0], Cx[0][1], Cx[0][2]};
-  const std::array<float, 2> CHy = {Cy[0][0], Cy[0][1]};
+  const std::array<float, 3> measurementCovX = {
+      predictedCovX[0][0], predictedCovX[0][1], predictedCovX[0][2]};
+  const std::array<float, 2> measurementCovY = {predictedCovY[0][0],
+                                                predictedCovY[0][1]};
 
-  float sigma_rz = 0;
+  float varianceRZ = 0;
 
   const GbtsLayerType type = getLayerType(n1.layer());
 
@@ -182,37 +190,43 @@ bool GbtsTrackingFilter::update(const detail::GbtsNodeView& nodeView,
   }
 
   if (type == GbtsLayerType::Barrel) {
-    sigma_rz = sigmaY * sigmaY;
+    varianceRZ = sigmaY * sigmaY;
   } else if (type == GbtsLayerType::Endcap) {
-    sigma_rz = sigmaY * ts.y[1];
-    sigma_rz = sigma_rz * sigma_rz;
+    varianceRZ = sigmaY * ts.y[1];
+    varianceRZ = varianceRZ * varianceRZ;
   } else {
     throw std::runtime_error("invalid layer type");
   }
 
-  const float Dx = 1.0f / (Cx[0][0] + sigmaX * sigmaX);
+  const float invResidualVarianceX =
+      1.0f / (predictedCovX[0][0] + sigmaX * sigmaX);
 
-  const float Dy = 1.0f / (Cy[0][0] + sigma_rz);
+  const float invResidualVarianceY = 1.0f / (predictedCovY[0][0] + varianceRZ);
 
-  const float dchi2_x = resid_x * resid_x * Dx;
-  const float dchi2_y = resid_y * resid_y * Dy;
+  const float dChi2X = residualX * residualX * invResidualVarianceX;
+  const float dChi2Y = residualY * residualY * invResidualVarianceY;
 
-  if (dchi2_x > m_cfg.maxDChi2X || dchi2_y > m_cfg.maxDChi2Y) {
+  if (dChi2X > m_cfg.maxDChi2X || dChi2Y > m_cfg.maxDChi2Y) {
     return false;
   }
 
   // The path search in GraphBasedTrackSeeder::extractBestPathPerEdge skips
   // paths that cannot beat the best one found, assuming a hit adds at most
   // addHit here. A score that can add more must change or remove that bound.
-  ts.j += m_cfg.addHit - dchi2_x * m_cfg.weightX - dchi2_y * m_cfg.weightY;
+  ts.j += m_cfg.addHit - dChi2X * m_cfg.weightX - dChi2Y * m_cfg.weightY;
 
   // state update
 
-  const std::array<float, 3> Kx = {Dx * Cx[0][0], Dx * Cx[0][1], Dx * Cx[0][2]};
-  const std::array<float, 2> Ky = {Dy * Cy[0][0], Dy * Cy[0][1]};
+  const std::array<float, 3> gainX = {
+      invResidualVarianceX * predictedCovX[0][0],
+      invResidualVarianceX * predictedCovX[0][1],
+      invResidualVarianceX * predictedCovX[0][2]};
+  const std::array<float, 2> gainY = {
+      invResidualVarianceY * predictedCovY[0][0],
+      invResidualVarianceY * predictedCovY[0][1]};
 
   for (std::uint32_t i = 0; i < 3; ++i) {
-    ts.x[i] = X[i] + Kx[i] * resid_x;
+    ts.x[i] = predictedX[i] + gainX[i] * residualX;
   }
 
   if (std::abs(ts.x[2]) > m_cfg.maxCurvature) {
@@ -220,7 +234,7 @@ bool GbtsTrackingFilter::update(const detail::GbtsNodeView& nodeView,
   }
 
   for (std::uint32_t i = 0; i < 2; ++i) {
-    ts.y[i] = Y[i] + Ky[i] * resid_y;
+    ts.y[i] = predictedY[i] + gainY[i] * residualY;
   }
 
   const float z0 = ts.y[0] - refY * ts.y[1];
@@ -232,13 +246,13 @@ bool GbtsTrackingFilter::update(const detail::GbtsNodeView& nodeView,
 
   for (std::uint32_t i = 0; i < 3; ++i) {
     for (std::uint32_t j = 0; j < 3; ++j) {
-      ts.cx[i][j] = Cx[i][j] - Kx[i] * CHx[j];
+      ts.cx[i][j] = predictedCovX[i][j] - gainX[i] * measurementCovX[j];
     }
   }
 
   for (std::uint32_t i = 0; i < 2; ++i) {
     for (std::uint32_t j = 0; j < 2; ++j) {
-      ts.cy[i][j] = Cy[i][j] - Ky[i] * CHy[j];
+      ts.cy[i][j] = predictedCovY[i][j] - gainY[i] * measurementCovY[j];
     }
   }
   ts.refX = refX;
