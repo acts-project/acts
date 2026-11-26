@@ -312,8 +312,10 @@ class TrackletJoiner {
       for (auto ts : second.trackStatesReversed()) {
         secondStart = ts;
       }
-      auto prior = detail::smoothPriorNode(AnyConstTrackStateProxy{secondStart},
-                                           sharedMean, sharedCov, logger());
+      auto prior = detail::smoothPriorNode(
+          gctx, AnyConstTrackStateProxy{secondStart},
+          detail::trackletStateParametrization(gctx, sharedState), sharedMean,
+          sharedCov, logger());
       if (!prior.ok()) {
         return prior.error();
       }
@@ -322,7 +324,7 @@ class TrackletJoiner {
 
     if (m_cfg.conditionFirst) {
       auto res = detail::conditionSmoothedStatesOnSharedState(
-          trajectory, sharedState.index(), first.tipIndex(), sharedMean,
+          gctx, trajectory, sharedState.index(), first.tipIndex(), sharedMean,
           sharedCov, logger());
       if (!res.ok()) {
         ACTS_DEBUG("Conditioning of the first tracklet failed: "

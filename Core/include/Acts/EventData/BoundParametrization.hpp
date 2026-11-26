@@ -1,0 +1,663 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+#pragma once
+
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/BoundParametrizationError.hpp"
+#include "Acts/Utilities/AngleHelpers.hpp"
+#include "Acts/Utilities/Result.hpp"
+#include "Acts/Utilities/UnitVectors.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
+#include "Acts/Utilities/detail/AllFinite.hpp"
+#include "Acts/Utilities/detail/periodic.hpp"
+
+#include <cassert>
+#include <cmath>
+#include <cstddef>
+#include <limits>
+#include <numbers>
+#include <tuple>
+#include <type_traits>
+#include <utility>
+#include <variant>
+
+namespace Acts {
+
+/// Interpretation of the coordinates of a bound state.
+///
+/// This value owns its interpretation and borrows neither a surface nor a
+/// GeometryContext. Construction and copying do not allocate. Vectors and
+/// covariance matrices retain their existing Eigen storage. The private storage
+/// representation has no stable binary layout contract.
+///
+/// The public operations define the coordinate interpretation used by surfaces
+/// and steppers. Both coordinate-based and unit-direction derivative methods
+/// are supported API for custom implementations. Concrete representations and
+/// visitor dispatch are private implementation details.
+///
+/// Currently only canonical global-spherical coordinates are supported. Values
+/// can represent the poles, but the inverse direction derivative is singular
+/// there. No alternative chart can be selected yet.
+///
+/// Computational methods require finite inputs and representable arithmetic
+/// results. These caller preconditions are checked with assertions. Use
+/// isValid() or isInDomain() for explicit validation of untrusted coordinates.
+/// Runtime chart singularities remain errors in release builds.
+class BoundParametrization {
+ private:
+  struct GlobalSpherical {
+    /// The convention carries no state, so all instances are equal.
+    constexpr bool operator==(const GlobalSpherical&) const noexcept = default;
+
+    template <typename Derived>
+    Vector3 direction(const Eigen::MatrixBase<Derived>& parameters) const {
+      const double phi = parameters[eBoundDir0];
+      const double theta = parameters[eBoundDir1];
+      assertFiniteAngles(phi, theta);
+      return makeDirectionFromPhiTheta(phi, theta);
+    }
+
+    Vector2 directionCoordinates(const Vector3& direction) const {
+      assert(isValidDirection(direction) &&
+             "Direction must be finite and nonzero with a representable norm");
+      // Angles are scale invariant: no normalization is needed. Preserve the
+      // atan2 endpoint convention used by bound/free conversion at +/-pi.
+      return {(direction.x() == 0. && direction.y() == 0.)
+                  ? 0.
+                  : VectorHelpers::phi(direction),
+              std::atan2(transverseNorm(direction.x(), direction.y()),
+                         direction.z())};
+    }
+
+    template <typename Derived>
+    double phi(const Eigen::MatrixBase<Derived>& parameters) const {
+      assertFiniteAngles(parameters[eBoundDir0], parameters[eBoundDir1]);
+      return parameters[eBoundDir0];
+    }
+
+    template <typename Derived>
+    double theta(const Eigen::MatrixBase<Derived>& parameters) const {
+      assertFiniteAngles(parameters[eBoundDir0], parameters[eBoundDir1]);
+      return parameters[eBoundDir1];
+    }
+
+    template <typename Derived>
+    Matrix<3, 2> directionJacobian(
+        const Eigen::MatrixBase<Derived>& parameters) const {
+      const double phi = parameters[eBoundDir0];
+      const double theta = parameters[eBoundDir1];
+      assertFiniteAngles(phi, theta);
+      const double cp = std::cos(phi);
+      const double sp = std::sin(phi);
+      const double ct = std::cos(theta);
+      const double st = std::sin(theta);
+      Matrix<3, 2> jacobian;
+      jacobian << -sp * st, cp * ct, cp * st, sp * ct, 0., -st;
+      return jacobian;
+    }
+
+    Matrix<3, 2> directionJacobianFromUnitDirection(
+        const Vector3& direction) const {
+      assertUnitDirection(direction);
+      const double transverse = transverseNorm(direction.x(), direction.y());
+      // Encoding chooses phi = 0 at an exact pole.
+      double cp = 1.;
+      double sp = 0.;
+      if (transverse != 0.) {
+        const Azimuth azimuth =
+            makeAzimuth(direction.x(), direction.y(), transverse);
+        cp = azimuth.cosPhi;
+        sp = azimuth.sinPhi;
+      }
+      Matrix<3, 2> jacobian;
+      jacobian << -direction.y(), cp * direction.z(), direction.x(),
+          sp * direction.z(), 0., -transverse;
+      return jacobian;
+    }
+
+    Result<Matrix<2, 3>> directionCoordinatesJacobianFromUnitDirection(
+        const Vector3& direction, double minTransverse = 1e-12) const {
+      assertUnitDirection(direction);
+      assertValidThreshold(minTransverse);
+      const double transverse = transverseNorm(direction.x(), direction.y());
+      if (transverse <= minTransverse) {
+        return Result<Matrix<2, 3>>::failure(
+            BoundParametrizationError::SingularDirection);
+      }
+      const Azimuth azimuth =
+          makeAzimuth(direction.x(), direction.y(), transverse);
+      Matrix<2, 3> jacobian;
+      jacobian << -azimuth.sinPhiOverTransverse, azimuth.cosPhiOverTransverse,
+          0., azimuth.cosPhi * direction.z(), azimuth.sinPhi * direction.z(),
+          -transverse;
+      return Result<Matrix<2, 3>>::success(jacobian);
+    }
+
+    Result<Matrix<2, 3>> directionCoordinatesJacobian(
+        const Vector3& direction, double minTransverse = 1e-12) const {
+      const double norm = direction.stableNorm();
+      const auto jacobian = directionCoordinatesJacobianFromUnitDirection(
+          unitDirection(direction, norm), minTransverse);
+      if (!jacobian.ok()) {
+        return Result<Matrix<2, 3>>::failure(jacobian.error());
+      }
+      return Result<Matrix<2, 3>>::success(*jacobian / norm);
+    }
+
+    template <typename Derived>
+    bool isInDomain(const Eigen::MatrixBase<Derived>& parameters,
+                    double minTransverse = 1e-12) const {
+      assertValidThreshold(minTransverse);
+      return isValid(parameters, true, 0.) && parameters[eBoundDir1] > 0. &&
+             parameters[eBoundDir1] < std::numbers::pi &&
+             std::sin(parameters[eBoundDir1]) > minTransverse;
+    }
+
+    template <typename Derived>
+    bool isValid(
+        const Eigen::MatrixBase<Derived>& parameters,
+        bool validateCoordinateRange = true, double epsilon = 1e-6,
+        double maxAbsEta = std::numeric_limits<double>::infinity()) const {
+      if (!parameters.allFinite()) {
+        return false;
+      }
+      const double phi = parameters[eBoundDir0];
+      const double theta = parameters[eBoundDir1];
+      constexpr double pi = std::numbers::pi;
+      if (validateCoordinateRange &&
+          !(phi + epsilon >= -pi && phi - epsilon < pi &&
+            theta + epsilon >= 0. && theta - epsilon <= pi)) {
+        return false;
+      }
+      if (std::isfinite(maxAbsEta)) {
+        const double eta = AngleHelpers::etaFromTheta(theta);
+        return std::isfinite(eta) && std::abs(eta) - epsilon <= maxAbsEta;
+      }
+      return true;
+    }
+
+    template <typename Derived>
+    BoundVector canonicalize(
+        const Eigen::MatrixBase<Derived>& parameters) const {
+      assertFinite(parameters);
+      BoundVector result = parameters;
+      std::tie(result[eBoundDir0], result[eBoundDir1]) =
+          detail::normalizePhiTheta(result[eBoundDir0], result[eBoundDir1]);
+      return result;
+    }
+
+    template <typename Derived>
+    Result<BoundMatrix> canonicalizationJacobian(
+        const Eigen::MatrixBase<Derived>& parameters) const {
+      assertFinite(parameters);
+      const double theta = detail::radian_pos(parameters[eBoundDir1]);
+      if (theta == 0. || theta == std::numbers::pi) {
+        return Result<BoundMatrix>::failure(
+            BoundParametrizationError::UndefinedCanonicalization);
+      }
+      BoundMatrix jacobian = BoundMatrix::Identity();
+      if (theta > std::numbers::pi) {
+        jacobian(eBoundDir1, eBoundDir1) = -1.;
+      }
+      return Result<BoundMatrix>::success(jacobian);
+    }
+
+    template <typename Derived, typename Covariance>
+    Result<void> canonicalizeInPlace(
+        Eigen::MatrixBase<Derived>& parameters,
+        Eigen::MatrixBase<Covariance>& covariance) const {
+      assertFinite(parameters);
+      assertFinite(covariance);
+      // Same fold criterion as canonicalizationJacobian(), without
+      // materializing the diagonal Jacobian.
+      const double theta = detail::radian_pos(parameters[eBoundDir1]);
+      if (theta == 0. || theta == std::numbers::pi) {
+        return Result<void>::failure(
+            BoundParametrizationError::UndefinedCanonicalization);
+      }
+      if (theta > std::numbers::pi) {
+        covariance.row(eBoundDir1) *= -1.;
+        covariance.col(eBoundDir1) *= -1.;
+      }
+      std::tie(parameters[eBoundDir0], parameters[eBoundDir1]) =
+          detail::normalizePhiTheta(parameters[eBoundDir0],
+                                    parameters[eBoundDir1]);
+      return Result<void>::success();
+    }
+
+    template <typename Derived, typename Covariance>
+    Result<std::pair<BoundVector, BoundMatrix>> canonicalize(
+        const Eigen::MatrixBase<Derived>& parameters,
+        const Eigen::MatrixBase<Covariance>& covariance) const {
+      std::pair<BoundVector, BoundMatrix> result{parameters, covariance};
+      const auto status = canonicalizeInPlace(result.first, result.second);
+      if (!status.ok()) {
+        return status.error();
+      }
+      return result;
+    }
+
+    template <typename Left, typename Right>
+    BoundVector difference(const Eigen::MatrixBase<Left>& lhs,
+                           const Eigen::MatrixBase<Right>& rhs) const {
+      BoundVector result = lhs - rhs;
+      // A finite difference implies finite inputs: a nonfinite operand always
+      // yields a nonfinite result.
+      assertFinite(result);
+      result[eBoundDir0] = detail::radian_sym(result[eBoundDir0]);
+      result[eBoundDir1] = detail::radian_sym(result[eBoundDir1]);
+      return result;
+    }
+
+    // Evaluated for every measurement candidate. Forced inline because the
+    // live assertions push it just above the inlining threshold, and an
+    // out-of-line call costs as much as the residual itself.
+    template <typename Measured, typename Predicted, typename Indices>
+    [[gnu::always_inline]] Vector<Measured::RowsAtCompileTime>
+    subspaceDifference(const Eigen::MatrixBase<Measured>& measured,
+                       const Eigen::MatrixBase<Predicted>& predicted,
+                       const Indices& indices) const {
+      constexpr int kSize = Measured::RowsAtCompileTime;
+      Vector<kSize> result;
+      // Sum of r - r, which is zero iff every residual r is finite. Checked on
+      // the values in registers, as reloading the freshly stored scalars as a
+      // vector would stall store forwarding.
+      [[maybe_unused]] double finiteCheck = 0.;
+      for (int i = 0; i < kSize; ++i) {
+        const auto index = static_cast<std::size_t>(indices[i]);
+        double residual = measured[i] - predicted[index];
+        finiteCheck += residual - residual;
+        if (index == eBoundDir0 || index == eBoundDir1) {
+          residual = detail::radian_sym(residual);
+        }
+        result[i] = residual;
+      }
+      // A finite residual implies finite measured and predicted coordinates in
+      // the subspace. Unmeasured predicted coordinates are not used.
+      assert(finiteCheck == 0. && "Nonfinite bound coordinates or covariance");
+      return result;
+    }
+
+    template <typename Parameters, typename Delta>
+    BoundVector update(const Eigen::MatrixBase<Parameters>& parameters,
+                       const Eigen::MatrixBase<Delta>& delta) const {
+      return canonicalize(parameters + delta);
+    }
+
+   private:
+    /// Transverse norm sqrt(x^2 + y^2) without spurious over- or underflow.
+    /// Uses the direct formula whenever the sum of squares is a normal number,
+    /// which matches VectorHelpers::perp, and std::hypot otherwise. Both keep
+    /// the relative accuracy of the transverse components near the poles.
+    static double transverseNorm(double x, double y) {
+      const double squared = x * x + y * y;
+      if (squared >= std::numeric_limits<double>::min() &&
+          squared <= std::numeric_limits<double>::max()) [[likely]] {
+        return std::sqrt(squared);
+      }
+      return std::hypot(x, y);
+    }
+    /// Azimuthal cosine and sine of a direction and their ratios to the
+    /// transverse fraction.
+    struct Azimuth {
+      double cosPhi;
+      double sinPhi;
+      double cosPhiOverTransverse;
+      double sinPhiOverTransverse;
+    };
+    /// Evaluate the azimuth for a nonzero transverse fraction, using a single
+    /// division whenever the reciprocal of the fraction is representable.
+    static Azimuth makeAzimuth(double x, double y, double transverse) {
+      if (transverse >= std::numeric_limits<double>::min()) [[likely]] {
+        const double invTransverse = 1. / transverse;
+        const double cosPhi = x * invTransverse;
+        const double sinPhi = y * invTransverse;
+        return {cosPhi, sinPhi, cosPhi * invTransverse, sinPhi * invTransverse};
+      }
+      const double cosPhi = x / transverse;
+      const double sinPhi = y / transverse;
+      return {cosPhi, sinPhi, cosPhi / transverse, sinPhi / transverse};
+    }
+    static void assertFiniteAngles([[maybe_unused]] double phi,
+                                   [[maybe_unused]] double theta) {
+      assert(std::isfinite(phi) && std::isfinite(theta) &&
+             "Nonfinite bound direction coordinates");
+    }
+    template <typename Derived>
+    static void assertFinite(
+        [[maybe_unused]] const Eigen::MatrixBase<Derived>& values) {
+      assert(detail::allFinite(values) &&
+             "Nonfinite bound coordinates or covariance");
+    }
+    static void assertValidThreshold([[maybe_unused]] double threshold) {
+      assert(std::isfinite(threshold) && threshold >= 0. && threshold < 1. &&
+             "Invalid direction conditioning threshold");
+    }
+    static void assertUnitDirection([[maybe_unused]] const Vector3& direction) {
+      assert(direction.allFinite() &&
+             std::abs(direction.squaredNorm() - 1.) < 1e-6 &&
+             "Direction must be a finite unit vector");
+    }
+    static Vector3 unitDirection(const Vector3& direction, double norm) {
+      assert(direction.allFinite() && std::isfinite(norm) && norm > 0. &&
+             "Direction must be finite and nonzero with a representable norm");
+      return direction / norm;
+    }
+  };
+  using Variant = std::variant<GlobalSpherical>;
+  // The supported alternatives cannot make the variant valueless by throwing.
+  static_assert(std::is_nothrow_copy_constructible_v<Variant>);
+  static_assert(std::is_nothrow_copy_assignable_v<Variant>);
+  static_assert(std::is_nothrow_move_constructible_v<Variant>);
+  static_assert(std::is_nothrow_move_assignable_v<Variant>);
+  Variant m_chart;
+
+  template <typename Visitor>
+  [[gnu::always_inline]] decltype(auto) visit(Visitor&& visitor) const {
+    if constexpr (std::variant_size_v<Variant> == 1) {
+      // A single alternative needs no dispatch. Calling it directly keeps the
+      // std::visit invocation layers out of the per-candidate hot paths.
+      return std::forward<Visitor>(visitor)(*std::get_if<0>(&m_chart));
+    } else {
+      return std::visit(std::forward<Visitor>(visitor), m_chart);
+    }
+  }
+
+  explicit constexpr BoundParametrization(GlobalSpherical chart)
+      : m_chart(chart) {}
+
+ public:
+  /// Construct the canonical global-spherical interpretation.
+  /// @return Allocation-free parametrization value
+  static constexpr BoundParametrization globalSpherical() noexcept {
+    return BoundParametrization(GlobalSpherical{});
+  }
+
+  /// Whether two values describe the same parametrization.
+  /// @param other Parametrization to compare with
+  /// @return True if both hold the same convention with equal parameters
+  constexpr bool operator==(const BoundParametrization& other) const noexcept {
+    return m_chart == other.m_chart;
+  }
+
+  /// Whether algorithms requiring global spherical coordinates are supported.
+  /// @return True for the canonical convention
+  constexpr bool isGlobalSpherical() const noexcept {
+    return std::holds_alternative<GlobalSpherical>(m_chart);
+  }
+
+  /// Check the input domain of directionCoordinates().
+  /// @param direction Global direction three-vector
+  /// @return Whether the vector is finite and has a nonzero, representable norm
+  static bool isValidDirection(const Vector3& direction) {
+    if (!direction.allFinite()) {
+      return false;
+    }
+    const double largest = direction.cwiseAbs().maxCoeff();
+    const double limit = std::numeric_limits<double>::max();
+    // Only directions close to overflow need a scaled norm check.
+    return largest > 0. && (largest <= 0.5 * limit ||
+                            (direction / largest).norm() <= limit / largest);
+  }
+
+  /// Decode the global direction without copying the bound vector.
+  /// @tparam Derived Eigen vector, map or expression type
+  /// @param parameters Bound coordinates
+  /// @return Global unit direction, including at the poles
+  /// @pre Direction coordinates are finite (asserted).
+  template <typename Derived>
+  Vector3 direction(const Eigen::MatrixBase<Derived>& parameters) const {
+    return visit(
+        [&](const auto& chart) { return chart.direction(parameters); });
+  }
+
+  /// Global azimuthal direction angle.
+  /// @tparam Derived Eigen vector, map or expression type
+  /// @param parameters Bound coordinates
+  /// @return Global phi in radians, preserving the stored canonical convention
+  /// @pre Direction coordinates are finite (asserted).
+  template <typename Derived>
+  double phi(const Eigen::MatrixBase<Derived>& parameters) const {
+    return visit([&](const auto& chart) { return chart.phi(parameters); });
+  }
+
+  /// Global polar direction angle.
+  /// @tparam Derived Eigen vector, map or expression type
+  /// @param parameters Bound coordinates
+  /// @return Global theta in radians
+  /// @pre Direction coordinates are finite (asserted).
+  template <typename Derived>
+  double theta(const Eigen::MatrixBase<Derived>& parameters) const {
+    return visit([&](const auto& chart) { return chart.theta(parameters); });
+  }
+
+  /// Encode a global direction into the two direction coordinates.
+  /// @param direction Nonzero global direction; normalization is ignored
+  /// @return Direction coordinates with phi in [-pi, pi], zero at an exact pole
+  /// @note Preserves atan2's signed endpoint convention. Use canonicalize()
+  /// when the half-open canonical interval [-pi, pi) is required.
+  /// @pre Direction is finite and nonzero, with a representable norm (asserted).
+  Vector2 directionCoordinates(const Vector3& direction) const {
+    return visit([&](const auto& chart) {
+      return chart.directionCoordinates(direction);
+    });
+  }
+
+  /// Derivative of global unit direction with respect to direction coordinates.
+  /// @tparam Derived Eigen vector, map or expression type
+  /// @param parameters Bound coordinates
+  /// @return A 3x2 Jacobian (rank deficient at the poles)
+  /// @pre Direction coordinates are finite (asserted).
+  template <typename Derived>
+  Matrix<3, 2> directionJacobian(
+      const Eigen::MatrixBase<Derived>& parameters) const {
+    return visit(
+        [&](const auto& chart) { return chart.directionJacobian(parameters); });
+  }
+
+  /// Derivative of global direction at coordinates encoded from a unit vector.
+  /// Avoids re-encoding angles and evaluating trigonometric functions in
+  /// surface and propagation Jacobians.
+  /// @param direction Global unit direction
+  /// @return A 3x2 Jacobian; at an exact pole uses the encoding convention phi = 0
+  /// @pre Direction is finite and normalized (asserted).
+  Matrix<3, 2> directionJacobianFromUnitDirection(
+      const Vector3& direction) const {
+    return visit([&](const auto& chart) {
+      return chart.directionJacobianFromUnitDirection(direction);
+    });
+  }
+
+  /// Derivative of encoding evaluated at a global unit direction.
+  /// Includes the tangent projection, without computing a normalization factor.
+  /// @param direction Global unit direction
+  /// @param minTransverse Minimum transverse fraction for acceptable conditioning
+  /// @return A 2x3 Jacobian or SingularDirection below the conditioning threshold
+  /// @pre Direction is finite and normalized (asserted).
+  /// @pre minTransverse is finite and in [0, 1) (asserted).
+  Result<Matrix<2, 3>> directionCoordinatesJacobianFromUnitDirection(
+      const Vector3& direction, double minTransverse = 1e-12) const {
+    return visit([&](const auto& chart) {
+      return chart.directionCoordinatesJacobianFromUnitDirection(direction,
+                                                                 minTransverse);
+    });
+  }
+
+  /// Derivative of encoding with respect to a global Cartesian direction.
+  /// @param direction Nonzero global direction; need not be normalized
+  /// @param minTransverse Minimum transverse fraction for acceptable conditioning
+  /// @return A 2x3 Jacobian including the derivative of normalization
+  /// @pre Direction is finite and nonzero, with a representable norm (asserted).
+  /// @note Returns SingularDirection at a pole or below the conditioning threshold.
+  /// @pre minTransverse is finite and in [0, 1) (asserted).
+  Result<Matrix<2, 3>> directionCoordinatesJacobian(
+      const Vector3& direction, double minTransverse = 1e-12) const {
+    return visit([&](const auto& chart) {
+      return chart.directionCoordinatesJacobian(direction, minTransverse);
+    });
+  }
+
+  /// Whether a bound state admits a sufficiently conditioned inverse
+  /// derivative.
+  /// @tparam Derived Eigen vector, map or expression type
+  /// @param parameters Bound coordinates, required to be canonical and finite
+  /// @param minTransverse Minimum transverse fraction
+  /// @return True inside the differentiable chart domain
+  /// @pre minTransverse is finite and in [0, 1) (asserted).
+  template <typename Derived>
+  bool isInDomain(const Eigen::MatrixBase<Derived>& parameters,
+                  double minTransverse = 1e-12) const {
+    return visit([&](const auto& chart) {
+      return chart.isInDomain(parameters, minTransverse);
+    });
+  }
+
+  /// Validate storage values and optional canonical ranges and eta acceptance.
+  /// This is separate from derivative conditioning: valid values include poles.
+  /// @tparam Derived Eigen vector, map or expression type
+  /// @param parameters Bound coordinates
+  /// @param validateCoordinateRange Whether to check canonical coordinate ranges
+  /// @param epsilon Numerical tolerance for ranges and eta acceptance
+  /// @param maxAbsEta Maximum absolute global pseudorapidity
+  /// @return Whether all values satisfy the requested checks
+  template <typename Derived>
+  bool isValid(
+      const Eigen::MatrixBase<Derived>& parameters,
+      bool validateCoordinateRange = true, double epsilon = 1e-6,
+      double maxAbsEta = std::numeric_limits<double>::infinity()) const {
+    return visit([&](const auto& chart) {
+      return chart.isValid(parameters, validateCoordinateRange, epsilon,
+                           maxAbsEta);
+    });
+  }
+
+  /// Canonicalize coordinates without changing the represented direction.
+  /// @tparam Derived Eigen vector, map or expression type
+  /// @param parameters Bound coordinates
+  /// @return Canonical bound coordinates
+  /// @pre Inputs and arithmetic results are finite (asserted).
+  template <typename Derived>
+  BoundVector canonicalize(const Eigen::MatrixBase<Derived>& parameters) const {
+    return visit(
+        [&](const auto& chart) { return chart.canonicalize(parameters); });
+  }
+
+  /// Local covariance-basis transformation associated with canonicalization.
+  /// The theta row changes sign when folding across a pole. The phi wrapping
+  /// seam is treated using local periodic coordinates, with derivative +1.
+  /// @tparam Derived Eigen vector, map or expression type
+  /// @param parameters Original bound coordinates
+  /// @return Jacobian from the original to canonical coordinate basis
+  /// @pre Input coordinates are finite (asserted).
+  /// @note Returns UndefinedCanonicalization exactly at a pole.
+  template <typename Derived>
+  Result<BoundMatrix> canonicalizationJacobian(
+      const Eigen::MatrixBase<Derived>& parameters) const {
+    return visit([&](const auto& chart) {
+      return chart.canonicalizationJacobian(parameters);
+    });
+  }
+
+  /// Canonicalize a state and transform its covariance into the same basis.
+  /// @tparam Derived Eigen vector, map or expression type
+  /// @tparam Covariance Eigen covariance matrix or map type
+  /// @param parameters Original bound coordinates
+  /// @param covariance Covariance in the original coordinate basis
+  /// @return Canonical coordinates and transformed covariance
+  /// @pre Input coordinates and covariance are finite (asserted).
+  /// @note Propagates UndefinedCanonicalization for an undefined derivative.
+  template <typename Derived, typename Covariance>
+  Result<std::pair<BoundVector, BoundMatrix>> canonicalize(
+      const Eigen::MatrixBase<Derived>& parameters,
+      const Eigen::MatrixBase<Covariance>& covariance) const {
+    return visit([&](const auto& chart) {
+      return chart.canonicalize(parameters, covariance);
+    });
+  }
+
+  /// Canonicalize a state and its covariance in place.
+  ///
+  /// Same transformation as the copying canonicalize() overload. Both inputs
+  /// are left untouched on failure.
+  /// @tparam Derived Eigen bound vector type
+  /// @tparam Covariance Eigen bound covariance matrix type
+  /// @param parameters Bound coordinates, canonicalized on success
+  /// @param covariance Covariance in the original coordinate basis,
+  ///        transformed into the canonical basis on success
+  /// @return Success or UndefinedCanonicalization exactly at a pole
+  /// @pre Input coordinates and covariance are finite (asserted).
+  template <typename Derived, typename Covariance>
+  Result<void> canonicalizeInPlace(
+      Eigen::MatrixBase<Derived>& parameters,
+      Eigen::MatrixBase<Covariance>& covariance) const {
+    return visit([&](const auto& chart) {
+      return chart.canonicalizeInPlace(parameters, covariance);
+    });
+  }
+
+  /// Coordinate residual lhs - rhs, respecting this parametrization's topology.
+  /// @tparam Left Left Eigen vector or map type
+  /// @tparam Right Right Eigen vector or map type
+  /// @param lhs Left bound coordinates
+  /// @param rhs Right bound coordinates
+  /// @return Residual suitable for a small filtering/smoothing update
+  /// @pre Inputs and arithmetic results are finite (asserted).
+  template <typename Left, typename Right>
+  BoundVector difference(const Eigen::MatrixBase<Left>& lhs,
+                         const Eigen::MatrixBase<Right>& rhs) const {
+    return visit([&](const auto& chart) { return chart.difference(lhs, rhs); });
+  }
+
+  /// Coordinate residual of a measurement in a subspace of the bound
+  /// coordinates, respecting this parametrization's topology.
+  ///
+  /// Equivalent to embedding @p measured into @p predicted at @p indices,
+  /// taking difference() with @p predicted and projecting the result back onto
+  /// the subspace, without forming the full bound vectors.
+  /// @tparam Measured Fixed-size Eigen vector or map type of the subspace
+  /// @tparam Predicted Eigen bound vector or map type
+  /// @tparam Indices Indexable container of the measured bound indices
+  /// @param measured Measured coordinates in the subspace
+  /// @param predicted Bound coordinates
+  /// @param indices Bound index of each measured coordinate, without duplicates
+  /// @return Subspace residual measured - predicted
+  /// @pre The residual is finite (asserted), which implies finite measured and
+  /// predicted coordinates in the subspace.
+  template <typename Measured, typename Predicted, typename Indices>
+  [[gnu::always_inline]] Vector<Measured::RowsAtCompileTime> subspaceDifference(
+      const Eigen::MatrixBase<Measured>& measured,
+      const Eigen::MatrixBase<Predicted>& predicted,
+      const Indices& indices) const {
+    constexpr int kSize = Measured::RowsAtCompileTime;
+    static_assert(kSize > 0 && kSize <= static_cast<int>(eBoundSize) &&
+                      Measured::ColsAtCompileTime == 1,
+                  "Subspace residual requires a fixed-size column vector");
+    return visit([&](const auto& chart) __attribute__((always_inline)) {
+      return chart.subspaceDifference(measured, predicted, indices);
+    });
+  }
+
+  /// Apply a small coordinate update and canonicalize the result.
+  /// @tparam Parameters Eigen vector or map type
+  /// @tparam Delta Eigen update vector or expression type
+  /// @param parameters Original coordinates
+  /// @param delta Small coordinate increment
+  /// @return Canonical updated coordinates
+  /// @pre Inputs and arithmetic results are finite (asserted).
+  template <typename Parameters, typename Delta>
+  BoundVector update(const Eigen::MatrixBase<Parameters>& parameters,
+                     const Eigen::MatrixBase<Delta>& delta) const {
+    return visit(
+        [&](const auto& chart) { return chart.update(parameters, delta); });
+  }
+};
+
+static_assert(std::is_trivially_copyable_v<BoundParametrization>);
+
+}  // namespace Acts

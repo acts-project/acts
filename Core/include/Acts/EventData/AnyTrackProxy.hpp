@@ -395,16 +395,9 @@ class AnyTrackProxy : public TrackProxyCommon<AnyTrackProxy<read_only>,
   template <TrackProxyConcept track_proxy_t>
     requires(ReadOnly || !track_proxy_t::ReadOnly)
   explicit AnyTrackProxy(track_proxy_t track)
-      : m_container(nullptr), m_index(track.m_index), m_handler(nullptr) {
-    using container_t = std::remove_reference_t<decltype(*track.m_container)>;
-    auto* containerPtr = &(*track.m_container);
-    if constexpr (ReadOnly) {
-      m_container = static_cast<const void*>(containerPtr);
-    } else {
-      m_container = static_cast<void*>(containerPtr);
-    }
-    m_handler = &detail_anytrack::TrackHandler<container_t>::instance();
-  }
+      : AnyTrackProxy(&track.container(), track.index(),
+                      &detail_anytrack::TrackHandler<std::remove_reference_t<
+                          decltype(track.container())>>::instance()) {}
 
   /// Get the index of this track
   /// @return The track index
@@ -663,6 +656,12 @@ class AnyTrackProxy : public TrackProxyCommon<AnyTrackProxy<read_only>,
  private:
   template <bool R>
   friend class AnyTrackProxy;
+
+  // Keep the erased pointer and its matching handler together across the
+  // compilation boundary. GCC can otherwise speculate about a different
+  // holder layout when it inlines a virtual call on the erased pointer.
+  AnyTrackProxy(ContainerPointer container, TrackIndexType index,
+                HandlerPointer handler);
 
   const detail_anytrack::TrackHandlerConstBase* constHandler() const {
     return m_handler;

@@ -134,8 +134,8 @@ ProcessCode TrackFittingAlgorithm::execute(const AlgorithmContext& ctx) const {
 
     ACTS_VERBOSE("Initial 4 position: "
                  << initialParams.fourPosition(ctx.recoGeoContext).transpose());
-    ACTS_VERBOSE(
-        "Initial direction: " << initialParams.direction().transpose());
+    ACTS_VERBOSE("Initial direction: "
+                 << initialParams.direction(ctx.recoGeoContext).transpose());
     ACTS_VERBOSE("Initial momentum: " << initialParams.absoluteMomentum());
 
     // Clear & reserve the right size

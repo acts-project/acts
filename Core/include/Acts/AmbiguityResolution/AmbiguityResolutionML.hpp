@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/AmbiguityResolution/AmbiguityNetworkConcept.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <cstddef>
@@ -103,13 +104,23 @@ class AmbiguityResolutionML {
   ///
   /// @param clusters is a map of clusters, each cluster correspond to a vector of track ID
   /// @param tracks is the input track container
+  /// @param gctx geometry context for evaluating track observables
   /// @return a vector of trackID corresponding tho the good tracks
   template <TrackContainerFrontend track_container_t>
   std::vector<std::size_t> solveAmbiguity(
       std::unordered_map<std::size_t, std::vector<std::size_t>>& clusters,
-      const track_container_t& tracks) const {
-    std::vector<std::vector<float>> outputTensor =
-        m_duplicateClassifier.inferScores(clusters, tracks);
+      const track_container_t& tracks,
+      const GeometryContext& gctx =
+          GeometryContext::dangerouslyDefaultConstruct()) const {
+    auto outputTensor = [&] {
+      if constexpr (requires {
+                      m_duplicateClassifier.inferScores(clusters, tracks, gctx);
+                    }) {
+        return m_duplicateClassifier.inferScores(clusters, tracks, gctx);
+      } else {
+        return m_duplicateClassifier.inferScores(clusters, tracks);
+      }
+    }();
     std::vector<std::size_t> goodTracks =
         m_duplicateClassifier.trackSelection(clusters, outputTensor);
 

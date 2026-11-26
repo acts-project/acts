@@ -165,9 +165,10 @@ void PatternRecognitionPerformanceCollector::fill(
     std::optional<Acts::BoundTrackParameters> fittedParameters;
     if (track.hasReferenceSurface()) {
       fittedParameters = track.createParametersAtReference();
-      m_trackSummaryPlotTool.fill(*fittedParameters, track.nTrackStates(),
-                                  track.nMeasurements(), track.nOutliers(),
-                                  track.nHoles(), track.nSharedHits());
+      m_trackSummaryPlotTool.fill(geoContext, *fittedParameters,
+                                  track.nTrackStates(), track.nMeasurements(),
+                                  track.nOutliers(), track.nHoles(),
+                                  track.nSharedHits());
     } else {
       m_stats.nTotalTracksMissingRefSurface++;
       missingRefSurface++;
@@ -199,14 +200,15 @@ void PatternRecognitionPerformanceCollector::fill(
 
       if (fittedParameters.has_value()) {
         m_subDetectorSummaryTools.at(key).fill(
-            *fittedParameters, counts.nTrackStates, counts.nMeasurements,
-            counts.nOutliers, counts.nHoles, counts.nSharedHits);
+            geoContext, *fittedParameters, counts.nTrackStates,
+            counts.nMeasurements, counts.nOutliers, counts.nHoles,
+            counts.nSharedHits);
       }
     }
 
     auto imatched = trackParticleMatching.find(track.index());
     if (fittedParameters.has_value()) {
-      m_fakePlotTool.fill(*fittedParameters,
+      m_fakePlotTool.fill(geoContext, *fittedParameters,
                           imatched != trackParticleMatching.end() &&
                               imatched->second.classification ==
                                   TrackMatchClassification::Fake);
@@ -228,7 +230,7 @@ void PatternRecognitionPerformanceCollector::fill(
 
     if (fittedParameters.has_value()) {
       m_duplicationPlotTool.fill(
-          *fittedParameters,
+          geoContext, *fittedParameters,
           particleMatch.classification == TrackMatchClassification::Duplicate);
     }
 

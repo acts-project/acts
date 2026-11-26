@@ -111,7 +111,7 @@ ActsExamples::ProcessCode VertexTruthMatcher::execute(
       }
     }
 
-    double sumPt2 = calcSumPt2(vtx, m_cfg.minTrkWeight);
+    double sumPt2 = calcSumPt2(ctx.recoGeoContext, vtx, m_cfg.minTrkWeight);
 
     double vertexMatchFraction =
         (totalTrackWeight > 0

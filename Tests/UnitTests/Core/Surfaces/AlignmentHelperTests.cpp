@@ -220,8 +220,11 @@ BOOST_AUTO_TEST_CASE(composite_jacobian_plane_derivative) {
 
   FreeVector pathDerivative = FreeVector::Zero();
   pathDerivative.head<3>() = direction;
-  const AlignmentToBoundMatrix alignToBound = plane->alignmentToBoundDerivative(
-      gctx, position, direction, pathDerivative);
+  const AlignmentToBoundMatrix alignToBound =
+      plane
+          ->alignmentToBoundDerivative(gctx, position, direction,
+                                       pathDerivative)
+          .value();
   const Matrix<2, eAlignmentSize> expected =
       alignToBound.topRows<2>() *
       detail::localFrameToAlignmentParametersJacobian(fix.component) *

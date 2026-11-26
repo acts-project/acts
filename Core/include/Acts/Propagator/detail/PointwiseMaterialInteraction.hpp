@@ -13,11 +13,14 @@
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/BoundParametrization.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Material/MaterialInteractionError.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
+#include "Acts/Utilities/detail/AllFinite.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -104,15 +107,14 @@ Result<MaterialSlab> evaluateMaterialSlab(const propagator_state_t& state,
 /// Struct to hold the material effects computed at a pointwise interaction
 struct PointwiseMaterialEffects {
   double eLoss = 0;
-  double variancePhi = 0;
-  double varianceTheta = 0;
+  /// Projected physical scattering variance, independent of bound coordinates.
+  double scatteringVariance = 0;
   double varianceQoverP = 0;
 };
 
 /// Compute the material effects given a material slab and particle properties
 /// @param slab The material slab
 /// @param particleHypothesis The particle hypothesis
-/// @param direction The direction of the particle
 /// @param qOverP The charge over momentum of the particle
 /// @param multipleScattering Whether to compute multiple scattering effects
 /// @param energyLoss Whether to compute energy loss effects
@@ -120,8 +122,91 @@ struct PointwiseMaterialEffects {
 /// @return The computed material effects
 PointwiseMaterialEffects computeMaterialEffects(
     const MaterialSlab& slab, const ParticleHypothesis& particleHypothesis,
-    const Vector3& direction, float qOverP, bool multipleScattering,
-    bool energyLoss, bool covTransport);
+    float qOverP, bool multipleScattering, bool energyLoss, bool covTransport);
+
+/// Express isotropic scattering noise in a bound direction basis.
+/// Only the noise increment is projected; the existing covariance is untouched.
+/// @param parametrization Interpretation of the covariance direction coordinates
+/// @param direction Global unit direction
+/// @param scatteringVariance Projected physical scattering variance
+/// @pre Direction is normalized; scattering variance is finite and nonnegative.
+/// @return Direction noise block, or a singular-direction error
+inline Result<Matrix<2, 2>> scatteringNoise(
+    const BoundParametrization& parametrization, const Vector3& direction,
+    double scatteringVariance) {
+  assert(direction.allFinite() &&
+         std::abs(direction.squaredNorm() - 1.) < 1e-6);
+  assert(std::isfinite(scatteringVariance) && scatteringVariance >= 0.);
+  if (scatteringVariance == 0.) {
+    return Result<Matrix<2, 2>>::success(Matrix<2, 2>::Zero());
+  }
+  if (parametrization.isGlobalSpherical()) {
+    const double transverseSquared = direction.head<2>().squaredNorm();
+    if (transverseSquared == 0.) {
+      return Result<Matrix<2, 2>>::failure(
+          BoundParametrizationError::SingularDirection);
+    }
+    const double variance0 = scatteringVariance / transverseSquared;
+    if (!std::isfinite(variance0)) {
+      return Result<Matrix<2, 2>>::failure(
+          BoundParametrizationError::SingularDirection);
+    }
+    const Vector2 variances(variance0, scatteringVariance);
+    return Result<Matrix<2, 2>>::success(Matrix<2, 2>(variances.asDiagonal()));
+  }
+  const auto jacobian =
+      parametrization.directionCoordinatesJacobianFromUnitDirection(direction,
+                                                                    0.);
+  if (!jacobian.ok()) {
+    return Result<Matrix<2, 2>>::failure(jacobian.error());
+  }
+  // The encoding derivative already includes the tangent projection I - d*d^T.
+  return Result<Matrix<2, 2>>::success(scatteringVariance * (*jacobian) *
+                                       jacobian->transpose());
+}
+
+/// Internal checked subtraction; see updateMaterialCovariance for the contract.
+/// @param covariance Covariance, modified only on success
+/// @param directionNoise Direction noise to subtract
+/// @param varianceQoverP Q/p variance to subtract
+/// @return Success or InvalidCovarianceAfterNoiseRemoval
+Result<void> removeMaterialCovarianceNoise(BoundMatrix& covariance,
+                                           const Matrix<2, 2>& directionNoise,
+                                           double varianceQoverP);
+
+/// Add or remove material noise in the current bound covariance basis.
+/// Removal checks the whole covariance, including correlations outside the
+/// direction block. It does not clamp variances or partially remove noise.
+/// @param covariance Covariance, modified only on success
+/// @param directionNoise Symmetric positive-semidefinite direction noise block
+/// @param varianceQoverP Nonnegative q/p variance increment
+/// @param mode Whether to add or remove noise
+/// @pre Inputs are finite; covariance is symmetric and positive semidefinite.
+/// @return Success or InvalidCovarianceAfterNoiseRemoval. The removal check
+/// uses diagonal scaling and a relative eigenvalue tolerance of 64 machine
+/// epsilons.
+inline Result<void> updateMaterialCovariance(BoundMatrix& covariance,
+                                             const Matrix<2, 2>& directionNoise,
+                                             double varianceQoverP,
+                                             NoiseUpdateMode mode) {
+  assert(detail::allFinite(covariance) && detail::allFinite(directionNoise));
+  assert(std::isfinite(varianceQoverP) && varianceQoverP >= 0.);
+  if (mode == NoiseUpdateMode::addNoise) {
+    covariance.block<2, 2>(eBoundDir0, eBoundDir0) += directionNoise;
+    covariance(eBoundQOverP, eBoundQOverP) += varianceQoverP;
+    return Result<void>::success();
+  }
+  return removeMaterialCovarianceNoise(covariance, directionNoise,
+                                       varianceQoverP);
+}
+
+/// Global angular variances for legacy material diagnostics.
+/// @param direction Global unit direction
+/// @param scatteringVariance Projected physical scattering variance
+/// @pre Direction is normalized; scattering variance is finite and nonnegative.
+/// @return Phi/theta variances; phi is infinite at a pole for nonzero scattering
+Vector2 globalAngularScatteringVariances(const Vector3& direction,
+                                         double scatteringVariance);
 
 /// Compute the material effects given the propagation state and material slab
 /// @tparam propagator_state_t The type of the propagator state
@@ -139,12 +224,11 @@ PointwiseMaterialEffects computeMaterialEffects(const propagator_state_t& state,
                                                 bool multipleScattering,
                                                 bool energyLoss) {
   const bool covTransport = stepper.hasCovariance(state.stepping);
-  const Vector3 direction = stepper.direction(state.stepping);
   const float qOverP = stepper.qOverP(state.stepping);
   const ParticleHypothesis& particleHypothesis =
       stepper.particleHypothesis(state.stepping);
 
-  return computeMaterialEffects(slab, particleHypothesis, direction, qOverP,
+  return computeMaterialEffects(slab, particleHypothesis, qOverP,
                                 multipleScattering, energyLoss, covTransport);
 }
 
@@ -155,21 +239,29 @@ PointwiseMaterialEffects computeMaterialEffects(const propagator_state_t& state,
 /// @param state The current propagator state
 /// @param stepper The stepper used for the propagation
 /// @param slab The material slab
+/// @param parametrization Interpretation of the active covariance anchor
 /// @param noiseUpdateMode The noise update mode
 /// @param multipleScattering Whether to compute multiple scattering effects
 /// @param energyLoss Whether to compute energy loss effects
-/// @return The computed material effects
+/// @return The computed effects, or a direction-noise mapping error
 template <typename propagator_state_t, typename stepper_t>
-PointwiseMaterialEffects performMaterialInteraction(
+Result<PointwiseMaterialEffects> performMaterialInteraction(
     propagator_state_t& state, const stepper_t& stepper,
-    const MaterialSlab& slab, NoiseUpdateMode noiseUpdateMode,
-    bool multipleScattering, bool energyLoss) {
+    const MaterialSlab& slab, const BoundParametrization& parametrization,
+    NoiseUpdateMode noiseUpdateMode, bool multipleScattering, bool energyLoss) {
   if (slab.isVacuum()) {
-    return {};
+    return PointwiseMaterialEffects{};
   }
 
   const PointwiseMaterialEffects effects = computeMaterialEffects(
       state, stepper, slab, multipleScattering, energyLoss);
+
+  const auto noise =
+      scatteringNoise(parametrization, stepper.direction(state.stepping),
+                      effects.scatteringVariance);
+  if (!noise.ok()) {
+    return noise.error();
+  }
 
   const Direction propDir = state.options.direction;
   const ParticleHypothesis& particleHypothesis =
@@ -197,36 +289,40 @@ PointwiseMaterialEffects performMaterialInteraction(
   const double nextQOverP =
       particleHypothesis.qOverP(nextP, std::copysign(absQ, qOverP));
 
+  auto covariance = stepper.covariance(state.stepping);
+
+  if (noiseUpdateMode == NoiseUpdateMode::addNoise) {
+    // Adding positive-semidefinite noise cannot fail, so nothing needs to be
+    // validated before committing. This performs the same operations, in the
+    // same order, as updateMaterialCovariance with addNoise.
+    stepper.update(state.stepping, position, direction, nextQOverP, time);
+    if (covariance.has_value()) {
+      assert(std::isfinite(effects.varianceQoverP) &&
+             effects.varianceQoverP >= 0.);
+      covariance->template block<2, 2>(eBoundDir0, eBoundDir0) += *noise;
+      (*covariance)(eBoundQOverP, eBoundQOverP) += effects.varianceQoverP;
+      stepper.setCovariance(state.stepping, *covariance);
+    }
+    return effects;
+  }
+
+  // Validate noise removal before committing either momentum or covariance.
+  if (covariance.has_value()) {
+    const auto updateResult = updateMaterialCovariance(
+        *covariance, *noise, effects.varianceQoverP, noiseUpdateMode);
+    if (!updateResult.ok()) {
+      return updateResult.error();
+    }
+  }
+
   // update track parameters
   stepper.update(state.stepping, position, direction, nextQOverP, time);
   //! [energy loss update]
 
-  if (!stepper.hasCovariance(state.stepping)) {
-    return effects;
-  }
-
-  // Convenience method to update a variance given a change and noise update
-  // mode
-  const auto updateVariance = [](double variance, double change,
-                                 NoiseUpdateMode updateMode) {
-    // Add/Subtract the change
-    // Protect the variance against becoming negative
-    return std::max(0.,
-                    variance + std::copysign(change, toUnderlying(updateMode)));
-  };
-
-  // update covariance matrix
   //! [covariance update]
-  BoundMatrix covariance = *stepper.covariance(state.stepping);
-  covariance(eBoundPhi, eBoundPhi) = updateVariance(
-      covariance(eBoundPhi, eBoundPhi), effects.variancePhi, noiseUpdateMode);
-  covariance(eBoundTheta, eBoundTheta) =
-      updateVariance(covariance(eBoundTheta, eBoundTheta),
-                     effects.varianceTheta, noiseUpdateMode);
-  covariance(eBoundQOverP, eBoundQOverP) =
-      updateVariance(covariance(eBoundQOverP, eBoundQOverP),
-                     effects.varianceQoverP, noiseUpdateMode);
-  stepper.setCovariance(state.stepping, covariance);
+  if (covariance.has_value()) {
+    stepper.setCovariance(state.stepping, *covariance);
+  }
   //! [covariance update]
 
   return effects;
@@ -240,16 +336,18 @@ PointwiseMaterialEffects performMaterialInteraction(
 /// @param stepper The stepper used for the propagation
 /// @param surface The surface at which to perform the material interaction
 /// @param updateMode The material update mode
+/// @param parametrization Interpretation of the active covariance anchor
 /// @param noiseUpdateMode The noise update mode
 /// @param multipleScattering Whether to compute multiple scattering effects
 /// @param energyLoss Whether to compute energy loss effects
 /// @param logger The logger to use for verbose output
-/// @return The computed material effects
+/// @return The computed effects, or a direction-noise mapping error
 template <typename propagator_state_t, typename stepper_t>
 Result<PointwiseMaterialEffects> performMaterialInteraction(
     propagator_state_t& state, const stepper_t& stepper, const Surface& surface,
-    MaterialUpdateMode updateMode, NoiseUpdateMode noiseUpdateMode,
-    bool multipleScattering, bool energyLoss, const Logger& logger) {
+    const BoundParametrization& parametrization, MaterialUpdateMode updateMode,
+    NoiseUpdateMode noiseUpdateMode, bool multipleScattering, bool energyLoss,
+    const Logger& logger) {
   const Result<MaterialSlab> slabResult =
       evaluateMaterialSlab(state, stepper, surface, updateMode);
   if (!slabResult.ok()) {
@@ -262,8 +360,13 @@ Result<PointwiseMaterialEffects> performMaterialInteraction(
                                                     << updateMode);
   }
 
-  const PointwiseMaterialEffects effects = performMaterialInteraction(
-      state, stepper, slab, noiseUpdateMode, multipleScattering, energyLoss);
+  const auto effectsResult = performMaterialInteraction(
+      state, stepper, slab, parametrization, noiseUpdateMode,
+      multipleScattering, energyLoss);
+  if (!effectsResult.ok()) {
+    return effectsResult.error();
+  }
+  const PointwiseMaterialEffects& effects = *effectsResult;
 
   const Direction propDir = state.options.direction;
 
@@ -271,8 +374,8 @@ Result<PointwiseMaterialEffects> performMaterialInteraction(
                << surface.geometryId() << " with update mode: " << updateMode
                << " are :");
   ACTS_VERBOSE("eLoss = " << effects.eLoss * propDir << ", "
-                          << "variancePhi = " << effects.variancePhi << ", "
-                          << "varianceTheta = " << effects.varianceTheta << ", "
+                          << "scatteringVariance = "
+                          << effects.scatteringVariance << ", "
                           << "varianceQoverP = " << effects.varianceQoverP);
 
   return effects;

@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(TrackParametersJsonIO) {
   BoundTrackParameters ctpRead = ctpJson;
 
   BOOST_CHECK_EQUAL(ctp.position(gctx), ctpRead.position(gctx));
-  BOOST_CHECK_EQUAL(ctp.direction(), ctpRead.direction());
+  BOOST_CHECK_EQUAL(ctp.direction(gctx), ctpRead.direction(gctx));
   BOOST_CHECK_EQUAL(ctp.qOverP(), ctpRead.qOverP());
   BOOST_CHECK_EQUAL(ctp.covariance().value(), ctpRead.covariance().value());
   BOOST_CHECK_EQUAL(ctp.particleHypothesis(), ctpRead.particleHypothesis());
@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(TrackParametersJsonIO) {
   BoundTrackParameters btpRead = btpJson;
 
   BOOST_CHECK_EQUAL(btp.position(gctx), btpRead.position(gctx));
-  BOOST_CHECK_EQUAL(btp.direction(), btpRead.direction());
+  BOOST_CHECK_EQUAL(btp.direction(gctx), btpRead.direction(gctx));
   BOOST_CHECK_EQUAL(btp.qOverP(), btpRead.qOverP());
   BOOST_CHECK_EQUAL(btp.covariance().value(), btpRead.covariance().value());
   BOOST_CHECK_EQUAL(btp.particleHypothesis(), btpRead.particleHypothesis());

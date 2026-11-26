@@ -190,7 +190,7 @@ BOOST_AUTO_TEST_CASE(Accumulation) {
     double avgP = avgMom.norm();
 
     CHECK_CLOSE_ABS(ipBound->fourPosition(gctx), avgPos, 1e-3);
-    CHECK_CLOSE_ABS(ipBound->direction(), avgDir, 1e-3);
+    CHECK_CLOSE_ABS(ipBound->direction(gctx), avgDir, 1e-3);
     CHECK_CLOSE_ABS(ipBound->absoluteMomentum(), avgP, 1e-3);
 
     CHECK_CLOSE_ABS(ipFree->fourPosition(), avgPos, 1e-3);

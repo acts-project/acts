@@ -56,7 +56,7 @@ auto MultiStepperLoop<S, R>::curvilinearParameters(const State& state) const
     const auto cp = m_singleStepper.curvilinearParameters(cmp.state);
 
     cmps.emplace_back(cmp.weight, cp.fourPosition(state.options.geoContext),
-                      cp.direction(), cp.qOverP(),
+                      cp.direction(state.options.geoContext), cp.qOverP(),
                       cp.covariance().value_or(BoundMatrix::Zero()));
   }
 
@@ -91,6 +91,15 @@ auto MultiStepperLoop<S, R>::transportToBound(
 
     auto res = m_singleStepper.transportToBound(cmpState, surface,
                                                 freeToBoundCorrection);
+    // A chart failure invalidates the component covariance even if the reducer
+    // selected a different component. Preserve the existing handling of missed
+    // surfaces, but never silently retain a covariance in an invalid chart.
+    if (!res.ok() &&
+        res.error().category() ==
+            make_error_code(BoundParametrizationError::SingularDirection)
+                .category()) {
+      return Result<Jacobian>::failure(res.error());
+    }
     if (i == selected) {
       jacobian = std::move(res);
     }

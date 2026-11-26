@@ -11,6 +11,7 @@
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
 
 #include <cmath>
+#include <optional>
 
 namespace Acts {
 
@@ -19,6 +20,7 @@ Result<
     std::pair<typename std::vector<typename traj_t::TrackStateProxy>::iterator,
               typename std::vector<typename traj_t::TrackStateProxy>::iterator>>
 MeasurementSelector::select(
+    const BoundParametrization& parametrization,
     std::vector<typename traj_t::TrackStateProxy>& candidates, bool& isOutlier,
     const Logger& logger) const {
   using Result = Result<std::pair<
@@ -32,10 +34,29 @@ MeasurementSelector::select(
     return Result::success(std::pair(candidates.begin(), candidates.end()));
   }
 
-  // Get geoID of this surface
-  GeometryIdentifier geoID = candidates.front().referenceSurface().geometryId();
-  // Get the theta of the first track state
-  const double theta = candidates.front().predicted()[eBoundTheta];
+  // Candidates normally share one prediction. Find a usable one before
+  // invoking parametrization operations, which require finite coordinates.
+  // Keep the found prediction to avoid repeating the component lookup.
+  auto prediction = candidates.begin();
+  std::optional<decltype(prediction->predicted())> predicted;
+  for (; prediction != candidates.end(); ++prediction) {
+    if (auto candidatePredicted = prediction->predicted();
+        detail::allFinite(candidatePredicted)) {
+      predicted.emplace(candidatePredicted);
+      break;
+    }
+  }
+  if (!predicted.has_value()) {
+    for (auto& candidate : candidates) {
+      candidate.chi2() = std::numeric_limits<double>::quiet_NaN();
+    }
+    isOutlier = false;
+    return Result::success(std::pair(candidates.begin(), candidates.begin()));
+  }
+  // All candidates are on the same surface, which also selects the cuts.
+  // The caller resolves the surface's parametrization.
+  const GeometryIdentifier geoID = prediction->referenceSurface().geometryId();
+  const double theta = parametrization.theta(*predicted);
   // Find the appropriate cuts
   const auto cutsResult = getCuts(geoID, theta);
   if (!cutsResult.ok()) {
@@ -57,19 +78,39 @@ MeasurementSelector::select(
   // When done trackStateIterEnd will point to the first element that
   // does not satisfy the chi2 cut.
   std::size_t passedCandidates = 0ul;
+  // Candidates normally share the predicted storage of the first one, so the
+  // finiteness of a prediction only has to be checked once per distinct
+  // buffer. The predicted component is a writable view of the backend storage,
+  // so equal data pointers refer to the same, here unmodified, parameters.
+  // Candidates with separate storage, e.g. from a custom track state creator,
+  // are checked individually.
+  const double* checkedPredicted = predicted->data();
+  bool checkedPredictedFinite = true;
   for (std::size_t i(0ul); i < candidates.size(); ++i) {
     auto& trackState = candidates[i];
+
+    const auto candidatePredicted = trackState.predicted();
+    if (candidatePredicted.data() != checkedPredicted) {
+      checkedPredicted = candidatePredicted.data();
+      checkedPredictedFinite = detail::allFinite(candidatePredicted);
+    }
 
     // We access the dynamic size of the matrix here but use them later
     // through a template function which accesses the data pointer
     // with compile time size. That way the Eigen math operations are
     // still done with compile time size and no dynamic memory allocation
     // is needed.
-    double chi2 = calculateChi2(
-        trackState.effectiveCalibrated().data(),
-        trackState.effectiveCalibratedCovariance().data(),
-        trackState.predicted(), trackState.predictedCovariance(),
-        trackState.projectorSubspaceIndices(), trackState.calibratedSize());
+    // A non-finite prediction must not reach the parametrization operations,
+    // which require finite coordinates.
+    double chi2 =
+        checkedPredictedFinite
+            ? calculateChi2(
+                  parametrization, trackState.effectiveCalibrated().data(),
+                  trackState.effectiveCalibratedCovariance().data(),
+                  candidatePredicted, trackState.predictedCovariance(),
+                  trackState.projectorSubspaceIndices(),
+                  trackState.calibratedSize())
+            : std::numeric_limits<double>::quiet_NaN();
     trackState.chi2() = chi2;
 
     // A diverging fit can inflate the predicted covariance until inverting it

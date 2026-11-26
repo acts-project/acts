@@ -85,7 +85,7 @@ ProcessCode CsvTrackWriter::writeT(const AlgorithmContext& context,
 
     // Requirement on the pT of the track
     auto params = track.createParametersAtReference();
-    const auto momentum = params.momentum();
+    const auto momentum = params.momentum(context.recoGeoContext);
     const auto pT = Acts::VectorHelpers::perp(momentum);
     if (pT < m_cfg.ptMin) {
       continue;
@@ -177,7 +177,7 @@ ProcessCode CsvTrackWriter::writeT(const AlgorithmContext& context,
     }
 
     const auto& params = *trajState.fittedParameters;
-    const auto momentum = params.momentum();
+    const auto momentum = params.momentum(context.recoGeoContext);
 
     // write the track info
     mos << trajState.trackId << ",";

@@ -15,6 +15,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/Result.hpp"
 #include "ActsAlignment/Geometry/AlignmentHierarchy.hpp"
 #include "ActsAlignment/Kernel/AlignmentMask.hpp"
 
@@ -108,7 +109,7 @@ void resetAlignmentDerivative(Acts::AlignmentToBoundMatrix& alignToBound,
 /// During an iterative fit this may be the frame updated by the solver.
 /// @return Derivative of bound parameters with respect to the selected
 /// alignment parameters, with fixed columns set to zero
-Acts::AlignmentToBoundMatrix alignmentToBoundDerivative(
+Acts::Result<Acts::AlignmentToBoundMatrix> alignmentToBoundDerivative(
     const Acts::GeometryContext& gctx, const Acts::Surface& surface,
     const Acts::Vector3& position, const Acts::Vector3& direction,
     const Acts::FreeVector& pathDerivative, AlignmentMask mask,
@@ -173,9 +174,9 @@ void solveAlignmentParameters(
 ///                  returned state. No effect on derivatives at this step.
 ///
 /// @return The track alignment state containing fundamental alignment
-/// ingredients
+/// ingredients, or an error from the alignment derivative
 template <typename traj_t>
-TrackAlignmentState trackAlignmentState(
+Acts::Result<TrackAlignmentState> trackAlignmentState(
     const Acts::GeometryContext& gctx, const traj_t& multiTraj,
     Acts::TrackIndexType entryIndex,
     const std::pair<Acts::DynamicMatrix,
@@ -320,9 +321,12 @@ TrackAlignmentState trackAlignmentState(
       pathDerivative.head<3>() = direction;
       // Get the bound derivative and mask the surface degrees of freedom.
       // @Todo: don't allocate memory for fixed degree of freedom and consider surface/layer/volume wise align mask (instead of using global mask as now)
-      const Acts::AlignmentToBoundMatrix alignToBound =
-          alignmentToBoundDerivative(gctx, *surface, position, direction,
-                                     pathDerivative, alignMask);
+      const auto alignToBoundResult = alignmentToBoundDerivative(
+          gctx, *surface, position, direction, pathDerivative, alignMask);
+      if (!alignToBoundResult.ok()) {
+        return alignToBoundResult.error();
+      }
+      const Acts::AlignmentToBoundMatrix& alignToBound = *alignToBoundResult;
 
       // Residual is calculated as the (measurement - parameters), thus we need
       // a minus sign below

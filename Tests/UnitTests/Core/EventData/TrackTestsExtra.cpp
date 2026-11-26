@@ -472,7 +472,7 @@ BOOST_AUTO_TEST_CASE(ReverseTrackStatesStitchJacobian) {
 
   auto jacobian = [](double scale) {
     BoundMatrix jac = BoundMatrix::Identity() * scale;
-    jac(eBoundLoc0, eBoundPhi) = 0.5 * scale;
+    jac(eBoundLoc0, eBoundDir0) = 0.5 * scale;
     return jac;
   };
 

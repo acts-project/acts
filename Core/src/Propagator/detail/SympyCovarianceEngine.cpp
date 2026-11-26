@@ -39,7 +39,7 @@ void applyBoundCovarianceTransport(const BoundMatrix& jacobian,
 
 }  // namespace
 
-void sympy::transportCovarianceToBound(
+Result<void> sympy::transportCovarianceToBound(
     const GeometryContext& geoContext, const Surface& surface,
     BoundMatrix& boundCovariance, BoundMatrix& fullTransportJacobian,
     FreeVector& freeToPathDerivatives, BoundToFreeMatrix& boundToFreeJacobian,
@@ -50,9 +50,12 @@ void sympy::transportCovarianceToBound(
 
   // Calculate the full jacobian from local parameters at the start surface to
   // current bound parameters
-  sympy::boundToBoundTransportJacobian(
+  const auto transportResult = sympy::boundToBoundTransportJacobian(
       geoContext, surface, freeParameters, boundToFreeJacobian,
       freeToBoundJacobian, freeToPathDerivatives, fullTransportJacobian);
+  if (!transportResult.ok()) {
+    return transportResult.error();
+  }
 
   bool correction = false;
   if (freeToBoundCorrection) {
@@ -97,9 +100,10 @@ void sympy::transportCovarianceToBound(
   // ->The boundToFreeJacobian is initialized to that at the current surface
   reinitializeJacobians(geoContext, surface, freeToPathDerivatives,
                         boundToFreeJacobian, freeParameters);
+  return Result<void>::success();
 }
 
-void sympy::transportCovarianceToCurvilinear(
+Result<void> sympy::transportCovarianceToCurvilinear(
     BoundMatrix& boundCovariance, BoundMatrix& fullTransportJacobian,
     FreeVector& freeToPathDerivatives, BoundToFreeMatrix& boundToFreeJacobian,
     const std::optional<FreeMatrix>& additionalFreeCovariance,
@@ -108,9 +112,12 @@ void sympy::transportCovarianceToCurvilinear(
 
   // Calculate the full jacobian from local parameters at the start surface to
   // current curvilinear parameters
-  sympy::boundToCurvilinearTransportJacobian(
+  const auto transportResult = sympy::boundToCurvilinearTransportJacobian(
       direction, boundToFreeJacobian, freeToBoundJacobian,
       freeToPathDerivatives, fullTransportJacobian);
+  if (!transportResult.ok()) {
+    return transportResult.error();
+  }
 
   // Apply the actual covariance transport to get covariance of the current
   // curvilinear parameters
@@ -129,6 +136,7 @@ void sympy::transportCovarianceToCurvilinear(
   // ->The boundToFreeJacobian is reinitialized to that at the current
   // curvilinear surface
   reinitializeJacobians(freeToPathDerivatives, boundToFreeJacobian, direction);
+  return Result<void>::success();
 }
 
 }  // namespace Acts::detail

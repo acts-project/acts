@@ -42,6 +42,7 @@
 #include <iterator>
 #include <limits>
 #include <memory>
+#include <numbers>
 #include <optional>
 #include <type_traits>
 #include <utility>
@@ -229,6 +230,35 @@ BOOST_AUTO_TEST_CASE(UpdateFromComponents) {
   BOOST_CHECK_EQUAL(stepper.charge(state), charge);
 }
 
+// Binding without covariance still consumes the requested bound interpretation.
+BOOST_AUTO_TEST_CASE(BoundRoundTripWithoutCovariance) {
+  Stepper stepper(magneticField);
+  Stepper::Options options(geoCtx, magCtx);
+  const auto surface =
+      Surface::makeShared<PlaneSurface>(Transform3::Identity());
+  for (double phi : {-std::numbers::pi + .01, std::numbers::pi - .01}) {
+    for (double theta : {1e-8, 1.}) {
+      BoundVector input = BoundVector::Zero();
+      input[eBoundDir0] = phi;
+      input[eBoundDir1] = theta;
+      input[eBoundQOverP] = charge / absMom;
+      auto state = stepper.makeState(options);
+      stepper.initialize(state, input, std::nullopt, particleHypothesis,
+                         *surface);
+      const auto before = state.pVector;
+      const auto jacobian = stepper.transportToBound(state, *surface);
+      BOOST_REQUIRE(jacobian.ok());
+      CHECK_CLOSE_ABS(*jacobian, BoundMatrix::Identity(), eps);
+      BOOST_CHECK(state.pVector == before);
+      const auto output = stepper.boundParameters(state, *surface);
+      BOOST_REQUIRE(output.ok());
+      BOOST_CHECK(!output->covariance().has_value());
+      CHECK_CLOSE_ABS(output->parameters(), input, eps);
+      CHECK_CLOSE_ABS(output->direction(geoCtx), stepper.direction(state), eps);
+    }
+  }
+}
+
 // test building a bound state object from the stepper state
 BOOST_AUTO_TEST_CASE(BuildBound) {
   BoundTrackParameters cp = BoundTrackParameters::createCurvilinear(
@@ -252,7 +282,7 @@ BOOST_AUTO_TEST_CASE(BuildBound) {
   // check parameters
   CHECK_CLOSE_ABS(pars.position(geoCtx), pos, eps);
   CHECK_CLOSE_ABS(pars.time(), time, eps);
-  CHECK_CLOSE_ABS(pars.momentum(), absMom * unitDir, eps);
+  CHECK_CLOSE_ABS(pars.momentum(geoCtx), absMom * unitDir, eps);
   BOOST_CHECK_EQUAL(pars.charge(), charge);
   BOOST_CHECK(pars.covariance().has_value());
   CHECK_CLOSE_ABS(*pars.covariance(), cov, eps);
@@ -275,13 +305,13 @@ BOOST_AUTO_TEST_CASE(BuildCurvilinear) {
   Stepper::State state = stepper.makeState(options);
   stepper.initialize(state, cp);
 
-  const Jacobian jac = stepper.transportToCurvilinear(state);
+  const Jacobian jac = stepper.transportToCurvilinear(state).value();
   const auto pars = stepper.curvilinearParameters(state);
   const double pathLength = stepper.pathLength(state);
   // check parameters
   CHECK_CLOSE_ABS(pars.position(geoCtx), pos, eps);
   CHECK_CLOSE_ABS(pars.time(), time, eps);
-  CHECK_CLOSE_ABS(pars.momentum(), absMom * unitDir, eps);
+  CHECK_CLOSE_ABS(pars.momentum(geoCtx), absMom * unitDir, eps);
   BOOST_CHECK_EQUAL(pars.charge(), charge);
   BOOST_CHECK(pars.covariance().has_value());
   CHECK_CLOSE_ABS(*pars.covariance(), cov, eps);
@@ -365,7 +395,7 @@ BOOST_AUTO_TEST_CASE(StepWithCovariance) {
   CHECK_CLOSE_ABS(stepper.absoluteMomentum(state), absMom, eps);
   BOOST_CHECK_EQUAL(stepper.charge(state), charge);
 
-  stepper.transportToCurvilinear(state);
+  BOOST_REQUIRE(stepper.transportToCurvilinear(state).ok());
   BOOST_CHECK_NE(*state.cov, cov);
 }
 
@@ -690,9 +720,9 @@ BOOST_AUTO_TEST_CASE(NeutralParticleDoesNotBend) {
                   eps);
   const double dtds = fastHypot(1., neutral.mass() / absMom);
   CHECK_CLOSE_ABS(stepper.time(state), time + *result * dtds, eps);
-  const auto jac = stepper.transportToCurvilinear(state);
-  CHECK_CLOSE_ABS(jac(eBoundPhi, eBoundQOverP), 0., eps);
-  CHECK_CLOSE_ABS(jac(eBoundTheta, eBoundQOverP), 0., eps);
+  const auto jac = stepper.transportToCurvilinear(state).value();
+  CHECK_CLOSE_ABS(jac(eBoundDir0, eBoundQOverP), 0., eps);
+  CHECK_CLOSE_ABS(jac(eBoundDir1, eBoundQOverP), 0., eps);
   CHECK_CLOSE_ABS(jac(eBoundTime, eBoundQOverP), 0., eps);
   BOOST_CHECK_EQUAL(stepper.qOverP(state), 0.);
 }
@@ -713,7 +743,7 @@ BOOST_AUTO_TEST_CASE(TransportBeforeSteppingIncludesPathCorrections) {
     CHECK_CLOSE_ABS(jac(eBoundTime, i), -dtds * frame(2, i) / unitDir.z(), eps);
   }
   // Reanchoring must allow another transport without an intervening step.
-  const auto inverse = stepper.transportToCurvilinear(state);
+  const auto inverse = stepper.transportToCurvilinear(state).value();
   CHECK_CLOSE_ABS(BoundMatrix(inverse * jac), BoundMatrix::Identity().eval(),
                   1e-12);
   CHECK_CLOSE_ABS(*state.cov, cov, 1e-12);
@@ -728,7 +758,7 @@ BOOST_AUTO_TEST_CASE(CurvilinearFrameNearBeam) {
   const auto initial = BoundTrackParameters::createCurvilinear(
       pos4, nearBeam, charge / absMom, cov, particleHypothesis);
   stepper.initialize(state, initial);
-  const auto jac = stepper.transportToCurvilinear(state);
+  const auto jac = stepper.transportToCurvilinear(state).value();
   // evaluateTrigonomics computes sin(theta) from cos(theta), which loses about
   // 1e-10 here.
   CHECK_CLOSE_ABS(jac, BoundMatrix::Identity().eval(), 1e-9);

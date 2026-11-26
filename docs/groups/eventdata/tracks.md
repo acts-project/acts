@@ -33,6 +33,303 @@ detailed information produced during track reconstruction.
 
 ---
 
+## Bound coordinates and physical observables
+
+@ref Acts::BoundVector "BoundVector" remains a six-component Eigen vector in
+the order `(loc0, loc1, dir0, dir1, q/p, time)`. Use the @ref Acts::BoundIndices
+values `eBoundDir0` and `eBoundDir1` for the raw direction slots.
+`eBoundPhi` and `eBoundTheta` remain compatible aliases, deprecated in favor of the
+neutral names. `parameters()[index]` and @ref Acts::BoundTrackParameters::get
+"get<Index>()" always read stored coordinates; they do not calculate physical
+observables. Covariance rows and columns and measurement projector indices refer
+to that same stored basis. Integer indexing remains available and carries the
+same responsibility for interpreting the basis.
+
+Only the canonical global-spherical parametrization is currently supported:
+`dir0` is global phi and `dir1` is global theta. @ref Acts::BoundTrackParameters
+"Bound parameters" and @ref Acts::TrackProxyCommon "track proxies" provide
+@ref Acts::BoundTrackParameters::direction "direction(gctx)",
+@ref Acts::BoundTrackParameters::phi "phi(gctx)",
+@ref Acts::BoundTrackParameters::theta "theta(gctx)",
+@ref Acts::BoundTrackParameters::momentum "momentum(gctx)" and
+@ref Acts::BoundTrackParameters::transverseMomentum "transverseMomentum(gctx)"
+for physical observables. Track proxies also provide
+@ref Acts::TrackProxyCommon::fourMomentum "fourMomentum(gctx)". The context is
+unused for canonical direction interpretation; these overloads agree with the
+existing no-context accessors. The no-context `phi()`, `theta()`, `direction()`,
+`momentum()`, `transverseMomentum()` and proxy `fourMomentum()` overloads are
+deprecated; pass the caller's geometry context instead. Raw `get<Index>()` access
+remains available. Absolute momentum and charge depend only on q/p and the
+particle hypothesis and need no context.
+
+@ref Acts::BoundParametrization::globalSpherical "BoundParametrization::globalSpherical()"
+provides the current interpretation as an allocation-free value with private
+variant storage. It exposes direction encoding/decoding, forward and inverse
+derivatives, coordinate validation, canonicalization, differences and updates.
+It owns no surface or context and can be kept independently of either.
+Raw-vector callers can use @ref Acts::BoundParametrization::direction
+"direction(parameters)", which accepts Eigen maps and expressions without a
+parameter object or additional stored metadata. Existing parameter and proxy
+concepts do not require the new context overloads from client-defined types.
+@ref Acts::Surface::boundParametrization "surface.boundParametrization(gctx)"
+resolves the interpretation for a surface. Context-aware observables and
+bound/free value conversions use this lookup. It currently returns the canonical
+global-spherical interpretation for every surface, including curvilinear planes;
+surface placement and alignment do not rotate the direction axes. Track proxies
+without a reference surface retain the canonical interpretation. No chart state
+is added to surfaces. Bound/free surface Jacobians use the same interpretation, including the
+curvilinear utility and the direction-dependent line/point position terms.
+Covariance transport retains its source-to-free-to-destination composition and
+path-length correction; reinitialization uses the destination interpretation.
+Chart configuration and alternative charts remain follow-up work.
+
+@ref Acts::Surface::freeToBoundJacobian "Surface inverse Jacobians" and
+@ref Acts::Surface::alignmentToBoundDerivative "alignment derivatives" return
+@ref Acts::Result "Result" for chart-domain failures. The covariance engines,
+steppers (including curvilinear transport), material interactions and final
+propagation results propagate those errors. Exactly axial canonical directions
+return @ref Acts::BoundParametrizationError::SingularDirection when an inverse
+derivative is required. Value-only transport remains available without a
+covariance. The transport path introduces no additional conditioning cutoff;
+use @ref Acts::BoundParametrization::directionCoordinatesJacobian for an
+explicit threshold. Normalized-direction Jacobians avoid normalization and
+angle reconstruction in the propagation path.
+
+Callers of `freeToBoundJacobian`, `alignmentToBoundDerivative`, and
+`transportToCurvilinear` must check `.ok()` before accessing the returned
+matrix. The covariance engines return `Result<void>` and preserve their inputs
+on chart-domain failure. Sympy also retains its scaled Jacobian and accumulated
+material effects on failure. Multi-component transport reports a component
+failure immediately; earlier components may already have been transported.
+
+The public extension API consists of the mathematical operations on
+@ref Acts::BoundParametrization, the surface Jacobians, and the operations
+required by @ref Acts::Concepts::CommonStepper and the other stepper concepts.
+Custom surface Jacobians must agree with
+@ref Acts::Surface::boundParametrization and propagate inverse-derivative
+failures through @ref Acts::Result. The unit-direction derivative methods are
+supported primitives for custom surfaces and steppers; their normalized-input
+preconditions avoid redundant work in transport.
+
+The covariance and Jacobian engines in `Acts::detail`, including their Sympy
+implementations, are internal helpers under the @ref versioning "API policy".
+Their installed headers allow use by template implementations but do not make
+them public API. Custom steppers can implement the public contract without
+using these engines. Parametrization storage and dispatch are also private.
+
+The canonical-only wrappers in @ref TrackParameterHelpers.hpp are deprecated:
+@ref Acts::directionFromBoundParameters, @ref Acts::isBoundVectorValid,
+@ref Acts::normalizeBoundParameters, @ref Acts::addBoundParameters and
+@ref Acts::subtractBoundParameters. Use the corresponding
+@ref Acts::BoundParametrization "parametrization" operations instead. For
+explicitly canonical callers, construct it with `globalSpherical()`.
+@ref Acts::isFreeVectorValid remains independent of the bound parametrization.
+
+@ref Acts::BoundParametrization::isValid "isValid()" checks finite values,
+optional canonical ranges and eta acceptance. It permits axial directions.
+@ref Acts::BoundParametrization::isInDomain "isInDomain()" additionally checks
+whether the inverse direction derivative is sufficiently conditioned.
+@ref Acts::BoundParametrization::directionCoordinatesJacobian "The inverse Jacobian"
+returns a failed @ref Acts::Result "Result" at a pole or below its
+transverse-fraction threshold. It includes input normalization when given a
+non-unit Cartesian direction. Computational methods assert caller preconditions:
+finite coordinates/covariance, nonzero finite Cartesian directions with
+representable norms, valid conditioning thresholds, and finite arithmetic
+results. These assertions disappear when `NDEBUG` is set (unless the build
+forces assertions). Use `isValid()` or `isInDomain()` for explicit runtime
+validation of coordinates. Chart singularities and conditioning failures still
+return errors in release builds.
+
+@ref Acts::BoundParametrization::canonicalize "canonicalize(parameters, covariance)"
+returns a `Result` containing coordinates and covariance in the canonical basis.
+Folding theta across a pole reverses its covariance cross terms. At an exact
+pole that canonicalization derivative is undefined, so covariance
+canonicalization returns a failed `Result`. Value-only canonicalization remains
+available. The phi wrapping seam uses local periodic coordinates. The legacy
+value-only normalization/update helpers do not transform a separate covariance.
+For an update with covariance, use `canonicalize(parameters + delta, covariance)`
+with the covariance in the uncanonicalized updated basis.
+
+@ref Acts::Experimental::ReferenceTrajectoryBuilder::filter uses each surface's
+parametrization to form the filtered correction relative to the original
+reference prediction. Transported predictions are canonicalized together with
+their covariance; the stored transport Jacobian is transformed into that same
+prediction basis for smoothing. Phi wrapping therefore does not introduce a
+spurious full-turn correction into subsequent transport. Undefined
+canonicalization at an exact pole returns an error before replacing that
+prediction. Earlier states may already have been filtered.
+The filter consumes the stored reference predictions, so rebuild the reference
+trajectory before filtering again. It remains a local linear approximation:
+large direction changes require rebuilding the reference transport Jacobians.
+Only canonical global-spherical coordinates are currently supported.
+
+Mixture merging remains explicitly canonical-only. GSF, bremsstrahlung CKF,
+@ref Acts::MultiComponentBoundTrackParameters::merge and the KL-distance reducers
+pass the geometry context through to the surface's bound parametrization.
+The existing circular global-phi mean, linear theta mean, periodic local
+coordinates on discs/cylinders, and mixture covariance calculation are unchanged.
+Selecting the largest-weight component also retains the existing mean-based
+mixture covariance. Weight-only pruning and q/p-only KL distances do not interpret
+direction coordinates.
+
+The circular-mean implementation checks for global-spherical support before
+interpreting the direction slots. An unsupported parametrization throws a
+`std::system_error` with @ref Acts::GsfError::UnsupportedBoundParametrization and
+the surface identifier; it is not converted into a rejected component. No
+alternative parametrization is selectable yet, so that rejection path awaits
+validation when one is introduced. Custom mixture-reducer callbacks now take
+`const GeometryContext&` as their first argument; parameter merging takes
+`merge(gctx, method)`.
+
+@ref Acts::Experimental::Gx2Fitter explicitly requires canonical
+global-spherical bound coordinates. It checks the initial state and each bound
+state it creates for measurements, valid scattering material, or stored holes.
+Surfaces merely traversed without creating a bound state are not checked.
+Standalone equation assembly checks the stored states it consumes as well.
+Unsupported interpretation throws `std::system_error` with
+@ref Acts::Experimental::GlobalChiSquareFitterError::UnsupportedBoundParametrization
+and the surface identifier; it is not treated as a missing measurement.
+Only canonical coordinates exist today, so unsupported-state tests remain deferred.
+
+GX2F measurement residuals use the surface parametrization before projection
+into the measurement basis. Its scattering model remains canonical-specific:
+linear phi/theta kicks, inverse phi variance weighted by `sin(theta)^2`, and explicit
+phi/theta derivative columns are a coupled model. These operations and the
+raw fit-parameter updates have not been generalized or given covariance-aware
+branch changes. Supporting alternative coordinates requires
+updating that model consistently, rather than just replacing its angle addition.
+
+@ref Acts::AtlasStepper also remains explicitly canonical-only because its
+internal direction derivatives are written in phi/theta coordinates. It checks
+the surface before initialization, bound updates, bound parameter extraction,
+and bound covariance transport, including the path without covariance.
+An unsupported parametrization throws `std::system_error` with
+@ref Acts::AtlasStepperError::UnsupportedBoundParametrization and the surface
+identifier before modifying the stepper state. Free Cartesian updates and
+canonical curvilinear output do not consume a configurable bound interpretation.
+These checks concern requested bound operations, not surfaces merely traversed
+by navigation. Alternative-parametrization rejection tests remain deferred.
+
+@ref Acts::Experimental::RiddersStepper forms its numerical transport residuals
+using the destination surface's parametrization, including periodic direction
+differences. Its perturbation generation and finite-difference algorithm are
+unchanged.
+
+@ref Acts::MeasurementSelector::select now takes the bound parametrization of
+the candidates' common surface as its first argument, i.e.
+`select(parametrization, candidates, isOutlier, logger)`. The caller resolves
+it with `surface.boundParametrization(gctx)`; the selector does not look it up
+itself. The measurement-selector delegate in @ref Acts::TrackStateCreator
+resolves it once per surface from the bound state's reference surface and
+passes it on; custom selector callbacks must accept a
+`const BoundParametrization&` in place of the geometry context. Selection uses
+this parametrization for physical theta and measurement residuals, including
+direction measurements across the phi seam. Non-finite candidates are rejected before evaluating these residuals.
+
+The optional nonlinear free-to-bound correction averages sigma-point offsets
+relative to the nominal bound point using the surface parametrization. It uses
+periodic residuals for covariance and canonicalizes the resulting mean and
+covariance together. This avoids artificial spreads at the phi seam while
+retaining the existing local sigma-point approximation and weights. If the
+corrected covariance basis is undefined, correction falls back to nominal
+transport through its existing optional-result interface. Broad distributions
+spanning direction singularities remain outside this local approximation.
+
+### Canonical support audit
+
+Only canonical global-spherical coordinates are selectable. The current
+implementation and remaining work are:
+
+| Path | Current status |
+| --- | --- |
+| Kalman update, RTS and MBF smoothing | Surface-selected residuals and covariance-aware canonicalization |
+| Reference-trajectory filtering | Surface-selected reference residuals and consistent prediction covariance/Jacobians |
+| Eigen, straight-line, helix and Sympy steppers | Surface conversions and shared/generated transport engines |
+| Multi-stepper transport | Delegates to component steppers; bound-direction domain errors propagate |
+| Ridders | Surface-selected numerical residuals; existing perturbation algorithm |
+| GSF and bremsstrahlung CKF merging | Context-aware entry points with explicit canonical-only checks |
+| GX2F | Surface-selected measurement residuals; explicitly canonical scattering model and raw fit updates |
+| AtlasStepper | Explicit canonical-only checks at bound entry points |
+| CKF measurement selection | Uses the surface parametrization for physical theta and periodic measurement residuals |
+| Optional nonlinear free-to-bound correction | Surface-selected local sigma-point residuals and covariance-aware canonicalization |
+
+The explicit unsupported-configuration exceptions from mixture merging, GX2F,
+and AtlasStepper escape the fitting and component-discard paths. The example
+framework logs the exception message and rethrows it. Existing numerical domain
+failures retain their `Result` handling; these are distinct from unsupported
+configurations. Tests with another parametrization are still needed to verify
+rejection at initial and subsequent states, harmless navigation-only encounters,
+and mixed-parametrization physical equivalence. Canonical regression tests alone
+do not establish those properties.
+
+Pointwise material physics computes a projected scattering variance independently
+of the direction coordinates. A separate mapping produces the direction-noise
+block, with a direct diagonal calculation for the canonical spherical convention.
+Reference-trajectory rebuilding uses the reference surface's parametrization for
+this mapping. Pointwise material updates require callers to supply the active
+covariance anchor's parametrization separately from the material surface.
+Generic material interaction uses the curvilinear interpretation. KF and GSF
+use the bound surface interpretation. CKF retains the curvilinear interpretation
+for material-only transport until rebinding or a filtered-state update changes
+the anchor. The material helper neither selects an interpretation nor performs
+an additional covariance transport. Noise addition updates the full direction block and q/p variance directly.
+Noise removal subtracts the requested increment in full and checks the complete
+covariance, including correlations with other coordinates. An invalid result
+returns @ref Acts::MaterialInteractionError::InvalidCovarianceAfterNoiseRemoval
+without changing momentum or covariance; no variances are clamped. Only removal
+checks positivity: an unscaled in-place Cholesky factorization of a scratch matrix handles
+positive-definite results first. Difficult cases retain the diagonally scaled
+Cholesky check and eigenvalue fallback using a relative tolerance of
+64 machine epsilons for semidefinite boundaries. Addition stays inline.
+The `ActsBenchmarkMaterialCovariance` target compares these paths with the
+legacy diagonal update and includes material-physics and noise-mapping work. Legacy
+@ref Acts::MaterialInteraction::sigmaPhi2 and
+@ref Acts::MaterialInteraction::sigmaTheta2 remain global angular diagnostics;
+nonzero scattering at a global pole has infinite phi variance.
+
+The updater delegates of the Kalman fitter and CKF
+(`KalmanFitterExtensions::Updater`), the GSF (`GsfExtensions::Updater`),
+GX2F (`Experimental::Gx2FitterExtensions::Updater`) and
+`Experimental::ReferenceTrajectoryBuilder::Updater` take the bound
+parametrization of the track state's reference surface after the geometry
+context:
+`Result<void>(const GeometryContext&, const BoundParametrization&,
+TrackStateProxy, const Logger&)`. The fitter, which knows the surface, resolves
+it once per surface and passes it on. Custom updaters must accept the extra
+parameter; the geometry context is still passed.
+
+@ref Acts::GainMatrixUpdater uses the passed bound parametrization; debug
+builds assert that it matches the track state's reference surface in the
+supplied geometry context. It forms the
+measurement innovation using coordinate differences and evaluates chi2 in the
+original measurement basis. Parameters and covariance are canonicalized together,
+so folding theta also changes its covariance cross terms. Both the standard
+and Joseph covariance updates use this transformation.
+
+@ref Acts::GainMatrixSmoother uses the destination state's parametrization for
+the smoothed-minus-predicted residual and the source state's parametrization
+for the corrected values and covariance. Its single-step `calculate` API now
+requires a geometry context. States without a reference surface retain the
+canonical global-spherical interpretation. Undefined canonicalization at an
+exact pole returns a failed Result. The updater preserves filtered values,
+covariance and chi2 on failure; the smoother preserves the failing state's
+values, but later states may already have been smoothed.
+
+@ref Acts::MbfSmoother also uses surface-resolved residuals and canonicalizes
+smoothed parameters and covariance together. Its backward information recursion
+includes the forward update's canonicalization Jacobian, since backward
+information is expressed in the filtered basis while measurement residuals and
+the transport Jacobian use the predicted basis. Singular canonicalization and
+nonfinite recursion results stop smoothing with an error. States already
+processed may retain their smoothed results; earlier states are not visited.
+The supported interpretation remains canonical global spherical coordinates.
+
+Other fitting and mixture operations and specialized
+propagation algorithms still assume the canonical spherical coordinates.
+The neutral index names alone do not make those operations chart-independent.
+Custom coordinate ordering through `ACTS_PARAMETER_DEFINITIONS_HEADER` has been
+removed; the coordinate ordering is fixed.
+
 ## Conceptual {#edm_track_conceptual}
 
 ### Architecture

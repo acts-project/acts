@@ -150,17 +150,18 @@ ProcessCode RootPropagationStepsWriter::writeT(
     const auto& startParameters = summary.startParameters;
     m_d0 = static_cast<float>(startParameters.parameters()[Acts::eBoundLoc0]);
     m_z0 = static_cast<float>(startParameters.parameters()[Acts::eBoundLoc1]);
-    m_phi = static_cast<float>(startParameters.parameters()[Acts::eBoundPhi]);
+    m_phi = static_cast<float>(startParameters.parameters()[Acts::eBoundDir0]);
     m_theta =
-        static_cast<float>(startParameters.parameters()[Acts::eBoundTheta]);
+        static_cast<float>(startParameters.parameters()[Acts::eBoundDir1]);
     m_qOverP =
         static_cast<float>(startParameters.parameters()[Acts::eBoundQOverP]);
     m_t = static_cast<float>(startParameters.parameters()[Acts::eBoundTime]);
 
     // Derived initial trajectory parameters
-    m_eta = static_cast<float>(
-        Acts::VectorHelpers::eta(startParameters.direction()));
-    m_pt = static_cast<float>(startParameters.transverseMomentum());
+    m_eta = static_cast<float>(Acts::VectorHelpers::eta(
+        startParameters.direction(context.recoGeoContext)));
+    m_pt = static_cast<float>(
+        startParameters.transverseMomentum(context.recoGeoContext));
     m_p = static_cast<float>(startParameters.absoluteMomentum());
 
     // Loop over single steps

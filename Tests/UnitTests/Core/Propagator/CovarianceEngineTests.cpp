@@ -79,9 +79,10 @@ BOOST_AUTO_TEST_CASE(covariance_engine_test) {
   std::optional<FreeMatrix> additionalFreeCovariance;
 
   // Covariance transport to curvilinear coordinates
-  detail::transportCovarianceToCurvilinear(
-      covariance, jacobian, transportJacobian, derivatives, boundToFreeJacobian,
-      additionalFreeCovariance, direction);
+  BOOST_REQUIRE(detail::transportCovarianceToCurvilinear(
+                    covariance, jacobian, transportJacobian, derivatives,
+                    boundToFreeJacobian, additionalFreeCovariance, direction)
+                    .ok());
 
   // Tests to see that the right components are (un-)changed
   BOOST_CHECK_NE(covariance, Covariance::Identity());
@@ -104,10 +105,11 @@ BOOST_AUTO_TEST_CASE(covariance_engine_test) {
   FreeToBoundCorrection freeToBoundCorrection(false);
   std::shared_ptr<PlaneSurface> surface =
       CurvilinearSurface(position, direction).planeSurface();
-  detail::transportCovarianceToBound(
-      tgContext, *surface, covariance, jacobian, transportJacobian, derivatives,
-      boundToFreeJacobian, additionalFreeCovariance, parameters,
-      freeToBoundCorrection);
+  BOOST_REQUIRE(detail::transportCovarianceToBound(
+                    tgContext, *surface, covariance, jacobian,
+                    transportJacobian, derivatives, boundToFreeJacobian,
+                    additionalFreeCovariance, parameters, freeToBoundCorrection)
+                    .ok());
 
   BOOST_CHECK_NE(covariance, Covariance::Identity());
   BOOST_CHECK_NE(jacobian, 2. * Jacobian::Identity());
@@ -121,7 +123,7 @@ BOOST_AUTO_TEST_CASE(covariance_engine_test) {
                                                 particleHypothesis);
   BOOST_CHECK(!curvPars.covariance().has_value());
   CHECK_CLOSE_ABS(curvPars.position(tgContext), position, 1e-12);
-  CHECK_CLOSE_ABS(curvPars.direction(), direction, 1e-12);
+  CHECK_CLOSE_ABS(curvPars.direction(tgContext), direction, 1e-12);
 
   // Produce curvilinear parameters with covariance matrix
   curvPars =
@@ -152,10 +154,11 @@ BOOST_AUTO_TEST_CASE(covariance_engine_test) {
   freeToBoundCorrection.apply = true;
 
   // Transport to the surface with free to bound correction
-  detail::transportCovarianceToBound(
-      tgContext, *surface, covariance, jacobian, transportJacobian, derivatives,
-      boundToFreeJacobian, additionalFreeCovariance, parameters,
-      freeToBoundCorrection);
+  BOOST_REQUIRE(detail::transportCovarianceToBound(
+                    tgContext, *surface, covariance, jacobian,
+                    transportJacobian, derivatives, boundToFreeJacobian,
+                    additionalFreeCovariance, parameters, freeToBoundCorrection)
+                    .ok());
   BOOST_CHECK_NE(covariance, Covariance::Identity());
 }
 
@@ -187,7 +190,7 @@ BoundVector localToLocal(const propagator_t& prop, const BoundVector& local,
 
   // The perturbed start can be past the destination
   const Intersection3D intersection =
-      dst.intersect(gctx, start.position(gctx), start.direction(),
+      dst.intersect(gctx, start.position(gctx), start.direction(gctx),
                     BoundaryTolerance::Infinite())
           .closest();
   options.direction =

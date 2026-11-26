@@ -9,6 +9,7 @@
 #include "Acts/EventData/AnyTrackProxy.hpp"
 #include "Acts/EventData/AnyTrackStateProxy.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 
@@ -38,16 +39,46 @@ void bindTrackProxyCommon(Cls& cls) {
       .def_property_readonly("isForwardLinked", &Proxy::isForwardLinked)
       .def_property_readonly("loc0", &Proxy::loc0)
       .def_property_readonly("loc1", &Proxy::loc1)
-      .def_property_readonly("phi", &Proxy::phi)
-      .def_property_readonly("theta", &Proxy::theta)
+      .def(
+          "phi",
+          [](const Proxy& self, const Acts::GeometryContext& gctx) {
+            return self.phi(gctx);
+          },
+          py::arg("gctx"))
+      .def(
+          "theta",
+          [](const Proxy& self, const Acts::GeometryContext& gctx) {
+            return self.theta(gctx);
+          },
+          py::arg("gctx"))
       .def_property_readonly("time", &Proxy::time)
       .def_property_readonly("qOverP", &Proxy::qOverP)
       .def_property_readonly("charge", &Proxy::charge)
       .def_property_readonly("absoluteMomentum", &Proxy::absoluteMomentum)
-      .def_property_readonly("transverseMomentum", &Proxy::transverseMomentum)
-      .def_property_readonly("direction", &Proxy::direction)
-      .def_property_readonly("momentum", &Proxy::momentum)
-      .def_property_readonly("fourMomentum", &Proxy::fourMomentum)
+      .def(
+          "transverseMomentum",
+          [](const Proxy& self, const Acts::GeometryContext& gctx) {
+            return self.transverseMomentum(gctx);
+          },
+          py::arg("gctx"))
+      .def(
+          "direction",
+          [](const Proxy& self, const Acts::GeometryContext& gctx) {
+            return self.direction(gctx);
+          },
+          py::arg("gctx"))
+      .def(
+          "momentum",
+          [](const Proxy& self, const Acts::GeometryContext& gctx) {
+            return self.momentum(gctx);
+          },
+          py::arg("gctx"))
+      .def(
+          "fourMomentum",
+          [](const Proxy& self, const Acts::GeometryContext& gctx) {
+            return self.fourMomentum(gctx);
+          },
+          py::arg("gctx"))
       .def(
           "hasColumn",
           [](const Proxy& self, const std::string& key) {

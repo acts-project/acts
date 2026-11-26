@@ -9,7 +9,6 @@
 #include "Acts/TrackFitting/detail/TrackletJoining.hpp"
 
 #include "Acts/EventData/MeasurementHelpers.hpp"
-#include "Acts/EventData/TrackParameterHelpers.hpp"
 #include "Acts/TrackFitting/KalmanFitterError.hpp"
 
 #include <Eigen/Cholesky>
@@ -53,8 +52,10 @@ void setSmoothedWithoutSharing(AnyMutableTrackStateProxy ts, BoundVector mean,
 }
 
 Result<std::pair<BoundVector, BoundMatrix>> smoothPriorNode(
-    const AnyConstTrackStateProxy& first, const BoundVector& priorMean,
-    const BoundMatrix& priorCov, const Logger& logger) {
+    const GeometryContext& gctx, const AnyConstTrackStateProxy& first,
+    const BoundParametrization& priorParametrization,
+    const BoundVector& priorMean, const BoundMatrix& priorCov,
+    const Logger& logger) {
   const BoundMatrix predictedCov = first.predictedCovariance();
   if (!predictedCov.allFinite()) {
     return KalmanFitterError::SmoothFailed;
@@ -70,9 +71,10 @@ Result<std::pair<BoundVector, BoundMatrix>> smoothPriorNode(
   const BoundMatrix jacobian = first.jacobian();
   const BoundMatrix g = ldlt.solve(jacobian * priorCov).transpose();
 
-  const BoundVector mean = normalizeBoundParameters(
-      priorMean +
-      g * subtractBoundParameters(first.smoothed(), first.predicted()));
+  // The residual lives in the basis of the first state; G maps it to the prior
+  const BoundVector mean =
+      priorMean + g * trackletStateParametrization(gctx, first)
+                          .difference(first.smoothed(), first.predicted());
   const BoundMatrix cov =
       priorCov + g * (BoundMatrix(first.smoothedCovariance()) - predictedCov) *
                      g.transpose();
@@ -80,12 +82,14 @@ Result<std::pair<BoundVector, BoundMatrix>> smoothPriorNode(
     ACTS_DEBUG("Prior node estimate is not finite");
     return KalmanFitterError::SmoothFailed;
   }
-  return std::pair{mean, BoundMatrix(0.5 * (cov + cov.transpose()))};
+  return priorParametrization.canonicalize(
+      mean, BoundMatrix(0.5 * (cov + cov.transpose())));
 }
 
 Result<SharedStateCondition> makeSharedStateCondition(
-    const AnyConstTrackStateProxy& shared, const BoundVector& newMean,
-    const BoundMatrix& newCov, const Logger& logger) {
+    const GeometryContext& gctx, const AnyConstTrackStateProxy& shared,
+    const BoundVector& newMean, const BoundMatrix& newCov,
+    const Logger& logger) {
   const BoundMatrix smoothedCov = shared.smoothedCovariance();
   if (!smoothedCov.allFinite()) {
     return KalmanFitterError::SmoothFailed;
@@ -99,8 +103,8 @@ Result<SharedStateCondition> makeSharedStateCondition(
   // Z = Pp Ps^-1, applied to the change of the shared state
   const BoundMatrix predictedCov = shared.predictedCovariance();
   const BoundMatrix z = ldlt.solve(predictedCov).transpose();
-  const BoundVector deltaMean =
-      subtractBoundParameters(newMean, shared.smoothed());
+  const BoundVector deltaMean = trackletStateParametrization(gctx, shared)
+                                    .difference(newMean, shared.smoothed());
   const BoundMatrix deltaCov = newCov - smoothedCov;
 
   SharedStateCondition condition;
@@ -127,7 +131,8 @@ BoundMatrix filteredSensitivity(const AnyConstTrackStateProxy& ts,
   return df;
 }
 
-Result<void> conditionTrackState(AnyMutableTrackStateProxy ts,
+Result<void> conditionTrackState(const GeometryContext& gctx,
+                                 AnyMutableTrackStateProxy ts,
                                  const BoundMatrix& dp, const BoundMatrix& df,
                                  BoundMatrix& psiHat,
                                  const SharedStateCondition& condition,
@@ -138,15 +143,19 @@ Result<void> conditionTrackState(AnyMutableTrackStateProxy ts,
   // T = Df - Pf Psi^
   const BoundMatrix t = df - filteredCov * psiHat;
 
-  const BoundVector mean =
-      normalizeBoundParameters(ts.smoothed() + t * condition.u);
+  const BoundVector mean = ts.smoothed() + t * condition.u;
   const BoundMatrix cov =
       ts.smoothedCovariance() + t * condition.w * t.transpose();
   if (!mean.allFinite() || !cov.allFinite()) {
     ACTS_DEBUG("Conditioned state " << ts.index() << " is not finite");
     return KalmanFitterError::SmoothFailed;
   }
-  setSmoothedWithoutSharing(ts, mean, 0.5 * (cov + cov.transpose()));
+  const auto canonical = trackletStateParametrization(gctx, ts).canonicalize(
+      mean, BoundMatrix(0.5 * (cov + cov.transpose())));
+  if (!canonical.ok()) {
+    return canonical.error();
+  }
+  setSmoothedWithoutSharing(ts, canonical->first, canonical->second);
 
   // Psi~ = H^T S^-1 H Dp + (I - K H)^T Psi^, then transport to the previous
   BoundMatrix psiTilde = psiHat;

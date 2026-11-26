@@ -16,13 +16,17 @@
 
 namespace ActsAlignment::detail {
 
-Acts::AlignmentToBoundMatrix alignmentToBoundDerivative(
+Acts::Result<Acts::AlignmentToBoundMatrix> alignmentToBoundDerivative(
     const Acts::GeometryContext& gctx, const Acts::Surface& surface,
     const Acts::Vector3& position, const Acts::Vector3& direction,
     const Acts::FreeVector& pathDerivative, AlignmentMask mask,
     const Acts::Transform3* structureTransform) {
-  Acts::AlignmentToBoundMatrix derivative = surface.alignmentToBoundDerivative(
+  const auto result = surface.alignmentToBoundDerivative(
       gctx, position, direction, pathDerivative);
+  if (!result.ok()) {
+    return Acts::Result<Acts::AlignmentToBoundMatrix>::failure(result.error());
+  }
+  Acts::AlignmentToBoundMatrix derivative = *result;
   if (structureTransform != nullptr) {
     const Acts::Transform3& surfaceTransform =
         surface.localToGlobalTransform(gctx);
@@ -31,7 +35,7 @@ Acts::AlignmentToBoundMatrix alignmentToBoundDerivative(
                      .eval();
   }
   resetAlignmentDerivative(derivative, mask);
-  return derivative;
+  return Acts::Result<Acts::AlignmentToBoundMatrix>::success(derivative);
 }
 
 void resetAlignmentDerivative(Acts::AlignmentToBoundMatrix& alignToBound,

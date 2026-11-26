@@ -65,7 +65,7 @@ concept SurfaceConcept = requires(S s, const S cs, S s2, const S cs2,
 
   {
     cs.freeToBoundJacobian(gctx, Vector3{}, Vector3{})
-  } -> std::same_as<FreeToBoundMatrix>;
+  } -> std::same_as<Result<FreeToBoundMatrix>>;
 
   {
     cs.freeToPathDerivative(gctx, Vector3{}, Vector3{})
@@ -89,7 +89,7 @@ concept SurfaceConcept = requires(S s, const S cs, S s2, const S cs2,
 
   {
     cs.alignmentToBoundDerivative(gctx, Vector3{}, Vector3{}, FreeVector{})
-  } -> std::same_as<AlignmentToBoundMatrix>;
+  } -> std::same_as<Result<AlignmentToBoundMatrix>>;
 
   {
     cs.alignmentToPathDerivative(gctx, Vector3{}, Vector3{})

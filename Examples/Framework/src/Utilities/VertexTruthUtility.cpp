@@ -62,12 +62,13 @@ std::uint32_t ActsExamples::getNumberOfTruePriVertices(
   return allPriVtxIds.size();
 }
 
-double ActsExamples::calcSumPt2(const Acts::Vertex& vtx, double minTrkWeight) {
+double ActsExamples::calcSumPt2(const Acts::GeometryContext& gctx,
+                                const Acts::Vertex& vtx, double minTrkWeight) {
   double sumPt2 = 0;
   for (const auto& trk : vtx.tracks()) {
     if (trk.trackWeight > minTrkWeight) {
       double pt = trk.originalParams.as<Acts::BoundTrackParameters>()
-                      ->transverseMomentum();
+                      ->transverseMomentum(gctx);
       sumPt2 += pt * pt;
     }
   }

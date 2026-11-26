@@ -16,7 +16,7 @@
 
 namespace Acts {
 
-void detail::boundToBoundTransportJacobian(
+Result<void> detail::boundToBoundTransportJacobian(
     const GeometryContext& geoContext, const Surface& surface,
     const FreeVector& freeParameters,
     const BoundToFreeMatrix& boundToFreeJacobian,
@@ -26,13 +26,18 @@ void detail::boundToBoundTransportJacobian(
     BoundMatrix& fullTransportJacobian) {
   const Vector3 position = freeParameters.segment<3>(eFreePos0);
   const Vector3 direction = freeParameters.segment<3>(eFreeDir0);
+  // Calculate the jacobian from free to bound at the final surface
+  const auto projection =
+      surface.freeToBoundJacobian(geoContext, position, direction);
+  if (!projection.ok()) {
+    return projection.error();
+  }
+  freeToBoundJacobian = *projection;
   // Calculate the derivative of path length at the final surface or the
   // point-of-closest approach w.r.t. free parameters
   const FreeToPathMatrix freeToPath =
       surface.freeToPathDerivative(geoContext, position, direction);
-  // Calculate the jacobian from free to bound at the final surface
-  freeToBoundJacobian =
-      surface.freeToBoundJacobian(geoContext, position, direction);
+
   // https://acts.readthedocs.io/en/latest/white_papers/correction-for-transport-jacobian.html
   // Calculate the full jacobian from the local/bound parameters at the start
   // surface to local/bound parameters at the final surface
@@ -42,30 +47,38 @@ void detail::boundToBoundTransportJacobian(
       freeToBoundJacobian *
       (FreeMatrix::Identity() + freeToPathDerivatives * freeToPath) *
       freeTransportJacobian * boundToFreeJacobian;
+  return Result<void>::success();
 }
 
-BoundMatrix detail::boundToBoundTransportJacobian(
+Result<BoundMatrix> detail::boundToBoundTransportJacobian(
     const GeometryContext& geoContext, const FreeVector& freeParameters,
     const BoundToFreeMatrix& boundToFreeJacobian,
     const FreeMatrix& freeTransportJacobian,
     const FreeVector& freeToPathDerivatives, const Surface& surface) {
   BoundMatrix result;
   FreeToBoundMatrix freeToBoundJacobian;
-  detail::boundToBoundTransportJacobian(
+  const auto status = detail::boundToBoundTransportJacobian(
       geoContext, surface, freeParameters, boundToFreeJacobian,
       freeTransportJacobian, freeToBoundJacobian, freeToPathDerivatives,
       result);
-  return result;
+  if (!status.ok()) {
+    return Result<BoundMatrix>::failure(status.error());
+  }
+  return Result<BoundMatrix>::success(result);
 }
 
-void detail::boundToCurvilinearTransportJacobian(
+Result<void> detail::boundToCurvilinearTransportJacobian(
     const Vector3& direction, const BoundToFreeMatrix& boundToFreeJacobian,
     const FreeMatrix& freeTransportJacobian,
     FreeToBoundMatrix& freeToBoundJacobian,
     const FreeVector& freeToPathDerivatives,
     BoundMatrix& fullTransportJacobian) {
   // Calculate the jacobian from global to local at the curvilinear surface
-  freeToBoundJacobian = CurvilinearSurface(direction).freeToBoundJacobian();
+  const auto projection = CurvilinearSurface(direction).freeToBoundJacobian();
+  if (!projection.ok()) {
+    return projection.error();
+  }
+  freeToBoundJacobian = *projection;
 
   // Update the jacobian to include the derivative of the path length at the
   // curvilinear surface w.r.t. the free parameters
@@ -79,6 +92,7 @@ void detail::boundToCurvilinearTransportJacobian(
   // pathCorrectionFactor(gloB))*jacTransport(gloA->gloB) *jac(locA->gloA)
   fullTransportJacobian =
       freeToBoundJacobian * freeTransportJacobian * boundToFreeJacobian;
+  return Result<void>::success();
 }
 
 BoundToFreeMatrix detail::boundToFreeTransportJacobian(
@@ -89,7 +103,7 @@ BoundToFreeMatrix detail::boundToFreeTransportJacobian(
   return freeTransportJacobian * boundToFreeJacobian;
 }
 
-void detail::freeToBoundTransportJacobian(
+Result<void> detail::freeToBoundTransportJacobian(
     const GeometryContext& geoContext, const Surface& surface,
     const FreeVector& freeParameters, const FreeMatrix& freeTransportJacobian,
     const FreeVector& freeToPathDerivatives,
@@ -97,17 +111,22 @@ void detail::freeToBoundTransportJacobian(
   const Vector3 position = freeParameters.segment<3>(eFreePos0);
   const Vector3 direction = freeParameters.segment<3>(eFreeDir0);
   // Calculate the jacobian from free to bound at the final surface
-  FreeToBoundMatrix freeToBoundJacobian =
+  const auto projection =
       surface.freeToBoundJacobian(geoContext, position, direction);
+  if (!projection.ok()) {
+    return projection.error();
+  }
+  const FreeToBoundMatrix& freeToBoundJacobian = *projection;
   FreeToPathMatrix sVec =
       surface.freeToPathDerivative(geoContext, position, direction);
   // Return the jacobian to local
   fullTransportJacobian = freeToBoundJacobian * (freeTransportJacobian +
                                                  freeToPathDerivatives * sVec *
                                                      freeTransportJacobian);
+  return Result<void>::success();
 }
 
-FreeToBoundMatrix detail::freeToCurvilinearTransportJacobian(
+Result<FreeToBoundMatrix> detail::freeToCurvilinearTransportJacobian(
     const Vector3& direction, const FreeMatrix& freeTransportJacobian,
     const FreeVector& freeToPathDerivatives) {
   auto sfactors = direction.transpose() *
@@ -115,8 +134,12 @@ FreeToBoundMatrix detail::freeToCurvilinearTransportJacobian(
 
   // Since the jacobian to local needs to calculated for the bound parameters
   // here, it is convenient to do the same here
-  return CurvilinearSurface(direction).freeToBoundJacobian() *
-         (freeTransportJacobian - freeToPathDerivatives * sfactors);
+  const auto projection = CurvilinearSurface(direction).freeToBoundJacobian();
+  if (!projection.ok()) {
+    return Result<FreeToBoundMatrix>::failure(projection.error());
+  }
+  return Result<FreeToBoundMatrix>::success(
+      *projection * (freeTransportJacobian - freeToPathDerivatives * sfactors));
 }
 
 void detail::reinitializeJacobians(const GeometryContext& geoContext,

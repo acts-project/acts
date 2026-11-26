@@ -156,7 +156,13 @@ struct EventDataView3D {
 
     // Draw the parameter shaft and cone
     auto position = parameters.position(gctx);
-    auto direction = parameters.direction();
+    const auto direction = [&] {
+      if constexpr (requires { parameters.direction(gctx); }) {
+        return parameters.direction(gctx);
+      } else {
+        return parameters.direction();
+      }
+    }();
     double p = parameters.absoluteMomentum();
 
     ViewConfig lparConfig = parConfig;

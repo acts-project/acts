@@ -66,8 +66,10 @@ class TruthJetAlgorithm final : public IAlgorithm {
   ProcessCode execute(const AlgorithmContext& ctx) const override;
   ProcessCode finalize() override;
 
-  void trackJetMatching(const ConstTrackContainer& tracks,
-                        TruthJetContainer& jets) const;
+  void trackJetMatching(
+      const ConstTrackContainer& tracks, TruthJetContainer& jets,
+      const Acts::GeometryContext& gctx =
+          Acts::GeometryContext::dangerouslyDefaultConstruct()) const;
 
   const Config& config() const { return m_cfg; }
 

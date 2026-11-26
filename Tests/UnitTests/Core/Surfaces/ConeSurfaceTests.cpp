@@ -364,7 +364,7 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceJacobianRoundTrip) {
   const Vector3 position = cone->localToGlobal(tgContext, local, direction);
 
   const FreeToBoundMatrix freeToBound =
-      cone->freeToBoundJacobian(tgContext, position, direction);
+      cone->freeToBoundJacobian(tgContext, position, direction).value();
   const BoundToFreeMatrix boundToFree =
       cone->boundToFreeJacobian(tgContext, position, direction);
   CHECK_CLOSE_ABS(freeToBound * boundToFree, SquareMatrix<6>::Identity(),
@@ -417,7 +417,7 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceFreeToBoundTransport) {
   };
 
   const FreeToBoundMatrix freeToBound =
-      cone->freeToBoundJacobian(tgContext, position, direction);
+      cone->freeToBoundJacobian(tgContext, position, direction).value();
   const FreeToPathMatrix freeToPath =
       cone->freeToPathDerivative(tgContext, position, direction);
   // Straight-line correction: the intersection moves along the direction.
