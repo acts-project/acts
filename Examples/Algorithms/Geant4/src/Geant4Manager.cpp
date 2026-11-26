@@ -10,6 +10,7 @@
 
 #include "ActsExamples/Geant4/MaterialPhysicsList.hpp"
 #include "ActsExamples/Geant4/PhysicsListFactory.hpp"
+#include "ActsExamples/Geant4/RunManager.hpp"
 
 #include <memory>
 #include <stdexcept>
@@ -20,7 +21,6 @@
 #include <G4HadronicParameters.hh>
 #include <G4HadronicProcessStore.hh>
 #include <G4RunManager.hh>
-#include <G4RunManagerFactory.hh>
 #include <G4UserEventAction.hh>
 #include <G4UserRunAction.hh>
 #include <G4UserSteppingAction.hh>
@@ -96,8 +96,7 @@ std::shared_ptr<Geant4Handle> Geant4Manager::createHandle(
         "first one.");
   }
 
-  auto runManager = std::unique_ptr<G4RunManager>(
-      G4RunManagerFactory::CreateRunManager(G4RunManagerType::SerialOnly));
+  auto runManager = std::make_unique<Geant4::RunManager>();
 
   auto handle = std::make_shared<Geant4Handle>(std::move(runManager),
                                                std::move(physicsList),
