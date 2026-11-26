@@ -16,8 +16,9 @@
 #include "Acts/Utilities/Result.hpp"
 #include "ActsAlignment/Geometry/AlignableStructure.hpp"
 #include "ActsAlignment/Geometry/AlignmentHierarchy.hpp"
-#include "ActsAlignment/Kernel/detail/AlignmentEngine.hpp"
+#include "ActsAlignment/Kernel/TrackAlignmentState.hpp"
 
+#include <filesystem>
 #include <limits>
 #include <map>
 #include <memory>
@@ -191,8 +192,7 @@ struct Alignment {
   ///
   /// @result The alignment state for a single track
   template <typename source_link_t, typename fit_options_t>
-  Acts::Result<ActsAlignment::detail::TrackAlignmentState>
-  evaluateTrackAlignmentState(
+  Acts::Result<TrackAlignmentState> evaluateTrackAlignmentState(
       const Acts::GeometryContext& gctx,
       const std::vector<source_link_t>& sourceLinks,
       const Acts::BoundTrackParameters& sParameters,
@@ -236,7 +236,7 @@ struct Alignment {
   /// @param performDecomposition Perform a decomposition of the
   /// second derivative matrix and write eigenvectors/values to a file.
   void calculateAlignmentParameters(
-      const std::vector<detail::TrackAlignmentState>& trackAlignmentStates,
+      const std::vector<TrackAlignmentState>& trackAlignmentStates,
       AlignmentResult& alignResult) const;
 
   /// @brief update the detector element alignment parameters

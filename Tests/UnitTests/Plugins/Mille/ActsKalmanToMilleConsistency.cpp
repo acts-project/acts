@@ -15,7 +15,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsAlignment/Kernel/Alignment.hpp"
-#include "ActsAlignment/Kernel/detail/AlignmentEngine.hpp"
+#include "ActsAlignment/Kernel/TrackAlignmentState.hpp"
 #include "ActsPlugins/Mille/ActsToMille.hpp"
 #include "ActsPlugins/Mille/Helpers.hpp"
 #include "ActsTests/CommonHelpers/AlignmentHelpers.hpp"
@@ -125,7 +125,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldKalmanToMille) {
 
   // Decode it back into a TrackAlignmentState
 
-  ActsAlignment::detail::TrackAlignmentState millePedeState;
+  ActsAlignment::TrackAlignmentState millePedeState;
   // we need to externally supply the alignment parameter indexing logic
   millePedeState.alignedSurfaces = alignState.alignedSurfaces;
   BOOST_CHECK(ActsPlugins::ActsToMille::unpackMilleRecord(

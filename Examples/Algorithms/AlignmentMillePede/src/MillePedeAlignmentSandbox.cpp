@@ -17,6 +17,7 @@
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsAlignment/Kernel/Alignment.hpp"
+#include "ActsAlignment/Kernel/TrackAlignmentState.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/MeasurementCalibration.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -182,7 +183,7 @@ ProcessCode MillePedeAlignmentSandbox::execute(
 
     // and, if successful, dump the information into our Mille record.
     if (aliStates.ok()) {
-      const ActsAlignment::detail::TrackAlignmentState& state = *aliStates;
+      const ActsAlignment::TrackAlignmentState& state = *aliStates;
       ActsPlugins::ActsToMille::dumpToMille(
           state, *m_milleOut, m_cfg.discardUnconstrainedTrackPar, logger());
       if (needInternalSolving()) {

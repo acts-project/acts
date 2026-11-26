@@ -9,6 +9,8 @@
 #include "ActsPlugins/Mille/ActsToMille.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Alignment.hpp"
+#include "ActsAlignment/Kernel/detail/AlignmentEngine.hpp"
 #include "ActsPlugins/Mille/Helpers.hpp"
 
 #include <algorithm>
@@ -20,7 +22,9 @@
 #include <set>
 #include <vector>
 
-#include <Eigen/src/Core/Matrix.h>
+#include <Eigen/Cholesky>
+#include <Eigen/Eigenvalues>
+#include <Eigen/LU>
 #include <Mille/MilleDataStructures.h>
 #include <Mille/MilleRecord.h>
 
@@ -44,7 +48,7 @@ unsigned long globalIndexSurfToParam(unsigned long surfaceIndex,
 
 }  // namespace
 
-void dumpToMille(const ActsAlignment::detail::TrackAlignmentState& state,
+void dumpToMille(const ActsAlignment::TrackAlignmentState& state,
                  MilleRecord& record, bool removeUnconstrainedTrackPar,
                  const Acts::Logger& logger) {
   // spawn a local buffer to be able to assemble the record without lock
@@ -298,7 +302,7 @@ void dumpToMille(const ActsAlignment::detail::TrackAlignmentState& state,
 
 Mille::MilleDecoder::ReadResult unpackMilleRecord(
     Mille::IMilleReader& reader,
-    ActsAlignment::detail::TrackAlignmentState& targetState,
+    ActsAlignment::TrackAlignmentState& targetState,
     const std::unordered_map<const Acts::Surface*, std::size_t>&
         idxedAlignSurfaces,
     const Acts::Logger& logger) {
@@ -321,7 +325,7 @@ Mille::MilleDecoder::ReadResult unpackMilleRecord(
   // In the following, we emulate what MillePede-II is doing internally.
   // This is somewhat approximate, as we do not run any of the cleaning /
   // conditioning performed by MP-II.
-  ActsAlignment::detail::TrackAlignmentState state;
+  ActsAlignment::TrackAlignmentState state;
 
   // Step 1: Parameter discovery
   // Goal: Identify all existing parameters and assign internal indices.

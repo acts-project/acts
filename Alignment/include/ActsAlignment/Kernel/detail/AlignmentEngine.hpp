@@ -17,68 +17,16 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsAlignment/Geometry/AlignmentHierarchy.hpp"
 #include "ActsAlignment/Kernel/AlignmentMask.hpp"
+#include "ActsAlignment/Kernel/TrackAlignmentState.hpp"
 
 #include <unordered_map>
 #include <vector>
 
 namespace ActsAlignment {
 struct AlignmentResult;
-class AlignableStructure;
 }  // namespace ActsAlignment
 
 namespace ActsAlignment::detail {
-
-///
-///@brief struct to store info needed for track-based alignment
-///
-struct TrackAlignmentState {
-  // The dimension of measurements
-  std::size_t measurementDim = 0;
-
-  // The dimension of track parameters
-  std::size_t trackParametersDim = 0;
-
-  // The contributed alignment degree of freedom
-  std::size_t alignmentDof = 0;
-
-  // The measurements covariance
-  Acts::DynamicMatrix measurementCovariance;
-
-  // The track parameters covariance
-  Acts::DynamicMatrix trackParametersCovariance;
-
-  // The projection matrix
-  Acts::DynamicMatrix projectionMatrix;
-
-  // The residual
-  Acts::DynamicVector residual;
-
-  // The covariance of residual
-  Acts::DynamicMatrix residualCovariance;
-
-  // The chi2
-  double chi2 = 0;
-
-  // The derivative of residual w.r.t. alignment parameters
-  Acts::DynamicMatrix alignmentToResidualDerivative;
-
-  // The derivative of chi2 w.r.t. alignment parameters
-  Acts::DynamicVector alignmentToChi2Derivative;
-
-  // The second derivative of chi2 w.r.t. alignment parameters
-  Acts::DynamicMatrix alignmentToChi2SecondDerivative;
-
-  // The alignable surfaces on the track and their indices in both the global
-  // alignable surfaces pool and those relevant with this track
-  std::unordered_map<const Acts::Surface*, std::pair<std::size_t, std::size_t>>
-      alignedSurfaces;
-
-  // Per-alignable-surface pointer to its owning AlignableStructure. Absent
-  // when the surface is a standalone floating module or no hierarchy is in
-  // use. Populated alongside @c alignedSurfaces.
-  std::unordered_map<const Acts::Surface*, const AlignableStructure*>
-      surfaceStructures;
-};
 
 /// Reset some columns of the alignment to bound derivative to zero if the
 /// relevant degree of freedom is fixed

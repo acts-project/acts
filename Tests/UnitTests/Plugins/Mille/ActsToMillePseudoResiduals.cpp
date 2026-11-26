@@ -15,7 +15,7 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsAlignment/Kernel/detail/AlignmentEngine.hpp"
+#include "ActsAlignment/Kernel/TrackAlignmentState.hpp"
 #include "ActsPlugins/Mille/ActsToMille.hpp"
 
 #include <cmath>
@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(SmoothedTrackIsLocalFitMinimum) {
       Acts::Transform3::Identity(),
       std::make_shared<Acts::RectangleBounds>(10., 10.));
 
-  ActsAlignment::detail::TrackAlignmentState state;
+  ActsAlignment::TrackAlignmentState state;
   state.measurementDim = nMeas;
   state.trackParametersDim = nPar;
   state.alignmentDof = Acts::eAlignmentSize;
@@ -146,7 +146,7 @@ BOOST_AUTO_TEST_CASE(SmoothedTrackIsLocalFitMinimum) {
   BOOST_REQUIRE(reader2->open(fname));
   const std::unordered_map<const Acts::Surface*, std::size_t>
       idxedAlignSurfaces{{surface.get(), 0}};
-  ActsAlignment::detail::TrackAlignmentState readState;
+  ActsAlignment::TrackAlignmentState readState;
   BOOST_REQUIRE(ActsPlugins::ActsToMille::unpackMilleRecord(
                     *reader2, readState, idxedAlignSurfaces, *logger) ==
                 Mille::MilleDecoder::ReadResult::OK);

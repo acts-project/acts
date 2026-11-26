@@ -17,7 +17,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsAlignment/Kernel/Alignment.hpp"
-#include "ActsAlignment/Kernel/detail/AlignmentEngine.hpp"
+#include "ActsAlignment/Kernel/TrackAlignmentState.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsPlugins/Mille/ActsToMille.hpp"
 
@@ -97,8 +97,8 @@ ProcessCode ActsSolverFromMille::finalize() {
   }
 
   ACTS_INFO("Performing alignment fit on collected Mille records");
-  std::vector<ActsAlignment::detail::TrackAlignmentState> alignmentStates;
-  ActsAlignment::detail::TrackAlignmentState state;
+  std::vector<ActsAlignment::TrackAlignmentState> alignmentStates;
+  ActsAlignment::TrackAlignmentState state;
   std::size_t iRec = 0;
   auto res = Mille::MilleDecoder::ReadResult::OK;
   do {
