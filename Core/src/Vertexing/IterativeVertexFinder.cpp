@@ -14,7 +14,7 @@
 namespace {
 
 Acts::Result<Acts::Vertex> fitVertex(
-    const Acts::FullBilloirVertexFitter& fitter,
+    const Acts::IVertexFitter& fitter,
     const std::vector<Acts::InputTrack>& tracks,
     const Acts::VertexingOptions& options, Acts::MagneticFieldQuery& field) {
   Acts::VertexFitInput input{
@@ -27,9 +27,20 @@ Acts::Result<Acts::Vertex> fitVertex(
 
 }  // namespace
 
+Acts::IterativeVertexFinder::Config::Config(
+    FullBilloirVertexFitter fitter, std::shared_ptr<IVertexFinder> sfinder,
+    ImpactPointEstimator est)
+    : Config(std::make_shared<FullBilloirVertexFitter>(std::move(fitter)),
+             std::move(sfinder), std::move(est)) {}
+
 Acts::IterativeVertexFinder::IterativeVertexFinder(
     Config cfg, std::unique_ptr<const Logger> logger)
     : m_cfg(std::move(cfg)), m_logger(std::move(logger)) {
+  if (!m_cfg.vertexFitter) {
+    throw std::invalid_argument(
+        "IterativeVertexFinder: No vertex fitter provided.");
+  }
+
   if (!m_cfg.extractParameters.connected()) {
     throw std::invalid_argument(
         "IterativeVertexFinder: "
@@ -107,7 +118,7 @@ auto Acts::IterativeVertexFinder::find(
     Vertex currentSplitVertex;
 
     if (vertexingOptions.useConstraintInFit && !tracksToFit.empty()) {
-      auto fitResult = fitVertex(m_cfg.vertexFitter, tracksToFit,
+      auto fitResult = fitVertex(*m_cfg.vertexFitter, tracksToFit,
                                  vertexingOptions, state.fieldQuery);
       if (fitResult.ok()) {
         currentVertex = std::move(*fitResult);
@@ -115,7 +126,7 @@ auto Acts::IterativeVertexFinder::find(
         return fitResult.error();
       }
     } else if (!vertexingOptions.useConstraintInFit && tracksToFit.size() > 1) {
-      auto fitResult = fitVertex(m_cfg.vertexFitter, tracksToFit,
+      auto fitResult = fitVertex(*m_cfg.vertexFitter, tracksToFit,
                                  vertexingOptions, state.fieldQuery);
       if (fitResult.ok()) {
         currentVertex = std::move(*fitResult);
@@ -124,7 +135,7 @@ auto Acts::IterativeVertexFinder::find(
       }
     }
     if (m_cfg.createSplitVertices && tracksToFitSplitVertex.size() > 1) {
-      auto fitResult = fitVertex(m_cfg.vertexFitter, tracksToFitSplitVertex,
+      auto fitResult = fitVertex(*m_cfg.vertexFitter, tracksToFitSplitVertex,
                                  vertexingOptions, state.fieldQuery);
       if (fitResult.ok()) {
         currentSplitVertex = std::move(*fitResult);
@@ -541,7 +552,7 @@ Acts::Result<bool> Acts::IterativeVertexFinder::reassignTracksToNewVertex(
   // later
   currentVertex = Vertex();
   if (vertexingOptions.useConstraintInFit && !tracksToFit.empty()) {
-    auto fitResult = fitVertex(m_cfg.vertexFitter, tracksToFit,
+    auto fitResult = fitVertex(*m_cfg.vertexFitter, tracksToFit,
                                vertexingOptions, state.fieldQuery);
     if (fitResult.ok()) {
       currentVertex = std::move(*fitResult);
@@ -549,7 +560,7 @@ Acts::Result<bool> Acts::IterativeVertexFinder::reassignTracksToNewVertex(
       return Result<bool>::success(false);
     }
   } else if (!vertexingOptions.useConstraintInFit && tracksToFit.size() > 1) {
-    auto fitResult = fitVertex(m_cfg.vertexFitter, tracksToFit,
+    auto fitResult = fitVertex(*m_cfg.vertexFitter, tracksToFit,
                                vertexingOptions, state.fieldQuery);
     if (fitResult.ok()) {
       currentVertex = std::move(*fitResult);

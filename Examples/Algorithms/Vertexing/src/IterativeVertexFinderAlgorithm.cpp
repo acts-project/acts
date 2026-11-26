@@ -85,8 +85,8 @@ ProcessCode IterativeVertexFinderAlgorithm::execute(
 
   vertexFitterCfg.trackLinearizer
       .connect<&Acts::HelicalTrackLinearizer::linearizeTrack>(&linearizer);
-  Fitter vertexFitter(vertexFitterCfg,
-                      logger().cloneWithSuffix("FullBilloirVertexFitter"));
+  auto vertexFitter = std::make_shared<Fitter>(
+      vertexFitterCfg, logger().cloneWithSuffix("FullBilloirVertexFitter"));
 
   // Setup the seed finder
   Acts::ImpactPointEstimator::Config ipEstCfg(m_cfg.bField, propagator);
