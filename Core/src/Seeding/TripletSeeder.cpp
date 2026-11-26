@@ -344,7 +344,10 @@ void TripletSeeder::createSeedsFromGroups(
   const auto splitBatch = [&](const std::uint32_t first,
                               const std::uint32_t last) {
     batchBegin = first;
-    const std::uint32_t batchCount = last - first + 1;
+    // at most middleSpsPerCut by how the batch is cut; said here so the
+    // compiler sees byZ is never indexed past its end
+    const std::uint32_t batchCount =
+        std::min<std::uint32_t>(last - first + 1, middleSpsPerCut);
     std::array<std::pair<float, std::uint8_t>, middleSpsPerCut> byZ{};
     for (std::uint32_t i = 0; i < batchCount; ++i) {
       byZ[i] = {middleSpGroup[first + i].zr()[0], static_cast<std::uint8_t>(i)};
