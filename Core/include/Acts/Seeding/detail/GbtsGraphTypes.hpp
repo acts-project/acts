@@ -16,6 +16,7 @@
 #include <array>
 #include <cstdint>
 #include <limits>
+#include <optional>
 #include <span>
 #include <utility>
 #include <vector>
@@ -76,9 +77,9 @@ struct GbtsEtaBinInfo final {
 
   float minRadius{};
   float maxRadius{};
-  /// How deep the bin's layer sits, -1 if it is out of the innermost-layer
-  /// cuts.
-  std::int32_t depth{-1};
+  /// Barrel depth of the bin's layer, unset if it is out of the
+  /// innermost-layer cuts.
+  std::optional<std::uint32_t> barrelDepth;
 
   /// Type of the layer this bin belongs to.
   GbtsLayerType type{};

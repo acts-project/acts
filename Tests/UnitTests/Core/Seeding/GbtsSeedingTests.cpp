@@ -136,26 +136,9 @@ ToyDetector forwardDetector() {
   return detector;
 }
 
-/// Set by the experiment, not by GBTS: the depth of the pixel barrel layers,
-/// inside out.
-void setPixelBarrelDepth(
-    std::vector<Experimental::GbtsLayerDescription>& layers) {
-  std::vector<Experimental::GbtsLayerDescription*> pixelBarrel;
-  for (Experimental::GbtsLayerDescription& layer : layers) {
-    if (layer.type == GbtsLayerType::Barrel &&
-        layer.technology == GbtsLayerTechnology::Pixel) {
-      pixelBarrel.push_back(&layer);
-    }
-  }
-  std::ranges::sort(pixelBarrel, {},
-                    [](const auto* layer) { return layer->refCoord; });
-  for (std::size_t i = 0; i < pixelBarrel.size(); ++i) {
-    pixelBarrel[i]->depth = static_cast<std::int32_t>(i);
-  }
-}
-
 /// Filled by the experiment, not by GBTS: the tau ratio tolerances of the layer
-/// pairs, wider for a pair that skips a layer of depth or, as the outer pair,
+/// pairs, wider for a pair that skips a layer with a barrel depth or, as the
+/// outer pair,
 /// leaves those layers, and wider again for a pair with a strip layer.
 void assignToyTauRatioCuts(
     std::vector<Experimental::GbtsLayerConnection>& connections,
@@ -172,9 +155,11 @@ void assignToyTauRatioCuts(
     const auto outer = find(connection.src);
     const auto inner = find(connection.dst);
 
-    const bool skipsLayer = outer->depth >= 0 && inner->depth >= 0 &&
-                            outer->depth - inner->depth != 1;
-    const bool leaves = inner->depth >= 0 && outer->depth < 0;
+    const bool skipsLayer = outer->barrelDepth.has_value() &&
+                            inner->barrelDepth.has_value() &&
+                            *outer->barrelDepth != *inner->barrelDepth + 1;
+    const bool leaves =
+        inner->barrelDepth.has_value() && !outer->barrelDepth.has_value();
     const float strip = outer->technology == GbtsLayerTechnology::Strip ||
                                 inner->technology == GbtsLayerTechnology::Strip
                             ? kTauRatioCorrStrip
@@ -202,7 +187,7 @@ std::shared_ptr<Experimental::GbtsGeometry> makeGeometry(
     layers.push_back(layer);
   }
 
-  setPixelBarrelDepth(layers);
+  Experimental::assignPixelBarrelDepth(layers);
 
   std::vector<Experimental::GbtsLayerConnection> connections;
   connections.reserve(detector.links.size());
@@ -1097,28 +1082,64 @@ BOOST_AUTO_TEST_CASE(StripLayersNeedTheirPairResolved) {
   BOOST_CHECK_EQUAL(seed(kWalk, true), tracks.size());
 }
 
-BOOST_AUTO_TEST_CASE(EndcapLayerCannotHaveADepth) {
+BOOST_AUTO_TEST_CASE(EndcapLayerCannotHaveABarrelDepth) {
   const auto layer = [](Experimental::GbtsExperimentLayerId id,
-                        GbtsLayerType type, std::int32_t depth) {
+                        GbtsLayerType type,
+                        std::optional<std::uint32_t> barrelDepth) {
     Experimental::GbtsLayerDescription description;
     description.id = id;
     description.type = type;
     description.refCoord = 100.f;
     description.minBound = 10.f;
     description.maxBound = 100.f;
-    description.depth = depth;
+    description.barrelDepth = barrelDepth;
     return description;
   };
 
   const std::vector<Experimental::GbtsLayerConnection> connections;
-  const auto geometry = [&](const std::int32_t depth) {
+  const auto geometry = [&](const std::optional<std::uint32_t> barrelDepth) {
     const std::vector<Experimental::GbtsLayerDescription> layers = {
-        layer(1, GbtsLayerType::Endcap, depth)};
+        layer(1, GbtsLayerType::Endcap, barrelDepth)};
     return Experimental::GbtsGeometry(layers, connections, kEtaBinWidth);
   };
 
-  BOOST_CHECK_THROW(geometry(0), std::invalid_argument);
-  BOOST_CHECK_NO_THROW(geometry(-1));
+  BOOST_CHECK_THROW(geometry(0u), std::invalid_argument);
+  BOOST_CHECK_NO_THROW(geometry(std::nullopt));
+}
+
+BOOST_AUTO_TEST_CASE(AssignPixelBarrelDepthCountsInsideOut) {
+  const auto layer = [](Experimental::GbtsExperimentLayerId id,
+                        GbtsLayerType type, GbtsLayerTechnology technology,
+                        float refCoord) {
+    Experimental::GbtsLayerDescription description;
+    description.id = id;
+    description.type = type;
+    description.technology = technology;
+    description.refCoord = refCoord;
+    return description;
+  };
+
+  // out of order, with a radius tie, a strip barrel layer and an endcap
+  std::vector<Experimental::GbtsLayerDescription> layers = {
+      layer(4, GbtsLayerType::Barrel, GbtsLayerTechnology::Pixel, 100.f),
+      layer(9, GbtsLayerType::Barrel, GbtsLayerTechnology::Strip, 10.f),
+      layer(3, GbtsLayerType::Barrel, GbtsLayerTechnology::Pixel, 30.f),
+      layer(2, GbtsLayerType::Barrel, GbtsLayerTechnology::Pixel, 30.f),
+      layer(7, GbtsLayerType::Endcap, GbtsLayerTechnology::Pixel, 5.f),
+      layer(1, GbtsLayerType::Barrel, GbtsLayerTechnology::Pixel, 20.f)};
+  Experimental::assignPixelBarrelDepth(layers);
+
+  const auto depthOf = [&](Experimental::GbtsExperimentLayerId id) {
+    return std::ranges::find(layers, id,
+                             &Experimental::GbtsLayerDescription::id)
+        ->barrelDepth;
+  };
+  BOOST_CHECK(depthOf(1) == 0u);
+  BOOST_CHECK(depthOf(2) == 1u);
+  BOOST_CHECK(depthOf(3) == 2u);
+  BOOST_CHECK(depthOf(4) == 3u);
+  BOOST_CHECK(!depthOf(9).has_value());
+  BOOST_CHECK(!depthOf(7).has_value());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -50,13 +50,16 @@ along which its eta bins are cut. `ActsExamples::GraphBasedSeedingAlgorithm`
 takes the slope from the module planes of the tracking geometry when
 `useLayerTilt` is set.
 
-A layer carries one more field, `depth`: how deep it sits, counted outwards from
-zero, for the two innermost-layer cuts of @ref gbts-graph. The caller sets it,
-because which layers should count differs between seeding configurations. The
-default `-1` keeps a layer out of those cuts, and is the only value an endcap
-layer may have: @ref Acts::Experimental::GbtsGeometry rejects anything else. GBTS
-therefore runs on any layer numbering. The Examples read `depth` from the layer
-mapping file.
+A layer carries one more field, the optional `barrelDepth`: how deep a barrel
+layer sits, counted outwards from zero, for the two innermost-layer cuts of
+@ref gbts-graph. The caller sets it, because which layers should count differs
+between seeding configurations. Left unset, the default, it keeps a layer out of
+those cuts, and an endcap layer must leave it unset:
+@ref Acts::Experimental::GbtsGeometry rejects an endcap layer with one. GBTS
+therefore runs on any layer numbering. For the common choice,
+@ref Acts::Experimental::assignPixelBarrelDepth numbers the pixel barrel layers
+inside out by radius; GBTS does not call it itself. The Examples call it on the
+layers they build from the tracking geometry.
 
 Which layer pairs may be joined by an edge is a list of
 @ref Acts::Experimental::GbtsLayerConnection, each naming a source (outer) and a
@@ -175,8 +178,8 @@ continuation and the curvature difference must all agree within tolerance. The
 the looser of `tauRatioCutInner` of its inner pair and `tauRatioCutOuter` of
 its outer pair, see @ref Acts::Experimental::GbtsLayerConnection.
 The caller fills them, since how much to widen a pair differs between seeding
-configurations. The Examples widen a pair that skips a layer of depth or, as the
-outer pair, leaves those layers, and widen again for a pair with a strip layer.
+configurations. The Examples widen a pair that skips a layer with a barrel depth or,
+as the outer pair, leaves those layers, and widen again for a pair with a strip layer.
 With `useSumRatioCut` the three differences, each divided by its own cut, may
 not add up to more than `sumRatioCutMax`, which rejects a pair that is marginal
 in all three at once. For
@@ -185,7 +188,7 @@ pixel-barrel triplets an optional
 a circle through the three points and cuts on @f$d_0@f$ and @f$p_T@f$.
 
 Two further cuts apply on the innermost layers, where the combinatorics are
-worst. Each cut has its own limit on the `depth` of the inner layer, and a
+worst. Each cut has its own limit on the `barrelDepth` of the inner layer, and a
 negative limit switches the cut off:
 
 - `matchBeforeCreate` (off by default, limited by
@@ -304,7 +307,7 @@ The cuts that build and link the doublets live on
 | `maxEdgesPerSP` | @ref gbts-graph | cap on the edge array per space point (30 by default); exceeding it costs efficiency |
 | `dropDeadEnds` | @ref gbts-graph | leave out the innermost edges that cannot join a chain (on by default); the seeds are unchanged |
 | `matchBeforeCreate`, `tauRatioPrecut`, `matchBeforeCreateMaxDepth` | @ref gbts-graph | require a compatible incoming edge before creating one, down to that depth in the pixel barrel |
-| `z0HistogramMaxDepth`, `z0Resolution` | @ref gbts-graph | @f$z_0@f$ histogram cut, down to that `depth` |
+| `z0HistogramMaxDepth`, `z0Resolution` | @ref gbts-graph | @f$z_0@f$ histogram cut, down to that `barrelDepth` |
 | `pruneShortChains` | @ref gbts-graph | leave out edges too short for a seed while the graph is built |
 The rest are on @ref Acts::Experimental::GraphBasedTrackSeeder "GraphBasedTrackSeeder::Config":
 

@@ -4,7 +4,6 @@
             "id": 7,
             "type": "endcap",
             "technology": "pixel",
-            "depth": -1,
             "surfaces": [
                 {
                     "volume": 16,
@@ -16,7 +15,6 @@
             "id": 6,
             "type": "endcap",
             "technology": "pixel",
-            "depth": -1,
             "surfaces": [
                 {
                     "volume": 16,
@@ -28,7 +26,6 @@
             "id": 5,
             "type": "endcap",
             "technology": "pixel",
-            "depth": -1,
             "surfaces": [
                 {
                     "volume": 16,
@@ -40,7 +37,6 @@
             "id": 4,
             "type": "endcap",
             "technology": "pixel",
-            "depth": -1,
             "surfaces": [
                 {
                     "volume": 16,
@@ -52,7 +48,6 @@
             "id": 3,
             "type": "endcap",
             "technology": "pixel",
-            "depth": -1,
             "surfaces": [
                 {
                     "volume": 16,
@@ -64,7 +59,6 @@
             "id": 2,
             "type": "endcap",
             "technology": "pixel",
-            "depth": -1,
             "surfaces": [
                 {
                     "volume": 16,
@@ -76,7 +70,6 @@
             "id": 1,
             "type": "endcap",
             "technology": "pixel",
-            "depth": -1,
             "surfaces": [
                 {
                     "volume": 16,
@@ -88,7 +81,6 @@
             "id": 8,
             "type": "barrel",
             "technology": "pixel",
-            "depth": 0,
             "surfaces": [
                 {
                     "volume": 17,
@@ -100,7 +92,6 @@
             "id": 9,
             "type": "barrel",
             "technology": "pixel",
-            "depth": 1,
             "surfaces": [
                 {
                     "volume": 17,
@@ -112,7 +103,6 @@
             "id": 10,
             "type": "barrel",
             "technology": "pixel",
-            "depth": 2,
             "surfaces": [
                 {
                     "volume": 17,
@@ -124,7 +114,6 @@
             "id": 11,
             "type": "barrel",
             "technology": "pixel",
-            "depth": 3,
             "surfaces": [
                 {
                     "volume": 17,
@@ -136,7 +125,6 @@
             "id": 12,
             "type": "endcap",
             "technology": "pixel",
-            "depth": -1,
             "surfaces": [
                 {
                     "volume": 18,
@@ -148,7 +136,6 @@
             "id": 13,
             "type": "endcap",
             "technology": "pixel",
-            "depth": -1,
             "surfaces": [
                 {
                     "volume": 18,
@@ -160,7 +147,6 @@
             "id": 14,
             "type": "endcap",
             "technology": "pixel",
-            "depth": -1,
             "surfaces": [
                 {
                     "volume": 18,
@@ -172,7 +158,6 @@
             "id": 15,
             "type": "endcap",
             "technology": "pixel",
-            "depth": -1,
             "surfaces": [
                 {
                     "volume": 18,
@@ -184,7 +169,6 @@
             "id": 16,
             "type": "endcap",
             "technology": "pixel",
-            "depth": -1,
             "surfaces": [
                 {
                     "volume": 18,
@@ -196,7 +180,6 @@
             "id": 17,
             "type": "endcap",
             "technology": "pixel",
-            "depth": -1,
             "surfaces": [
                 {
                     "volume": 18,
@@ -208,7 +191,6 @@
             "id": 18,
             "type": "endcap",
             "technology": "pixel",
-            "depth": -1,
             "surfaces": [
                 {
                     "volume": 18,
@@ -220,7 +202,6 @@
             "id": 24,
             "type": "endcap",
             "technology": "strip",
-            "depth": -1,
             "surfaces": [
                 {
                     "volume": 23,
@@ -232,7 +213,6 @@
             "id": 23,
             "type": "endcap",
             "technology": "strip",
-            "depth": -1,
             "surfaces": [
                 {
                     "volume": 23,
@@ -244,7 +224,6 @@
             "id": 22,
             "type": "endcap",
             "technology": "strip",
-            "depth": -1,
             "surfaces": [
                 {
                     "volume": 23,
@@ -256,7 +235,6 @@
             "id": 21,
             "type": "endcap",
             "technology": "strip",
-            "depth": -1,
             "surfaces": [
                 {
                     "volume": 23,
@@ -268,7 +246,6 @@
             "id": 20,
             "type": "endcap",
             "technology": "strip",
-            "depth": -1,
             "surfaces": [
                 {
                     "volume": 23,
@@ -280,7 +257,6 @@
             "id": 19,
             "type": "endcap",
             "technology": "strip",
-            "depth": -1,
             "surfaces": [
                 {
                     "volume": 23,
@@ -292,7 +268,6 @@
             "id": 25,
             "type": "barrel",
             "technology": "strip",
-            "depth": -1,
             "surfaces": [
                 {
                     "volume": 24,
@@ -304,7 +279,6 @@
             "id": 26,
             "type": "barrel",
             "technology": "strip",
-            "depth": -1,
             "surfaces": [
                 {
                     "volume": 24,
@@ -316,7 +290,6 @@
             "id": 27,
             "type": "barrel",
             "technology": "strip",
-            "depth": -1,
             "surfaces": [
                 {
                     "volume": 24,
@@ -328,7 +301,6 @@
             "id": 28,
             "type": "barrel",
             "technology": "strip",
-            "depth": -1,
             "surfaces": [
                 {
                     "volume": 24,
@@ -340,7 +312,6 @@
             "id": 29,
             "type": "endcap",
             "technology": "strip",
-            "depth": -1,
             "surfaces": [
                 {
                     "volume": 25,
@@ -352,7 +323,6 @@
             "id": 30,
             "type": "endcap",
             "technology": "strip",
-            "depth": -1,
             "surfaces": [
                 {
                     "volume": 25,
@@ -364,7 +334,6 @@
             "id": 31,
             "type": "endcap",
             "technology": "strip",
-            "depth": -1,
             "surfaces": [
                 {
                     "volume": 25,
@@ -376,7 +345,6 @@
             "id": 32,
             "type": "endcap",
             "technology": "strip",
-            "depth": -1,
             "surfaces": [
                 {
                     "volume": 25,
@@ -388,7 +356,6 @@
             "id": 33,
             "type": "endcap",
             "technology": "strip",
-            "depth": -1,
             "surfaces": [
                 {
                     "volume": 25,
@@ -400,7 +367,6 @@
             "id": 34,
             "type": "endcap",
             "technology": "strip",
-            "depth": -1,
             "surfaces": [
                 {
                     "volume": 25,
@@ -412,7 +378,6 @@
             "id": 40,
             "type": "endcap",
             "technology": "strip",
-            "depth": -1,
             "surfaces": [
                 {
                     "volume": 28,
@@ -424,7 +389,6 @@
             "id": 39,
             "type": "endcap",
             "technology": "strip",
-            "depth": -1,
             "surfaces": [
                 {
                     "volume": 28,
@@ -436,7 +400,6 @@
             "id": 38,
             "type": "endcap",
             "technology": "strip",
-            "depth": -1,
             "surfaces": [
                 {
                     "volume": 28,
@@ -448,7 +411,6 @@
             "id": 37,
             "type": "endcap",
             "technology": "strip",
-            "depth": -1,
             "surfaces": [
                 {
                     "volume": 28,
@@ -460,7 +422,6 @@
             "id": 36,
             "type": "endcap",
             "technology": "strip",
-            "depth": -1,
             "surfaces": [
                 {
                     "volume": 28,
@@ -472,7 +433,6 @@
             "id": 35,
             "type": "endcap",
             "technology": "strip",
-            "depth": -1,
             "surfaces": [
                 {
                     "volume": 28,
@@ -484,7 +444,6 @@
             "id": 41,
             "type": "barrel",
             "technology": "strip",
-            "depth": -1,
             "surfaces": [
                 {
                     "volume": 29,
@@ -496,7 +455,6 @@
             "id": 42,
             "type": "barrel",
             "technology": "strip",
-            "depth": -1,
             "surfaces": [
                 {
                     "volume": 29,
@@ -508,7 +466,6 @@
             "id": 43,
             "type": "endcap",
             "technology": "strip",
-            "depth": -1,
             "surfaces": [
                 {
                     "volume": 30,
@@ -520,7 +477,6 @@
             "id": 44,
             "type": "endcap",
             "technology": "strip",
-            "depth": -1,
             "surfaces": [
                 {
                     "volume": 30,
@@ -532,7 +488,6 @@
             "id": 45,
             "type": "endcap",
             "technology": "strip",
-            "depth": -1,
             "surfaces": [
                 {
                     "volume": 30,
@@ -544,7 +499,6 @@
             "id": 46,
             "type": "endcap",
             "technology": "strip",
-            "depth": -1,
             "surfaces": [
                 {
                     "volume": 30,
@@ -556,7 +510,6 @@
             "id": 47,
             "type": "endcap",
             "technology": "strip",
-            "depth": -1,
             "surfaces": [
                 {
                     "volume": 30,
@@ -568,7 +521,6 @@
             "id": 48,
             "type": "endcap",
             "technology": "strip",
-            "depth": -1,
             "surfaces": [
                 {
                     "volume": 30,

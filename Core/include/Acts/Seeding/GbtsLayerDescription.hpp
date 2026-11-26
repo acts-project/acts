@@ -11,6 +11,7 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 
 #include <cstdint>
+#include <optional>
 #include <vector>
 
 namespace Acts::Experimental {
@@ -49,13 +50,13 @@ struct GbtsLayerDescription final {
   /// Slope in r-z about the middle of the bounds: dr/dz for a barrel layer,
   /// dz/dr for an endcap layer.
   float slope{0.f};
-  /// How deep the layer sits, counted outwards from zero, for the cuts that
-  /// apply on the innermost layers only: see `z0HistogramMaxDepth` and
+  /// How deep the barrel layer sits, counted outwards from zero, for the cuts
+  /// that apply on the innermost layers only: see `z0HistogramMaxDepth` and
   /// `matchBeforeCreateMaxDepth` of the graph builder. The caller sets it,
-  /// since which layers should count differs between seeding configurations. -1
-  /// keeps the layer out of those cuts, and is the only value an endcap layer
-  /// may have.
-  std::int32_t depth{-1};
+  /// since which layers should count differs between seeding configurations,
+  /// for example with `assignPixelBarrelDepth`. Unset keeps the layer out of
+  /// those cuts, and an endcap layer must leave it unset.
+  std::optional<std::uint32_t> barrelDepth;
 };
 
 /// A GBTS layer and the detector surfaces it is made of
@@ -66,8 +67,6 @@ struct GbtsLayerConfig final {
   GbtsLayerType type{};
   /// Sensor technology of the layer
   GbtsLayerTechnology technology{};
-  /// See `GbtsLayerDescription::depth`
-  std::int32_t depth{-1};
   /// Surfaces of the layer
   std::vector<GeometryIdentifier> surfaces;
 };

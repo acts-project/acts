@@ -20,6 +20,7 @@
 #include <cstdint>
 #include <limits>
 #include <numbers>
+#include <optional>
 #include <ranges>
 #include <span>
 #include <utility>
@@ -343,15 +344,17 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(
 
     const float rb1 = B1.minRadius;
 
-    const std::int32_t depth1 = B1.depth;
+    const std::optional<std::uint32_t> barrelDepth1 = B1.barrelDepth;
 
     const bool isPixel1 = B1.technology == GbtsLayerTechnology::Pixel;
     const bool isPixelBarrel1 = isPixel1 && B1.type == GbtsLayerType::Barrel;
 
     const bool useZ0Histogram =
-        depth1 >= 0 && depth1 <= m_cfg.z0HistogramMaxDepth;
-    const bool useMatchBeforeCreate = m_cfg.matchBeforeCreate && depth1 >= 0 &&
-                                      depth1 <= m_cfg.matchBeforeCreateMaxDepth;
+        barrelDepth1.has_value() &&
+        std::cmp_less_equal(*barrelDepth1, m_cfg.z0HistogramMaxDepth);
+    const bool useMatchBeforeCreate =
+        m_cfg.matchBeforeCreate && barrelDepth1.has_value() &&
+        std::cmp_less_equal(*barrelDepth1, m_cfg.matchBeforeCreateMaxDepth);
 
     // Nothing extends an edge of this bin inwards, so one that links to no
     // outer edge, or whose outer node has no edges, stays a chain of its own,

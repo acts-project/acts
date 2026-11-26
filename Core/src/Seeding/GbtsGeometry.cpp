@@ -13,10 +13,13 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <cstddef>
+#include <cstdint>
 #include <cstring>
 #include <iterator>
 #include <limits>
 #include <optional>
+#include <span>
 #include <stdexcept>
 #include <unordered_map>
 #include <utility>
@@ -183,6 +186,22 @@ using BinConnections =
                                                 std::vector<GbtsBinLink>>>;
 }  // namespace
 
+void assignPixelBarrelDepth(std::span<GbtsLayerDescription> layers) {
+  std::vector<GbtsLayerDescription*> pixelBarrel;
+  for (GbtsLayerDescription& layer : layers) {
+    if (layer.type == GbtsLayerType::Barrel &&
+        layer.technology == GbtsLayerTechnology::Pixel) {
+      pixelBarrel.push_back(&layer);
+    }
+  }
+  std::ranges::sort(pixelBarrel, {}, [](const GbtsLayerDescription* layer) {
+    return std::pair{layer->refCoord, layer->id};
+  });
+  for (std::size_t i = 0; i < pixelBarrel.size(); ++i) {
+    pixelBarrel[i]->barrelDepth = static_cast<std::uint32_t>(i);
+  }
+}
+
 GbtsGeometry::GbtsGeometry(
     std::span<const GbtsLayerDescription> layerDescriptions,
     std::span<const GbtsLayerConnection> layerConnections,
@@ -192,7 +211,7 @@ GbtsGeometry::GbtsGeometry(
   const float maxZ0 = z0Range.max;
 
   for (const GbtsLayerDescription& layer : layerDescriptions) {
-    if (layer.type == GbtsLayerType::Endcap && layer.depth >= 0) {
+    if (layer.type == GbtsLayerType::Endcap && layer.barrelDepth.has_value()) {
       throw std::invalid_argument(
           "GbtsGeometry: an endcap layer cannot have a barrel depth");
     }

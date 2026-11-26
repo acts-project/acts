@@ -37,8 +37,8 @@ namespace ActsExamples {
 namespace {
 
 /// Fill the tau ratio tolerances of the layer pairs. A pair is widened by
-/// `tauRatioCorr` if it skips a layer of depth, or, as an outer pair, if it
-/// leaves those layers. A pair with a strip layer is widened by
+/// `tauRatioCorr` if it skips a layer with a barrel depth, or, as an outer pair,
+/// if it leaves those layers. A pair with a strip layer is widened by
 /// `tauRatioCorrStrip` on top.
 void assignTauRatioCuts(
     std::vector<Acts::Experimental::GbtsLayerConnection> &connections,
@@ -63,11 +63,12 @@ void assignTauRatioCuts(
     const auto *outer = find(connection.src);
     const auto *inner = find(connection.dst);
 
-    const bool outerHasDepth = outer->depth >= 0;
-    const bool innerHasDepth = inner->depth >= 0;
-    const bool skipsLayer =
-        outerHasDepth && innerHasDepth && outer->depth - inner->depth != 1;
-    const bool leavesDepth = innerHasDepth && !outerHasDepth;
+    const std::optional<std::uint32_t> &outerDepth = outer->barrelDepth;
+    const std::optional<std::uint32_t> &innerDepth = inner->barrelDepth;
+    const bool skipsLayer = outerDepth.has_value() && innerDepth.has_value() &&
+                            *outerDepth != *innerDepth + 1;
+    const bool leavesBarrelDepth =
+        innerDepth.has_value() && !outerDepth.has_value();
     const float strip =
         (outer->technology == Acts::Experimental::GbtsLayerTechnology::Strip ||
          inner->technology == Acts::Experimental::GbtsLayerTechnology::Strip)
@@ -79,7 +80,7 @@ void assignTauRatioCuts(
         cuts.tauRatioCut + (skipsLayer ? cuts.tauRatioCorr : 0.f) + strip;
     connection.tauRatioCutOuter =
         cuts.tauRatioCut +
-        (skipsLayer || leavesDepth ? cuts.tauRatioCorr : 0.f) + strip;
+        (skipsLayer || leavesBarrelDepth ? cuts.tauRatioCorr : 0.f) + strip;
   }
 }
 
@@ -137,8 +138,10 @@ GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
 
   // create the TrigInDetSiLayers (Logical Layers),
   // as well as a map that tracks there index in m_layerGeometry
-  const auto layerGeometry =
+  auto layerGeometry =
       layerNumbering(Acts::GeometryContext::dangerouslyDefaultConstruct());
+  // the innermost-layer cuts count the pixel barrel layers, inside out
+  Acts::Experimental::assignPixelBarrelDepth(layerGeometry);
 
   TauRatioCuts tauRatioCuts = m_cfg.tauRatioCuts;
   if (!m_cfg.useAdaptiveCuts) {
@@ -265,8 +268,7 @@ GraphBasedSeedingAlgorithm::makeActsGbtsMap() const {
     for (const Acts::GeometryIdentifier &surface : layer.surfaces) {
       const GbtsLayerInfo layerInfo{.layerId = layer.id,
                                     .type = layer.type,
-                                    .technology = layer.technology,
-                                    .depth = layer.depth};
+                                    .technology = layer.technology};
       actsToGbtsMap.emplace_back(surface, layerInfo);
     }
   }
@@ -392,8 +394,7 @@ void GraphBasedSeedingAlgorithm::addSurfaceToGbtsLayers(
                                                  .refCoord = rc,
                                                  .minBound = minBound,
                                                  .maxBound = maxBound,
-                                                 .slope = slope,
-                                                 .depth = find->depth});
+                                                 .slope = slope});
     // so the element exists and not divinding by 0
     countVector.push_back(1);
   }

@@ -26,7 +26,6 @@
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 
-#include <cstdint>
 #include <filesystem>
 #include <memory>
 #include <optional>
@@ -45,15 +44,14 @@ class GraphBasedSeedingAlgorithm final : public IAlgorithm {
     Acts::Experimental::GbtsLayerType type{};
     /// sensor technology of the layer
     Acts::Experimental::GbtsLayerTechnology technology{};
-    /// how deep the layer sits for the innermost-layer cuts, -1 if out of them
-    std::int32_t depth{-1};
   };
 
   /// Tau ratio tolerances assigned to the layer pairs.
   struct TauRatioCuts {
     /// Tolerance of a triplet nothing widens.
     float tauRatioCut = 0.007f;
-    /// Widening for a layer of depth skipped, or for those layers left.
+    /// Widening for a layer with a barrel depth skipped, or for those layers
+    /// left.
     float tauRatioCorr = 0.006f;
     /// Widening, on top, for a strip layer in the triplet.
     float tauRatioCorrStrip = 0.03f;

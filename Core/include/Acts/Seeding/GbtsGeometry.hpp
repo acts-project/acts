@@ -36,6 +36,14 @@ struct GbtsZ0Range final {
   float max = 200.0f * UnitConstants::mm;
 };
 
+/// Set `GbtsLayerDescription::barrelDepth` on the pixel barrel layers, inside
+/// out: 0 for the innermost, counting up with `refCoord`, ties broken by id so
+/// the result does not depend on the input order. Every other layer is left as
+/// it is. GBTS does not call this itself; it is the common choice for prompt
+/// pixel seeding, for a caller that does not set the depths another way.
+/// @param layers Layer descriptions with `refCoord` filled, updated in place
+void assignPixelBarrelDepth(std::span<GbtsLayerDescription> layers);
+
 /// Geometry helper built from layers and connectors.
 class GbtsGeometry final {
  public:
