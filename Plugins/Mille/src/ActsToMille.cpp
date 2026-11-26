@@ -10,7 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Alignment.hpp"
-#include "ActsAlignment/Kernel/detail/AlignmentEngine.hpp"
+#include "ActsAlignment/Kernel/TrackAlignmentState.hpp"
 #include "ActsPlugins/Mille/Helpers.hpp"
 
 #include <algorithm>
@@ -497,7 +497,7 @@ Mille::MilleDecoder::ReadResult unpackMilleRecord(
 
   /// and calculate the dependent members
   /// (first and second derivatives, chi2) of the state.
-  ActsAlignment::detail::finaliseTrackAlignState(state);
+  ActsAlignment::finaliseTrackAlignState(state);
 
   targetState = std::move(state);
   return res;

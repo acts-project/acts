@@ -74,4 +74,11 @@ struct TrackAlignmentState {
       surfaceStructures;
 };
 
+/// Compute the track chi-squared, residual covariance, and first and second
+/// derivatives of chi-squared with respect to the alignment parameters.
+/// @param[in,out] alignState State with dimensions, residual, measurement and
+/// track covariances, projection matrix, and residual derivatives filled in.
+/// The measurement covariance must be invertible.
+void finaliseTrackAlignState(TrackAlignmentState& alignState);
+
 }  // namespace ActsAlignment

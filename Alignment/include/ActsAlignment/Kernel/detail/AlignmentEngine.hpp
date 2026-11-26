@@ -62,22 +62,6 @@ Acts::AlignmentToBoundMatrix alignmentToBoundDerivative(
     const Acts::FreeVector& pathDerivative, AlignmentMask mask,
     const Acts::Transform3* structureTransform = nullptr);
 
-/// @brief Helper function to calculate first and second derivative
-/// of chi2 w.r.t. alignment parameters for a single track once the
-/// relevant information has
-/// been retrieved from the respective track.
-/// Updates in-place the chi2 and the matrix/vector forming the final
-/// equation.
-/// @param [in,out] alignState: TrackAlignmentState to modify (in-place).
-///
-/// @note This operates purely on the (dynamically sized) matrices already
-/// stored in @p alignState and does not depend on the track/trajectory type.
-/// It is deliberately defined out-of-line (in AlignmentEngine.cpp) so its
-/// Eigen expression templates are instantiated once in the Acts alignment
-/// library instead of in every translation unit that instantiates
-/// @c trackAlignmentState.
-void finaliseTrackAlignState(TrackAlignmentState& alignState);
-
 /// @brief Assemble the summed chi2 derivatives from the per-track alignment
 /// states and solve for the alignment parameter delta.
 ///
