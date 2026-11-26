@@ -1045,9 +1045,6 @@ def assert_gnn_output(output_dir: Path):
 @pytest.mark.skipif(not gnnEnabled, reason="Gnn environment not set up")
 def test_gnn_metric_learning(tmp_path, trk_geo, field, assert_root_hash, hardware):
     """Test GNN track finding with metric learning graph construction"""
-    if hardware == "cpu":
-        pytest.skip("CPU not yet supported")
-
     root_files = ["performance_finding_gnn.root", "ntuple_finding_gnn.root"]
     for f in root_files:
         assert not (tmp_path / f).exists()

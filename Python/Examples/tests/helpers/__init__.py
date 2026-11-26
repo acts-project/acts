@@ -98,12 +98,14 @@ with warnings.catch_warnings():
     except ModuleNotFoundError:
         hashingSeedingEnabled = False
 
-    gnnEnabled = shutil.which("nvidia-smi") is not None
-    if gnnEnabled:
-        try:
-            from acts.examples.gnn import TrackFindingAlgorithmGnn
-        except ModuleNotFoundError:
-            gnnEnabled = False
+    # The GNN pipeline runs on the CPU too, so only require the bindings here
+    # and leave hardware-specific skips to the tests themselves.
+    try:
+        from acts.examples.gnn import TrackFindingAlgorithmGnn
+
+        gnnEnabled = True
+    except ModuleNotFoundError:
+        gnnEnabled = False
 
     try:
         import podio

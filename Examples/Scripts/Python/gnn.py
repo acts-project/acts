@@ -186,7 +186,22 @@ if "__main__" == __name__:
         Device.Cpu() if os.environ.get("CUDA_VISIBLE_DEVICES") == "" else Device.Cuda()
     )
 
-    s = acts.examples.Sequencer(events=2, numThreads=1)
+    # Torch's vectorized CPU kernels (SLEEF's tanh) raise FPEs on the padding
+    # lanes of the last vector of a tensor. They are harmless, but they are
+    # raised inside torch's own OpenMP worker threads, whose stack traces carry
+    # no symbolized frame at all, so a mask cannot be keyed to a source
+    # location: the empty file name below is what such a frame reports.
+    fpeMasks = [
+        acts.examples.Sequencer.FpeMask("", (0, 1), fpeType, 1000)
+        for fpeType in (
+            acts.examples.FpeType.FLTINV,
+            acts.examples.FpeType.FLTDIV,
+            acts.examples.FpeType.FLTOVF,
+            acts.examples.FpeType.FLTUND,
+        )
+    ]
+
+    s = acts.examples.Sequencer(events=2, numThreads=1, fpeMasks=fpeMasks)
     s.config.logLevel = acts.logging.INFO
 
     rnd = acts.examples.RandomNumbers()
