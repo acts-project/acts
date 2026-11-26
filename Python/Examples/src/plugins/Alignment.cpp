@@ -282,7 +282,7 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsAlignment, m) {
         }
         return result;
       },
-      [](AA::Config& cfg, py::dict d) {
+      [](AA::Config& cfg, const py::dict& d) {
         // Convert first. A bad key or value throws before the stored map is
         // replaced, so a rejected assignment keeps the previous configuration.
         std::map<unsigned int, std::bitset<6>> parsed;
