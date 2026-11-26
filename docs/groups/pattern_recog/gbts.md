@@ -166,7 +166,7 @@ proxy @f$\kappa = (\phi_2-\phi_1)/\Delta r@f$.
 
 Surviving pairs are appended to a flat edge array:
 
-@snippet{trimleft} include/Acts/Seeding/detail/GbtsGraphTypes.hpp gbts edge
+@snippet{trimleft} include/Acts/Seeding/GbtsEdge.hpp gbts edge
 
 The three fit parameters `p` are @f$\{\exp(-\eta),\ \kappa,\ \phi_1 + \kappa
 r_1\}@f$.
@@ -345,8 +345,10 @@ separately controls the chain-following filter of @ref gbts-extraction "seed ext
 
 - Seeder and configuration: @ref Acts::Experimental::GraphBasedTrackSeeder.
 - Node storage: @ref Acts::Experimental::GbtsNodeStorage. The graph EDM it
-  holds - `GbtsNodeParams`, `GbtsNodeEdgeInfo`, `GbtsEtaBinInfo`, `GbtsEdge` -
+  holds - `GbtsNodeParams`, `GbtsNodeEdgeInfo`, `GbtsEtaBinInfo` -
   is internal and lives in `Acts/Seeding/detail/GbtsGraphTypes.hpp`.
+- Graph edges: @ref Acts::Experimental::GbtsEdge, the public element type of
+  @ref Acts::Experimental::GbtsGraph::edgeStorage, in `Acts/Seeding/GbtsEdge.hpp`.
 - Geometry: @ref Acts::Experimental::GbtsGeometry,
   @ref Acts::Experimental::GbtsLayerConnection, the binning it hands back in
   `Acts/Seeding/GbtsBinning.hpp`, and the internal `GbtsLayer`.

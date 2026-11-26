@@ -136,7 +136,7 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
   // Turn the fitted path of every head edge into a seed candidate.
   for (const auto& [rs, edges] :
        extractBestPathPerEdge(nodeView, graph, filter)) {
-    const detail::GbtsEdge& head = graph.edgeStorage[edges.front()];
+    const GbtsEdge& head = graph.edgeStorage[edges.front()];
     const float seedAbsEta = std::abs(-std::log(head.p[0]));
 
     std::vector<SpacePointIndex> vN;
@@ -341,7 +341,7 @@ std::vector<GraphBasedTrackSeeder::FittedPath>
 GraphBasedTrackSeeder::extractBestPathPerEdge(
     const detail::GbtsNodeView& nodeView, const GbtsGraph& graph,
     const GbtsTrackingFilter& filter) const {
-  const std::vector<detail::GbtsEdge>& edgeStorage = graph.edgeStorage;
+  const std::vector<GbtsEdge>& edgeStorage = graph.edgeStorage;
   const auto nEdges = static_cast<std::uint32_t>(edgeStorage.size());
   const auto maxLength = static_cast<std::uint32_t>(m_cfg.maxChainLength);
 
@@ -454,7 +454,7 @@ GraphBasedTrackSeeder::extractBestPathPerEdge(
   };
 
   for (const std::uint32_t head : linkedEdges) {
-    const detail::GbtsEdge& headEdge = edgeStorage[head];
+    const GbtsEdge& headEdge = edgeStorage[head];
 
     // `addTriplets` accepts a path one edge short at low eta
     minLength = m_cfg.minSeedLevel;

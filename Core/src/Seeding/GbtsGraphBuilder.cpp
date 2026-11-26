@@ -253,7 +253,7 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(
     const GbtsRoiDescriptor& roi, GbtsNodeStorage& nodeStorage,
     const float bFieldInZ, const std::uint32_t minEdgeLevel) const {
   GbtsGraph graph;
-  std::vector<detail::GbtsEdge>& edgeStorage = graph.edgeStorage;
+  std::vector<GbtsEdge>& edgeStorage = graph.edgeStorage;
 
   // the one z0 window of the seeding, held by the geometry
   const float minZ0 = m_geometry->z0Range().min;
@@ -772,7 +772,7 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(
             // looking for neighbours of the new edge
             for (std::uint32_t outerEdgeIdx = n2FirstEdge;
                  outerEdgeIdx < n2LastEdge; ++outerEdgeIdx) {
-              detail::GbtsEdge* pS = &edgeStorage[outerEdgeIdx];
+              GbtsEdge* pS = &edgeStorage[outerEdgeIdx];
 
               const float absTauRatio = std::abs(pS->p[0] * uat2 - 1.0f);
 

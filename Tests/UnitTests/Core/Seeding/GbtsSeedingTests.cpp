@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/SeedContainer.hpp"
 #include "Acts/EventData/SpacePointContainer.hpp"
+#include "Acts/Seeding/GbtsEdge.hpp"
 #include "Acts/Seeding/GbtsGeometry.hpp"
 #include "Acts/Seeding/GbtsGraphBuilder.hpp"
 #include "Acts/Seeding/GbtsLayerConnection.hpp"
@@ -766,7 +767,7 @@ BOOST_AUTO_TEST_CASE(EdgesKeepEveryInnerNeighbour) {
   // layer 2 (index 1)
   std::optional<std::uint32_t> outer;
   for (std::uint32_t e = 0; e < nEdges; ++e) {
-    const auto& edge = graph.edgeStorage[e];
+    const Experimental::GbtsEdge& edge = graph.edgeStorage[e];
     if (storage.spacePointIndex(edge.n1) == 0 &&
         storage.spacePointIndex(edge.n2) == 1) {
       outer = e;
@@ -828,7 +829,7 @@ BOOST_AUTO_TEST_CASE(GraphPrunesEdgesBelowTheirBinLevel) {
 
     std::vector<EdgeInfo> edges;
     for (std::uint32_t e = 0; e < nEdges; ++e) {
-      const auto& edge = graph.edgeStorage[e];
+      const Experimental::GbtsEdge& edge = graph.edgeStorage[e];
       const std::uint32_t sp1 = storage.spacePointIndex(edge.n1);
       edges.push_back({.spacePoints = {sp1, storage.spacePointIndex(edge.n2)},
                        .layer = spacePoints.at(sp1).extra(layerColumn),

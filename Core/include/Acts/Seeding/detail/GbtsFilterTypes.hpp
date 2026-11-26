@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Seeding/GbtsEdge.hpp"
 #include "Acts/Seeding/detail/GbtsGraphTypes.hpp"
 
 #include <array>
