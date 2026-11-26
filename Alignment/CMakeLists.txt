@@ -4,7 +4,7 @@ acts_add_library(
     Alignment
     SHARED
     src/Kernel/detail/AlignmentEngine.cpp
-    src/Kernel/detail/AlignmentParameterIndex.cpp
+    src/Kernel/detail/AlignmentParameterDirectory.cpp
     src/Alignment.cpp
     ACTS_INCLUDE_FOLDER include/ActsAlignment
 )

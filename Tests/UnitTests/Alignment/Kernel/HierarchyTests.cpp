@@ -23,7 +23,7 @@
 #include "ActsAlignment/Geometry/AlignmentHierarchy.hpp"
 #include "ActsAlignment/Kernel/Alignment.hpp"
 #include "ActsAlignment/Kernel/detail/AlignmentEngine.hpp"
-#include "ActsAlignment/Kernel/detail/AlignmentParameterIndex.hpp"
+#include "ActsAlignment/Kernel/detail/AlignmentParameterDirectory.hpp"
 #include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
@@ -585,17 +585,17 @@ BOOST_AUTO_TEST_CASE(MaskConflictDetection, *boost::unit_test::disabled()) {
 namespace {
 namespace AlignDetail = ActsAlignment::detail;
 
-auto makeParameterIndex(
+auto makeParameterDirectory(
     const std::vector<std::shared_ptr<AlignableStructure>>& registered,
     const std::vector<std::shared_ptr<AlignableStructure>>& selected,
     const std::vector<SurfacePlacementBase*>& modules = {},
     AlignmentMask moduleMask = AlignmentMask::All) {
-  return AlignDetail::makeAlignmentParameterIndex(registered, selected, modules,
-                                                  moduleMask);
+  return AlignDetail::makeAlignmentParameterDirectory(registered, selected,
+                                                      modules, moduleMask);
 }
 
 void checkSelectionError(
-    const Acts::Result<AlignDetail::AlignmentParameterIndex,
+    const Acts::Result<AlignDetail::AlignmentParameterDirectory,
                        AlignDetail::AlignmentSelectionError>& result,
     AlignmentError code, const std::string& message) {
   BOOST_REQUIRE(!result.ok());
@@ -603,7 +603,7 @@ void checkSelectionError(
   BOOST_CHECK_NE(result.error().message.find(message), std::string::npos);
 }
 
-struct ParameterIndexFixture {
+struct ParameterDirectoryFixture {
   std::shared_ptr<ActsTests::DetectorElementStub> first =
       makeDummyElement(Transform3::Identity());
   std::shared_ptr<ActsTests::DetectorElementStub> second =
@@ -618,7 +618,7 @@ struct ParameterIndexFixture {
   std::shared_ptr<AlignableStructure> otherGroup =
       std::make_shared<AlignableStructure>(GeometryIdentifier().withVolume(1));
 
-  ParameterIndexFixture() {
+  ParameterDirectoryFixture() {
     group->alignmentMask() = AlignmentMask::All;
     group->addSurface(first->surface().getSharedPtr());
     group->addSurface(second->surface().getSharedPtr());
@@ -628,211 +628,215 @@ struct ParameterIndexFixture {
 };
 }  // namespace
 
-BOOST_FIXTURE_TEST_CASE(MembersShareParameterIndices, ParameterIndexFixture) {
-  const auto index = makeParameterIndex({group}, {group});
-  BOOST_REQUIRE(index.ok());
-  BOOST_REQUIRE_EQUAL(index->groups.size(), 1u);
-  BOOST_CHECK_EQUAL(index->numParameters, 6u);
-  BOOST_CHECK_EQUAL(index->placementGroups.size(), 2u);
-  BOOST_CHECK_EQUAL(index->placementGroups.at(first.get()), 0u);
-  BOOST_CHECK_EQUAL(index->placementGroups.at(second.get()), 0u);
-  const auto& entry = index->groups.front();
+BOOST_FIXTURE_TEST_CASE(MembersShareParameterIndices,
+                        ParameterDirectoryFixture) {
+  const auto directory = makeParameterDirectory({group}, {group});
+  BOOST_REQUIRE(directory.ok());
+  BOOST_REQUIRE_EQUAL(directory->alignables.size(), 1u);
+  BOOST_CHECK_EQUAL(directory->numParameters, 6u);
+  BOOST_CHECK_EQUAL(directory->placementToAlignable.size(), 2u);
+  BOOST_CHECK_EQUAL(directory->placementToAlignable.at(first.get()), 0u);
+  BOOST_CHECK_EQUAL(directory->placementToAlignable.at(second.get()), 0u);
+  const auto& entry = directory->alignables.front();
   BOOST_CHECK(std::get<const AlignableStructure*>(entry.alignable) ==
               group.get());
   for (std::size_t dof = 0; dof < eAlignmentSize; ++dof) {
     BOOST_REQUIRE(entry.parameterIndices[dof].has_value());
     BOOST_CHECK_EQUAL(*entry.parameterIndices[dof], dof);
   }
-  BOOST_CHECK_EQUAL(index->placementGroups.at(first.get()),
-                    index->placementGroups.at(second.get()));
+  BOOST_CHECK_EQUAL(directory->placementToAlignable.at(first.get()),
+                    directory->placementToAlignable.at(second.get()));
 }
 
 BOOST_FIXTURE_TEST_CASE(MixedSelectionAndParameterOrder,
-                        ParameterIndexFixture) {
+                        ParameterDirectoryFixture) {
   group->alignmentMask() = AlignmentMask::Center0 | AlignmentMask::Rotation2;
-  const auto index = makeParameterIndex(
+  const auto directory = makeParameterDirectory(
       {otherGroup, group}, {group, otherGroup}, {module.get()},
       AlignmentMask::Center1 | AlignmentMask::Rotation0);
-  BOOST_REQUIRE(index.ok());
-  BOOST_REQUIRE_EQUAL(index->groups.size(), 3u);
-  BOOST_CHECK_EQUAL(index->numParameters, 5u);
+  BOOST_REQUIRE(directory.ok());
+  BOOST_REQUIRE_EQUAL(directory->alignables.size(), 3u);
+  BOOST_CHECK_EQUAL(directory->numParameters, 5u);
   BOOST_CHECK(std::get<const SurfacePlacementBase*>(
-                  index->groups[0].alignable) == module.get());
-  BOOST_CHECK_EQUAL(index->placementGroups.at(module.get()), 0u);
-  BOOST_CHECK_EQUAL(index->placementGroups.at(first.get()), 1u);
-  BOOST_CHECK_EQUAL(index->placementGroups.at(other.get()), 2u);
-  const auto& moduleIndices = index->groups[0].parameterIndices;
-  const auto& structureIndices = index->groups[1].parameterIndices;
+                  directory->alignables[0].alignable) == module.get());
+  BOOST_CHECK_EQUAL(directory->placementToAlignable.at(module.get()), 0u);
+  BOOST_CHECK_EQUAL(directory->placementToAlignable.at(first.get()), 1u);
+  BOOST_CHECK_EQUAL(directory->placementToAlignable.at(other.get()), 2u);
+  const auto& moduleIndices = directory->alignables[0].parameterIndices;
+  const auto& structureIndices = directory->alignables[1].parameterIndices;
   BOOST_REQUIRE(moduleIndices[eAlignmentCenter1]);
   BOOST_REQUIRE(moduleIndices[eAlignmentRotation0]);
   BOOST_REQUIRE(structureIndices[eAlignmentCenter0]);
   BOOST_REQUIRE(structureIndices[eAlignmentRotation2]);
-  BOOST_REQUIRE(index->groups[2].parameterIndices[eAlignmentCenter2]);
+  BOOST_REQUIRE(directory->alignables[2].parameterIndices[eAlignmentCenter2]);
   BOOST_CHECK_EQUAL(*moduleIndices[eAlignmentCenter1], 0u);
   BOOST_CHECK_EQUAL(*moduleIndices[eAlignmentRotation0], 1u);
   BOOST_CHECK_EQUAL(*structureIndices[eAlignmentCenter0], 2u);
   BOOST_CHECK_EQUAL(*structureIndices[eAlignmentRotation2], 3u);
-  BOOST_CHECK_EQUAL(*index->groups[2].parameterIndices[eAlignmentCenter2], 4u);
+  BOOST_CHECK_EQUAL(
+      *directory->alignables[2].parameterIndices[eAlignmentCenter2], 4u);
   BOOST_CHECK(!moduleIndices[eAlignmentCenter0]);
   BOOST_CHECK(!structureIndices[eAlignmentCenter1]);
 
   const auto reversed =
-      makeParameterIndex({group, otherGroup}, {otherGroup, group});
+      makeParameterDirectory({group, otherGroup}, {otherGroup, group});
   BOOST_REQUIRE(reversed.ok());
-  BOOST_CHECK_EQUAL(reversed->placementGroups.at(other.get()), 0u);
-  BOOST_CHECK_EQUAL(reversed->placementGroups.at(first.get()), 1u);
-  BOOST_CHECK_EQUAL(*reversed->groups[0].parameterIndices[eAlignmentCenter2],
-                    0u);
-  BOOST_CHECK_EQUAL(*reversed->groups[1].parameterIndices[eAlignmentCenter0],
-                    1u);
+  BOOST_CHECK_EQUAL(reversed->placementToAlignable.at(other.get()), 0u);
+  BOOST_CHECK_EQUAL(reversed->placementToAlignable.at(first.get()), 1u);
+  BOOST_CHECK_EQUAL(
+      *reversed->alignables[0].parameterIndices[eAlignmentCenter2], 0u);
+  BOOST_CHECK_EQUAL(
+      *reversed->alignables[1].parameterIndices[eAlignmentCenter0], 1u);
 }
 
 BOOST_FIXTURE_TEST_CASE(InactiveSelectionsAndEffectiveMasks,
-                        ParameterIndexFixture) {
-  auto metadata = makeParameterIndex({group}, {});
+                        ParameterDirectoryFixture) {
+  auto metadata = makeParameterDirectory({group}, {});
   BOOST_REQUIRE(metadata.ok());
-  BOOST_CHECK(metadata->groups.empty());
+  BOOST_CHECK(metadata->alignables.empty());
   BOOST_CHECK_EQUAL(metadata->numParameters, 0u);
 
   group->alignmentMask() = AlignmentMask::None;
-  auto inactive =
-      makeParameterIndex({group}, {group}, {first.get()}, AlignmentMask::None);
+  auto inactive = makeParameterDirectory({group}, {group}, {first.get()},
+                                         AlignmentMask::None);
   BOOST_REQUIRE(inactive.ok());
-  BOOST_REQUIRE_EQUAL(inactive->groups.size(), 1u);
+  BOOST_REQUIRE_EQUAL(inactive->alignables.size(), 1u);
   BOOST_CHECK_EQUAL(inactive->numParameters, 0u);
-  BOOST_CHECK_EQUAL(inactive->placementGroups.at(first.get()), 0u);
-  BOOST_CHECK(!inactive->placementGroups.contains(second.get()));
-  for (const auto& parameter : inactive->groups[0].parameterIndices) {
+  BOOST_CHECK_EQUAL(inactive->placementToAlignable.at(first.get()), 0u);
+  BOOST_CHECK(!inactive->placementToAlignable.contains(second.get()));
+  for (const auto& parameter : inactive->alignables[0].parameterIndices) {
     BOOST_CHECK(!parameter);
   }
-  // Changing the mask requires a new index.
-  auto enabled = makeParameterIndex({group}, {group}, {first.get()},
-                                    AlignmentMask::Rotation1);
+  // Changing the mask requires a new directory.
+  auto enabled = makeParameterDirectory({group}, {group}, {first.get()},
+                                        AlignmentMask::Rotation1);
   BOOST_REQUIRE(enabled.ok());
-  BOOST_REQUIRE(enabled->groups[0].parameterIndices[eAlignmentRotation1]);
-  BOOST_CHECK_EQUAL(*enabled->groups[0].parameterIndices[eAlignmentRotation1],
-                    0u);
+  BOOST_REQUIRE(enabled->alignables[0].parameterIndices[eAlignmentRotation1]);
+  BOOST_CHECK_EQUAL(
+      *enabled->alignables[0].parameterIndices[eAlignmentRotation1], 0u);
   BOOST_CHECK_EQUAL(enabled->numParameters, 1u);
   BOOST_CHECK_EQUAL(inactive->numParameters, 0u);
 
-  auto empty = makeParameterIndex({}, {});
+  auto empty = makeParameterDirectory({}, {});
   BOOST_REQUIRE(empty.ok());
-  BOOST_CHECK(empty->placementGroups.empty());
+  BOOST_CHECK(empty->placementToAlignable.empty());
   BOOST_CHECK_EQUAL(empty->numParameters, 0u);
 }
 
-BOOST_FIXTURE_TEST_CASE(StandaloneParameterOrder, ParameterIndexFixture) {
+BOOST_FIXTURE_TEST_CASE(StandaloneParameterOrder, ParameterDirectoryFixture) {
   // An unselected structure leaves its members available as standalone modules.
-  const auto index = makeParameterIndex(
+  const auto directory = makeParameterDirectory(
       {group}, {}, {second.get(), first.get()}, AlignmentMask::Rotation2);
-  BOOST_REQUIRE(index.ok());
-  BOOST_REQUIRE_EQUAL(index->groups.size(), 2u);
-  BOOST_CHECK_EQUAL(index->numParameters, 2u);
-  BOOST_CHECK_EQUAL(index->placementGroups.at(second.get()), 0u);
-  BOOST_CHECK_EQUAL(index->placementGroups.at(first.get()), 1u);
-  BOOST_REQUIRE(index->groups[0].parameterIndices[eAlignmentRotation2]);
-  BOOST_REQUIRE(index->groups[1].parameterIndices[eAlignmentRotation2]);
-  BOOST_CHECK_EQUAL(*index->groups[0].parameterIndices[eAlignmentRotation2],
-                    0u);
-  BOOST_CHECK_EQUAL(*index->groups[1].parameterIndices[eAlignmentRotation2],
-                    1u);
+  BOOST_REQUIRE(directory.ok());
+  BOOST_REQUIRE_EQUAL(directory->alignables.size(), 2u);
+  BOOST_CHECK_EQUAL(directory->numParameters, 2u);
+  BOOST_CHECK_EQUAL(directory->placementToAlignable.at(second.get()), 0u);
+  BOOST_CHECK_EQUAL(directory->placementToAlignable.at(first.get()), 1u);
+  BOOST_REQUIRE(directory->alignables[0].parameterIndices[eAlignmentRotation2]);
+  BOOST_REQUIRE(directory->alignables[1].parameterIndices[eAlignmentRotation2]);
+  BOOST_CHECK_EQUAL(
+      *directory->alignables[0].parameterIndices[eAlignmentRotation2], 0u);
+  BOOST_CHECK_EQUAL(
+      *directory->alignables[1].parameterIndices[eAlignmentRotation2], 1u);
 }
 
 BOOST_FIXTURE_TEST_CASE(SelectionDoesNotResolveGeometry,
-                        ParameterIndexFixture) {
+                        ParameterDirectoryFixture) {
   BOOST_CHECK(!group->hasTransform());
-  auto withoutFrame = makeParameterIndex({group}, {group});
+  auto withoutFrame = makeParameterDirectory({group}, {group});
   BOOST_REQUIRE(withoutFrame.ok());
   group->setTransform([](const GeometryContext&) -> Transform3 {
     throw std::runtime_error("parameter numbering must not resolve a frame");
   });
   // Numbering depends on the mask, not on numerical constraints.
   group->constraints()[eAlignmentCenter0] = 0.;
-  auto index = makeParameterIndex({group}, {group});
-  BOOST_REQUIRE(index.ok());
-  BOOST_CHECK_EQUAL(index->numParameters, 6u);
+  auto directory = makeParameterDirectory({group}, {group});
+  BOOST_REQUIRE(directory.ok());
+  BOOST_CHECK_EQUAL(directory->numParameters, 6u);
 }
 
-BOOST_FIXTURE_TEST_CASE(ParameterIndexDoesNotOwnAlignables,
-                        ParameterIndexFixture) {
+BOOST_FIXTURE_TEST_CASE(ParameterDirectoryDoesNotOwnAlignables,
+                        ParameterDirectoryFixture) {
   const auto structureOwners = group.use_count();
   const auto moduleOwners = module.use_count();
-  const auto index = makeParameterIndex({group}, {group}, {module.get()});
-  BOOST_REQUIRE(index.ok());
+  const auto directory =
+      makeParameterDirectory({group}, {group}, {module.get()});
+  BOOST_REQUIRE(directory.ok());
   BOOST_CHECK_EQUAL(group.use_count(), structureOwners);
   BOOST_CHECK_EQUAL(module.use_count(), moduleOwners);
 }
 
 BOOST_FIXTURE_TEST_CASE(SelectedLeavesAndInactiveParents,
-                        ParameterIndexFixture) {
+                        ParameterDirectoryFixture) {
   auto parent = std::make_shared<AlignableStructure>(GeometryIdentifier());
   parent->addChild(group);
-  auto index = makeParameterIndex({parent}, {parent, group});
-  BOOST_REQUIRE(index.ok());
-  BOOST_CHECK_EQUAL(index->groups.size(), 1u);
+  auto directory = makeParameterDirectory({parent}, {parent, group});
+  BOOST_REQUIRE(directory.ok());
+  BOOST_CHECK_EQUAL(directory->alignables.size(), 1u);
   parent->alignmentMask() = AlignmentMask::All;
-  checkSelectionError(makeParameterIndex({parent}, {parent}),
+  checkSelectionError(makeParameterDirectory({parent}, {parent}),
                       AlignmentError::InvalidAlignmentSelection, "leaf");
-  checkSelectionError(makeParameterIndex({parent}, {parent, group}),
+  checkSelectionError(makeParameterDirectory({parent}, {parent, group}),
                       AlignmentError::InvalidAlignmentSelection, "leaf");
 }
 
-BOOST_FIXTURE_TEST_CASE(InvalidParameterSelections, ParameterIndexFixture) {
-  checkSelectionError(makeParameterIndex({group}, {nullptr}),
+BOOST_FIXTURE_TEST_CASE(InvalidParameterSelections, ParameterDirectoryFixture) {
+  checkSelectionError(makeParameterDirectory({group}, {nullptr}),
                       AlignmentError::InvalidAlignmentSelection, "null");
-  checkSelectionError(makeParameterIndex({group}, {otherGroup}),
+  checkSelectionError(makeParameterDirectory({group}, {otherGroup}),
                       AlignmentError::InvalidAlignmentSelection,
                       "unregistered");
-  checkSelectionError(makeParameterIndex({group}, {group, group}),
+  checkSelectionError(makeParameterDirectory({group}, {group, group}),
                       AlignmentError::InvalidAlignmentSelection, "Duplicate");
-  checkSelectionError(makeParameterIndex({}, {}, {nullptr}),
+  checkSelectionError(makeParameterDirectory({}, {}, {nullptr}),
                       AlignmentError::InvalidAlignmentSelection, "Null");
-  checkSelectionError(makeParameterIndex({}, {}, {module.get(), module.get()}),
-                      AlignmentError::InvalidAlignmentSelection, "Duplicate");
+  checkSelectionError(
+      makeParameterDirectory({}, {}, {module.get(), module.get()}),
+      AlignmentError::InvalidAlignmentSelection, "Duplicate");
   // A structure member cannot also be selected separately, regardless of masks.
   group->alignmentMask() = AlignmentMask::Center0;
   for (const auto mask : {AlignmentMask::Rotation0, AlignmentMask::None}) {
     checkSelectionError(
-        makeParameterIndex({group}, {group}, {first.get()}, mask),
+        makeParameterDirectory({group}, {group}, {first.get()}, mask),
         AlignmentError::InvalidAlignmentSelection, "Overlapping");
   }
   group->alignmentMask() = AlignmentMask::None;
-  checkSelectionError(makeParameterIndex({group}, {group, group}),
+  checkSelectionError(makeParameterDirectory({group}, {group, group}),
                       AlignmentError::InvalidAlignmentSelection, "Duplicate");
   auto empty = std::make_shared<AlignableStructure>(GeometryIdentifier());
   empty->alignmentMask() = AlignmentMask::All;
-  checkSelectionError(makeParameterIndex({empty}, {empty}),
+  checkSelectionError(makeParameterDirectory({empty}, {empty}),
                       AlignmentError::InvalidAlignmentSelection, "nonempty");
   empty->addSurface(Surface::makeShared<PlaneSurface>(
       Transform3::Identity(), std::make_shared<RectangleBounds>(1_mm, 1_mm)));
-  checkSelectionError(makeParameterIndex({empty}, {empty}),
+  checkSelectionError(makeParameterDirectory({empty}, {empty}),
                       AlignmentError::InvalidAlignmentSelection, "placement");
 }
 
-BOOST_FIXTURE_TEST_CASE(InvalidHierarchyForParameterIndex,
-                        ParameterIndexFixture) {
-  checkSelectionError(makeParameterIndex({nullptr}, {}),
+BOOST_FIXTURE_TEST_CASE(InvalidHierarchyForParameterDirectory,
+                        ParameterDirectoryFixture) {
+  checkSelectionError(makeParameterDirectory({nullptr}, {}),
                       AlignmentError::HierarchyValidationFailure, "Null");
-  checkSelectionError(makeParameterIndex({group, group}, {}),
+  checkSelectionError(makeParameterDirectory({group, group}, {}),
                       AlignmentError::HierarchyValidationFailure, "repeated");
   auto parent = std::make_shared<AlignableStructure>(GeometryIdentifier());
   parent->addChild(group);
   parent->addChild(group);
-  checkSelectionError(makeParameterIndex({parent}, {}),
+  checkSelectionError(makeParameterDirectory({parent}, {}),
                       AlignmentError::HierarchyValidationFailure, "repeated");
   auto invalid = std::make_shared<AlignableStructure>(GeometryIdentifier());
   invalid->addChild(nullptr);
-  checkSelectionError(makeParameterIndex({invalid}, {}),
+  checkSelectionError(makeParameterDirectory({invalid}, {}),
                       AlignmentError::HierarchyValidationFailure, "Null");
   invalid = std::make_shared<AlignableStructure>(GeometryIdentifier());
   invalid->addSurface(nullptr);
-  checkSelectionError(makeParameterIndex({invalid}, {}),
+  checkSelectionError(makeParameterDirectory({invalid}, {}),
                       AlignmentError::HierarchyValidationFailure, "Null");
   otherGroup->addSurface(first->surface().getSharedPtr());
-  checkSelectionError(makeParameterIndex({group, otherGroup}, {}),
+  checkSelectionError(makeParameterDirectory({group, otherGroup}, {}),
                       AlignmentError::HierarchyValidationFailure, "placement");
   group->addSurface(first->surface().getSharedPtr());
-  checkSelectionError(makeParameterIndex({group}, {}),
+  checkSelectionError(makeParameterDirectory({group}, {}),
                       AlignmentError::HierarchyValidationFailure, "placement");
 
   // Non-owning aliases let us test a cycle without creating an ownership leak.
@@ -841,6 +845,6 @@ BOOST_FIXTURE_TEST_CASE(InvalidHierarchyForParameterIndex,
   auto b = std::shared_ptr<AlignableStructure>(&cycleB, [](auto*) {});
   cycleA.addChild(b);
   cycleB.addChild(a);
-  checkSelectionError(makeParameterIndex({a}, {}),
+  checkSelectionError(makeParameterDirectory({a}, {}),
                       AlignmentError::HierarchyValidationFailure, "Cycle");
 }

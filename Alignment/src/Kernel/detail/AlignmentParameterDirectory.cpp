@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsAlignment/Kernel/detail/AlignmentParameterIndex.hpp"
+#include "ActsAlignment/Kernel/detail/AlignmentParameterDirectory.hpp"
 
 #include <array>
 #include <unordered_set>
@@ -79,8 +79,8 @@ Acts::Result<StructureSet, AlignmentSelectionError> collectStructures(
 
 }  // namespace
 
-Acts::Result<AlignmentParameterIndex, AlignmentSelectionError>
-makeAlignmentParameterIndex(
+Acts::Result<AlignmentParameterDirectory, AlignmentSelectionError>
+makeAlignmentParameterDirectory(
     std::span<const std::shared_ptr<AlignableStructure>> structures,
     std::span<const std::shared_ptr<AlignableStructure>> selectedStructures,
     std::span<Acts::SurfacePlacementBase* const> modules,
@@ -90,13 +90,12 @@ makeAlignmentParameterIndex(
     return registered.error();
   }
 
-  AlignmentParameterIndex index;
+  AlignmentParameterDirectory directory;
   // Assign consecutive indices, leaving fixed components empty.
-  const auto numberParameters = [&](AlignmentParameterGroup& group,
-                                    AlignmentMask mask) {
+  const auto numberParameters = [&](AlignableUnit& unit, AlignmentMask mask) {
     for (const auto& [dof, bit] : namedDofs) {
       if (ACTS_CHECK_BIT(mask, bit)) {
-        group.parameterIndices[dof] = index.numParameters++;
+        unit.parameterIndices[dof] = directory.numParameters++;
       }
     }
   };
@@ -105,13 +104,15 @@ makeAlignmentParameterIndex(
       return AlignmentSelectionError{AlignmentError::InvalidAlignmentSelection,
                                      "Null standalone module"};
     }
-    if (!index.placementGroups.emplace(module, index.groups.size()).second) {
+    if (!directory.placementToAlignable
+             .emplace(module, directory.alignables.size())
+             .second) {
       return AlignmentSelectionError{AlignmentError::InvalidAlignmentSelection,
                                      "Duplicate standalone module"};
     }
-    AlignmentParameterGroup group{module, {}};
-    numberParameters(group, moduleMask);
-    index.groups.push_back(group);
+    AlignableUnit unit{module, {}};
+    numberParameters(unit, moduleMask);
+    directory.alignables.push_back(unit);
   }
 
   // A valid hierarchy can still be accompanied by a duplicate selection.
@@ -136,7 +137,7 @@ makeAlignmentParameterIndex(
           AlignmentError::InvalidAlignmentSelection,
           "Active structure must be a nonempty leaf"};
     }
-    // Members share the next group. Inserting them also detects overlap with
+    // Members share the next unit. Inserting them also detects overlap with
     // the standalone modules already in the lookup.
     for (const auto& surface : structure->surfacePointers()) {
       const auto* placement = surface->surfacePlacement();
@@ -145,18 +146,19 @@ makeAlignmentParameterIndex(
             AlignmentError::InvalidAlignmentSelection,
             "Selected member has no placement"};
       }
-      if (!index.placementGroups.emplace(placement, index.groups.size())
+      if (!directory.placementToAlignable
+               .emplace(placement, directory.alignables.size())
                .second) {
         return AlignmentSelectionError{
             AlignmentError::InvalidAlignmentSelection,
             "Overlapping alignment selections"};
       }
     }
-    AlignmentParameterGroup group{structure.get(), {}};
-    numberParameters(group, mask);
-    index.groups.push_back(group);
+    AlignableUnit unit{structure.get(), {}};
+    numberParameters(unit, mask);
+    directory.alignables.push_back(unit);
   }
-  return index;
+  return directory;
 }
 
 }  // namespace ActsAlignment::detail

@@ -165,7 +165,7 @@ frame and continues to align individual modules.
 
 ## Selecting alignables and numbering parameters
 
-`detail::makeAlignmentParameterIndex()` assigns positions in the alignment
+`detail::makeAlignmentParameterDirectory()` assigns positions in the alignment
 correction vector to selected modules and structures. The caller supplies the
 standalone module mask; each structure supplies its own mask.
 
@@ -173,25 +173,26 @@ Registering a structure makes it available for selection. Selected structures
 with enabled parameters must have members and no children. A structure with mask
 `None` is omitted, leaving its members available for standalone selection.
 Standalone modules remain selected even with mask `None`. A placement cannot
-belong to two selected groups, regardless of their masks. The registered
+belong to two selected alignables, regardless of their masks. The registered
 hierarchy must be acyclic, with each structure and placement registered once.
 Null entries and duplicate selections are rejected.
 
 The result contains three fields:
 
-- `groups` lists standalone modules first, then active structures, in the supplied
-  order. Each entry holds the selected object and its parameter indices.
-- `placementGroups` maps each member placement to its position in `groups`.
+- `alignables` lists standalone modules first, then active structures, in the
+  supplied order. Each `AlignableUnit` entry points to the selected object and
+  holds its parameter indices.
+- `placementToAlignable` maps each member placement to its position in `alignables`.
 - `numParameters` counts the enabled parameters.
 
-Parameter indices start at zero. Within each group, translations `Center0..2`
+Parameter indices start at zero. Within each alignable, translations `Center0..2`
 precede rotations `Rotation0..2`; fixed components have no index. For example,
 if the only selected object is a structure with mask `Center0 | Rotation2`, every
 member uses indices 0 and 1. Geometry IDs do not affect numbering.
 An empty selection or a selection with no enabled parameters is valid.
 
-The index holds non-owning pointers. Callers must keep all selected structures
-and placements alive and rebuild the index after changing selection, membership,
+The directory holds non-owning pointers. Callers must keep all selected structures
+and placements alive and rebuild the directory after changing selection, membership,
 or masks. Building it visits the hierarchy and selected members; no track data is
 involved. Track processing, numerical constraints, solving, and geometry updates
-remain separate work. The existing solver does not yet use this index.
+remain separate work. The existing solver does not yet use this directory.

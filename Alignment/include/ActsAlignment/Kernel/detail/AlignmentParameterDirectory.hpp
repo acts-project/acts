@@ -32,7 +32,7 @@ struct AlignmentSelectionError {
 };
 
 /// Parameter indices for one selected module or structure.
-struct AlignmentParameterGroup {
+struct AlignableUnit {
   /// Non-owning pointer to a selected module or structure.
   std::variant<const Acts::SurfacePlacementBase*, const AlignableStructure*>
       alignable;
@@ -41,35 +41,36 @@ struct AlignmentParameterGroup {
   std::array<std::optional<std::size_t>, Acts::eAlignmentSize> parameterIndices;
 };
 
-/// Maps selected placements to groups and their parameter indices.
-struct AlignmentParameterIndex {
+/// Maps selected placements to alignables and their parameter indices.
+struct AlignmentParameterDirectory {
   /// Standalone modules in input order, followed by active selected structures.
-  std::vector<AlignmentParameterGroup> groups;
-  /// Position in groups for each selected placement.
+  std::vector<AlignableUnit> alignables;
+  /// Position in alignables for each selected placement.
   std::unordered_map<const Acts::SurfacePlacementBase*, std::size_t>
-      placementGroups;
-  /// Number of enabled parameters across all groups.
+      placementToAlignable;
+  /// Number of enabled parameters across all alignables.
   std::size_t numParameters = 0;
 };
 
 /// Number the enabled translations and rotations of selected alignables.
 ///
 /// Active structures must have members and no children. Structures with mask
-/// None are omitted. Each selected placement must belong to only one group,
+/// None are omitted. Each selected placement must belong to only one alignable,
 /// including standalone modules with mask None.
 ///
 /// Parameters are numbered from zero in input order: modules, then structures.
-/// Within each group, Center0..2 precede Rotation0..2; fixed components are
-/// skipped. An empty index is valid. Rebuild after changing selection,
-/// membership, or masks. Do not change the hierarchy while building the index.
-/// All selected structures and placements must outlive the index.
+/// Within each alignable, Center0..2 precede Rotation0..2; fixed components are
+/// skipped. An empty directory is valid. Rebuild after changing selection,
+/// membership, or masks. Do not change the hierarchy while building the
+/// directory. All selected structures and placements must outlive the
+/// directory.
 /// @param structures Top-level structures in the registered hierarchy
 /// @param selectedStructures Registered structures to align
 /// @param modules Standalone module placements
 /// @param moduleMask Enabled translations and rotations for standalone modules
-/// @return Parameter index, or the reason the hierarchy or selection is invalid
-Acts::Result<AlignmentParameterIndex, AlignmentSelectionError>
-makeAlignmentParameterIndex(
+/// @return Parameter directory, or the reason the hierarchy or selection is invalid
+Acts::Result<AlignmentParameterDirectory, AlignmentSelectionError>
+makeAlignmentParameterDirectory(
     std::span<const std::shared_ptr<AlignableStructure>> structures,
     std::span<const std::shared_ptr<AlignableStructure>> selectedStructures,
     std::span<Acts::SurfacePlacementBase* const> modules,
