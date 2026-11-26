@@ -194,11 +194,11 @@ class TrackProxyCommon {
 
   /// Access the theta parameter of the track at the reference surface
   /// @return The theta parameter
-  double theta() const { return derived().parameters()[eBoundTheta]; }
+  double theta() const { return derived().parameters()[eBoundDir1]; }
 
   /// Access the phi parameter of the track at the reference surface
   /// @return The phi parameter
-  double phi() const { return derived().parameters()[eBoundPhi]; }
+  double phi() const { return derived().parameters()[eBoundDir0]; }
 
   /// Access the loc0 parameter of the track at the reference surface
   /// @return The loc0 parameter

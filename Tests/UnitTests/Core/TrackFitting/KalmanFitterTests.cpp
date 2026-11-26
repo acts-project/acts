@@ -60,8 +60,8 @@ Acts::BoundTrackParameters makeParameters(
   stddev[Acts::eBoundLoc0] = 100_um;
   stddev[Acts::eBoundLoc1] = 100_um;
   stddev[Acts::eBoundTime] = 25_ns;
-  stddev[Acts::eBoundPhi] = 2_degree;
-  stddev[Acts::eBoundTheta] = 2_degree;
+  stddev[Acts::eBoundDir0] = 2_degree;
+  stddev[Acts::eBoundDir1] = 2_degree;
   stddev[Acts::eBoundQOverP] = 1 / 100_GeV;
   Acts::BoundMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
   // define a track in the transverse plane along x

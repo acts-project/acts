@@ -42,8 +42,8 @@ constexpr TrackStatePropMask trackStateMask = TrackStatePropMask::Smoothed |
 const Eigen::Matrix<double, eBoundSize, 2> phiThetaProjector = [] {
   Eigen::Matrix<double, eBoundSize, 2> m =
       Eigen::Matrix<double, eBoundSize, 2>::Zero();
-  m(eBoundPhi, 0) = 1.0;
-  m(eBoundTheta, 1) = 1.0;
+  m(eBoundDir0, 0) = 1.0;
+  m(eBoundDir1, 1) = 1.0;
   return m;
 }();
 }  // namespace Gx2fConstants
@@ -85,7 +85,7 @@ struct ScatteringProperties {
 
  private:
   /// Vector of scattering angles. The vector is usually all zeros except for
-  /// eBoundPhi and eBoundTheta.
+  /// eBoundDir0 and eBoundDir1.
   BoundVector m_scatteringAngles;
 
   /// Inverse covariance of the material. Compute with e.g. the Highland

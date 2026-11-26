@@ -218,11 +218,11 @@ PointwiseMaterialEffects performMaterialInteraction(
   // update covariance matrix
   //! [covariance update]
   BoundMatrix covariance = *stepper.covariance(state.stepping);
-  covariance(eBoundPhi, eBoundPhi) = updateVariance(
-      covariance(eBoundPhi, eBoundPhi), effects.variancePhi, noiseUpdateMode);
-  covariance(eBoundTheta, eBoundTheta) =
-      updateVariance(covariance(eBoundTheta, eBoundTheta),
-                     effects.varianceTheta, noiseUpdateMode);
+  covariance(eBoundDir0, eBoundDir0) = updateVariance(
+      covariance(eBoundDir0, eBoundDir0), effects.variancePhi, noiseUpdateMode);
+  covariance(eBoundDir1, eBoundDir1) =
+      updateVariance(covariance(eBoundDir1, eBoundDir1), effects.varianceTheta,
+                     noiseUpdateMode);
   covariance(eBoundQOverP, eBoundQOverP) =
       updateVariance(covariance(eBoundQOverP, eBoundQOverP),
                      effects.varianceQoverP, noiseUpdateMode);
