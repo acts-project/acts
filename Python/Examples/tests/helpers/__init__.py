@@ -107,6 +107,23 @@ with warnings.catch_warnings():
     except ModuleNotFoundError:
         gnnEnabled = False
 
+    # Whether a GPU is usable, and whether one is supposed to be. A job that
+    # runs the GPU tests sets ACTS_TEST_GPU, so that a broken GPU setup fails
+    # the tests instead of quietly skipping them (and running on the CPU
+    # instead, which would make a GPU test pass without a GPU).
+    gpuAvailable = shutil.which("nvidia-smi") is not None
+    gpuExpected = os.environ.get("ACTS_TEST_GPU") is not None
+
+    # The module map graph construction and the CUDA track building it is used
+    # with are only built in a CUDA build of the GNN plugin, so the examples
+    # based on them cannot even be imported in a CPU build.
+    try:
+        from acts.gnn import ModuleMapCuda
+
+        gnnModuleMapEnabled = gnnEnabled
+    except (ImportError, ModuleNotFoundError):
+        gnnModuleMapEnabled = False
+
     try:
         import podio
 
