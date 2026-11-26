@@ -151,7 +151,7 @@ ProcessCode GraphBasedSeedingAlgorithm::execute(
     }
 
     // Cluster width and local position are not available in the examples
-    // framework, so the machine learning features stay switched off.
+    // framework, so the cluster width cuts stay switched off.
     nodeStorage.insert(spacePoint.index(), spacePoint.x(), spacePoint.y(),
                        spacePoint.z(), *layerIndex);
   }
