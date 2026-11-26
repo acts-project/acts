@@ -6,7 +6,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-traccc_add_executable( kalman_filter_validation "apps/kalman_filter_validation.cpp"
-   LINK_LIBRARIES vecmem::core detray::io detray::detectors traccc::core
-   traccc::io traccc::simulation traccc::performance traccc::options traccc_examples_common
-)
+# The Kálmán filter comparison is only part of traccc::performance if the
+# detray validation tools are available.
+if(TARGET detray::validation_utils)
+    traccc_add_executable(kalman_filter_validation "apps/kalman_filter_validation.cpp"
+       LINK_LIBRARIES vecmem::core detray::io detray::detectors traccc::core
+       traccc::io traccc::simulation traccc::performance traccc::options traccc_examples_common
+    )
+endif()

@@ -265,6 +265,8 @@ set_option_if(
     ACTS_BUILD_PLUGIN_GNN
 )
 
+set_option_if(ACTS_SETUP_VECMEM ACTS_BUILD_PLUGIN_GNN)
+
 set_option_if(ACTS_BUILD_PYTHON_BINDINGS ACTS_BUILD_PYTHON_WHEEL)
 set_option_if(ACTS_BUILD_ALIGNMENT ACTS_BUILD_PLUGIN_MILLE)
 set_option_if(ACTS_BUILD_TRACCC ACTS_BUILD_PLUGIN_TRACCC)
@@ -727,9 +729,9 @@ if(ACTS_SETUP_DETRAY)
 
     if(ACTS_BUILD_TRACCC)
         set(DETRAY_SET_LOGGING "${ACTS_TRACCC_DEVICE_LOG_LEVEL}")
-        # Some detray validation tools are used in optional traccc libraries
+        # The detray test utilities are used in optional traccc libraries
         set_option_if(
-            DETRAY_BUILD_VALIDATION_TOOLS
+            DETRAY_BUILD_TEST_UTILS
             ACTS_TRACCC_BUILD_PERFORMANCE
             OR
             ACTS_TRACCC_BUILD_TESTS

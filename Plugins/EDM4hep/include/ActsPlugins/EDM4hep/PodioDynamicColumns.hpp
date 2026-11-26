@@ -11,6 +11,7 @@
 #include <any>
 #include <string>
 #include <string_view>
+#include <typeindex>
 
 #include <podio/Frame.h>
 #include <podio/UserDataCollection.h>
@@ -19,6 +20,9 @@ namespace ActsPlugins::podio_detail {
 
 struct ConstDynamicColumnBase {
   explicit ConstDynamicColumnBase(std::string_view name) : m_name{name} {}
+
+  std::string_view name() const { return m_name; }
+  virtual std::type_index type() const = 0;
 
   virtual ~ConstDynamicColumnBase() = default;
 
@@ -35,6 +39,8 @@ struct ConstDynamicColumn : public ConstDynamicColumnBase {
   ConstDynamicColumn(std::string_view name,
                      const podio::UserDataCollection<T>& collection)
       : ConstDynamicColumnBase(name), m_collection{collection} {}
+
+  std::type_index type() const override { return typeid(T); }
 
   std::any get(std::size_t i) const override {
     return &m_collection.vec().at(i);
@@ -73,6 +79,8 @@ struct DynamicColumn : public DynamicColumnBase {
       : DynamicColumnBase(name), m_collection{std::move(collection)} {}
 
   std::any get(std::size_t i) override { return &m_collection.vec().at(i); }
+
+  std::type_index type() const override { return typeid(T); }
 
   std::any get(std::size_t i) const override {
     return &m_collection.vec().at(i);

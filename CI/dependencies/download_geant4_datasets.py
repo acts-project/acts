@@ -308,6 +308,9 @@ def main(
             help="Redownload and reinstall datasets even if they already exist",
         ),
     ] = False,
+    dataset: Annotated[
+        str | None, typer.Option("--dataset", help="Install only the named dataset")
+    ] = None,
     config: Annotated[
         Path | None, typer.Option("--config", help="Path to geant4-config script")
     ] = None,
@@ -325,6 +328,10 @@ def main(
 
     # Parse datasets
     datasets = parse_datasets(config_path)
+    if dataset is not None:
+        datasets = [entry for entry in datasets if entry["name"] == dataset]
+        if not datasets:
+            raise typer.BadParameter(f"Unknown Geant4 dataset: {dataset}")
     console.print(f"[cyan]Found {len(datasets)} datasets[/cyan]")
 
     # Get base URL

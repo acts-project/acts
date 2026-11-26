@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/DynamicColumnInfo.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
@@ -396,6 +397,17 @@ class MultiTrajectory {
     requires(!ReadOnly)
   {
     self().template addColumn_impl<T>(key);
+  }
+
+  /// Iterate over dynamic track-state columns in unspecified order.
+  /// @return An input range of DynamicColumnInfo. Keep the backend alive and
+  /// its column schema unchanged while using the range or its borrowed names.
+  detail::DynamicColumnInfoRange auto dynamicColumns() const
+    requires requires(const Derived& backend) {
+      { backend.dynamicColumns_impl() } -> detail::DynamicColumnInfoRange;
+    }
+  {
+    return self().dynamicColumns_impl();
   }
 
   /// Check if a column with a key @p key exists.

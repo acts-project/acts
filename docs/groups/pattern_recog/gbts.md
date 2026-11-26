@@ -130,8 +130,8 @@ array per field, because the innermost loop reads all of it together:
 @snippet{trimleft} include/Acts/Seeding/detail/GbtsGraphTypes.hpp gbts node params
 
 @f$\tau = \cot\theta@f$. The infinite defaults disable the @f$\tau@f$ cut
-entirely; only the optional machine-learning lookup table narrows them (see
-@ref gbts-ml). Alongside it sits the bookkeeping the graph builder writes:
+entirely; only the optional cluster-width lookup table narrows them (see
+@ref gbts-cluster-width). Alongside it sits the bookkeeping the graph builder writes:
 
 @snippet{trimleft} include/Acts/Seeding/detail/GbtsGraphTypes.hpp gbts node edge info
 
@@ -157,7 +157,7 @@ A candidate pair @f$(n_1, n_2)@f$ becomes an edge if it survives, in order:
 | --- | --- |
 | @f$\Delta r > @f$ `minDeltaRadius` | the two hits are radially separated enough for @f$\tau@f$ to be meaningful |
 | @f$\lvert\tau\rvert < @f$ `maxAbsTau` | within the detector's angular acceptance |
-| @f$\tau@f$ inside both nodes' windows | per-node acceptance from the ML lookup table |
+| @f$\tau@f$ inside both nodes' windows | per-node acceptance from the cluster-width lookup table |
 | @f$z_0@f$ inside the geometry's `GbtsZ0Range`, and @f$z@f$ at the outer radius inside the ROI | the pair points back to the luminous region |
 | @f$\lvert\kappa\rvert@f$ below an @f$\eta@f$-dependent bound | consistent with the @f$p_T@f$ threshold |
 
@@ -270,10 +270,10 @@ The result is a set of seed candidates. These are reduced in two passes:
 The surviving candidates are written to the output @ref Acts::SeedContainer, with
 node indices translated back to the caller's own space point indices.
 
-## Machine-learning assisted acceptance {#gbts-ml}
+## Cluster-width acceptance {#gbts-cluster-width}
 
 When `useClusterWidthCuts` is enabled, GBTS narrows the per-node @f$\tau@f$
-window using a pre-trained lookup table indexed by **pixel cluster width**. The
+window using a lookup table of calibrated bounds indexed by **pixel cluster width**. The
 cluster a track leaves in a pixel module grows with the incidence angle, so the
 width alone constrains @f$\cot\theta@f$ before any pairing is attempted.
 
@@ -323,8 +323,8 @@ The rest are on @ref Acts::Experimental::GraphBasedTrackSeeder "GraphBasedTrackS
 | `addTriplets`, `maxAbsEtaAddTriplets` | @ref gbts-extraction | allow shorter chains within an @f$\eta@f$ range |
 | `hitShareThreshold` | @ref gbts-extraction | fraction of shared hits above which a candidate is a clone |
 | `maxSeedSplitEta`, `maxInvRadDiff` | @ref gbts-extraction | seed splitting |
-| `useClusterWidthCuts`, `tauLookupTable` | @ref gbts-ml | cluster-width based @f$\tau@f$ windows |
-| `maxEndcapClusterWidth`, `moduleHalfLengthY`, `moduleEdgeTolerance` | @ref gbts-ml | cluster-width acceptance and module-edge handling |
+| `useClusterWidthCuts`, `tauLookupTable` | @ref gbts-cluster-width | cluster-width based @f$\tau@f$ windows |
+| `maxEndcapClusterWidth`, `moduleHalfLengthY`, `moduleEdgeTolerance` | @ref gbts-cluster-width | cluster-width acceptance and module-edge handling |
 
 `useStripConnections`, which takes the strip layer connections from the
 connector file instead of the pixel ones, is read where the file is loaded and
