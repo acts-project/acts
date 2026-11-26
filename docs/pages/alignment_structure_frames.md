@@ -185,6 +185,11 @@ The result contains three fields:
 - `placementToAlignable` maps each member placement to its position in `alignables`.
 - `numParameters` counts the enabled parameters.
 
+The factory uses `addAlignable()` to number parameters and append an entry, then
+`registerPlacement()` to associate each module placement with that entry.
+Registering a placement twice fails without replacing its existing association.
+Selection validation remains in the factory.
+
 Parameter indices start at zero. Within each alignable, translations `Center0..2`
 precede rotations `Rotation0..2`; fixed components have no index. For example,
 if the only selected object is a structure with mask `Center0 | Rotation2`, every

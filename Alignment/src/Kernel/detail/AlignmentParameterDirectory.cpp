@@ -79,6 +79,24 @@ Acts::Result<StructureSet, AlignmentSelectionError> collectStructures(
 
 }  // namespace
 
+std::size_t AlignmentParameterDirectory::addAlignable(AlignableUnit unit,
+                                                      AlignmentMask mask) {
+  unit.parameterIndices.fill(std::nullopt);
+  for (const auto& [dof, bit] : namedDofs) {
+    if (ACTS_CHECK_BIT(mask, bit)) {
+      unit.parameterIndices[dof] = numParameters++;
+    }
+  }
+  const auto position = alignables.size();
+  alignables.push_back(unit);
+  return position;
+}
+
+bool AlignmentParameterDirectory::registerPlacement(
+    const Acts::SurfacePlacementBase& placement, std::size_t alignableIndex) {
+  return placementToAlignable.emplace(&placement, alignableIndex).second;
+}
+
 Acts::Result<AlignmentParameterDirectory, AlignmentSelectionError>
 makeAlignmentParameterDirectory(
     std::span<const std::shared_ptr<AlignableStructure>> structures,
@@ -91,28 +109,16 @@ makeAlignmentParameterDirectory(
   }
 
   AlignmentParameterDirectory directory;
-  // Assign consecutive indices, leaving fixed components empty.
-  const auto numberParameters = [&](AlignableUnit& unit, AlignmentMask mask) {
-    for (const auto& [dof, bit] : namedDofs) {
-      if (ACTS_CHECK_BIT(mask, bit)) {
-        unit.parameterIndices[dof] = directory.numParameters++;
-      }
-    }
-  };
   for (const auto* module : modules) {
     if (module == nullptr) {
       return AlignmentSelectionError{AlignmentError::InvalidAlignmentSelection,
                                      "Null standalone module"};
     }
-    if (!directory.placementToAlignable
-             .emplace(module, directory.alignables.size())
-             .second) {
+    const auto position = directory.addAlignable({module, {}}, moduleMask);
+    if (!directory.registerPlacement(*module, position)) {
       return AlignmentSelectionError{AlignmentError::InvalidAlignmentSelection,
                                      "Duplicate standalone module"};
     }
-    AlignableUnit unit{module, {}};
-    numberParameters(unit, moduleMask);
-    directory.alignables.push_back(unit);
   }
 
   // A valid hierarchy can still be accompanied by a duplicate selection.
@@ -137,7 +143,8 @@ makeAlignmentParameterDirectory(
           AlignmentError::InvalidAlignmentSelection,
           "Active structure must be a nonempty leaf"};
     }
-    // Members share the next unit. Inserting them also detects overlap with
+    const auto position = directory.addAlignable({structure.get(), {}}, mask);
+    // Members share one entry. Registering them also detects overlap with
     // the standalone modules already in the lookup.
     for (const auto& surface : structure->surfacePointers()) {
       const auto* placement = surface->surfacePlacement();
@@ -146,17 +153,12 @@ makeAlignmentParameterDirectory(
             AlignmentError::InvalidAlignmentSelection,
             "Selected member has no placement"};
       }
-      if (!directory.placementToAlignable
-               .emplace(placement, directory.alignables.size())
-               .second) {
+      if (!directory.registerPlacement(*placement, position)) {
         return AlignmentSelectionError{
             AlignmentError::InvalidAlignmentSelection,
             "Overlapping alignment selections"};
       }
     }
-    AlignableUnit unit{structure.get(), {}};
-    numberParameters(unit, mask);
-    directory.alignables.push_back(unit);
   }
   return directory;
 }

@@ -43,6 +43,19 @@ struct AlignableUnit {
 
 /// Maps selected placements to alignables and their parameter indices.
 struct AlignmentParameterDirectory {
+  /// Number a unit's enabled parameters and append it to alignables.
+  /// @param unit Module or structure to add; existing parameter indices are replaced
+  /// @param mask Enabled translations and rotations
+  /// @return Position of the new entry in the alignables vector
+  std::size_t addAlignable(AlignableUnit unit, AlignmentMask mask);
+
+  /// Associate a module placement with an alignable entry.
+  /// @param placement Module placement to register
+  /// @param alignableIndex Entry position returned by addAlignable()
+  /// @return True if inserted; false if already registered, leaving its entry unchanged
+  bool registerPlacement(const Acts::SurfacePlacementBase& placement,
+                         std::size_t alignableIndex);
+
   /// Standalone modules in input order, followed by active selected structures.
   std::vector<AlignableUnit> alignables;
   /// Position in alignables for each selected placement.

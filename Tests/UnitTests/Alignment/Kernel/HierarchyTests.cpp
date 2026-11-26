@@ -628,6 +628,68 @@ struct ParameterDirectoryFixture {
 };
 }  // namespace
 
+BOOST_FIXTURE_TEST_CASE(DirectoryRegistrationPreservesAssignments,
+                        ParameterDirectoryFixture) {
+  AlignDetail::AlignmentParameterDirectory directory;
+  const auto modulePosition =
+      directory.addAlignable({module.get(), {}}, AlignmentMask::None);
+  const auto structurePosition = directory.addAlignable(
+      {group.get(), {}}, AlignmentMask::Center1 | AlignmentMask::Rotation2);
+  BOOST_CHECK_EQUAL(modulePosition, 0u);
+  BOOST_CHECK_EQUAL(structurePosition, 1u);
+  BOOST_REQUIRE_EQUAL(directory.alignables.size(), 2u);
+  BOOST_CHECK_EQUAL(directory.numParameters, 2u);
+  for (const auto& parameter :
+       directory.alignables[modulePosition].parameterIndices) {
+    BOOST_CHECK(!parameter);
+  }
+  const auto& indices =
+      directory.alignables[structurePosition].parameterIndices;
+  BOOST_REQUIRE(indices[eAlignmentCenter1]);
+  BOOST_REQUIRE(indices[eAlignmentRotation2]);
+  BOOST_CHECK_EQUAL(*indices[eAlignmentCenter1], 0u);
+  BOOST_CHECK_EQUAL(*indices[eAlignmentRotation2], 1u);
+  BOOST_CHECK(!indices[eAlignmentCenter0]);
+
+  BOOST_CHECK(directory.registerPlacement(*module, modulePosition));
+  BOOST_CHECK(directory.registerPlacement(*first, structurePosition));
+  BOOST_CHECK(directory.registerPlacement(*second, structurePosition));
+  // Reject repeated registration without replacing the original association.
+  BOOST_CHECK(!directory.registerPlacement(*module, structurePosition));
+  BOOST_CHECK(!directory.registerPlacement(*first, structurePosition));
+  BOOST_CHECK_EQUAL(directory.placementToAlignable.size(), 3u);
+  BOOST_CHECK_EQUAL(directory.placementToAlignable.at(module.get()),
+                    modulePosition);
+  BOOST_CHECK_EQUAL(directory.placementToAlignable.at(first.get()),
+                    structurePosition);
+  BOOST_CHECK_EQUAL(directory.placementToAlignable.at(second.get()),
+                    structurePosition);
+  BOOST_CHECK_EQUAL(directory.numParameters, 2u);
+}
+
+BOOST_FIXTURE_TEST_CASE(DirectoryRenumbersCopiedUnits,
+                        ParameterDirectoryFixture) {
+  const auto original = makeParameterDirectory({group}, {group});
+  BOOST_REQUIRE(original.ok());
+  AlignDetail::AlignmentParameterDirectory directory;
+  directory.addAlignable({module.get(), {}}, AlignmentMask::Center0);
+  const auto position = directory.addAlignable(original->alignables.front(),
+                                               AlignmentMask::Rotation1);
+  BOOST_REQUIRE_EQUAL(directory.alignables.size(), 2u);
+  BOOST_CHECK_EQUAL(position, 1u);
+  BOOST_CHECK_EQUAL(directory.numParameters, 2u);
+  const auto& indices = directory.alignables[position].parameterIndices;
+  BOOST_REQUIRE(indices[eAlignmentRotation1]);
+  BOOST_CHECK_EQUAL(*indices[eAlignmentRotation1], 1u);
+  for (std::size_t dof = 0; dof < eAlignmentSize; ++dof) {
+    if (dof != eAlignmentRotation1) {
+      BOOST_CHECK(!indices[dof]);
+    }
+    BOOST_REQUIRE(original->alignables.front().parameterIndices[dof]);
+    BOOST_CHECK_EQUAL(*original->alignables.front().parameterIndices[dof], dof);
+  }
+}
+
 BOOST_FIXTURE_TEST_CASE(MembersShareParameterIndices,
                         ParameterDirectoryFixture) {
   const auto directory = makeParameterDirectory({group}, {group});
@@ -809,8 +871,18 @@ BOOST_FIXTURE_TEST_CASE(InvalidParameterSelections, ParameterDirectoryFixture) {
                       AlignmentError::InvalidAlignmentSelection, "nonempty");
   empty->addSurface(Surface::makeShared<PlaneSurface>(
       Transform3::Identity(), std::make_shared<RectangleBounds>(1_mm, 1_mm)));
+  // A placement is required only when the structure is selected and active.
+  const auto unselected = makeParameterDirectory({empty}, {});
+  BOOST_REQUIRE(unselected.ok());
+  BOOST_CHECK(unselected->alignables.empty());
+  BOOST_CHECK_EQUAL(unselected->numParameters, 0u);
   checkSelectionError(makeParameterDirectory({empty}, {empty}),
                       AlignmentError::InvalidAlignmentSelection, "placement");
+  empty->alignmentMask() = AlignmentMask::None;
+  const auto inactive = makeParameterDirectory({empty}, {empty});
+  BOOST_REQUIRE(inactive.ok());
+  BOOST_CHECK(inactive->alignables.empty());
+  BOOST_CHECK_EQUAL(inactive->numParameters, 0u);
 }
 
 BOOST_FIXTURE_TEST_CASE(InvalidHierarchyForParameterDirectory,
