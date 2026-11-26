@@ -41,8 +41,8 @@ Acts::SquareMatrix<2> planeCov(
     const Acts::Experimental::detail::FastStrawLineFitter::FitResult& result) {
   Acts::SquareMatrix<2> cov = Acts::SquareMatrix<2>::Zero();
   cov(0, 0) = Acts::square(result.dY0);
-  cov(1, 1) = Acts::square(result.dTheta);
-  cov(0, 1) = cov(1, 0) = result.covY0Theta;
+  cov(1, 1) = Acts::square(result.dTanTheta);
+  cov(0, 1) = cov(1, 0) = result.covY0TanTheta;
   return cov;
 }
 }  // namespace
@@ -76,7 +76,7 @@ void FastStrawLineFitter::FitResult::print(std::ostream& ostr) const {
        << ", chi2 / nDoF: " << (chi2 / std::max(1., static_cast<double>(nDoF)))
        << ",\n";
   // theta is an angle during the fit and a slope after fit(): printed as is
-  ostr << std::format("theta: {:.5f} pm {:.5f}, ", theta, dTheta)
+  ostr << std::format("theta: {:.5f} pm {:.5f}, ", tanTheta, dTanTheta)
        << std::format("y0: {:.3f}  pm {:.3f}", y0, dY0);
 }
 void FastStrawLineFitter::FitResultT0::print(std::ostream& ostr) const {
@@ -117,30 +117,30 @@ double FastStrawLineFitter::calcTimeGrad(const TrigonomHelper& angles,
 
 void FastStrawLineFitter::completeResult(const FitAuxiliaries& fitPars,
                                          FitResult& result) const {
-  const double tanTheta = std::tan(result.theta);
-  const double secTheta = 1. / std::cos(result.theta);
+  const double tanTheta = std::tan(result.tanTheta);
+  const double secTheta = 1. / std::cos(result.tanTheta);
   result.y0 =
       fitPars.centerY - fitPars.centerZ * tanTheta + fitPars.fitY0 * secTheta;
 
   const double dY0dTheta = -fitPars.centerZ * Acts::square(secTheta) +
                            fitPars.fitY0 * secTheta * tanTheta;
-  result.dY0 = Acts::fastHypot(dY0dTheta * result.dTheta,
+  result.dY0 = Acts::fastHypot(dY0dTheta * result.dTanTheta,
                                std::sqrt(fitPars.covNorm) * secTheta);
-  result.covY0Theta = dY0dTheta * Acts::square(result.dTheta);
+  result.covY0TanTheta = dY0dTheta * Acts::square(result.dTanTheta);
   ACTS_DEBUG(__func__ << "() - " << __LINE__ << ": Fit succeeded " << result);
 }
 
-void FastStrawLineFitter::toChamberFrame(const FitAuxiliaries& fitPars,
-                                         const ResidualIdx projection,
-                                         FitResult& result) {
+void FastStrawLineFitter::toCommonFrame(const FitAuxiliaries& fitPars,
+                                        const ResidualIdx projection,
+                                        FitResult& result) {
   // Line of the fit: through y0' eY with direction sin(angle) eY + cos(angle)
   // eZ.
   const Vector& eY = fitPars.eY;
   const Vector& eZ = fitPars.eZ;
   const auto iCoord =
       projection == ResidualIdx::nonBending ? Acts::eX : Acts::eY;
-  const double sinA = std::sin(result.theta);
-  const double cosA = std::cos(result.theta);
+  const double sinA = std::sin(result.tanTheta);
+  const double cosA = std::cos(result.tanTheta);
   const double sign = copySign(1., sinA);
   const Vector dir = sign * (sinA * eY + cosA * eZ);
   // Derivative of the direction w.r.t. the angle, with the same sign as dir
@@ -160,11 +160,11 @@ void FastStrawLineFitter::toChamberFrame(const FitAuxiliaries& fitPars,
   jac(1, 1) = dSlopedA;                        // dslope / dangle
 
   result.y0 *= dIsectdY0;
-  result.theta = dir[iCoord] / dir.z();
+  result.tanTheta = dir[iCoord] / dir.z();
   const SquareMatrix<2> cov = jac * planeCov(result) * jac.transpose();
   result.dY0 = std::sqrt(cov(0, 0));
-  result.dTheta = std::sqrt(cov(1, 1));
-  result.covY0Theta = cov(0, 1);
+  result.dTanTheta = std::sqrt(cov(1, 1));
+  result.covY0TanTheta = cov(0, 1);
 }
 
 std::optional<FastStrawLineFitter::FitResult> FastStrawLineFitter::fit(
@@ -181,14 +181,14 @@ std::optional<FastStrawLineFitter::FitResult> FastStrawLineFitter::fit(
                       << ": Start fast fit seed  theta: " << inDeg(thetaGuess));
   ////
   FitResult result{};
-  result.theta = thetaGuess;
+  result.tanTheta = thetaGuess;
   result.nDoF = fitPars.nDoF;
 
   double thetaPrime{0.};
   double thetaTwoPrime{0.};
   while (result.nIter <= m_cfg.maxIter) {
     ++result.nIter;
-    const TrigonomHelper angles{result.theta};
+    const TrigonomHelper angles{result.tanTheta};
     calcAngularDerivatives(angles, fitPars, thetaPrime, thetaTwoPrime);
     if (std::abs(thetaTwoPrime) < 2. * std::numeric_limits<double>::epsilon()) {
       ACTS_WARNING(__func__
@@ -196,7 +196,7 @@ std::optional<FastStrawLineFitter::FitResult> FastStrawLineFitter::fit(
                    << ": The fast straw fit encountered a singular "
                       "second derivative "
                    << fitPars << ", \n"
-                   << printThetaStep(result.theta, thetaPrime, thetaTwoPrime)
+                   << printThetaStep(result.tanTheta, thetaPrime, thetaTwoPrime)
                    << "\n"
                    << result);
       return std::nullopt;
@@ -205,20 +205,20 @@ std::optional<FastStrawLineFitter::FitResult> FastStrawLineFitter::fit(
     ACTS_VERBOSE(
         __func__ << "() - " << __LINE__ << ": Fit iteration #" << result.nIter
                  << " "
-                 << printThetaStep(result.theta, thetaPrime, thetaTwoPrime));
+                 << printThetaStep(result.tanTheta, thetaPrime, thetaTwoPrime));
 
     if (std::abs(update) < m_cfg.precCutOff) {
-      result.dTheta = std::sqrt(1. / Acts::abs(thetaTwoPrime));
+      result.dTanTheta = std::sqrt(1. / Acts::abs(thetaTwoPrime));
       completeResult(fitPars, result);
       return result;
     }
-    result.theta -= update;
+    result.tanTheta -= update;
   }
 
   ACTS_WARNING(
       __func__ << "() - " << __LINE__
                << ": The fast straw fit did not converge " << fitPars << ", \n"
-               << printThetaStep(result.theta, thetaPrime, thetaTwoPrime)
+               << printThetaStep(result.tanTheta, thetaPrime, thetaTwoPrime)
                << "\n"
                << result);
   return std::nullopt;
@@ -239,7 +239,7 @@ FastStrawLineFitter::UpdateStatus FastStrawLineFitter::updateIteration(
   SquareMatrix<2> hes{SquareMatrix<2>::Zero()};
   Vector2 grad{Vector2::Zero()};
 
-  const TrigonomHelper angles{fitResult.theta};
+  const TrigonomHelper angles{fitResult.tanTheta};
 
   calcAngularDerivatives(angles, fitPars, grad[0], hes(0, 0));
   grad[1] = calcTimeGrad(angles, fitPars);
@@ -300,14 +300,14 @@ FastStrawLineFitter::UpdateStatus FastStrawLineFitter::updateIteration(
   }
 
   if (retCode == UpdateStatus::Converged) {
-    fitResult.dTheta = std::sqrt(cov(0, 0));
+    fitResult.dTanTheta = std::sqrt(cov(0, 0));
     fitResult.dT0 = std::sqrt(cov(1, 1));
     completeResult(fitPars, fitResult);
     return retCode;
   }
 
   fitResult.t0 -= update[1];
-  fitResult.theta -= update[0];
+  fitResult.tanTheta -= update[0];
   return retCode;
 }
 }  // namespace Acts::Experimental::detail

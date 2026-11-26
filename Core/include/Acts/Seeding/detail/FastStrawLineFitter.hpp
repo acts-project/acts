@@ -86,16 +86,17 @@ class FastStrawLineFitter {
       x.print(ostr);
       return ostr;
     }
-    /// Fitted inclination angle; after fit(), the slope of the line
-    double theta{0.};
-    /// Uncertainty on theta
-    double dTheta{0.};
-    /// Fitted line intercept; after fit(), the coordinate of the line at z = 0
+    /// Tangent of the inclination angle. During the fit it is just the angle.
+    /// The method toCommonFrame transforms it into the tangent.
+    double tanTheta{0.};
+    /// Uncertainty on tangent of angle (on the angle while the fit iterates)
+    double dTanTheta{0.};
+    /// Intercept: coordinate of the line at z = 0
     double y0{0.};
     /// Uncertainty on the intercept
     double dY0{0.};
-    /// Covariance between the intercept and the angle
-    double covY0Theta{0.};
+    /// Covariance between the intercept and the tangent of the angle
+    double covY0TanTheta{0.};
     /// Evaluated chi2 postfit
     double chi2{0.};
     /// Number of degrees of freedom
@@ -303,7 +304,7 @@ class FastStrawLineFitter {
   ///                to this object
   void completeResult(const FitAuxiliaries& fitPars, FitResult& result) const;
   /// @brief Converts in place the converged result from the fit frame
-  ///        (eY, eZ) to the common frame
+  ///        (eY, eZ of the reference measurement) to the common frame
   ///
   /// The angle is replaced by the slope dc/dz of the line and the intercept by
   /// its coordinate c at z = 0, with their uncertainties and covariance.
@@ -311,8 +312,8 @@ class FastStrawLineFitter {
   /// @param projection: Plane of the fit: the bending (y) or non-bending (x)
   ///                    coordinate
   /// @param result: Mutable reference to the FitResult object
-  static void toChamberFrame(const FitAuxiliaries& fitPars,
-                             const ResidualIdx projection, FitResult& result);
+  static void toCommonFrame(const FitAuxiliaries& fitPars,
+                            const ResidualIdx projection, FitResult& result);
   /// Enumeration to describe the outcome of the fit iteration
   enum class UpdateStatus : std::uint8_t {
     Converged,  ///< The fit converged

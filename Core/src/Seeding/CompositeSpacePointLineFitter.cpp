@@ -8,16 +8,17 @@
 
 #include "Acts/Seeding/CompositeSpacePointLineFitter.hpp"
 
+#include "Acts/Definitions/Tolerance.hpp"
 namespace Acts::Experimental {
 
 namespace {
 /// @brief Covariance of a fast fit in its (intercept, angle) parameters
 /// @param result: Fast fit result
 SquareMatrix<2> planeCov(const detail::FastStrawLineFitter::FitResult& result) {
-  SquareMatrix<2> cov = SquareMatrix<2>::Zero();
+  SquareMatrix<2> cov{SquareMatrix<2>::Zero()};
   cov(0, 0) = Acts::square(result.dY0);
-  cov(1, 1) = Acts::square(result.dTheta);
-  cov(0, 1) = cov(1, 0) = result.covY0Theta;
+  cov(1, 1) = Acts::square(result.dTanTheta);
+  cov(0, 1) = cov(1, 0) = result.covY0TanTheta;
   return cov;
 }
 }  // namespace
@@ -50,11 +51,10 @@ void CompositeSpacePointLineFitter::fastFitCovariance(
   // dtanAlpha / dphi at fixed theta (non-bending)
   const double dSlopedAng = Line_t::lineToSlopesJacobian(pars)(iAng, iAng);
   // The slope does not change with the angle, e.g. tanAlpha for tanBeta = 0
-  if (std::abs(dSlopedAng) < std::numeric_limits<double>::epsilon()) {
+  if (std::abs(dSlopedAng) < s_epsilon) {
     return;
   }
-
-  SquareMatrix<2> jac = SquareMatrix<2>::Identity();
+  SquareMatrix<2> jac{SquareMatrix<2>::Identity()};
   jac(1, 1) = 1. / dSlopedAng;
   cov.block<2, 2>(iPos, iPos) = jac * planeCov(planeResult) * jac.transpose();
 }
@@ -64,13 +64,13 @@ void CompositeSpacePointLineFitter::fastFitCovariance(
     const FastFitter_t::FitResult& nonPrecResult, const ParamVec_t& pars,
     CovMat_t& cov) {
   using enum FitParIndex;
-  const SquareMatrix<4> toSlopes = Line_t::lineToSlopesJacobian(pars);
-  // theta = 0: the slopes do not determine phi (singular Jacobian).
-  assert(std::abs(toSlopes.determinant()) >
-         std::numeric_limits<double>::epsilon());
-  const SquareMatrix<4> jac = toSlopes.inverse();
+  // Line along z (theta = 0, pi): the slopes do not determine phi
+  if (std::abs(std::sin(pars[toUnderlying(theta)])) < s_epsilon) {
+    return;
+  }
+  const SquareMatrix<4> jac = Line_t::slopesToLineJacobian(pars);
 
-  SquareMatrix<4> planeCovs = SquareMatrix<4>::Zero();
+  SquareMatrix<4> planeCovs{SquareMatrix<4>::Zero()};
   planeCovs.block<2, 2>(toUnderlying(y0), toUnderlying(y0)) =
       planeCov(precResult);
   planeCovs.block<2, 2>(toUnderlying(x0), toUnderlying(x0)) =

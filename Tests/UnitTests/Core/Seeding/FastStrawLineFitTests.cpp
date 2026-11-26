@@ -356,7 +356,7 @@ void testSimpleStrawFit(RandomEngine& engine, TFile& outFile) {
     trueTanTheta = track.direction().y() / track.direction().z();
     /// Calculate the chi2 again, from the fitted slope tan(theta)
     const Vector3 recoDir =
-        makeDirectionFromAxisTangents(0., (*fitResult).theta);
+        makeDirectionFromAxisTangents(0., (*fitResult).tanTheta);
     trackPars[toUnderlying(Line_t::ParIndex::theta)] =
         VectorHelpers::theta(recoDir);
     trackPars[toUnderlying(Line_t::ParIndex::y0)] = (*fitResult).y0;
@@ -373,9 +373,9 @@ void testSimpleStrawFit(RandomEngine& engine, TFile& outFile) {
     ACTS_DEBUG("testChi2: " << testChi2 << ", fit:" << (*fitResult).chi2);
 
     BOOST_CHECK_LE(abs(testChi2 - (*fitResult).chi2), 1.e-9);
-    recoTanTheta = (*fitResult).theta;
+    recoTanTheta = (*fitResult).tanTheta;
     recoY0 = (*fitResult).y0;
-    uncertTanTheta = (*fitResult).dTheta;
+    uncertTanTheta = (*fitResult).dTanTheta;
     uncertY0 = (*fitResult).dY0;
     nDoF = (*fitResult).nDoF;
     chi2 = (*fitResult).chi2;
@@ -477,10 +477,10 @@ void testFitWithT0(RandomEngine& engine, TFile& outFile) {
     trueT0 = inNanoS(timeOffSet);
     /// Fit parameters
     recoY0 = (*result).y0;
-    recoTanTheta = (*result).theta;
+    recoTanTheta = (*result).tanTheta;
     recoT0 = inNanoS((*result).t0);
     uncertY0 = (*result).dY0;
-    uncertTanTheta = (*result).dTheta;
+    uncertTanTheta = (*result).dTanTheta;
     uncertT0 = inNanoS((*result).dT0);
     nDoF = (*result).nDoF;
     chi2 = (*result).chi2;
@@ -528,9 +528,9 @@ void testStripFit(RandomEngine& engine, TFile& outFile) {
     }
     /// Fit parameters
     recoY0 = (*result).y0;
-    recoTanTheta = (*result).theta;
+    recoTanTheta = (*result).tanTheta;
     uncertY0 = (*result).dY0;
-    uncertTanTheta = (*result).dTheta;
+    uncertTanTheta = (*result).dTanTheta;
     nDoF = (*result).nDoF;
     nIter = (*result).nIter;
     chi2 = 0.;

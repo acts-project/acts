@@ -172,7 +172,7 @@ CompositeSpacePointLineFitter::fastFit(
     result.nIter = precResult->nIter;
     result.chi2 = precResult->chi2;
     result.converged = true;
-    tanBeta = precResult->theta;
+    tanBeta = precResult->tanTheta;
     yInt = precResult->y0;
   }
   // Try to perform a fast fit in non-precision direction
@@ -184,7 +184,7 @@ CompositeSpacePointLineFitter::fastFit(
     ACTS_DEBUG(__func__ << "() " << __LINE__ << " Non precision fit "
                         << (nonPrecResult ? "succeeded." : "failed."));
     if (nonPrecResult) {
-      tanAlpha = nonPrecResult->theta;
+      tanAlpha = nonPrecResult->tanTheta;
       xInt = nonPrecResult->y0;
       result.chi2 += nonPrecResult->chi2;
       result.nDoF += nonPrecResult->nDoF;

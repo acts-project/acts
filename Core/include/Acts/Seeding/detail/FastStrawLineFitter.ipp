@@ -32,14 +32,14 @@ std::optional<FastStrawLineFitter::FitResult> FastStrawLineFitter::fit(
   }
   // Calculate the chi2
   calcPostFitChi2(measurements, *result);
-  toChamberFrame(fitPars, ResidualIdx::bending, *result);
+  toCommonFrame(fitPars, ResidualIdx::bending, *result);
   return result;
 }
 
 template <CompositeSpacePointContainer StrawCont_t>
 void FastStrawLineFitter::calcPostFitChi2(const StrawCont_t& measurements,
                                           FitResult& result) const {
-  const TrigonomHelper angles{result.theta};
+  const TrigonomHelper angles{result.tanTheta};
   result.chi2 = 0.;
   for (const auto& strawMeas : measurements) {
     result.chi2 += chi2Term(angles, result.y0, *strawMeas);
@@ -149,7 +149,7 @@ std::optional<FastStrawLineFitter::FitResult> FastStrawLineFitter::fit(
   }
   auto result = fit(auxVars);
   if (result) {
-    toChamberFrame(auxVars, projection, *result);
+    toCommonFrame(auxVars, projection, *result);
   }
   return result;
 }
@@ -162,7 +162,7 @@ void FastStrawLineFitter::calcPostFitChi2(const Acts::CalibrationContext& ctx,
                                           const StrawCont_t& measurements,
                                           const Calibrator_t& calibrator,
                                           FitResultT0& result) const {
-  const TrigonomHelper angles{result.theta};
+  const TrigonomHelper angles{result.tanTheta};
   result.chi2 = 0.;
   for (const auto& strawMeas : measurements) {
     result.chi2 += chi2Term(angles, result.y0, *strawMeas,
@@ -274,7 +274,7 @@ std::optional<FastStrawLineFitter::FitResultT0> FastStrawLineFitter::fit(
 
   FitAuxiliariesWithT0 fitPars{
       fillAuxiliaries(ctx, calibrator, measurements, signs, result.t0)};
-  result.theta = startTheta(fitPars);
+  result.tanTheta = startTheta(fitPars);
   result.nDoF = fitPars.nDoF;
   ACTS_DEBUG(__func__ << "() - " << __LINE__
                       << ": Initial fit parameters: " << result);
@@ -284,7 +284,7 @@ std::optional<FastStrawLineFitter::FitResultT0> FastStrawLineFitter::fit(
          UpdateStatus::Exceeded) {
     if (iterStatus == UpdateStatus::Converged) {
       calcPostFitChi2(ctx, measurements, calibrator, result);
-      toChamberFrame(fitPars, ResidualIdx::bending, result);
+      toCommonFrame(fitPars, ResidualIdx::bending, result);
       return result;
     }
     fitPars = fillAuxiliaries(ctx, calibrator, measurements, signs, result.t0);

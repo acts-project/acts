@@ -133,7 +133,6 @@ Line3DWithPartialDerivatives<T>::lineToSlopesJacobian(
 {
   constexpr auto iTh = toUnderlying(ParIndex::theta);
   constexpr auto iPh = toUnderlying(ParIndex::phi);
-
   const T cosTheta = std::cos(pars[iTh]);
   // The slopes dx/dz, dy/dz are not defined for a line parallel to the z = 0
   // plane
@@ -149,6 +148,31 @@ Line3DWithPartialDerivatives<T>::lineToSlopesJacobian(
   jac(iTh, iPh) = tanTheta * cosPhi;    // dtanBeta / dphi
   jac(iPh, iTh) = cosPhi * secThetaSq;  // dtanAlpha / dtheta
   jac(iPh, iPh) = -tanTheta * sinPhi;   // dtanAlpha / dphi
+  return jac;
+}
+
+template <std::floating_point T>
+template <std::size_t N>
+Line3DWithPartialDerivatives<T>::LineJacobian_t
+Line3DWithPartialDerivatives<T>::slopesToLineJacobian(
+    const std::array<T, N>& pars) noexcept
+  requires(N >= s_nPars)
+{
+  constexpr auto iTh = toUnderlying(ParIndex::theta);
+  constexpr auto iPh = toUnderlying(ParIndex::phi);
+  const T cosTheta = std::cos(pars[iTh]);
+  const T tanTheta = std::tan(pars[iTh]);
+  // theta = 90 deg: no slopes; theta = 0: phi is not determined by the slopes
+  assert(std::abs(cosTheta) > s_epsilon && std::abs(tanTheta) > s_epsilon);
+  const T cosThetaSq = Acts::square(cosTheta);
+  const T cosPhi = std::cos(pars[iPh]);
+  const T sinPhi = std::sin(pars[iPh]);
+  // theta = atan(hypot(tanAlpha, tanBeta)), phi = atan2(tanBeta, tanAlpha)
+  LineJacobian_t jac = LineJacobian_t::Identity();
+  jac(iTh, iTh) = sinPhi * cosThetaSq;  // dtheta / dtanBeta
+  jac(iTh, iPh) = cosPhi * cosThetaSq;  // dtheta / dtanAlpha
+  jac(iPh, iTh) = cosPhi / tanTheta;    // dphi / dtanBeta
+  jac(iPh, iPh) = -sinPhi / tanTheta;   // dphi / dtanAlpha
   return jac;
 }
 }  // namespace Acts::detail
