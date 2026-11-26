@@ -182,8 +182,7 @@ ProcessCode Geant4SimulationBase::execute(const AlgorithmContext& ctx) const {
     }
     m_persistentRun->processEvent();
   } catch (...) {
-    eventStore().store = nullptr;
-    eventStore().inputParticles = nullptr;
+    eventStore() = Geant4::EventStore{};
     throw;
   }
   // The run can outlive this event's WhiteBoard.
