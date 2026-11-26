@@ -168,7 +168,8 @@ class AlignableStructure {
 
   /// Access direct member pointers, including any null entries.
   /// @return Read-only view of the stored surface pointers
-  /// @note Keep the structure alive and obtain a new view after addSurface().
+  /// @note The structure must outlive the returned view. Calling addSurface()
+  /// may invalidate the view; obtain a new view after adding surfaces.
   std::span<const std::shared_ptr<Acts::Surface>> surfacePointers() const {
     return m_surfaces;
   }

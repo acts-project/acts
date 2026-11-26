@@ -58,7 +58,9 @@ struct AlignmentParameterDirectory {
 
   /// Standalone modules in input order, followed by active selected structures.
   std::vector<AlignableUnit> alignables;
-  /// Position in alignables for each selected placement.
+  /// Maps each module placement to its position in the alignables vector.
+  /// A standalone module maps to its own entry. Every module belonging to a
+  /// selected structure maps to that structure's shared entry.
   std::unordered_map<const Acts::SurfacePlacementBase*, std::size_t>
       placementToAlignable;
   /// Number of enabled parameters across all alignables.
@@ -67,9 +69,10 @@ struct AlignmentParameterDirectory {
 
 /// Number the enabled translations and rotations of selected alignables.
 ///
-/// Active structures must have members and no children. Structures with mask
-/// None are omitted. Each selected placement must belong to only one alignable,
-/// including standalone modules with mask None.
+/// Active structures must have members and no children, and every member must
+/// have a surface placement. Structures with mask None are omitted. Each
+/// selected placement must belong to only one alignable, including standalone
+/// modules with mask None.
 ///
 /// Parameters are numbered from zero in input order: modules, then structures.
 /// Within each alignable, Center0..2 precede Rotation0..2; fixed components are
@@ -79,7 +82,8 @@ struct AlignmentParameterDirectory {
 /// directory.
 /// @param structures Top-level structures in the registered hierarchy
 /// @param selectedStructures Registered structures to align
-/// @param modules Standalone module placements
+/// @param modules Modules selected for individual alignment, excluding members
+/// of active selected structures
 /// @param moduleMask Enabled translations and rotations for standalone modules
 /// @return Parameter directory, or the reason the hierarchy or selection is invalid
 Acts::Result<AlignmentParameterDirectory, AlignmentSelectionError>

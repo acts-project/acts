@@ -170,8 +170,9 @@ correction vector to selected modules and structures. The caller supplies the
 standalone module mask; each structure supplies its own mask.
 
 Registering a structure makes it available for selection. Selected structures
-with enabled parameters must have members and no children. A structure with mask
-`None` is omitted, leaving its members available for standalone selection.
+with enabled parameters must have members and no children, and every member must
+have a surface placement. A structure with mask `None` is omitted, leaving its
+members available for standalone selection.
 Standalone modules remain selected even with mask `None`. A placement cannot
 belong to two selected alignables, regardless of their masks. The registered
 hierarchy must be acyclic, with each structure and placement registered once.
@@ -197,7 +198,8 @@ member uses indices 0 and 1. Geometry IDs do not affect numbering.
 An empty selection or a selection with no enabled parameters is valid.
 
 The directory holds non-owning pointers. Callers must keep all selected structures
-and placements alive and rebuild the directory after changing selection, membership,
-or masks. Building it visits the hierarchy and selected members; no track data is
-involved. Track processing, numerical constraints, solving, and geometry updates
-remain separate work. The existing solver does not yet use this directory.
+and placements alive and rebuild the directory after changing selection,
+membership, or masks. Building it visits the hierarchy and selected members; no
+track data is involved. Track processing, numerical constraints, solving, and
+geometry updates remain separate work. The existing solver does not yet use this
+directory.
