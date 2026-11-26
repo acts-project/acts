@@ -23,7 +23,7 @@ inline void take_the_picture(
     const global_index_t n_rows, const int width, const int height,
     const int ix, const int iy, const unsigned short* wedge,
     vecmem::jagged_device_vector<scalar>::reference image) {
-  static constexpr scalar normalization = 1.f / 256.f;
+  static constexpr scalar normalization = 1.f / 12.f;
   const int wedge_width = static_cast<int>(n_cols);
   const int wedge_height = static_cast<int>(n_rows);
 
@@ -32,7 +32,7 @@ inline void take_the_picture(
   const int center_y = static_cast<int>(row);
 
   const global_index_t output_index =
-      static_cast<global_index_t>(ix) * height + iy;
+      static_cast<global_index_t>(iy) * width + ix;
   const int x = center_x + ix - width / 2;
   if (x < 0 || x >= wedge_width) {
     image[output_index] = scalar{0};
@@ -84,7 +84,8 @@ inline void take_pictures(
   if (colIndex == 0 && rowIndex == 0) {
     vecmem::device_vector<scalar> maxima_x(maxima_x_view);
     const auto [col, _] = get_col_row(maxima_idx, n_cols, n_rows);
-    maxima_x[globalIndex] = 0.50f * (edges_x[col] + edges_x[col + 1]);
+    maxima_x[globalIndex] =
+        static_cast<scalar>(col) / static_cast<scalar>(n_cols);
   }
 }
 

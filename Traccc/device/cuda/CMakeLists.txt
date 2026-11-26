@@ -117,6 +117,18 @@ traccc_add_library( traccc_cuda cuda TYPE SHARED
   "src/fitting/kernels/fit_prelude.cu"
 )
 
+if(TRACCC_USE_ONNXRUNTIME)
+    if(NOT TARGET onnxruntime::onnxruntime)
+        find_package(onnxruntime MODULE REQUIRED)
+    endif()
+    target_sources(
+        traccc_cuda
+        PRIVATE "src/seeding/peak_filter.hpp" "src/seeding/peak_filter.cpp"
+    )
+    target_link_libraries(traccc_cuda PRIVATE onnxruntime::onnxruntime)
+    target_compile_definitions(traccc_cuda PRIVATE TRACCC_USE_ONNXRUNTIME)
+endif()
+
 function(traccc_add_cuda_specialization TEMPLATE_FILE)
     cmake_parse_arguments(ARG "" "DETECTOR_NAME;BFIELD_NAME" "" ${ARGN})
 

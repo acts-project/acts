@@ -167,6 +167,7 @@ option(ACTS_TRACCC_BUILD_PERFORMANCE "Build the traccc performance library" OFF)
 option(ACTS_TRACCC_BUILD_TESTS "Build the traccc unit tests" ${ACTS_BUILD_UNITTESTS})
 option(ACTS_TRACCC_BUILD_EXAMPLES "Build the traccc examples" ${ACTS_BUILD_EXAMPLES})
 option(ACTS_TRACCC_ENABLE_NVTX_PROFILING "Instrument the traccc device code for NVTX profiling" OFF)
+option(ACTS_TRACCC_USE_ONNXRUNTIME "Run the traccc Hough seeding peak filter network with ONNX Runtime" OFF)
 set(ACTS_TRACCC_SUPPORTED_DETECTORS "default_detector;odd_detector;telescope_detector" CACHE STRING "Semicolon-separated list of detector types that traccc supports")
 set(ACTS_TRACCC_DEVICE_LOG_LEVEL "NONE" CACHE STRING "Log level for traccc and detray device code")
 # other options

@@ -15,7 +15,13 @@
 // Project include(s).
 #include "traccc/seeding/device/hough_transform_seeding_algorithm.hpp"
 
+// System include(s).
+#include <memory>
+
 namespace traccc::cuda {
+namespace details {
+class peak_filter;
+}  // namespace details
 
 /// Main algorithm for performing the track seeding on an NVIDIA GPU
 ///
@@ -64,6 +70,9 @@ class hough_transform_seeding_algorithm
       const compute_cottheta_matrix_payload& payload) const;
   void select_hits_kernel(const select_hits_payload& payload) const;
   void make_seeds_kernel(const make_seeds_payload& payload) const;
+
+  /// Peak filter network, set when a model path is configured
+  std::shared_ptr<details::peak_filter> m_peak_filter;
 };
 
 }  // namespace traccc::cuda

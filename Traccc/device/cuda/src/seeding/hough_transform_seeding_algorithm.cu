@@ -11,8 +11,12 @@
 #include "../utils/global_index.hpp"
 #include "../utils/magnetic_field_types.hpp"
 #include "../utils/utils.hpp"
+#include "peak_filter.hpp"
 #include "traccc/cuda/seeding/hough_transform_seeding_algorithm.hpp"
 #include "traccc/device/global_index.hpp"
+
+// System include(s).
+#include <stdexcept>
 
 namespace traccc::cuda {
 namespace kernels {
@@ -124,6 +128,19 @@ __global__ void evaluate_nn(
                       nn_outcome);
 }
 
+__global__ void apply_nn_scores(
+    const unsigned int n_images,
+    const vecmem::data::vector_view<const scalar> scores_view,
+    vecmem::data::vector_view<unsigned int> nn_outcome_view) {
+  const unsigned int i = details::global_index1();
+  if (i >= n_images) {
+    return;
+  }
+  const vecmem::device_vector<const scalar> scores(scores_view);
+  vecmem::device_vector<unsigned int> nn_outcome(nn_outcome_view);
+  nn_outcome[i] = (scores[2u * i + 1u] > scores[2u * i]) ? 1u : 0u;
+}
+
 __global__ void count_contributing_hits(
     const traccc::hough_seeding_config config, const unsigned int n_images,
     const vecmem::data::vector_view<const scalar> edges_x,
@@ -215,7 +232,18 @@ hough_transform_seeding_algorithm::hough_transform_seeding_algorithm(
     std::unique_ptr<const Logger> logger, await_function_type await_func)
     : device::hough_transform_seeding_algorithm(mr, copy, seeding_config,
                                                 std::move(logger)),
-      cuda::algorithm_base{str, std::move(await_func)} {}
+      cuda::algorithm_base{str, std::move(await_func)} {
+  if (!seeding_config.nn_model_path.empty()) {
+#ifdef TRACCC_USE_ONNXRUNTIME
+    m_peak_filter = std::make_shared<details::peak_filter>(
+        seeding_config.nn_model_path, details::get_stream(stream()));
+#else
+    throw std::runtime_error(
+        "A Hough seeding NN model was given, but traccc was built without "
+        "ONNX Runtime (ACTS_TRACCC_USE_ONNXRUNTIME)");
+#endif
+  }
+}
 
 void hough_transform_seeding_algorithm::define_plane_edges_kernel(
     const define_plane_edges_kernel_payload& payload) const {
@@ -316,6 +344,20 @@ void hough_transform_seeding_algorithm::evaluate_nn_kernel(
     const evaluate_nn_payload& payload) const {
   const unsigned int n_threads = 256;
   const unsigned int n_blocks = (payload.n_images + n_threads - 1) / n_threads;
+#ifdef TRACCC_USE_ONNXRUNTIME
+  if (m_peak_filter && payload.n_images > 0u) {
+    // The images of the fixed size jagged buffer lie one after another
+    vecmem::data::vector_buffer<scalar> scores(2u * payload.n_images,
+                                               mr().main);
+    (*m_peak_filter)(payload.images.host_ptr()[0].ptr(), payload.maxima_x.ptr(),
+                     payload.n_images, scores.ptr());
+    kernels::apply_nn_scores<<<n_blocks, n_threads, 0,
+                               details::get_stream(stream())>>>(
+        payload.n_images, scores, payload.nn_outcome);
+    TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
+    return;
+  }
+#endif
   kernels::
       evaluate_nn<<<n_blocks, n_threads, 0, details::get_stream(stream())>>>(
           payload.n_images, payload.images, payload.maxima_x,

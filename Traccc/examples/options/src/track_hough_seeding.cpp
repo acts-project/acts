@@ -122,6 +122,11 @@ track_hough_seeding::track_hough_seeding() : interface("HOUGH Options") {
           ->default_value(hough_config.shift_map,
                           vector_as_text(hough_config.shift_map)),
       "Bit position per detector volume");
+
+  m_desc.add_options()("nn_model_path",
+                       po::value(&hough_config.nn_model_path)
+                           ->default_value(hough_config.nn_model_path),
+                       "ONNX model of the peak filter (empty: keep all peaks)");
 }
 
 track_hough_seeding::operator hough_seeding_config() const {
@@ -204,6 +209,9 @@ std::unique_ptr<configuration_printable> track_hough_seeding::as_printable()
 
   cat->add_child(std::make_unique<configuration_kv_pair>(
       "shift_map", vector_as_text(hough_config.shift_map)));
+
+  cat->add_child(std::make_unique<configuration_kv_pair>(
+      "nn_model_path", hough_config.nn_model_path));
 
   return cat;
 }
