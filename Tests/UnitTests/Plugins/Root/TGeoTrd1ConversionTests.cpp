@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
@@ -21,6 +22,7 @@
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <algorithm>
+#include <cctype>
 #include <cstddef>
 #include <memory>
 #include <stdexcept>
@@ -50,7 +52,7 @@ BOOST_AUTO_TEST_SUITE(RootSuite)
 
 /// @brief Unit test to convert a TGeoTrd1 into a Plane
 ///
-/// * The TGeoTrd1 can only have (x/X)(z/Z) orientation
+/// * A TGeoTrd1 tapered within the surface needs (x/X)(z/Z) orientation
 BOOST_AUTO_TEST_CASE(TGeoTrd1_to_PlaneSurface) {
   ObjVisualization3D objVis;
 
@@ -105,13 +107,68 @@ BOOST_AUTO_TEST_CASE(TGeoTrd1_to_PlaneSurface) {
   }
 
   // Check exceptions for not allowed axis definition
-  std::vector<TGeoAxes> notAllowed = {"XYZ", "YZX", "ZXY", "ZYX"};
+  std::vector<TGeoAxes> notAllowed = {"YZX", "ZXY", "ZYX"};
   for (const auto &naxis : notAllowed) {
     BOOST_CHECK_THROW(TGeoSurfaceConverter::toSurface(*vol->GetShape(),
                                                       *gGeoIdentity, naxis, 1),
                       std::invalid_argument);
   }
   objVis.write("TGeoConversion_TGeoTrd1_PlaneSurface");
+}
+
+/// Unit test to convert a thin TGeoTrd1 that tapers along its normal, as
+/// used for the flat segments approximating a curved sensor, into a plane
+/// surface at its mid-plane
+BOOST_AUTO_TEST_CASE(TGeoTrd1_tapered_along_normal_to_PlaneSurface) {
+  double hxin = 2.49;   // half width at -dz
+  double hxout = 2.51;  // half width at +dz
+  double hy = 15.;
+  double ht = 0.025;  // half thickness
+
+  new TGeoManager("trd1", "poza9");
+  TGeoMaterial *mat = new TGeoMaterial("Si", 28.09, 14, 2.33);
+  TGeoMedium *med = new TGeoMedium("MED", 1, mat);
+  TGeoVolume *top = gGeoManager->MakeBox("TOP", med, 100, 100, 100);
+  gGeoManager->SetTopVolume(top);
+  TGeoVolume *vol = gGeoManager->MakeTrd1("Trd1", med, hxin, hxout, hy, ht);
+  gGeoManager->CloseGeometry();
+
+  // Signed unit vector of an axis character, lower case = negative direction
+  auto direction = [](char c) -> Vector3 {
+    double sign = std::islower(c) != 0 ? -1. : 1.;
+    return sign *
+           (std::toupper(c) == 'X' ? Vector3::UnitX() : Vector3::UnitY());
+  };
+
+  double scale = 10.;
+  std::vector<TGeoAxes> allowedAxes = {"XYZ", "xYZ", "xyZ", "XyZ",
+                                       "YXZ", "yXZ", "yxZ", "YxZ"};
+  for (const auto &axes : allowedAxes) {
+    auto [plane, thickness] = TGeoSurfaceConverter::toSurface(
+        *vol->GetShape(), *gGeoIdentity, axes, scale);
+    BOOST_REQUIRE_NE(plane, nullptr);
+    BOOST_CHECK_EQUAL(plane->type(), Surface::Plane);
+    CHECK_CLOSE_ABS(thickness, scale * 2 * ht, s_epsilon);
+
+    auto bounds = dynamic_cast<const RectangleBounds *>(&(plane->bounds()));
+    BOOST_REQUIRE_NE(bounds, nullptr);
+    double hxMid = 0.5 * (hxin + hxout);
+    bool xFirst = std::toupper(axes.value()[0]) == 'X';
+    CHECK_CLOSE_ABS(bounds->halfLengthX(), scale * (xFirst ? hxMid : hy),
+                    s_epsilon);
+    CHECK_CLOSE_ABS(bounds->halfLengthY(), scale * (xFirst ? hy : hxMid),
+                    s_epsilon);
+
+    // The surface sits at the mid-plane, its local axes follow the requested
+    // (signed) axes and the normal completes them to a right-handed frame
+    CHECK_CLOSE_ABS(plane->center(tgContext).norm(), 0., s_epsilon);
+    auto rotation = plane->localToGlobalTransform(tgContext).rotation();
+    Vector3 expectedX = direction(axes.value()[0]);
+    Vector3 expectedY = direction(axes.value()[1]);
+    CHECK_CLOSE_ABS(rotation.col(0), expectedX, s_epsilon);
+    CHECK_CLOSE_ABS(rotation.col(1), expectedY, s_epsilon);
+    CHECK_CLOSE_ABS(rotation.col(2), expectedX.cross(expectedY), s_epsilon);
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
