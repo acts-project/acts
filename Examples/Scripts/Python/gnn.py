@@ -121,10 +121,6 @@ def runGnnMetricLearning(
         from acts.gnn import OnnxEdgeClassifier
 
         gnnConfig["device"] = device
-        # The ONNX GNN was exported for positions in metres, while the
-        # TorchScript models above take the millimetres the pipeline feeds
-        # them. Without these scales every edge scores ~1e-4 and the cut below
-        # empties the graph, so no track candidate survives.
         gnnConfig["featureScales"] = [1000.0, 1.0, 1000.0]
         edgeClassifiers.append(
             OnnxEdgeClassifier(**gnnConfig),
