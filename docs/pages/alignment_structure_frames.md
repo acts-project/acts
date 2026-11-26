@@ -190,8 +190,8 @@ if the only selected object is a structure with mask `Center0 | Rotation2`, ever
 member uses indices 0 and 1. Geometry IDs do not affect numbering.
 An empty selection or a selection with no enabled parameters is valid.
 
-The index keeps active structures alive. Callers must keep all selected
-placements alive and rebuild the index after changing selection, membership, or
-masks. Building it visits the hierarchy and selected members; no track data is
+The index holds non-owning pointers. Callers must keep all selected structures
+and placements alive and rebuild the index after changing selection, membership,
+or masks. Building it visits the hierarchy and selected members; no track data is
 involved. Track processing, numerical constraints, solving, and geometry updates
 remain separate work. The existing solver does not yet use this index.

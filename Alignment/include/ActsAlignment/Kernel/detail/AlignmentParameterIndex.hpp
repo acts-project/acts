@@ -33,9 +33,8 @@ struct AlignmentSelectionError {
 
 /// Parameter indices for one selected module or structure.
 struct AlignmentParameterGroup {
-  /// Retains a selected structure or points to a standalone module.
-  std::variant<const Acts::SurfacePlacementBase*,
-               std::shared_ptr<const AlignableStructure>>
+  /// Non-owning pointer to a selected module or structure.
+  std::variant<const Acts::SurfacePlacementBase*, const AlignableStructure*>
       alignable;
   /// Position in the correction vector for each Acts::AlignmentIndices
   /// component. A fixed component has no index (std::nullopt).
@@ -63,7 +62,7 @@ struct AlignmentParameterIndex {
 /// Within each group, Center0..2 precede Rotation0..2; fixed components are
 /// skipped. An empty index is valid. Rebuild after changing selection,
 /// membership, or masks. Do not change the hierarchy while building the index.
-/// All selected placements must outlive the index.
+/// All selected structures and placements must outlive the index.
 /// @param structures Top-level structures in the registered hierarchy
 /// @param selectedStructures Registered structures to align
 /// @param modules Standalone module placements

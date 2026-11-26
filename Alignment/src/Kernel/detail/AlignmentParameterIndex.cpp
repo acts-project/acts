@@ -111,7 +111,7 @@ makeAlignmentParameterIndex(
     }
     AlignmentParameterGroup group{module, {}};
     numberParameters(group, moduleMask);
-    index.groups.push_back(std::move(group));
+    index.groups.push_back(group);
   }
 
   // A valid hierarchy can still be accompanied by a duplicate selection.
@@ -152,9 +152,9 @@ makeAlignmentParameterIndex(
             "Overlapping alignment selections"};
       }
     }
-    AlignmentParameterGroup group{structure, {}};
+    AlignmentParameterGroup group{structure.get(), {}};
     numberParameters(group, mask);
-    index.groups.push_back(std::move(group));
+    index.groups.push_back(group);
   }
   return index;
 }

@@ -637,8 +637,8 @@ BOOST_FIXTURE_TEST_CASE(MembersShareParameterIndices, ParameterIndexFixture) {
   BOOST_CHECK_EQUAL(index->placementGroups.at(first.get()), 0u);
   BOOST_CHECK_EQUAL(index->placementGroups.at(second.get()), 0u);
   const auto& entry = index->groups.front();
-  BOOST_CHECK(std::get<std::shared_ptr<const AlignableStructure>>(
-                  entry.alignable) == group);
+  BOOST_CHECK(std::get<const AlignableStructure*>(entry.alignable) ==
+              group.get());
   for (std::size_t dof = 0; dof < eAlignmentSize; ++dof) {
     BOOST_REQUIRE(entry.parameterIndices[dof].has_value());
     BOOST_CHECK_EQUAL(*entry.parameterIndices[dof], dof);
@@ -751,11 +751,16 @@ BOOST_FIXTURE_TEST_CASE(SelectionDoesNotResolveGeometry,
   auto index = makeParameterIndex({group}, {group});
   BOOST_REQUIRE(index.ok());
   BOOST_CHECK_EQUAL(index->numParameters, 6u);
-  // Release other owners before checking that the index retains the structure.
-  withoutFrame = makeParameterIndex({}, {});
-  std::weak_ptr<const AlignableStructure> lifetime = group;
-  group.reset();
-  BOOST_CHECK(!lifetime.expired());
+}
+
+BOOST_FIXTURE_TEST_CASE(ParameterIndexDoesNotOwnAlignables,
+                        ParameterIndexFixture) {
+  const auto structureOwners = group.use_count();
+  const auto moduleOwners = module.use_count();
+  const auto index = makeParameterIndex({group}, {group}, {module.get()});
+  BOOST_REQUIRE(index.ok());
+  BOOST_CHECK_EQUAL(group.use_count(), structureOwners);
+  BOOST_CHECK_EQUAL(module.use_count(), moduleOwners);
 }
 
 BOOST_FIXTURE_TEST_CASE(SelectedLeavesAndInactiveParents,
