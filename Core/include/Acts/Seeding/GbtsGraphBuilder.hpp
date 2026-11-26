@@ -9,11 +9,11 @@
 #pragma once
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Seeding/GbtsEdge.hpp"
 #include "Acts/Seeding/GbtsGeometry.hpp"
 #include "Acts/Seeding/GbtsLayerDescription.hpp"
 #include "Acts/Seeding/GbtsNodeStorage.hpp"
 #include "Acts/Seeding/GbtsRoiDescriptor.hpp"
-#include "Acts/Seeding/detail/GbtsGraphTypes.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <cstdint>
@@ -27,7 +27,7 @@ namespace Acts::Experimental {
 /// The doublet graph of the GBTS workflow, as built by `GbtsGraphBuilder`.
 struct GbtsGraph {
   /// The graph edges, i.e. the doublets.
-  std::vector<detail::GbtsEdge> edgeStorage;
+  std::vector<GbtsEdge> edgeStorage;
 
   /// The inner neighbours of edge `e` are `neighbours[neighbourOffsets[e]]` up
   /// to, not including, `neighbours[neighbourOffsets[e + 1]]`, in the order

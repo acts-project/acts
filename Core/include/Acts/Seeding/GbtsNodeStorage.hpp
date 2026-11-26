@@ -37,10 +37,6 @@ class GbtsGraphBuilder;
 /// array indexed by node, since the graph builder reads them one at a time in
 /// its hot loops and never as space points.
 class GbtsNodeStorage final {
-  // Declared here so the public accessor can return it; defined privately
-  // below.
-  struct Config;
-
  public:
   /// Neither copied nor moved: the graph builder holds spans into it while it
   /// runs.
@@ -139,10 +135,6 @@ class GbtsNodeStorage final {
   /// @return Whether there are any
   bool hasStrips() const { return !m_strips.empty(); }
 
-  /// Access the node loading configuration.
-  /// @return The configuration
-  const Config& config() const { return m_cfg; }
-
  private:
   // Only the seeder builds one, and only it and the graph walk the nodes.
   friend class GraphBasedTrackSeeder;
@@ -169,6 +161,10 @@ class GbtsNodeStorage final {
     /// Cluster width covered by one bin of the tau lookup table.
     float tauLutBinWidth = 0.05f;
   };
+
+  /// Access the node loading configuration.
+  /// @return The configuration
+  const Config& config() const { return m_cfg; }
 
   /// @param config Node loading configuration
   /// @param geometry Shared pointer to GBTS geometry
