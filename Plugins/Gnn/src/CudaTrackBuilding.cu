@@ -13,6 +13,8 @@
 #include "ActsPlugins/Gnn/detail/CudaUtils.hpp"
 #include "ActsPlugins/Gnn/detail/JunctionRemoval.hpp"
 
+#include "CudaStream.hpp"
+
 using namespace Acts;
 
 namespace ActsPlugins {
@@ -35,7 +37,7 @@ std::vector<std::vector<int>> CudaTrackBuilding::operator()(
     return {};
   }
 
-  auto stream = execContext.stream.value();
+  auto stream = detail::getCudaStream(execContext);
 
   auto cudaSrcPtr = tensors.edgeIndex.data();
   auto cudaTgtPtr = tensors.edgeIndex.data() + numEdges;

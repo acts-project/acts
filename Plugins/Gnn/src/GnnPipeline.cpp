@@ -11,21 +11,14 @@
 #include "Acts/Utilities/Helpers.hpp"
 #include "ActsPlugins/Gnn/detail/NvtxUtils.hpp"
 
+#include <optional>
 #include <stdexcept>
 
 #ifdef ACTS_GNN_WITH_CUDA
-#include "ActsPlugins/Gnn/detail/CudaUtils.hpp"
+#include "ActsPlugins/Gnn/detail/async_device_memory_resource.hpp"
 
-namespace {
-struct CudaStreamGuard {
-  cudaStream_t stream{};
-  CudaStreamGuard() { ACTS_CUDA_CHECK(cudaStreamCreate(&stream)); }
-  ~CudaStreamGuard() {
-    ACTS_CUDA_CHECK(cudaStreamSynchronize(stream));
-    ACTS_CUDA_CHECK(cudaStreamDestroy(stream));
-  }
-};
-}  // namespace
+#include <vecmem/utils/cuda/async_copy.hpp>
+#include <vecmem/utils/cuda/stream_wrapper.hpp>
 #endif
 
 using namespace Acts;
@@ -67,10 +60,18 @@ std::vector<std::vector<int>> GnnPipeline::run(
   ExecutionContext ctx;
   ctx.device = device;
 #ifdef ACTS_GNN_WITH_CUDA
-  std::optional<CudaStreamGuard> streamGuard;
+  // A new stream, memory resource and copy object for every run, so that runs
+  // on several threads stay independent
+  std::optional<vecmem::cuda::stream_wrapper> stream;
+  std::optional<detail::async_device_memory_resource> deviceMr;
+  std::optional<vecmem::cuda::async_copy> copy;
   if (ctx.device.type == Device::Type::eCUDA) {
-    streamGuard.emplace();
-    ctx.stream = streamGuard->stream;
+    stream.emplace();
+    deviceMr.emplace(*stream);
+    copy.emplace(*stream);
+    ctx.stream = &*stream;
+    ctx.memoryResource = &*deviceMr;
+    ctx.copy = &*copy;
   }
 #endif
 
