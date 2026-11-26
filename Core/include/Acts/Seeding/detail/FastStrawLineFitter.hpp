@@ -177,8 +177,8 @@ class FastStrawLineFitter {
       return ostr;
     }
     /// Axes of the fit frame
-    Vector axisY{Vector::UnitY()};
-    Vector axisZ{Vector::UnitZ()};
+    Vector eY{Vector::UnitY()};
+    Vector eZ{Vector::UnitZ()};
     /// Tube position center - y weighted with inverse covariances
     double centerY{0.};
     /// Tube position center - z weighted with inverse covariances
@@ -303,7 +303,7 @@ class FastStrawLineFitter {
   ///                to this object
   void completeResult(const FitAuxiliaries& fitPars, FitResult& result) const;
   /// @brief Converts in place the converged result from the fit frame
-  ///        (axisY, axisZ) to the common frame
+  ///        (eY, eZ) to the common frame
   ///
   /// The angle is replaced by the slope dc/dz of the line and the intercept by
   /// its coordinate c at z = 0, with their uncertainties and covariance.

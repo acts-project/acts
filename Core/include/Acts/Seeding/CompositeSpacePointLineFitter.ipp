@@ -213,14 +213,14 @@ CompositeSpacePointLineFitter::fastFit(
   }
   if (!m_cfg.fastPreFitter) {
     if (precResult && nonPrecResult) {
-      fastFitCovariance(*precResult, *nonPrecResult, postFitDir,
+      fastFitCovariance(*precResult, *nonPrecResult, result.parameters,
                         result.covariance);
     } else if (precResult) {
       fastFitCovariance(*precResult, FastFitter_t::ResidualIdx::bending,
-                        postFitDir, result.covariance);
+                        result.parameters, result.covariance);
     } else if (nonPrecResult) {
       fastFitCovariance(*nonPrecResult, FastFitter_t::ResidualIdx::nonBending,
-                        postFitDir, result.covariance);
+                        result.parameters, result.covariance);
     }
   }
   return result;

@@ -133,10 +133,10 @@ std::optional<FastStrawLineFitter::FitResult> FastStrawLineFitter::fit(
             : strip->toNextSensor()};
 
     if (!centerSet) {
-      auxVars.axisY = measDir;
-      auxVars.axisZ = strip->planeNormal();
-      auxVars.centerY = centerOfGravity.dot(auxVars.axisY);
-      auxVars.centerZ = centerOfGravity.dot(auxVars.axisZ);
+      auxVars.eY = measDir;
+      auxVars.eZ = strip->planeNormal();
+      auxVars.centerY = centerOfGravity.dot(auxVars.eY);
+      auxVars.centerZ = centerOfGravity.dot(auxVars.eZ);
       centerSet = true;
     }
 
@@ -231,10 +231,10 @@ FastStrawLineFitter::FitAuxiliaries FastStrawLineFitter::fillAuxiliaries(
       continue;
     }
     if (!centerSet) {
-      auxVars.axisY = strawMeas->toNextSensor();
-      auxVars.axisZ = strawMeas->planeNormal();
-      auxVars.centerY = centerOfGravity.dot(auxVars.axisY);
-      auxVars.centerZ = centerOfGravity.dot(auxVars.axisZ);
+      auxVars.eY = strawMeas->toNextSensor();
+      auxVars.eZ = strawMeas->planeNormal();
+      auxVars.centerY = centerOfGravity.dot(auxVars.eY);
+      auxVars.centerZ = centerOfGravity.dot(auxVars.eZ);
       centerSet = true;
     }
     const Vector pos = strawMeas->localPosition() - centerOfGravity;

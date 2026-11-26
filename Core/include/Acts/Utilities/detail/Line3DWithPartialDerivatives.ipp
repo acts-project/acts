@@ -10,6 +10,7 @@
 
 #include "Acts/Utilities/detail/Line3DWithPartialDerivatives.hpp"
 
+#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
@@ -124,23 +125,29 @@ Line3DWithPartialDerivatives<T>::Vector Line3DWithPartialDerivatives<T>::point(
 }
 
 template <std::floating_point T>
-auto Line3DWithPartialDerivatives<T>::lineToSlopesJacobian(const Vector& dir)
-    -> Eigen::Matrix<T, s_nPars, s_nPars> {
+template <std::size_t N>
+Line3DWithPartialDerivatives<T>::LineJacobian_t
+Line3DWithPartialDerivatives<T>::lineToSlopesJacobian(
+    const std::array<T, N>& pars) noexcept
+  requires(N >= s_nPars)
+{
   constexpr auto iTh = toUnderlying(ParIndex::theta);
   constexpr auto iPh = toUnderlying(ParIndex::phi);
-  assert(std::abs(dir.z()) > std::numeric_limits<T>::epsilon());
-  const T theta = VectorHelpers::theta(dir);
-  const T phi = VectorHelpers::phi(dir);
-  const T tanTheta = std::tan(theta);
-  const T cosThetaSq = Acts::square(std::cos(theta));
-  const T cosPhi = std::cos(phi);
-  const T sinPhi = std::sin(phi);
+
+  const T cosTheta = std::cos(pars[iTh]);
+  // The slopes dx/dz, dy/dz are not defined for a line parallel to the z = 0
+  // plane
+  assert(std::abs(cosTheta) > s_epsilon);
+  const T tanTheta = std::tan(pars[iTh]);
+  const T secThetaSq = T{1} / Acts::square(cosTheta);
+  const T cosPhi = std::cos(pars[iPh]);
+  const T sinPhi = std::sin(pars[iPh]);
+
   // tanAlpha = tan(theta) cos(phi), tanBeta = tan(theta) sin(phi)
-  Eigen::Matrix<T, s_nPars, s_nPars> jac =
-      Eigen::Matrix<T, s_nPars, s_nPars>::Identity();
-  jac(iTh, iTh) = sinPhi / cosThetaSq;  // dtanBeta / dtheta
+  LineJacobian_t jac = LineJacobian_t::Identity();
+  jac(iTh, iTh) = sinPhi * secThetaSq;  // dtanBeta / dtheta
   jac(iTh, iPh) = tanTheta * cosPhi;    // dtanBeta / dphi
-  jac(iPh, iTh) = cosPhi / cosThetaSq;  // dtanAlpha / dtheta
+  jac(iPh, iTh) = cosPhi * secThetaSq;  // dtanAlpha / dtheta
   jac(iPh, iPh) = -tanTheta * sinPhi;   // dtanAlpha / dphi
   return jac;
 }

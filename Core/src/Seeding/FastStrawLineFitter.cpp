@@ -135,15 +135,16 @@ void FastStrawLineFitter::toChamberFrame(const FitAuxiliaries& fitPars,
                                          FitResult& result) {
   // Line of the fit: through y0' eY with direction sin(angle) eY + cos(angle)
   // eZ.
-  const Vector& eY = fitPars.axisY;
-  const Vector& eZ = fitPars.axisZ;
+  const Vector& eY = fitPars.eY;
+  const Vector& eZ = fitPars.eZ;
   const auto iCoord =
       projection == ResidualIdx::nonBending ? Acts::eX : Acts::eY;
   const double sinA = std::sin(result.theta);
   const double cosA = std::cos(result.theta);
-  const auto dir = copySign<Vector, double>(sinA * eY + cosA * eZ, sinA);
+  const double sign = copySign(1., sinA);
+  const Vector dir = sign * (sinA * eY + cosA * eZ);
   // Derivative of the direction w.r.t. the angle, with the same sign as dir
-  const auto dDir = copySign<Vector, double>(cosA * eY - sinA * eZ, sinA);
+  const Vector dDir = sign * (cosA * eY - sinA * eZ);
 
   // Oblique projector to the plane z = 0 along the direction dir
   assert(std::abs(dir.z()) > std::numeric_limits<double>::epsilon());
