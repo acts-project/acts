@@ -352,7 +352,13 @@ void TripletSeeder::createSeedsFromGroups(
     for (std::uint32_t i = 0; i < batchCount; ++i) {
       byZ[i] = {middleSpGroup[first + i].zr()[0], static_cast<std::uint8_t>(i)};
     }
-    std::sort(byZ.begin(), byZ.begin() + batchCount);
+    // an insertion sort, as a batch holds a few middle space points; std::sort
+    // here makes GCC 16 see its heap fallback run past byZ
+    for (std::uint32_t i = 1; i < batchCount; ++i) {
+      for (std::uint32_t j = i; j > 0 && byZ[j] < byZ[j - 1]; --j) {
+        std::swap(byZ[j], byZ[j - 1]);
+      }
+    }
     for (std::uint32_t part = 0; part < Cache::kSubBatches; ++part) {
       const std::uint32_t begin = part * batchCount / Cache::kSubBatches;
       const std::uint32_t end = (part + 1) * batchCount / Cache::kSubBatches;
