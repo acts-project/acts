@@ -1037,11 +1037,12 @@ def assert_gnn_output(output_dir: Path):
     hash recorded on one card does not hold on the other.
 
     Both files are opened and both ntuple trees are looked up, so a chain that
-    crashed or a writer that produced nothing still fails here. The entry
-    counts are printed but not asserted on: the metric learning chain currently
-    finds no tracks at all (acts-project/acts#5911), and the reference hashes
-    this replaces pinned exactly that empty output. Assert on the counts again
-    once that is fixed.
+    crashed or a writer that produced nothing fails here, and the track count
+    has to be non-zero. That last part is what the reference hashes could not
+    do: they pinned the empty output the chain produced while
+    acts-project/acts#5911 was open (the ONNX edge classifier was fed
+    millimetres although it expects metres, so every edge scored ~1e-4 and the
+    cut emptied the graph).
     """
     import uproot
 
@@ -1056,7 +1057,9 @@ def assert_gnn_output(output_dir: Path):
 
     with uproot.open(ntuple_file) as rf:
         for tree in ("track_finder_tracks", "track_finder_particles"):
-            print(f"{ntuple_file.name}:{tree} has {rf[tree].num_entries} entries")
+            entries = rf[tree].num_entries
+            print(f"{ntuple_file.name}:{tree} has {entries} entries")
+            assert entries > 0, f"{ntuple_file.name}:{tree} is empty"
 
 
 @pytest.mark.parametrize("hardware", ["cpu", "gpu"])
