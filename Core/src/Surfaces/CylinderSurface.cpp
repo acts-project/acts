@@ -16,6 +16,7 @@
 #include "Acts/Surfaces/SurfaceError.hpp"
 #include "Acts/Surfaces/SurfaceMergingException.hpp"
 #include "Acts/Surfaces/detail/AlignmentHelper.hpp"
+#include "Acts/Surfaces/detail/CylinderHelper.hpp"
 #include "Acts/Surfaces/detail/FacesHelper.hpp"
 #include "Acts/Surfaces/detail/MergeHelper.hpp"
 #include "Acts/Utilities/AlgebraHelpers.hpp"
@@ -204,20 +205,27 @@ detail::RealQuadraticEquation CylinderSurface::intersectionSolver(
   // Solve for radius R
   double R = bounds().get(CylinderBounds::eR);
 
-  // Get the transformation matrtix
+  // Get the transformation matrix
   const auto& tMatrix = transform.matrix();
   Vector3 caxis = tMatrix.block<3, 1>(0, 2).transpose();
   Vector3 ccenter = tMatrix.block<3, 1>(0, 3).transpose();
 
-  // Check documentation for explanation
   Vector3 pc = position - ccenter;
+  // Cylindrical portals are commonly aligned with the global z-axis. In
+  // that case the quadratic only needs the transverse coordinates, also
+  // for translated cylinders and rotations about their axis. Use an exact
+  // check so that even small tilts retain the general intersection below.
+  if (caxis.x() == 0. && caxis.y() == 0. && std::abs(caxis.z()) == 1.) {
+    double a = direction.head<2>().squaredNorm();
+    double b = 2. * direction.head<2>().dot(pc.head<2>());
+    double c = pc.head<2>().squaredNorm() - R * R;
+    return detail::RealQuadraticEquation(a, b, c);
+  }
+
+  // Check documentation for explanation
   Vector3 pcXcd = pc.cross(caxis);
   Vector3 ldXcd = direction.cross(caxis);
-  double a = ldXcd.dot(ldXcd);
-  double b = 2. * (ldXcd.dot(pcXcd));
-  double c = pcXcd.dot(pcXcd) - (R * R);
-  // And solve the qaudratic equation
-  return detail::RealQuadraticEquation(a, b, c);
+  return detail::CylinderHelper::intersectionSolver(pcXcd, ldXcd, R);
 }
 
 MultiIntersection3D CylinderSurface::intersect(
@@ -253,8 +261,13 @@ MultiIntersection3D CylinderSurface::intersect(
       // Built-in local to global for speed reasons
       const auto& tMatrix = gctxTransform.matrix();
       // Create the reference vector in local
-      const Vector3 vecLocal(solution - tMatrix.block<3, 1>(0, 3));
-      double cZ = vecLocal.dot(tMatrix.block<3, 1>(0, 2));
+      double cZ = 0.;
+      if (tMatrix(0, 2) == 0. && tMatrix(1, 2) == 0.) {
+        cZ = (solution.z() - tMatrix(2, 3)) * tMatrix(2, 2);
+      } else {
+        const Vector3 vecLocal(solution - tMatrix.block<3, 1>(0, 3));
+        cZ = vecLocal.dot(tMatrix.block<3, 1>(0, 2));
+      }
       double hZ = bounds().get(CylinderBounds::eHalfLengthZ) + tolerance;
       return std::abs(cZ) < std::abs(hZ) ? status
                                          : IntersectionStatus::unreachable;
@@ -283,6 +296,94 @@ MultiIntersection3D CylinderSurface::intersect(
     return MultiIntersection3D(first, second);
   }
   return MultiIntersection3D(second, first);
+}
+
+MultiIntersection3D CylinderSurface::intersect(
+    const GeometryContext& gctx, const Vector3& position,
+    const Vector3& direction, const Vector3& curvature,
+    const BoundaryTolerance& boundaryTolerance, double tolerance) const {
+  if (curvature.isZero(0.) || !curvature.allFinite()) {
+    return intersect(gctx, position, direction, boundaryTolerance, tolerance);
+  }
+  const auto& transform = localToGlobalTransform(gctx);
+  const double radius = bounds().get(CylinderBounds::eR);
+  const double halfLength = bounds().get(CylinderBounds::eHalfLengthZ);
+  const Vector3 localPosition =
+      transform.linear().transpose() * (position - transform.translation());
+  const Vector3 localDirection = transform.linear().transpose() * direction;
+  const Vector3 localCurvature = transform.linear().transpose() * curvature;
+  const auto roots = detail::CylinderHelper::intersectionSolver(
+      localPosition.head<2>(), localDirection.head<2>(), radius);
+  if (roots.solutions == 0) {
+    return MultiIntersection3D(Intersection3D::Invalid(),
+                               Intersection3D::Invalid());
+  }
+  double s1 = roots.first;
+  double s2 = roots.solutions == 1 ? roots.first : roots.second;
+  if (s1 > s2) {
+    std::swap(s1, s2);
+  }
+  // Keep the ray branch order even when corrections change the path ordering:
+  // navigation stores indices and re-intersects those same branches.
+  const Vector3 seed1 = localPosition + s1 * localDirection;
+  const Vector3 seed2 = localPosition + s2 * localDirection;
+  const double curvatureNorm = curvature.norm();
+  const auto status = [tolerance](double s) {
+    return std::abs(s) < std::abs(tolerance) ? IntersectionStatus::onSurface
+                                             : IntersectionStatus::reachable;
+  };
+  auto first = detail::CylinderHelper::correctIntersection(
+      s1, seed1, localDirection, localCurvature, curvatureNorm, radius,
+      tolerance);
+  auto second = detail::CylinderHelper::correctIntersection(
+      s2, seed2, localDirection, localCurvature, curvatureNorm, radius,
+      tolerance);
+  const auto scales =
+      detail::CylinderHelper::cylinderProjectionScales(first, second, radius);
+  const auto inside = [&](const Vector3& local, bool fallback) {
+    if (boundaryTolerance.isInfinite()) {
+      return true;
+    }
+    if (boundaryTolerance.isNone() && bounds().coversFullAzimuth()) {
+      // Preserve the ray's tolerance-expanded length check on fallback, but
+      // check a corrected prediction against the requested physical bounds.
+      return fallback ? std::abs(local.z()) < std::abs(halfLength + tolerance)
+                      : std::abs(local.z()) <= halfLength;
+    }
+    if (fallback) {
+      // The general ray path checks membership before bounds. Retain that
+      // check for sector/toleranced bounds, especially for distant seeds.
+      const double radialTolerance = std::max(
+          tolerance == s_onSurfaceTolerance ? radius * 0.0001 : tolerance,
+          0.01);
+      if (std::abs(local.head<2>().norm() - radius) > radialTolerance) {
+        return false;
+      }
+    }
+    return insideBounds(
+        Vector2(radius * std::atan2(local.y(), local.x()), local.z()),
+        boundaryTolerance);
+  };
+  const auto finish = [&](double s, const Vector3& seed,
+                          std::optional<detail::CurvatureCorrection>& corrected,
+                          double scale) {
+    if (corrected && scale > 0. && std::isfinite(scale)) {
+      corrected->position.head<2>() *= scale;
+      const Vector3 global = transform * corrected->position;
+      if (global.allFinite()) {
+        return Intersection3D(global, corrected->pathLength,
+                              inside(corrected->position, false)
+                                  ? IntersectionStatus::reachable
+                                  : IntersectionStatus::unreachable);
+      }
+    }
+    // Fallback reuses the ray seed; do not solve the intersection again.
+    return Intersection3D(
+        position + s * direction, s,
+        inside(seed, true) ? status(s) : IntersectionStatus::unreachable);
+  };
+  return MultiIntersection3D(finish(s1, seed1, first, scales.first),
+                             finish(s2, seed2, second, scales.second));
 }
 
 AlignmentToPathMatrix CylinderSurface::alignmentToPathDerivative(
@@ -334,6 +435,41 @@ Matrix<2, 3> CylinderSurface::localCartesianToBoundLocalDerivative(
   loc3DToLocBound << -R * lsphi / lr, R * lcphi / lr, 0, 0, 0, 1;
 
   return loc3DToLocBound;
+}
+
+bool CylinderSurface::contains(const GeometryContext& gctx,
+                               const Surface& other, double tolerance) const {
+  const auto* cylinder = dynamic_cast<const CylinderSurface*>(&other);
+  if (cylinder == nullptr) {
+    return false;
+  }
+
+  // The other surface in the frame of this one, which has to be coaxial
+  const Transform3 otherLocal = localToGlobalTransform(gctx).inverse() *
+                                cylinder->localToGlobalTransform(gctx);
+  if (otherLocal.linear().col(2).head<2>().norm() > tolerance ||
+      otherLocal.translation().head<2>().norm() > tolerance) {
+    return false;
+  }
+
+  const CylinderBounds& otherBounds = cylinder->bounds();
+  const double r = bounds().get(CylinderBounds::eR);
+  if (std::abs(otherBounds.get(CylinderBounds::eR) - r) > tolerance ||
+      std::abs(otherLocal.translation().z()) +
+              otherBounds.get(CylinderBounds::eHalfLengthZ) >
+          bounds().get(CylinderBounds::eHalfLengthZ) + tolerance) {
+    return false;
+  }
+
+  const double otherAvgPhi = otherBounds.get(CylinderBounds::eAveragePhi);
+  const Vector3 otherAvgDir =
+      otherLocal.linear() *
+      Vector3{std::cos(otherAvgPhi), std::sin(otherAvgPhi), 0};
+  return detail::phiSectorContains(
+      bounds().get(CylinderBounds::eHalfPhiSector),
+      bounds().get(CylinderBounds::eAveragePhi),
+      otherBounds.get(CylinderBounds::eHalfPhiSector),
+      std::atan2(otherAvgDir.y(), otherAvgDir.x()), tolerance / r);
 }
 
 std::pair<std::shared_ptr<CylinderSurface>, bool> CylinderSurface::mergedWith(

@@ -166,6 +166,8 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsJson, json) {
                        &TrackingGeometryJsonConverter::Options::indentation)
         .def_readwrite("writeMaterial",
                        &TrackingGeometryJsonConverter::Options::writeMaterial)
+        .def_readwrite("materialOptions",
+                       &TrackingGeometryJsonConverter::Options::materialOptions)
         .def_readwrite(
             "compressionLevel",
             &TrackingGeometryJsonConverter::Options::compressionLevel);

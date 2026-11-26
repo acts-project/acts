@@ -18,6 +18,7 @@
 #include "ActsPlugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "ActsPlugins/Root/TGeoSurfaceConverter.hpp"
 
+#include <algorithm>
 #include <functional>
 #include <optional>
 #include <stdexcept>
@@ -116,6 +117,19 @@ std::vector<std::shared_ptr<Acts::Surface>> DD4hepBackend::makeSurfaces(
 
   ACTS_DEBUG("Using " << sensitives.size() << " sensitive elements.");
 
+  // Hits are only recorded in sensitive volumes, so a surface built from any
+  // other volume (e.g. a passive module around the silicon) never gets one
+  const auto isPassive = [this](const Element& e) { return !isSensitive(e); };
+  if (const auto passive = std::ranges::find_if(sensitives, isPassive);
+      passive != sensitives.end()) {
+    ACTS_WARNING(std::ranges::count_if(sensitives, isPassive)
+                 << " of " << sensitives.size()
+                 << " sensor elements are not sensitive volumes (first: "
+                 << passive->path()
+                 << "), no hits will be found on their surfaces. Select the "
+                    "sensitive elements, e.g. with resolveSensitives.");
+  }
+
   std::vector<std::shared_ptr<Acts::Surface>> surfaces;
   surfaces.reserve(sensitives.size());
 
@@ -202,17 +216,6 @@ Acts::Volume DD4hepBackend::passiveVolume(const Element& element) const {
         "or a disc.");
   }
   return *volume;
-}
-
-std::shared_ptr<Acts::StaticBlueprintNode> DD4hepBackend::makeMaterialCollector(
-    double rMin, double rMax, double halfLengthZ, double zCenter,
-    const std::string& name) const {
-  auto volumeBounds =
-      std::make_shared<Acts::CylinderVolumeBounds>(rMin, rMax, halfLengthZ);
-  const Acts::Transform3 transform{Acts::Translation3(0., 0., zCenter)};
-  auto volume =
-      std::make_unique<Acts::TrackingVolume>(transform, volumeBounds, name);
-  return std::make_shared<Acts::StaticBlueprintNode>(std::move(volume));
 }
 
 }  // namespace ActsPlugins::DD4hep

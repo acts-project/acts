@@ -19,10 +19,6 @@ traccc_add_library( traccc_performance performance TYPE SHARED
    "include/traccc/efficiency/finding_performance_writer.hpp"
    "src/efficiency/finding_performance_writer.cpp"
    "src/efficiency/track_classification.hpp"
-   "include/traccc/efficiency/nseed_performance_writer.hpp"
-   "src/efficiency/nseed_performance_writer.cpp"
-   "src/efficiency/track_filter.cpp"
-   "src/efficiency/track_matcher.cpp"
    # Resolution calculation code.
    "include/traccc/resolution/fitting_performance_writer.hpp"
    "include/traccc/resolution/res_plot_tool_config.hpp"
@@ -66,9 +62,6 @@ traccc_add_library( traccc_performance performance TYPE SHARED
    "include/traccc/performance/impl/container_comparator.ipp"
    "include/traccc/performance/soa_comparator.hpp"
    "include/traccc/performance/impl/soa_comparator.ipp"
-   # Truth propagation comparison
-   "include/traccc/performance/kalman_filter_comparison.hpp"
-   "src/performance/kalman_filter_comparison.cpp"
    # Performance time measurement code.
    "include/traccc/performance/timer.hpp"
    "src/performance/timer.cpp"
@@ -79,13 +72,30 @@ traccc_add_library( traccc_performance performance TYPE SHARED
 )
 target_link_libraries(
     traccc_performance
-    PUBLIC
-        traccc::core
-        traccc::io
-        covfie::core
-        detray::test_utils
-        detray::validation_utils
+    PUBLIC traccc::core traccc::io covfie::core detray::test_utils
 )
+
+# Truth propagation comparison. The detray validation tools need actsvg, and
+# they only exist if detray was configured with its SVG display.
+if(TARGET detray::validation_utils)
+    target_sources(
+        traccc_performance
+        PRIVATE
+            "include/traccc/performance/kalman_filter_comparison.hpp"
+            "src/performance/kalman_filter_comparison.cpp"
+    )
+    target_link_libraries(traccc_performance PUBLIC detray::validation_utils)
+else()
+    set(TRACCC_KF_COMPARISON_DIAGNOSTIC WARNING)
+    if("$ENV{CI}")
+        set(TRACCC_KF_COMPARISON_DIAGNOSTIC FATAL_ERROR)
+    endif()
+    message(
+        ${TRACCC_KF_COMPARISON_DIAGNOSTIC}
+        "Not building the Kálmán filter comparison: 'detray::validation_utils' not available (set DETRAY_BUILD_VALIDATION_TOOLS=ON, which needs actsvg)"
+    )
+    unset(TRACCC_KF_COMPARISON_DIAGNOSTIC)
+endif()
 
 # Use ROOT in traccc::performance, if requested.
 if(TRACCC_USE_ROOT)

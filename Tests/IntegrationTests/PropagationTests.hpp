@@ -369,18 +369,13 @@ inline std::pair<Acts::BoundTrackParameters, double> transportFreely(
 
 /// Propagate the initial parameters to the target surface.
 ///
-/// The target aborter type can be chosen with @p targetAborter, whose value is
-/// not used.
 template <typename propagator_t,
-          typename options_t = typename propagator_t::template Options<>,
-          typename target_aborter_t = Acts::SurfaceReached>
+          typename options_t = typename propagator_t::template Options<>>
 inline std::pair<Acts::BoundTrackParameters, double> transportToSurface(
     const propagator_t& propagator, const Acts::GeometryContext& geoCtx,
     const Acts::MagneticFieldContext& magCtx,
     const Acts::BoundTrackParameters& initialParams,
-    const Acts::Surface& targetSurface, double pathLimit,
-    const target_aborter_t& targetAborter = {}) {
-  static_cast<void>(targetAborter);
+    const Acts::Surface& targetSurface, double pathLimit) {
   using namespace Acts;
   using namespace UnitLiterals;
 
@@ -389,8 +384,7 @@ inline std::pair<Acts::BoundTrackParameters, double> transportToSurface(
   options.direction = Direction::Forward();
   options.pathLimit = pathLimit;
 
-  auto result = propagator.template propagate<options_t, target_aborter_t>(
-      initialParams, targetSurface, options);
+  auto result = propagator.propagate(initialParams, targetSurface, options);
   BOOST_CHECK(result.ok());
   BOOST_CHECK(result.value().endParameters);
 
@@ -427,14 +421,15 @@ inline void runForwardBackwardTest(
 /// initial parameters again to the target surface. Verify that the surface has
 /// been found and the parameters are consistent.
 template <typename propagator_t, typename surface_builder_t,
-          typename options_t = typename propagator_t::template Options<>,
-          typename target_aborter_t = Acts::SurfaceReached>
-inline void runToSurfaceTest(
-    const propagator_t& propagator, const Acts::GeometryContext& geoCtx,
-    const Acts::MagneticFieldContext& magCtx,
-    const Acts::BoundTrackParameters& initialParams, double pathLength,
-    surface_builder_t&& buildTargetSurface, double epsPos, double epsTime,
-    double epsDir, double epsMom, const target_aborter_t& targetAborter = {}) {
+          typename options_t = typename propagator_t::template Options<>>
+inline void runToSurfaceTest(const propagator_t& propagator,
+                             const Acts::GeometryContext& geoCtx,
+                             const Acts::MagneticFieldContext& magCtx,
+                             const Acts::BoundTrackParameters& initialParams,
+                             double pathLength,
+                             surface_builder_t&& buildTargetSurface,
+                             double epsPos, double epsTime, double epsDir,
+                             double epsMom) {
   // free propagation for the given path length
   auto [freeParams, freePathLength] = transportFreely<propagator_t, options_t>(
       propagator, geoCtx, magCtx, initialParams, pathLength);
@@ -446,9 +441,9 @@ inline void runToSurfaceTest(
   // bound propagation onto the target surface
   // increase path length limit to ensure the surface can be reached
   auto [surfParams, surfPathLength] =
-      transportToSurface<propagator_t, options_t, target_aborter_t>(
-          propagator, geoCtx, magCtx, initialParams, *surface, 1.5 * pathLength,
-          targetAborter);
+      transportToSurface<propagator_t, options_t>(propagator, geoCtx, magCtx,
+                                                  initialParams, *surface,
+                                                  1.5 * pathLength);
   CHECK_CLOSE_ABS(surfPathLength, pathLength, epsPos);
 
   // check that the to-surface propagation matches the defining free parameters
@@ -492,16 +487,14 @@ inline void runForwardComparisonTest(
 /// to define a target plane. Propagate the initial parameters using two
 /// different propagators and verify consistent output.
 template <typename cmp_propagator_t, typename ref_propagator_t,
-          typename surface_builder_t,
-          typename target_aborter_t = Acts::SurfaceReached>
+          typename surface_builder_t>
 inline void runToSurfaceComparisonTest(
     const cmp_propagator_t& cmpPropagator,
     const ref_propagator_t& refPropagator, const Acts::GeometryContext& geoCtx,
     const Acts::MagneticFieldContext& magCtx,
     const Acts::BoundTrackParameters& initialParams, double pathLength,
     surface_builder_t&& buildTargetSurface, double epsPos, double epsTime,
-    double epsDir, double epsMom, double tolCov,
-    const target_aborter_t& targetAborter = {}) {
+    double epsDir, double epsMom, double tolCov) {
   // free propagation with the reference propagator for the given path length
   auto [freeParams, freePathLength] = transportFreely<ref_propagator_t>(
       refPropagator, geoCtx, magCtx, initialParams, pathLength);
@@ -515,16 +508,14 @@ inline void runToSurfaceComparisonTest(
   // increase path length limit to ensure the surface can be reached
   auto [cmpParams, cmpPath] =
       transportToSurface<cmp_propagator_t,
-                         typename cmp_propagator_t::template Options<>,
-                         target_aborter_t>(cmpPropagator, geoCtx, magCtx,
-                                           initialParams, *surface,
-                                           1.5 * pathLength, targetAborter);
+                         typename cmp_propagator_t::template Options<>>(
+          cmpPropagator, geoCtx, magCtx, initialParams, *surface,
+          1.5 * pathLength);
   auto [refParams, refPath] =
       transportToSurface<ref_propagator_t,
-                         typename ref_propagator_t::template Options<>,
-                         target_aborter_t>(refPropagator, geoCtx, magCtx,
-                                           initialParams, *surface,
-                                           1.5 * pathLength, targetAborter);
+                         typename ref_propagator_t::template Options<>>(
+          refPropagator, geoCtx, magCtx, initialParams, *surface,
+          1.5 * pathLength);
   // check parameter comparison
   checkParametersConsistency(cmpParams, refParams, geoCtx, epsPos, epsTime,
                              epsDir, epsMom);

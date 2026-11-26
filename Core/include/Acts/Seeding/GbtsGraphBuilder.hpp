@@ -18,6 +18,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <span>
 #include <utility>
 #include <vector>
 
@@ -28,8 +29,21 @@ struct GbtsGraph {
   /// The graph edges, i.e. the doublets.
   std::vector<detail::GbtsEdge> edgeStorage;
 
-  /// Number of links between edges.
-  std::uint32_t nConnections = 0;
+  /// The inner neighbours of edge `e` are `neighbours[neighbourOffsets[e]]` up
+  /// to, not including, `neighbours[neighbourOffsets[e + 1]]`, in the order
+  /// they were linked.
+  std::vector<std::uint32_t> neighbourOffsets;
+  /// Inner neighbour edges of all edges, see `neighbourOffsets`.
+  std::vector<std::uint32_t> neighbours;
+
+  /// The inner neighbour edges of an edge
+  /// @param edge Index of the edge in `edgeStorage`
+  /// @return The indices of its inner neighbours
+  std::span<const std::uint32_t> innerNeighbours(std::uint32_t edge) const {
+    return std::span(neighbours)
+        .subspan(neighbourOffsets[edge],
+                 neighbourOffsets[edge + 1] - neighbourOffsets[edge]);
+  }
 };
 
 /// Builds the doublet graph of the GBTS workflow.
@@ -76,6 +90,13 @@ class GbtsGraphBuilder {
     /// Maximum number of GBTS edges/doublets per space point.
     float maxEdgesPerSP = 30.0f;
 
+    /// Leave out edges whose chain cannot grow beyond the edge itself, too
+    /// short for a seed. An edge of an inner bin that no connection leads into
+    /// is never extended inwards, so it is kept only if it links to an outer
+    /// edge, and outer nodes without edges are not tried for it. The seeds are
+    /// unchanged unless the edge array reaches `maxEdgesPerSP`.
+    bool dropDeadEnds = true;
+
     /// Minimum delta radius between layers.
     float minDeltaRadius = 2.0f * Acts::UnitConstants::mm;
 
@@ -101,12 +122,6 @@ class GbtsGraphBuilder {
     /// Threshold of the summed ratios, between 1 (only one difference
     /// can use its full cut) and 3 (no effect beyond the individual cuts).
     float sumRatioCutMax = 1.3f;
-
-    /// Minimum z0 value. In pixel mode the value is picked from the RoI.
-    float minZ0 = -600.0f;
-
-    /// Maximum z0 value. In pixel mode the value is picked from the RoI.
-    float maxZ0 = 600.0f;
 
     /// pT at which the default cut coefficients were tuned; they scale by
     /// `tuningPt / minPt`.
@@ -153,6 +168,10 @@ class GbtsGraphBuilder {
     /// disables it.
     std::int32_t matchBeforeCreateMaxBarrelOrder = 1;
 
+    /// Leave out edges and outer nodes that cannot be on a chain long enough
+    /// for a seed, see `buildTheGraph`.
+    bool pruneShortChains = false;
+
     /// Half-width of the z0 window against which a node is matched in the
     /// histogram.
     float z0Resolution = 2.5f * Acts::UnitConstants::mm;
@@ -188,14 +207,24 @@ class GbtsGraphBuilder {
   /// @param roi Region of interest descriptor
   /// @param nodeStorage Data storage containing nodes
   /// @param bFieldInZ Magnetic field in z, in GeV/(e*mm)
-  /// @return The graph, with its edges and their link counts
+  /// @param minEdgeLevel The level a chain needs to be a seed, for
+  ///        `pruneShortChains`; 0 for no pruning
+  /// @return The graph, with its edges and the links between them
   GbtsGraph buildTheGraph(const GbtsRoiDescriptor& roi,
-                          GbtsNodeStorage& nodeStorage, float bFieldInZ) const;
+                          GbtsNodeStorage& nodeStorage, float bFieldInZ,
+                          std::uint32_t minEdgeLevel = 0) const;
 
  private:
   Config m_cfg;
 
   std::shared_ptr<const GbtsGeometry> m_geometry;
+
+  /// Per eta bin, whether a connection leads into it from an inner bin.
+  std::vector<bool> m_binHasInnerLink;
+
+  /// Per eta bin, the most connection steps a chain can still go further in,
+  /// saturated.
+  std::vector<std::uint32_t> m_binInnerSteps;
 
   std::unique_ptr<const Acts::Logger> m_logger;
 

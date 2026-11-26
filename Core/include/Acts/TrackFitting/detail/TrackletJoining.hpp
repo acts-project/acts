@@ -161,8 +161,9 @@ Result<void> conditionSmoothedStatesOnSharedState(traj_t& trajectory,
   indices.erase(indices.begin(), indices.begin() + skip);
 
   auto shared = trajectory.getTrackState(sharedIndex);
-  if (!shared.hasSmoothed()) {
-    ACTS_DEBUG("Shared state " << sharedIndex << " has no smoothed parameters");
+  if (!shared.hasSmoothed() || !shared.hasPredicted()) {
+    ACTS_DEBUG("Shared state " << sharedIndex
+                               << " lacks smoothed or predicted parameters");
     return KalmanFitterError::SmoothFailed;
   }
   auto condition = makeSharedStateCondition(AnyConstTrackStateProxy{shared},
@@ -210,7 +211,8 @@ Result<void> conditionSmoothedStatesOnSharedState(traj_t& trajectory,
     Result<void> result = Result<void>::success();
     auto later = shared;
     trajectory.applyBackwards(shared.previous(), [&](TrackStateProxy ts) {
-      ts.addComponents(TrackStatePropMask::Smoothed);
+      setSmoothedWithoutSharing(AnyMutableTrackStateProxy{ts}, ts.filtered(),
+                                ts.filteredCovariance());
       auto res = smoother.calculate(AnyMutableTrackStateProxy{ts},
                                     AnyConstTrackStateProxy{later}, logger);
       if (!res.ok()) {

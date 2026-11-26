@@ -35,8 +35,9 @@ struct barrel_generator_config {
   /// Half length of the barrel (z)
   scalar_t m_half_z{500.f * unit<scalar_t>::mm};
   /// Boundary values for the module masks
-  std::vector<scalar_t> m_mask_values{8.4f * unit<scalar_t>::mm,
-                                      36.f * unit<scalar_t>::mm};
+  std::vector<scalar_t> m_mask_values{
+      -8.4f * unit<scalar_t>::mm, -36.f * unit<scalar_t>::mm,
+      8.4f * unit<scalar_t>::mm, 36.f * unit<scalar_t>::mm};
   /// Phi tilt for modules
   scalar_t m_tilt_phi{0.14f};
   /// Layer radius
@@ -225,9 +226,11 @@ class barrel_generator final : public surface_factory_interface<detector_t> {
     const scalar_t min_phi{-constant<scalar_t>::pi + 0.5f * phi_step};
 
     // @TODO: Only work for rectangles
-    const scalar_t z_start{
-        -0.5f * static_cast<scalar_t>(n_z_bins - 1u) *
-        (2.f * m_cfg.module_bounds().at(1) - m_cfg.z_overlap())};
+    const auto &bounds = m_cfg.module_bounds();
+    const scalar_t module_length_z{bounds.at(rectangle2D::e_max_y) -
+                                   bounds.at(rectangle2D::e_min_y)};
+    const scalar_t z_start{-0.5f * static_cast<scalar_t>(n_z_bins - 1u) *
+                           (module_length_z - m_cfg.z_overlap())};
     const scalar_t z_step{(math::fabs(z_start) - z_start) /
                           static_cast<scalar_t>(n_z_bins - 1)};
 

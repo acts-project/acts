@@ -138,7 +138,9 @@ DETRAY_HOST_DEVICE inline std::pair<scalar_t, scalar_t> newton_raphson(
   }
 
   // Run the iteration on s
-  scalar_t s_prev{0.f};
+  // Not the start value, so the first step always runs: a start at s = 0
+  // would otherwise be returned as converged without checking f(s)
+  scalar_t s_prev{inv};
   std::size_t n_tries{0u};
   auto [f_s, df_s] = evaluate_func(s);
 
@@ -275,7 +277,9 @@ DETRAY_HOST_DEVICE inline std::pair<scalar_t, scalar_t> newton_raphson_safe(
   }
 
   // Run the iteration on s
-  scalar_t s_prev{0.f};
+  // Not the start value, so the first step always runs: a start at s = 0
+  // would otherwise be returned as converged without checking f(s)
+  scalar_t s_prev{inv};
   std::size_t n_tries{0u};
   auto [f_s, df_s] = evaluate_func(s);
   if (math::fabs(f_s) < convergence_tolerance) {

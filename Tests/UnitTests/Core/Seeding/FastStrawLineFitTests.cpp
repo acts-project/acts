@@ -217,12 +217,12 @@ TestStrawCont_t generateStrawCircles(const Line_t& trajLine,
   /// Extrapolate the track to the z-planes of the tubes and determine which
   /// tubes were actually hit
   for (const auto& stag : tubePositions) {
-    auto planeExtpLow =
-        PlanarHelper::intersectPlane(trajLine.position(), trajLine.direction(),
-                                     Vector3::UnitZ(), stag.z() - tubeRadius);
-    auto planeExtpHigh =
-        PlanarHelper::intersectPlane(trajLine.position(), trajLine.direction(),
-                                     Vector3::UnitZ(), stag.z() + tubeRadius);
+    auto planeExtpLow = Acts::detail::PlanarHelper::intersectPlane(
+        trajLine.position(), trajLine.direction(), Vector3::UnitZ(),
+        stag.z() - tubeRadius);
+    auto planeExtpHigh = Acts::detail::PlanarHelper::intersectPlane(
+        trajLine.position(), trajLine.direction(), Vector3::UnitZ(),
+        stag.z() + tubeRadius);
 
     ACTS_DEBUG("Extrapolated to plane " << toString(planeExtpLow.position())
                                         << " "
@@ -276,7 +276,7 @@ TestStrawCont_t generateStrips(const Line_t& trajLine, RandomEngine& engine) {
                                           435._mm,  440_mm,  445_mm,  400._mm};
   constexpr double stripPitch = 1._cm;
   for (const auto z : stripZ) {
-    auto planeExtp = PlanarHelper::intersectPlane(
+    auto planeExtp = Acts::detail::PlanarHelper::intersectPlane(
         trajLine.position(), trajLine.direction(), Vector3::UnitZ(), z);
     Vector3 stripPos = planeExtp.position();
     stripPos[eY] = gauss_t{stripPos[eY], stripPitch}(engine);

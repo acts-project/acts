@@ -59,6 +59,9 @@ include(detray-functions)
 # detray is built via add_subdirectory from ACTS this is a no-op.
 include(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/ActsForceAssertions.cmake)
 
+# Use an absolute path to avoid changing package lookup via CMAKE_MODULE_PATH.
+include("${CMAKE_CURRENT_SOURCE_DIR}/../cmake/ActsWarningFlags.cmake")
+
 #
 # Define build options
 #
@@ -77,11 +80,11 @@ set_property(
     PROPERTY STRINGS "NONE" "WARNING" "INFO" "VERBOSE" "DEBUG"
 )
 option(DETRAY_BUILD_CLI_TOOLS "Build the command line tools of Detray" OFF)
-# Which detector metadata headers to generate during the build
+# Additional detector metadata headers to generate; shipped ones always are
 set(DETRAY_GENERATE_METADATA
     ""
     CACHE STRING
-    "Semicolon-separated list of metadata generator scripts to run in this build"
+    "Semicolon-separated external /path/to/<name>_detector.py:configure selectors"
 )
 
 # Device compilation
@@ -516,6 +519,9 @@ endif()
 #
 # Set up all of the libraries of the project.
 #
+
+# Apply warnings after dependency setup so they only affect our targets.
+acts_apply_warning_flags(CXX ${DETRAY_FAIL_ON_WARNINGS})
 
 add_subdirectory(core)
 add_subdirectory(detectors)

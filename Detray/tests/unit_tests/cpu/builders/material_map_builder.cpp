@@ -86,7 +86,7 @@ TEST(detray_builders, material_map_factory) {
   // Add material maps for a few rectangle surfaces
   mat_factory->push_back({surface_id::e_sensitive,
                           transform3(point3{0.f, 0.f, -1.f}), 1u,
-                          std::vector<scalar>{10.f, 8.f}});
+                          std::vector<scalar>{-10.f, -8.f, 10.f, 8.f}});
 
   scalar t{1.f * unit<scalar>::mm};
   add_material_data(mat_factory, mat_id::e_rectangle2D_map, 0u, t,
@@ -94,7 +94,7 @@ TEST(detray_builders, material_map_factory) {
 
   mat_factory->push_back({surface_id::e_sensitive,
                           transform3(point3{0.f, 0.f, 1.f}), 1u,
-                          std::vector<scalar>{20.f, 16.f}});
+                          std::vector<scalar>{-20.f, -16.f, 20.f, 16.f}});
   t = 2.f * unit<scalar>::mm;
   add_material_data(mat_factory, mat_id::e_rectangle2D_map, 1u, t,
                     tungsten<scalar>());
@@ -102,13 +102,12 @@ TEST(detray_builders, material_map_factory) {
   // Pass the parameters for 'gold'
   mat_factory->push_back({surface_id::e_sensitive,
                           transform3(point3{0.f, 0.f, 1.f}), 1u,
-                          std::vector<scalar>{20.f, 16.f}});
+                          std::vector<scalar>{-20.f, -16.f, 20.f, 16.f}});
   t = 3.f * unit<scalar>::mm;
   add_material_data(
       mat_factory, mat_id::e_rectangle2D_map, 2u, t,
       {3.344f * unit<scalar>::mm, 101.6f * unit<scalar>::mm, 196.97f, 79,
-       19.32f * unit<scalar>::g / (1.f * unit<scalar>::cm3),
-       material_state::e_solid});
+       static_cast<scalar>(19.32 * unit<double>::g / unit<double>::cm3)});
 
   EXPECT_EQ(mat_factory->size(), 3u);
 

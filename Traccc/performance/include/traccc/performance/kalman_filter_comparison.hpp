@@ -48,7 +48,7 @@ namespace traccc {
 bool kalman_filter_comparison(
     const traccc::default_detector_traits::host& det,
     const detray::name_map& names, const traccc::magnetic_field& bfield,
-    const detray::propagation_validation_config<float>& cfg,
+    const detray::propagation_validation_config<traccc::scalar>& cfg,
     const traccc::seed_generator<traccc::default_detector_traits::host>::config&
         smearing_cfg,
     std::unique_ptr<const traccc::Logger> ilogger,

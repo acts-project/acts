@@ -130,7 +130,8 @@ int main(int argc, char** argv) {
 
   // Mask with a rectangular shape (20x20 mm)
   detray::mask<detray::rectangle2D, algebra_t> rectangle{
-      vol_nav_link, 20.f * detray::unit<scalar>::mm,
+      vol_nav_link, -20.f * detray::unit<scalar>::mm,
+      -20.f * detray::unit<scalar>::mm, 20.f * detray::unit<scalar>::mm,
       20.f * detray::unit<scalar>::mm};
 
   // Pilot trajectory in x-direction

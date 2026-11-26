@@ -23,13 +23,6 @@ file(
 )
 
 # Allow access to the python detectors package from the main __init__.py
-file(
-    CREATE_LINK
-        ${CMAKE_CURRENT_SOURCE_DIR}/detray/detectors
-        ${_python_dir}/detray/detectors
-    SYMBOLIC
-)
-
 install(
     FILES ${CMAKE_CURRENT_SOURCE_DIR}/detray/__init__.py
     DESTINATION ${DETRAY_PYTHON_INSTALL_DIR}
@@ -44,10 +37,10 @@ endif()
 set(ACTS_GENERATE_PYTHON_STUBS ${DETRAY_GENERATE_PYTHON_STUBS})
 
 if(DETRAY_BUILD_PYTHON_BINDINGS)
-    add_subdirectory(Core)
-    add_subdirectory(Io)
-    add_subdirectory(Plugins)
-    add_subdirectory(Tests)
+    add_subdirectory(core)
+    add_subdirectory(io)
+    add_subdirectory(plugins)
+    add_subdirectory(tests)
 endif()
 
 # Install the generated stub files alongside the package.

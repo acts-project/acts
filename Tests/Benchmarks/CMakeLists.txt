@@ -18,14 +18,12 @@ macro(add_benchmark _name)
             Boost::program_options
             Boost::unit_test_framework
     )
-    if(ACTS_TESTS_HAS_WNO_C2Y_EXTENSIONS)
-        target_compile_options(${_target} PRIVATE -Wno-c2y-extensions)
-    endif()
 endmacro()
 
 add_benchmark(AtlasStepper AtlasStepperBenchmark.cpp)
 add_benchmark(BoundaryTolerance BoundaryToleranceBenchmark.cpp)
 add_benchmark(BinUtility BinUtilityBenchmark.cpp)
+add_benchmark(CylinderNavigation CylinderNavigationBenchmark.cpp)
 add_benchmark(EigenStepper EigenStepperBenchmark.cpp)
 add_benchmark(SolenoidField SolenoidFieldBenchmark.cpp)
 add_benchmark(SurfaceIntersection SurfaceIntersectionBenchmark.cpp)

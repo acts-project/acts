@@ -19,34 +19,4 @@ if(
     return()
 endif()
 
-# Basic flags for all build modes.
-foreach(mode RELEASE RELWITHDEBINFO MINSIZEREL DEBUG)
-    traccc_add_flag(CMAKE_SYCL_FLAGS_${mode} "-Wall")
-    traccc_add_flag(CMAKE_SYCL_FLAGS_${mode} "-Wextra")
-    traccc_add_flag(CMAKE_SYCL_FLAGS_${mode} "-Wno-unknown-cuda-version")
-    traccc_add_flag(CMAKE_SYCL_FLAGS_${mode} "-Wshadow")
-    traccc_add_flag(CMAKE_SYCL_FLAGS_${mode} "-Wunused-local-typedefs")
-    traccc_add_flag(CMAKE_SYCL_FLAGS_${mode} "-Wconversion")
-endforeach()
-
-if(NOT WIN32)
-    foreach(mode RELEASE RELWITHDEBINFO MINSIZEREL DEBUG)
-        traccc_add_flag(CMAKE_SYCL_FLAGS_${mode} "-pedantic")
-    endforeach()
-endif()
-
-# Fail on warnings, if asked for that behaviour.
-if(TRACCC_FAIL_ON_WARNINGS)
-    foreach(mode RELEASE RELWITHDEBINFO MINSIZEREL DEBUG)
-        traccc_add_flag(CMAKE_SYCL_FLAGS_${mode} "-Werror")
-    endforeach()
-endif()
-
-# Avoid issues coming from MSVC<->DPC++ argument differences.
-if("${CMAKE_CXX_COMPILER_ID}" MATCHES "MSVC")
-    foreach(mode RELEASE RELWITHDEBINFO MINSIZEREL DEBUG)
-        traccc_add_flag(CMAKE_SYCL_FLAGS_${mode}
-         "-Wno-unused-command-line-argument"
-        )
-    endforeach()
-endif()
+acts_apply_warning_flags(SYCL ${TRACCC_FAIL_ON_WARNINGS})

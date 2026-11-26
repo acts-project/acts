@@ -205,6 +205,7 @@ with tempfile.TemporaryDirectory() as temp:
         outputTruthVertexMatching="amvf_grid_time_truth_vertex_matching",
         seeder=acts.examples.VertexSeedFinder.AdaptiveGridSeeder,
         useTime=True,
+        spatialBinExtent=30 * u.um,
         vertexFinder=VertexFinder.AMVF,
         outputDirRoot=tp / "amvf_grid_time",
         writeTrackInfo=True,

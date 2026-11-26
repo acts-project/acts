@@ -26,6 +26,7 @@
 #include "traccc/hip/seeding/silicon_pixel_spacepoint_formation_algorithm.hpp"
 #include "traccc/hip/seeding/triplet_seeding_algorithm.hpp"
 #include "traccc/hip/utils/stream_wrapper.hpp"
+#include "traccc/seeding/detail/hough_seeding_config.hpp"
 #include "traccc/utils/algorithm.hpp"
 #include "traccc/utils/messaging.hpp"
 #include "traccc/utils/propagation.hpp"
@@ -114,11 +115,13 @@ class full_chain_algorithm
       const spacepoint_grid_config& grid_config,
       const seedfilter_config& filter_config,
       const gbts_seedfinder_config& gbts_config,
+      const hough_seeding_config& hough_config,
       const track_params_estimation_config& track_params_estimation_config,
       const finding_algorithm::config_type& finding_config,
       const fitting_algorithm::config_type& fitting_config,
       const shared_data& data, std::unique_ptr<const traccc::Logger> logger,
-      bool useGBTS = false, await_strategy = await_strategy::sync_event);
+      bool useGBTS = false, bool useHough = false,
+      await_strategy = await_strategy::sync_event);
 
   /// Algorithm destructor
   ~full_chain_algorithm();
@@ -197,6 +200,7 @@ class full_chain_algorithm
   /// @{
 
   bool usingGBTS;
+  bool usingHough;
 
   /// @}
 };  // class full_chain_algorithm

@@ -17,6 +17,8 @@ find_package(CUDAToolkit REQUIRED)
 #
 traccc_add_library( traccc_examples_cuda examples_cuda SHARED
    "include/traccc/examples/cuda/full_chain_algorithm.hpp"
+   "include/traccc/examples/cuda/full_chain_hough_transform_algorithm.hpp"
+   "src/full_chain_hough_transform_algorithm.cpp"
    "src/full_chain_algorithm.cpp"
    "include/traccc/examples/cuda/tbb_await.hpp"
    "src/tbb_await.cpp"

@@ -22,9 +22,6 @@
 
 namespace Acts::Experimental::detail {
 
-/// Maximum number of neighbouring edges recorded per graph edge
-static constexpr std::uint32_t kGbtsMaxEdgeNeighbours = 6;
-
 /// Bins of the per-node z0 histogram, which is kept as a bit mask in
 /// GbtsNodeEdgeInfo::isConnected and so may not exceed its width.
 static constexpr std::int32_t kGbtsZ0HistogramBins = 16;
@@ -77,8 +74,12 @@ struct GbtsEtaBinInfo final {
   /// by +-2pi at the wrap-around so the phi sliding window never has to wrap.
   std::vector<std::pair<float, SpacePointIndex>> phiNodes;
 
-  float minRadius{};
-  float maxRadius{};
+  /// Radial and z extent of the bin's nodes, empty until a node widens it.
+  /// Only the storage's finalize widens them; an empty bin's are never read.
+  float minRadius{std::numeric_limits<float>::max()};
+  float maxRadius{std::numeric_limits<float>::lowest()};
+  float minZ{std::numeric_limits<float>::max()};
+  float maxZ{std::numeric_limits<float>::lowest()};
   /// Inside-out pixel barrel ordinal of the bin's layer, -1 for the rest.
   std::int32_t barrelOrder{-1};
 
@@ -99,13 +100,24 @@ class GbtsNodeProxy;
 /// stereo pair, i.e. when it is a pixel node.
 constexpr std::uint32_t kNoStrip = std::numeric_limits<std::uint32_t>::max();
 
+/// A node's position, kept together because every consumer reads it together.
+struct GbtsNodePosition final {
+  /// Global x coordinate
+  float x{};
+  /// Global y coordinate
+  float y{};
+  /// Global z coordinate
+  float z{};
+  /// Transverse distance from the beamline
+  float r{};
+};
+
 /// Read-only view of the node attributes needed outside the graph builder.
 ///
-/// Positions are packed as (x, y, z, r) because every consumer reads them
-/// together. Index it to get a GbtsNodeProxy with named accessors.
+/// Index it to get a GbtsNodeProxy with named accessors.
 struct GbtsNodeView final {
-  /// Packed (x, y, z, r) per node.
-  std::span<const std::array<float, 4>> positions;
+  /// Position per node.
+  std::span<const GbtsNodePosition> positions;
   /// Dense layer index per node.
   std::span<const GbtsLayerIndex> layers;
   /// Stereo pairs of the strip nodes, reached through `stripIndex`.
@@ -145,18 +157,18 @@ class GbtsNodeProxy final {
   /// @return Index of the node
   SpacePointIndex index() const { return m_index; }
   /// @return Global x coordinate
-  float x() const { return position()[0]; }
+  float x() const { return position().x; }
   /// @return Global y coordinate
-  float y() const { return position()[1]; }
+  float y() const { return position().y; }
   /// @return Global z coordinate
-  float z() const { return position()[2]; }
+  float z() const { return position().z; }
   /// @return Transverse distance from the beamline
-  float r() const { return position()[3]; }
+  float r() const { return position().r; }
   /// @return Dense layer index
   GbtsLayerIndex layer() const { return m_view->layers[m_index]; }
 
  private:
-  const std::array<float, 4>& position() const {
+  const GbtsNodePosition& position() const {
     return m_view->positions[m_index];
   }
 
@@ -194,9 +206,7 @@ struct GbtsEdge final {
   /// Outer node of the edge
   SpacePointIndex n2{kSpacePointIndexInvalid};
 
-  std::uint8_t nNei{0};
-
-  /// Whether the outer node is on the pixel barrel. Sits in padding.
+  /// Whether the outer node is on the pixel barrel.
   bool n2PixelBarrel{};
 
   std::array<float, 3> p{};
@@ -204,8 +214,6 @@ struct GbtsEdge final {
   /// GbtsLayerConnection::tauRatioCutOuter of this doublet's layer pair,
   /// cached for the neighbour loop.
   float tauRatioCut{};
-
-  std::array<std::uint32_t, kGbtsMaxEdgeNeighbours> vNei{};
 };
 //! [gbts edge]
 

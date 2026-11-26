@@ -212,7 +212,7 @@ Vector2 detail::VerticesHelper::computeEuclideanClosestPointOnRectangle(
   double loc1Max = upperRight[1];
 
   // check if inside
-  if (loc0Min <= l0 && l0 < loc0Max && loc1Min <= l1 && l1 < loc1Max) {
+  if (loc0Min <= l0 && l0 <= loc0Max && loc1Min <= l1 && l1 <= loc1Max) {
     // INSIDE
     double dist = std::abs(loc0Max - l0);
     Vector2 cls(loc0Max, l1);

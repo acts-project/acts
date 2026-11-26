@@ -23,31 +23,26 @@ namespace Acts {
 
 namespace {
 
-float getBestSeedQuality(
-    const std::unordered_map<SpacePointIndex, float>& bestSeedQualityMap,
-    SpacePointIndex sp) {
-  auto it = bestSeedQualityMap.find(sp);
-  if (it != bestSeedQualityMap.end()) {
-    return it->second;
-  }
-  return std::numeric_limits<float>::lowest();
+float getBestSeedQuality(const std::vector<float>& bestSeedQuality,
+                         SpacePointIndex sp) {
+  return bestSeedQuality[sp];
 }
 
-void setBestSeedQuality(
-    std::unordered_map<SpacePointIndex, float>& bestSeedQualityMap,
-    SpacePointIndex bottom, SpacePointIndex middle, SpacePointIndex top,
-    float quality) {
-  const auto set = [&](SpacePointIndex sp) {
-    auto it = bestSeedQualityMap.find(sp);
-    if (it != bestSeedQualityMap.end()) {
-      it->second = std::max(quality, it->second);
-    } else {
-      bestSeedQualityMap.emplace(sp, quality);
-    }
-  };
-
+void setBestSeedQuality(std::vector<float>& bestSeedQuality,
+                        SpacePointIndex bottom, SpacePointIndex middle,
+                        SpacePointIndex top, float quality) {
   for (SpacePointIndex sp : {top, middle, bottom}) {
-    set(sp);
+    bestSeedQuality[sp] = std::max(quality, bestSeedQuality[sp]);
+  }
+}
+
+/// Sizes the best seed quality to the number of space points on first use per
+/// event. Space points that have not been part of a seed yet hold lowest(),
+/// which is what the previous map returned for a missing entry.
+void sizeBestSeedQuality(std::vector<float>& bestSeedQuality,
+                         std::size_t nSpacePoints) {
+  if (bestSeedQuality.size() < nSpacePoints) {
+    bestSeedQuality.resize(nSpacePoints, std::numeric_limits<float>::lowest());
   }
 }
 
@@ -107,6 +102,7 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
     const SpacePointContainer& spacePoints, const ConstSpacePointProxy& spM,
     const DoubletsForMiddleSp::Proxy& bottomLink,
     const TripletTopCandidates& tripletTopCandidates) const {
+  sizeBestSeedQuality(state().bestSeedQualityMap, spacePoints.size());
   auto spB = spacePoints[bottomLink.spacePointIndex()];
   auto bottomSp = spB.index();
   auto middleSp = spM.index();
@@ -334,6 +330,7 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
 void BroadTripletSeedFilter::filterTripletsMiddleFixed(
     const SpacePointContainer& spacePoints,
     SeedContainer& outputCollection) const {
+  sizeBestSeedQuality(state().bestSeedQualityMap, spacePoints.size());
   const std::size_t numQualitySeeds =
       state().candidatesCollector.nHighQualityCandidates();
 

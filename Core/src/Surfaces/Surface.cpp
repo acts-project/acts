@@ -41,6 +41,11 @@ std::ostream& operator<<(std::ostream& os, Surface::SurfaceType type) {
   return os << Surface::s_surfaceTypeNames[static_cast<std::size_t>(type)];
 }
 
+bool Surface::contains(const GeometryContext& /*gctx*/,
+                       const Surface& /*other*/, double /*tolerance*/) const {
+  return false;
+}
+
 bool Surface::isOnSurface(const GeometryContext& gctx, const Vector3& position,
                           const Vector3& direction,
                           const BoundaryTolerance& boundaryTolerance,
@@ -227,6 +232,13 @@ Vector2 Surface::closestPointOnBoundary(const Vector2& lposition,
 
 double Surface::distanceToBoundary(const Vector2& lposition) const {
   return bounds().distance(lposition);
+}
+
+MultiIntersection3D Surface::intersect(
+    const GeometryContext& gctx, const Vector3& position,
+    const Vector3& direction, const Vector3& /*curvature*/,
+    const BoundaryTolerance& boundaryTolerance, double tolerance) const {
+  return intersect(gctx, position, direction, boundaryTolerance, tolerance);
 }
 
 bool Surface::insideBounds(const Vector2& lposition,

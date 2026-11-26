@@ -29,6 +29,7 @@
 #include "traccc/options/track_finding.hpp"
 #include "traccc/options/track_fitting.hpp"
 #include "traccc/options/track_gbts_seeding.hpp"
+#include "traccc/options/track_hough_seeding.hpp"
 #include "traccc/options/track_propagation.hpp"
 #include "traccc/options/track_seeding.hpp"
 
@@ -82,6 +83,7 @@ int throughput_mt(std::string_view description, int argc, char* argv[],
   opts::clusterization clusterization_opts;
   opts::track_seeding seeding_opts;
   opts::track_gbts_seeding seeding_gbts_opts;
+  opts::track_hough_seeding seeding_hough_opts;
   opts::track_finding finding_opts;
   opts::track_propagation propagation_opts;
   opts::track_fitting fitting_opts;
@@ -91,8 +93,9 @@ int throughput_mt(std::string_view description, int argc, char* argv[],
   opts::program_options program_opts{
       description,
       {detector_opts, bfield_opts, input_opts, clusterization_opts,
-       seeding_opts, seeding_gbts_opts, finding_opts, propagation_opts,
-       fitting_opts, throughput_opts, threading_opts, logging_opts},
+       seeding_opts, seeding_gbts_opts, seeding_hough_opts, finding_opts,
+       propagation_opts, fitting_opts, throughput_opts, threading_opts,
+       logging_opts},
       argc,
       argv,
       prelogger->cloneWithSuffix("Options")};
@@ -109,8 +112,8 @@ int throughput_mt(std::string_view description, int argc, char* argv[],
       *(host_mr == nullptr ? &unpinned_host_mr : host_mr);
 
   // Construct the detector description object.
-  traccc::detector_design_description::host det_descr{input_host_mr};
-  traccc::detector_conditions_description::host det_cond{input_host_mr};
+  traccc::detector_design_description::host det_descr{unpinned_host_mr};
+  traccc::detector_conditions_description::host det_cond{unpinned_host_mr};
   traccc::io::read_detector_description(
       det_descr, det_cond, detector_opts.detector_file,
       detector_opts.digitization_file, detector_opts.conditions_file,
@@ -160,6 +163,7 @@ int throughput_mt(std::string_view description, int argc, char* argv[],
   const traccc::spacepoint_grid_config spacepoint_grid_config(seeding_opts);
 
   const traccc::gbts_seedfinder_config gbts_config(seeding_gbts_opts);
+  const traccc::hough_seeding_config hough_config(seeding_hough_opts);
 
   const traccc::track_params_estimation_config track_params_estimation_config;
 
@@ -188,9 +192,10 @@ int throughput_mt(std::string_view description, int argc, char* argv[],
   for (std::size_t i = 0; i < threading_opts.concurrent_slots; ++i) {
     algs.emplace_back(std::make_unique<FULL_CHAIN_ALG>(
         unpinned_host_mr, clustering_cfg, seedfinder_config,
-        spacepoint_grid_config, seedfilter_config, gbts_config,
+        spacepoint_grid_config, seedfilter_config, gbts_config, hough_config,
         track_params_estimation_config, finding_cfg, fitting_cfg, shared_data,
-        logger().clone(), seeding_gbts_opts.useGBTS, await_mode));
+        logger().clone(), seeding_gbts_opts.useGBTS,
+        seeding_hough_opts.useHough, await_mode));
   }
 
   // Set up and populate a queue with concurrent slot indices.

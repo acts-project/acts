@@ -89,6 +89,7 @@ full_chain_algorithm::full_chain_algorithm(
     const spacepoint_grid_config& grid_config,
     const seedfilter_config& filter_config,
     const gbts_seedfinder_config& gbts_config,
+    const hough_seedingconfig& /*hough_config*/,
     const track_params_estimation_config& track_params_estimation_config,
     const finding_algorithm::config_type& finding_config,
     const fitting_algorithm::config_type& fitting_config,
@@ -156,7 +157,8 @@ full_chain_algorithm::full_chain_algorithm(
                 m_data->m_queue_wrapper,
                 log->clone("TrackFittingAlg"),
                 m_await_function},
-      usingGBTS(useGBTS) {
+      usingGBTS(useGBTS),
+      usingHough(useHough) {
   // Tell the user what device is being used.
   TRACCC_INFO("Using SYCL device: " << m_data->m_queue.device_name());
 }
@@ -165,6 +167,10 @@ full_chain_algorithm::~full_chain_algorithm() = default;
 
 full_chain_algorithm::output_type full_chain_algorithm::operator()(
     const edm::silicon_cell_collection::host& cells) const {
+  if (usingHough) {
+    std::cout << "Hough not implemented for sycl" << std::endl;
+  }
+
   // Create device copy of input collections
   edm::silicon_cell_collection::buffer cells_buffer{
       static_cast<unsigned int>(cells.size()), m_cached_device_mr};
@@ -222,6 +228,9 @@ full_chain_algorithm::output_type full_chain_algorithm::operator()(
 
 bound_track_parameters_collection_types::host full_chain_algorithm::seeding(
     const edm::silicon_cell_collection::host& cells) const {
+  if (usingHough) {
+    std::cout << "Hough not implemented for sycl" << std::endl;
+  }
   // Create device copy of input collections
   edm::silicon_cell_collection::buffer cells_buffer{
       static_cast<unsigned int>(cells.size()), m_cached_device_mr};

@@ -86,11 +86,12 @@ full_chain_algorithm::full_chain_algorithm(
     const spacepoint_grid_config& grid_config,
     const seedfilter_config& filter_config,
     const gbts_seedfinder_config& gbts_config,
+    const hough_seeding_config& hough_config,
     const track_params_estimation_config& track_params_estimation_config,
     const finding_algorithm::config_type& finding_config,
     const fitting_algorithm::config_type& fitting_config,
     const shared_data& data, std::unique_ptr<const traccc::Logger> logger,
-    bool useGBTS, await_strategy await_mode)
+    bool useGBTS, bool useHough, await_strategy await_mode)
     : messaging(logger->clone()),
       m_host_mr(host_mr),
       m_cached_pinned_host_mr(data.m_synchronized_pinned_host_mr),
@@ -121,6 +122,9 @@ full_chain_algorithm::full_chain_algorithm(
       m_gbts_seeding(
           gbts_config, {m_cached_device_mr, &m_cached_pinned_host_mr}, m_copy,
           m_stream, logger->cloneWithSuffix("GbtsAlg"), m_await_function),
+      m_hough_seeding({m_cached_device_mr, &m_cached_pinned_host_mr}, m_copy,
+                      m_stream, hough_config,
+                      logger->cloneWithSuffix("HoughAlg"), m_await_function),
       m_track_parameter_estimation(
           track_params_estimation_config,
           {m_cached_device_mr, &m_cached_pinned_host_mr}, m_copy, m_stream,
@@ -131,7 +135,8 @@ full_chain_algorithm::full_chain_algorithm(
       m_fitting(fitting_config, {m_cached_device_mr, &m_cached_pinned_host_mr},
                 m_copy, m_stream, logger->cloneWithSuffix("TrackFittingAlg"),
                 m_await_function),
-      usingGBTS(useGBTS) {
+      usingGBTS(useGBTS),
+      usingHough(useHough) {
   // Tell the user what device is being used.
   int device = 0;
   CUDA_ERROR_CHECK(cudaGetDevice(&device));
@@ -146,6 +151,12 @@ full_chain_algorithm::~full_chain_algorithm() = default;
 
 full_chain_algorithm::output_type full_chain_algorithm::operator()(
     const edm::silicon_cell_collection::host& cells) const {
+  if (usingGBTS && usingHough) {
+    throw std::invalid_argument(
+        "Incompatible seeding options: cannot activate both GBTS and Hough "
+        "seeding");
+  }
+
   // Create device copy of input collections
   edm::silicon_cell_collection::buffer cells_buffer(
       static_cast<unsigned int>(cells.size()), m_cached_device_mr);
@@ -166,6 +177,8 @@ full_chain_algorithm::output_type full_chain_algorithm::operator()(
     triplet_seeding_algorithm::output_type seeds;
     if (usingGBTS) {
       seeds = m_gbts_seeding(spacepoints, measurements);
+    } else if (usingHough) {
+      seeds = m_hough_seeding(m_field, measurements, spacepoints);
     } else {
       seeds = m_seeding(spacepoints);
     }
@@ -200,6 +213,12 @@ full_chain_algorithm::output_type full_chain_algorithm::operator()(
 
 bound_track_parameters_collection_types::host full_chain_algorithm::seeding(
     const edm::silicon_cell_collection::host& cells) const {
+  if (usingGBTS && usingHough) {
+    throw std::invalid_argument(
+        "Incompatible seeding options: cannot activate both GBTS and Hough "
+        "seeding");
+  }
+
   // Create device copy of input collections
   edm::silicon_cell_collection::buffer cells_buffer(
       static_cast<unsigned int>(cells.size()), m_cached_device_mr);
@@ -220,6 +239,8 @@ bound_track_parameters_collection_types::host full_chain_algorithm::seeding(
     triplet_seeding_algorithm::output_type seeds;
     if (usingGBTS) {
       seeds = m_gbts_seeding(spacepoints, measurements);
+    } else if (usingHough) {
+      seeds = m_hough_seeding(m_field, measurements, spacepoints);
     } else {
       seeds = m_seeding(spacepoints);
     }

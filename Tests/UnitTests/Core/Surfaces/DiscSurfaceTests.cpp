@@ -935,6 +935,67 @@ BOOST_AUTO_TEST_CASE(DiscBoundToCartesianJacobianMatchesTheSurface) {
   }
 }
 
+/// Unit test for DiscSurface::contains
+BOOST_AUTO_TEST_CASE(DiscSurfaceContains) {
+  using std::numbers::pi;
+  auto disc = [](const Transform3& transform, double rMin, double rMax,
+                 double halfPhi = pi, double avgPhi = 0.) {
+    return Surface::makeShared<DiscSurface>(
+        transform,
+        std::make_shared<const RadialBounds>(rMin, rMax, halfPhi, avgPhi));
+  };
+  const Transform3 identity = Transform3::Identity();
+  auto rotatedZ = [](double angle) {
+    return Transform3{AngleAxis3{angle, Vector3::UnitZ()}};
+  };
+  auto ring = disc(identity, 10_mm, 50_mm);
+
+  BOOST_CHECK(ring->contains(tgContext, *ring));
+  BOOST_CHECK(ring->contains(tgContext, *disc(identity, 20_mm, 40_mm)));
+  BOOST_CHECK(!ring->contains(tgContext, *disc(identity, 5_mm, 40_mm)));
+  BOOST_CHECK(!ring->contains(tgContext, *disc(identity, 20_mm, 60_mm)));
+  BOOST_CHECK(!disc(identity, 20_mm, 40_mm)->contains(tgContext, *ring));
+
+  // Phi sectors, also through the rotation of the other disc
+  auto sector = disc(identity, 10_mm, 50_mm, pi / 4.);
+  BOOST_CHECK(sector->contains(
+      tgContext, *disc(identity, 20_mm, 40_mm, pi / 8., pi / 8.)));
+  BOOST_CHECK(!sector->contains(
+      tgContext, *disc(identity, 20_mm, 40_mm, pi / 8., pi / 4.)));
+  BOOST_CHECK(sector->contains(
+      tgContext, *disc(rotatedZ(pi / 8.), 20_mm, 40_mm, pi / 8.)));
+  BOOST_CHECK(!sector->contains(
+      tgContext, *disc(rotatedZ(pi / 4.), 20_mm, 40_mm, pi / 8.)));
+  BOOST_CHECK(!sector->contains(tgContext, *ring));
+
+  // Sectors across phi = +-pi
+  auto back = disc(identity, 10_mm, 50_mm, pi / 4., -pi);
+  BOOST_CHECK(back->contains(
+      tgContext, *disc(identity, 20_mm, 40_mm, pi / 16., 7. * pi / 8.)));
+
+  // A flipped normal mirrors the phi sector
+  auto upper = disc(identity, 10_mm, 50_mm, pi / 8., pi / 8.);
+  const Transform3 flipped{AngleAxis3{pi, Vector3::UnitX()}};
+  BOOST_CHECK(upper->contains(
+      tgContext, *disc(identity, 20_mm, 40_mm, pi / 16., pi / 8.)));
+  BOOST_CHECK(!upper->contains(
+      tgContext, *disc(flipped, 20_mm, 40_mm, pi / 16., pi / 8.)));
+  BOOST_CHECK(upper->contains(
+      tgContext, *disc(flipped, 20_mm, 40_mm, pi / 16., -pi / 8.)));
+
+  // Not concentric or not on the same plane
+  BOOST_CHECK(!ring->contains(
+      tgContext, *disc(Transform3{Translation3{1_mm, 0, 0}}, 20_mm, 40_mm)));
+  BOOST_CHECK(!ring->contains(
+      tgContext, *disc(Transform3{Translation3{0, 0, 1_mm}}, 20_mm, 40_mm)));
+
+  // Other bounds are not supported
+  auto trapezoid = Surface::makeShared<DiscSurface>(
+      identity,
+      std::make_shared<const DiscTrapezoidBounds>(2_mm, 4_mm, 20_mm, 40_mm));
+  BOOST_CHECK(!ring->contains(tgContext, *trapezoid));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace ActsTests

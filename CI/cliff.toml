@@ -56,10 +56,6 @@ filter_unconventional = true
 split_commits = false
 # regex for preprocessing the commit messages
 commit_preprocessors = [
-  # Only a `!` in the title marks a breaking change. A `BREAKING CHANGE:`
-  # footer in the body does not, so that it cannot bump the major version of
-  # a release by itself.
-  { pattern = '(?m)^BREAKING[ -]CHANGE:', replace = "Breaking change:" },
   # Replace issue numbers
   #{ pattern = '\((\w+\s)?#([0-9]+)\)', replace = "([#${2}](<REPO>/issues/${2}))"},
   # Check spelling of the commit with https://github.com/crate-ci/typos

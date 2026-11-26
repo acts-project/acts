@@ -9,6 +9,9 @@
 # Enable the HIP language.
 enable_language(HIP)
 
+# Project include(s).
+include(traccc-compiler-options-hip)
+
 add_library(traccc_test_hip_device STATIC test_thrust.hip)
 target_link_libraries(
     traccc_test_hip_device

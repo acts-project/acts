@@ -16,9 +16,10 @@ EXCLUDE_PATHS = (
     "Detray/detectors",
     # CLI tools
     "Detray/tests/tools",
-    "Detray/python/Io/tests",
-    "Detray/python/Tests/tests",
-    "Detray/python/Plugins/tests",
+    "Detray/python/core/tests",
+    "Detray/python/io/tests",
+    "Detray/python/tests/tests",
+    "Detray/python/plugins/tests",
     # TODO: Remove the traccc part.
     "Traccc",
     "git",
@@ -88,13 +89,14 @@ EXCLUDE_FILES = (
     "Detray/tests/include/detray/test/utils/perigee_stopper.hpp",
     "Detray/tests/include/detray/test/validation/propagation_validation.hpp",
     # Build-time metadata generation
-    "Detray/python/detray/detectors/impl/definitions.py",
-    "Detray/python/detray/detectors/impl/type_helpers.py",
+    "Detray/detectors/codegen/detray_metadata/impl/definitions.py",
+    "Detray/detectors/codegen/detray_metadata/impl/type_helpers.py",
     # Python uv files
     "Detray/codegen/detray-sympy/uv.lock",
-    "Detray/python/detray/uv.lock",
     # Generated PyPI readme, checked by Python/Examples/tests/test_pypi_readme.py
     "CI/pypi_readme.md",
+    # Remove once the first in-tree user includes this header.
+    "Core/include/Acts/Utilities/CompilerAttributes.hpp",
     # TODO: remove after file is gone
     "Core/include/Acts/Utilities/ProtoAxisHelpers.hpp",
 )

@@ -17,6 +17,7 @@
 #include "Acts/Geometry/ContainerBlueprintNode.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CuboidVolumeBuilder.hpp"
+#include "Acts/Geometry/CylinderLayer.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/MultiWireVolumeBuilder.hpp"
@@ -29,12 +30,14 @@
 #include "Acts/Navigation/TryAllNavigationPolicy.hpp"
 #include "Acts/Propagator/NavigationTarget.hpp"
 #include "Acts/Propagator/Navigator.hpp"
+#include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/LineBounds.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
@@ -146,6 +149,48 @@ auto bField = std::make_shared<ConstantBField>(Vector3{0, 0, Bz});
 Logging::Level logLevel = Logging::INFO;
 
 BOOST_AUTO_TEST_SUITE(PropagatorSuite)
+
+BOOST_AUTO_TEST_CASE(Navigator_inward_between_cylinder_approaches) {
+  // Keep sensitive-surface selection out of this approach/representation test.
+  auto sensor = Surface::makeShared<PlaneSurface>(
+      Transform3(Translation3(1000., 0., 0.)),
+      std::make_shared<RectangleBounds>(1., 1.));
+  auto layer = CylinderLayer::create(
+      Transform3::Identity(), std::make_shared<CylinderBounds>(10., 100.),
+      std::make_unique<SurfaceArray>(sensor), 2.);
+  auto volume = std::make_shared<TrackingVolume>(
+      Transform3::Identity(),
+      std::make_shared<CylinderVolumeBounds>(7., 20., 200.), nullptr,
+      LayerArrayCreator({}).layerArray(tgContext, {layer}, 7., 20., arbitrary,
+                                       AxisDirection::AxisR));
+  Navigator navigator(
+      {.trackingGeometry = std::make_shared<TrackingGeometry>(volume),
+       .resolvePassive = true});
+  auto state = navigator.makeState(Navigator::Options(tgContext));
+  Vector3 position(9.5, 0., 97.51);
+  const Vector3 direction = Vector3(-0.2, 0., -1.).normalized();
+  BOOST_REQUIRE(
+      navigator
+          .initialize(state, {.position = position, .direction = direction})
+          .ok());
+  // Near roots of r=11 and the r=10 representation are outside z bounds.
+  // Their far roots must not skip the inward r=9 approach and r=7 boundary.
+  for (double x : {9., 7.}) {
+    const auto target = navigator.nextTarget(state, position, direction);
+    BOOST_REQUIRE(!target.isNone());
+    const auto crossing = target.surface()
+                              .intersect(tgContext, position, direction,
+                                         target.boundaryTolerance())
+                              .at(target.intersectionIndex());
+    BOOST_REQUIRE(crossing.isValid());
+    BOOST_REQUIRE_GT(crossing.pathLength(), 0.);
+    position = crossing.position();
+    CHECK_CLOSE_ABS(position.x(), x, s_onSurfaceTolerance);
+    navigator.handleSurfaceReached(state, position, direction,
+                                   target.surface());
+  }
+  BOOST_CHECK(navigator.endOfWorldReached(state));
+}
 
 BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
   ACTS_LOCAL_LOGGER(getDefaultLogger("NavigatorTest", logLevel));

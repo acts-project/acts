@@ -14,29 +14,6 @@
 namespace traccc::edm {
 
 template <typename BASE>
-TRACCC_HOST_DEVICE silicon_cell<BASE>& silicon_cell<BASE>::operator=(
-    const silicon_cell& other) {
-  channel0() = other.channel0();
-  channel1() = other.channel1();
-  activation() = other.activation();
-  time() = other.time();
-  module_index() = other.module_index();
-  return *this;
-}
-
-template <typename BASE>
-template <typename T, std::enable_if_t<!std::is_same_v<BASE, T>, bool> >
-TRACCC_HOST_DEVICE silicon_cell<BASE>& silicon_cell<BASE>::operator=(
-    const silicon_cell<T>& other) {
-  channel0() = other.channel0();
-  channel1() = other.channel1();
-  activation() = other.activation();
-  time() = other.time();
-  module_index() = other.module_index();
-  return *this;
-}
-
-template <typename BASE>
 template <typename T>
 TRACCC_HOST_DEVICE bool silicon_cell<BASE>::operator==(
     const silicon_cell<T>& other) const {

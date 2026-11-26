@@ -140,9 +140,9 @@ clusterization_algorithm::execute_impl(
 
     sort_cells_kernel(num_cells, cells, *sorted_cells, permutation_map_buffer,
                       keep_disjoint_set);
-    sorted_cells_view = edm::silicon_cell_collection::const_view(*sorted_cells);
+    sorted_cells_view = *sorted_cells;
   } else {
-    sorted_cells_view = edm::silicon_cell_collection::const_view(cells);
+    sorted_cells_view = cells;
   }
 
   // Sorting must preserve module contiguity; a violation here indicates a
@@ -191,6 +191,11 @@ clusterization_algorithm::execute_impl(
     // Run the cluster data reification kernel.
     cluster_maker_kernel(num_cells, disjoint_set, *cluster_data,
                          permutation_map_buffer);
+  }
+
+  // Kernels must finish before the temporary buffers are released.
+  if (keep_disjoint_set || m_config.sort_cells) {
+    synchronize();
   }
 
   // Return the reconstructed measurements.

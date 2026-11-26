@@ -355,14 +355,17 @@ std::shared_ptr<TrackingGeometry> CylindricalTrackingGeometry::buildGen3(
 
           using SrfArrayNavPol = SurfaceArrayNavigationPolicy;
 
-          layer.setNavigationPolicyFactory(
+          auto factory =
               NavigationPolicyFactory{}
                   .add<TryAllNavigationPolicy>(
                       TryAllNavigationPolicy::Config{.sensitives = false})
                   .add<SrfArrayNavPol>(SrfArrayNavPol::Config{
                       .layerType = SrfArrayNavPol::LayerType::Cylinder,
-                      .bins = kLayerBinning[ilp]})
-                  .asUniquePtr());
+                      .bins = kLayerBinning[ilp]});
+          if (extendLayerNavigationPolicy) {
+            factory = extendLayerNavigationPolicy(std::move(factory));
+          }
+          layer.setNavigationPolicyFactory(std::move(factory).asUniquePtr());
         });
       });
 

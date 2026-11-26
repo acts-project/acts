@@ -19,10 +19,10 @@
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Propagator/DefaultActor.hpp"
 #include "Acts/Propagator/MaterialInteractor.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/SympyStepper.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -435,7 +435,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
 
   using Extrapolator = Acts::Propagator<Acts::SympyStepper, Acts::Navigator>;
   using ExtrapolatorOptions = Extrapolator::template Options<
-      Acts::ActorList<Acts::MaterialInteractor, Acts::EndOfWorldReached>>;
+      Acts::ActorList<Acts::DefaultActor, Acts::MaterialInteractor>>;
 
   Extrapolator extrapolator(
       Acts::SympyStepper(m_cfg.magneticField),
@@ -799,8 +799,11 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
 
   m_nStoppedBranches += branchStopper.m_nStoppedBranches;
 
-  m_memoryStatistics.local().hist +=
-      tracks.trackStateContainer().statistics().hist;
+  // only printed at debug level in finalize
+  if (logger().doPrint(Acts::Logging::DEBUG)) {
+    m_memoryStatistics.local().hist +=
+        tracks.trackStateContainer().statistics().hist;
+  }
 
   auto constTrackStateContainer =
       std::make_shared<Acts::ConstVectorMultiTrajectory>(

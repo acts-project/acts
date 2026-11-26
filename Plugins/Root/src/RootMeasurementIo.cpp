@@ -16,6 +16,10 @@
 
 using namespace Acts;
 
+/// Names of the bound parameters
+static const std::array<std::string, Acts::eBoundSize> bNames = {
+    "loc0", "loc1", "phi", "theta", "qop", "time"};
+
 ActsPlugins::RootMeasurementIo::RootMeasurementIo(const Config& config)
     : m_cfg(config) {
   clear();

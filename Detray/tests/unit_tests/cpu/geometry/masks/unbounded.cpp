@@ -43,7 +43,7 @@ GTEST_TEST(detray_masks, unbounded) {
 
   constexpr scalar h{20.f * unit<scalar>::mm};
 
-  mask<unbounded_t, test_algebra> u{0u, h, h};
+  mask<unbounded_t, test_algebra> u{0u, -h, -h, h, h};
 
   // Test local typedefs
   static_assert(std::is_same_v<unbounded_t::shape, shape_t>, "incorrect shape");

@@ -81,7 +81,7 @@ struct get_material_record {
       const auto mat = detail::material_accessor::get(mat_group, index, loc);
 
       // Empty material can occur in material maps, skip it
-      if (!mat) {
+      if (!mat.is_valid()) {
         // Set the pathlength and thickness to zero so that they are not counted
         return material_record{inv_sf, 0.f, 0.f, inv, inv};
       }

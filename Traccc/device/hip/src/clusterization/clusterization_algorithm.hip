@@ -78,15 +78,12 @@ void clusterization_algorithm::cluster_maker_kernel(
     edm::silicon_cluster_collection::view& cluster_data,
     const vecmem::data::vector_view<const unsigned int>& permutation_map_view)
     const {
-  const unsigned int num_threads = warp_size() * 16u;
+  const unsigned int num_threads = 512u;
   const unsigned int num_blocks = (num_cells + num_threads - 1) / num_threads;
   hipLaunchKernelGGL(kernels::reify_cluster_data, num_blocks, num_threads, 0,
                      details::get_stream(stream()), disjoint_set,
                      permutation_map_view, cluster_data);
   TRACCC_HIP_ERROR_CHECK(hipGetLastError());
-  // The base class destroys the input buffers right after this call, so
-  // the kernel must finish before returning.
-  stream().synchronize();
 }
 
 }  // namespace traccc::hip

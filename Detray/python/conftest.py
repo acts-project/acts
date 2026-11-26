@@ -20,13 +20,13 @@ def toy_detector_files(tmp_path_factory):
     """Write a toy detector to disk."""
     out_dir = str(tmp_path_factory.mktemp("toy_detector")) + os.sep
 
-    det, names = detray.tests.buildToyDetector(
+    det, names = detray.tests.build_toy_detector(
         detray.core.HostMemoryResource(), detray.tests.ToyDetectorConfig()
     )
 
     writer_config = detray.io.DetectorWriterConfig()
     writer_config.path = out_dir
-    detray.io.writeDetector(det, names, writer_config)
+    detray.io.write_detector_json(det, names, writer_config)
 
     files = {
         "geometry": os.path.join(out_dir, "toy_detector_geometry.json"),
@@ -38,11 +38,11 @@ def toy_detector_files(tmp_path_factory):
 
 
 @pytest.fixture(scope="session")
-def detector(toy_detector_files):
+def toy_detector(toy_detector_files):
     """Read the toy detector."""
-    reader_config = (
-        detray.io.DetectorReaderConfig()
-        .addFile(toy_detector_files["geometry"])
-        .addFile(toy_detector_files["material"])
+    reader_config = detray.io.DetectorReaderConfig()
+    reader_config.add_files(
+        toy_detector_files["geometry"], toy_detector_files["material"]
     )
-    return detray.io.readDetector(detray.core.HostMemoryResource(), reader_config)
+
+    return detray.io.read_detector_json(detray.core.HostMemoryResource(), reader_config)

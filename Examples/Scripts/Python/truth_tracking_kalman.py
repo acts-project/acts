@@ -273,4 +273,4 @@ if "__main__" == __name__:
 
     s.run()
 
-    vis.plot(projection="xy", filename="truth_tracking_kalman_visualization.pdf")
+    vis.plot(projection="xy", filename="truth_tracking_kalman_interpolation.pdf")

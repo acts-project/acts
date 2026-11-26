@@ -81,11 +81,11 @@ struct StateCollector {
     std::vector<typename stepper_t::State> stepping;
   };
 
-  using result_type = this_result;
+  using State = this_result;
 
   template <typename propagator_state_t>
   Result<void> act(propagator_state_t& state, const stepper_t& /*stepper*/,
-                   const navigator_t& /*navigator*/, result_type& result,
+                   const navigator_t& /*navigator*/, State& result,
                    const Logger& /*logger*/) const {
     result.navigation.push_back(state.navigation);
     result.stepping.push_back(state.stepping);
@@ -262,6 +262,9 @@ BOOST_AUTO_TEST_CASE(TrackingGeometryJsonConverterRoundTrip) {
   auto compositeLink = std::make_unique<CompositePortalLink>(
       std::move(compositeLinkA), std::move(compositeLinkB),
       AxisDirection::AxisX);
+  const auto compositeGeometryId =
+      GeometryIdentifier{}.withVolume(1u).withExtra(17u);
+  compositeLink->surfacePtr()->assignGeometryId(compositeGeometryId);
   root->addPortal(std::make_shared<Portal>(Direction::AlongNormal(),
                                            std::move(compositeLink)));
 
@@ -349,6 +352,8 @@ BOOST_AUTO_TEST_CASE(TrackingGeometryJsonConverterRoundTrip) {
   BOOST_REQUIRE(decodedComposite != nullptr);
   BOOST_CHECK_EQUAL(decodedComposite->size(), 2u);
   BOOST_CHECK_EQUAL(decodedComposite->direction(), AxisDirection::AxisX);
+  BOOST_CHECK_EQUAL(decodedComposite->surface().geometryId(),
+                    compositeGeometryId);
 
   const auto* decodedGrid = dynamic_cast<const GridPortalLink*>(
       decodedPortals.at(2)->getLink(Direction::AlongNormal()));
@@ -406,8 +411,7 @@ BOOST_AUTO_TEST_CASE(TrackingGeometryJsonConverterNavigation) {
       ParticleHypothesis::pion());
 
   // Action list and abort list
-  using EndOfWorld = EndOfWorldReached;
-  using ReferenceActorList = ActorList<StateCollector<>, EndOfWorld>;
+  using ReferenceActorList = ActorList<DefaultActor, StateCollector<>>;
   using PropagatorOptions =
       typename ConstantFieldPropagator::template Options<ReferenceActorList>;
 
@@ -449,7 +453,8 @@ BOOST_AUTO_TEST_CASE(TrackingGeometryJsonConverterNavigation) {
       Acts::getDefaultLogger("SourceNavigator", Acts::Logging::INFO)};
   ConstantFieldPropagator sourcePropagator(stepper, sourceNavigator);
 
-  auto sourceRes = sourcePropagator.propagate(start, options).value();
+  auto sourceState = sourcePropagator.makeState(options);
+  sourcePropagator.propagate(sourceState, start).value();
 
   Navigator::Config decodedNavCfg;
   decodedNavCfg.trackingGeometry = decodedGeometry;
@@ -461,11 +466,13 @@ BOOST_AUTO_TEST_CASE(TrackingGeometryJsonConverterNavigation) {
       Acts::getDefaultLogger("DecodedNavigator", Acts::Logging::INFO)};
   ConstantFieldPropagator decodedPropagator(stepper, decodedNavigator);
 
-  auto decodedRes = decodedPropagator.propagate(start, options).value();
+  auto decodedState = decodedPropagator.makeState(options);
+  decodedPropagator.propagate(decodedState, start).value();
 
-  auto& sourceStates = sourceRes.template get<StateCollector<>::result_type>();
+  auto& sourceStates =
+      sourceState.actor.template get<StateCollector<>::State>();
   auto& decodedStates =
-      decodedRes.template get<StateCollector<>::result_type>();
+      decodedState.actor.template get<StateCollector<>::State>();
   BOOST_REQUIRE_EQUAL(sourceStates.navigation.size(),
                       decodedStates.navigation.size());
   BOOST_REQUIRE_EQUAL(sourceStates.stepping.size(),

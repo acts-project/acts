@@ -34,6 +34,7 @@ namespace kernels {
 /// where the host-only @c name_map constructor that the concept uses is not
 /// callable. The device function that it calls carries the constraint.
 ///
+// TODO: Use detector concept as soon as HIP compiler can handle it
 template <typename detector_t>
 __global__ void find_tracks(const finding_config cfg,
                             const typename detector_t::const_view_type det,
@@ -69,7 +70,7 @@ void combinatorial_kalman_filter_algorithm::find_tracks_kernel(
     const detector_buffer& detector,
     const device::find_tracks_payload& payload) const {
   // Establish the kernel launch parameters.
-  const unsigned int deviceThreads = warp_size() * 2;
+  const unsigned int deviceThreads = 64;
   const unsigned int deviceBlocks =
       (n_threads + deviceThreads - 1) / deviceThreads;
   const std::size_t deviceSharedMem =

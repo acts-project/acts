@@ -211,6 +211,7 @@ TEST_P(TelescopeDetectorSimulation, telescope_detector_simulation) {
   const scalar thickness = 0.005f * traccc::unit<scalar>::cm;
 
   detray::tel_det_config<traccc::default_algebra, detray::rectangle2D> tel_cfg{
+      -1000.f * traccc::unit<scalar>::mm, -1000.f * traccc::unit<scalar>::mm,
       1000.f * traccc::unit<scalar>::mm, 1000.f * traccc::unit<scalar>::mm};
   tel_cfg.positions(positions).mat_thickness(thickness);
 

@@ -34,7 +34,6 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Propagator/detail/SteppingHelper.hpp"
-#include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -218,12 +217,12 @@ struct StepCollector {
     std::vector<const Surface*> surfaces;
   };
 
-  using result_type = this_result;
+  using State = this_result;
 
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   Result<void> act(propagator_state_t& state, const stepper_t& stepper,
-                   const navigator_t& /*navigator*/, result_type& result,
+                   const navigator_t& /*navigator*/, State& result,
                    const Logger& /*logger*/) const {
     result.position.push_back(stepper.position(state.stepping));
     if (state.navigation.currentSurface != nullptr) {
@@ -235,7 +234,7 @@ struct StepCollector {
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   bool checkAbort(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
-                  const navigator_t& /*navigator*/, result_type& /*result*/,
+                  const navigator_t& /*navigator*/, State& /*result*/,
                   const Logger& /*logger*/) const {
     return false;
   }
@@ -443,16 +442,16 @@ BOOST_AUTO_TEST_CASE(ConeValidityPolicy_MagneticField) {
         Vector4(startPos.x(), startPos.y(), startPos.z(), 0), startDir,
         1.0 / 1_GeV, std::nullopt, ParticleHypothesis::pion());
 
-    using MyActorList = ActorList<StepCollector, EndOfWorldReached>;
+    using MyActorList = ActorList<DefaultActor, StepCollector>;
     EigenPropagatorType::Options<MyActorList> propOpts(gctx, mfContext);
     propOpts.pathLimit = 5_m;
     propOpts.stepping.maxStepSize = 100_mm;
 
-    auto result = propagator.propagate(start, propOpts);
+    auto state = propagator.makeState(propOpts);
+    auto result = propagator.propagate(state, start);
     BOOST_REQUIRE(result.ok());
 
-    const auto& info =
-        result.value().template get<StepCollector::this_result>();
+    const auto& info = state.actor.template get<StepCollector::this_result>();
 
     const auto& positions = info.position;
     if (!positions.empty()) {
@@ -510,54 +509,18 @@ struct CurvatureRecords {
 // Hide the curvature overloads to model an existing custom navigator.
 class LegacyNavigator : public DirectNavigator {
  public:
-  struct Calls {
-    unsigned int next = 0;
-    unsigned int valid = 0;
-    unsigned int reached = 0;
-  };
-  std::shared_ptr<Calls> calls = std::make_shared<Calls>();
-
   NavigationTarget nextTarget(State& state, const Vector3& position,
-                              const Vector3& direction) const {
-    ++calls->next;
-    return DirectNavigator::nextTarget(state, position, direction);
-  }
-  bool checkTargetValid(const State& state, const Vector3& position,
-                        const Vector3& direction) const {
-    ++calls->valid;
-    return DirectNavigator::checkTargetValid(state, position, direction);
-  }
+                              const Vector3& direction) const;
+  bool checkTargetValid(State& state, const Vector3& position,
+                        const Vector3& direction) const;
   void handleSurfaceReached(State& state, const Vector3& position,
                             const Vector3& direction,
-                            const Surface& surface) const {
-    ++calls->reached;
-    DirectNavigator::handleSurfaceReached(state, position, direction, surface);
-  }
+                            const Surface& surface) const;
 };
 
-static_assert(NavigatorConcept<LegacyNavigator>);
+static_assert(!NavigatorConcept<LegacyNavigator>);
+static_assert(NavigatorConcept<DirectNavigator>);
 static_assert(NavigatorConcept<Navigator>);
-
-BOOST_AUTO_TEST_CASE(LegacyNavigatorPropagation) {
-  LegacyNavigator navigator;
-  const auto calls = navigator.calls;
-  Propagator propagator(StraightLineStepper{}, std::move(navigator));
-  const auto surface =
-      CurvilinearSurface(Vector3(0., 0., 10_mm), Vector3::UnitZ())
-          .planeSurface();
-  decltype(propagator)::Options<> options(gctx, mfContext);
-  options.navigation.surfaceSequence = {surface.get()};
-  options.stepping.maxStepSize = 1_mm;
-  options.pathLimit = 20_mm;
-  const auto start = BoundTrackParameters::createCurvilinear(
-      Vector4::Zero(), Vector3::UnitZ(), 1. / 1_GeV, std::nullopt,
-      ParticleHypothesis::pion());
-  const auto result = propagator.propagate(start, options);
-  BOOST_REQUIRE(result.ok());
-  BOOST_CHECK_GT(calls->next, 0u);
-  BOOST_CHECK_GT(calls->valid, 0u);
-  BOOST_CHECK_EQUAL(calls->reached, 1u);
-}
 
 class CurvatureRecordingPolicy final : public INavigationPolicy {
  public:
@@ -608,14 +571,14 @@ class CurvatureRecordingPolicy final : public INavigationPolicy {
 // then change the momentum again after the first step. Policy callbacks must
 // see the updated curvature, not a derivative cached by the previous step.
 struct ChangeCurvatureActor {
-  struct result_type {
+  struct State {
     bool changedAfterStep = false;
   };
   std::shared_ptr<CurvatureRecords> records;
 
   template <typename PropagatorState, typename Stepper, typename Nav>
   Result<void> act(PropagatorState& state, const Stepper& stepper,
-                   const Nav& /*navigator*/, result_type& result,
+                   const Nav& /*navigator*/, State& result,
                    const Logger& /*logger*/) const {
     Vector3 direction = stepper.direction(state.stepping);
     if (state.stage == PropagatorStage::prePropagation) {
@@ -634,7 +597,7 @@ struct ChangeCurvatureActor {
 
   template <typename PropagatorState, typename Stepper, typename Nav>
   bool checkAbort(PropagatorState& /*state*/, const Stepper& /*stepper*/,
-                  const Nav& /*navigator*/, result_type& /*result*/,
+                  const Nav& /*navigator*/, State& /*result*/,
                   const Logger& /*logger*/) const {
     return false;
   }
@@ -669,12 +632,12 @@ BOOST_AUTO_TEST_CASE(CurvatureReachesEveryPolicyEntryPoint) {
           Vector3::UnitX(), records->qOverP, std::nullopt,
           ParticleHypothesis::pion());
       decltype(propagator)::Options<
-          ActorList<ChangeCurvatureActor, EndOfWorldReached>>
+          ActorList<DefaultActor, ChangeCurvatureActor>>
           options(gctx, mfContext);
       options.direction = propagationDirection;
       options.pathLimit = 3_m;
       options.stepping.maxStepSize = 50_mm;
-      options.actorList.get<ChangeCurvatureActor>().records = records;
+      options.actor.get<ChangeCurvatureActor>().records = records;
       auto result = propagator.propagate(start, options);
       BOOST_REQUIRE(result.ok());
       BOOST_REQUIRE(!records->calls.empty());
@@ -812,7 +775,10 @@ BOOST_AUTO_TEST_CASE(CurvatureZeroCasesAndFieldErrors) {
   auto field = std::make_shared<FailingCurvatureField>();
   field->fail = false;
   Propagator refreshingPropagator{EigenStepper<>(field)};
-  auto refreshingState = refreshingPropagator.makeState(options);
+  // The loop protection would look up the failing field on its own.
+  auto refreshingOptions = options;
+  refreshingOptions.loopProtection = false;
+  auto refreshingState = refreshingPropagator.makeState(refreshingOptions);
   BOOST_REQUIRE(
       refreshingPropagator.initialize(refreshingState, start(), nullptr).ok());
   field->fail = true;

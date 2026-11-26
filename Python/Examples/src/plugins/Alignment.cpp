@@ -111,6 +111,23 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsAlignment, m) {
     py::class_<AlignableStructure, std::shared_ptr<AlignableStructure>>(
         m, "AlignableStructure")
         .def(py::init<Acts::GeometryIdentifier>(), py::arg("id"))
+        .def(py::init<Acts::GeometryIdentifier, const Acts::Transform3&>(),
+             py::arg("id"), py::arg("transform"))
+        .def(py::init<Acts::GeometryIdentifier,
+                      AlignableStructure::TransformProvider>(),
+             py::arg("id"), py::arg("transformProvider"))
+        .def("setTransform",
+             py::overload_cast<const Acts::Transform3&>(
+                 &AlignableStructure::setTransform),
+             py::arg("transform"))
+        .def("setTransform",
+             py::overload_cast<AlignableStructure::TransformProvider>(
+                 &AlignableStructure::setTransform),
+             py::arg("transformProvider"))
+        .def_property_readonly("hasTransform",
+                               &AlignableStructure::hasTransform)
+        .def("localToGlobalTransform",
+             &AlignableStructure::localToGlobalTransform, py::arg("gctx"))
         .def("addSurface", &AlignableStructure::addSurface, py::arg("surface"))
         .def("addChild", &AlignableStructure::addChild, py::arg("child"))
         .def_property_readonly("geometryId", &AlignableStructure::geometryId)

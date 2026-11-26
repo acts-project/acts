@@ -17,9 +17,10 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/ActorList.hpp"
+#include "Acts/Propagator/DefaultActor.hpp"
 #include "Acts/Propagator/DirectNavigator.hpp"
 #include "Acts/Propagator/PropagatorOptions.hpp"
-#include "Acts/Propagator/StandardAborters.hpp"
+#include "Acts/Propagator/detail/AbortConditions.hpp"
 #include "Acts/Propagator/detail/LoopProtection.hpp"
 #include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
 #include "Acts/TrackFitting/KalmanFitterError.hpp"
@@ -30,6 +31,7 @@
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/TrackHelpers.hpp"
 
+#include <limits>
 #include <memory>
 #include <unordered_map>
 #include <vector>
@@ -224,8 +226,8 @@ struct KalmanFitterResult {
   /// Measurement surfaces without hits
   std::vector<const Surface*> missedActiveSurfaces;
 
-  /// Path limit aborter
-  PathLimitReached pathLimitReached;
+  /// Signed path limit of the loop protection
+  double pathLimit = std::numeric_limits<double>::max();
 };
 
 /// Kalman fitter implementation.
@@ -285,11 +287,11 @@ class KalmanFitter {
   /// sorted along the track.
   class Actor {
    public:
-    /// Broadcast the result_type
-    using result_type = KalmanFitterResult<traj_t>;
+    /// Type alias for the actor state
+    using State = KalmanFitterResult<traj_t>;
 
-    /// The target surface aborter
-    SurfaceReached targetReached{std::numeric_limits<double>::lowest()};
+    /// The surface to stop at, or nullptr for none
+    const Surface* targetSurface = nullptr;
 
     /// Allows retrieving measurements for a surface
     std::unordered_map<const Surface*, SourceLink> inputMeasurements;
@@ -312,12 +314,6 @@ class KalmanFitter {
     /// Calibration context for the fit
     const CalibrationContext* calibrationContext{nullptr};
 
-    /// End of world aborter
-    EndOfWorldReached endOfWorldReached;
-
-    /// Volume constraint aborter
-    VolumeConstraintAborter volumeConstraintAborter;
-
     /// The logger instance
     const Logger* actorLogger{nullptr};
 
@@ -337,7 +333,7 @@ class KalmanFitter {
     template <typename propagator_state_t, typename stepper_t,
               typename navigator_t>
     Result<void> act(propagator_state_t& state, const stepper_t& stepper,
-                     const navigator_t& navigator, result_type& result,
+                     const navigator_t& navigator, State& result,
                      const Logger& /*logger*/) const {
       assert(result.fittedStates && "No MultiTrajectory set");
 
@@ -351,11 +347,10 @@ class KalmanFitter {
                    << " momentum: "
                    << stepper.absoluteMomentum(state.stepping));
 
-      // Initialize path limit reached aborter
-      if (result.pathLimitReached.internalLimit ==
-          std::numeric_limits<double>::max()) {
-        detail::setupLoopProtection(state, stepper, result.pathLimitReached,
-                                    true, logger());
+      // Initialize the path limit
+      if (result.pathLimit == std::numeric_limits<double>::max()) {
+        detail::setupLoopProtection(state, stepper, result.pathLimit, true,
+                                    logger());
       }
 
       // Update:
@@ -379,17 +374,17 @@ class KalmanFitter {
       }
 
       // Finalization:
-      // when all track states have been handled or an aborter is triggered
+      // when all track states have been handled or an abort condition is met
       const bool isTrackComplete =
           result.measurementStates == inputMeasurements.size();
       const bool isEndOfWorldReached =
-          endOfWorldReached.checkAbort(state, stepper, navigator, logger());
-      const bool isVolumeConstraintReached = volumeConstraintAborter.checkAbort(
-          state, stepper, navigator, logger());
-      const bool isPathLimitReached = result.pathLimitReached.checkAbort(
-          state, stepper, navigator, logger());
+          detail::endOfWorldReached(state, navigator);
+      const bool isVolumeConstraintReached =
+          detail::volumeConstraintReached(state, navigator, logger());
+      const bool isPathLimitReached =
+          detail::pathLimitReached(state, stepper, result.pathLimit, logger());
       const bool isTargetReached =
-          targetReached.checkAbort(state, stepper, navigator, logger());
+          detail::surfaceReached(state, navigator, targetSurface, logger());
       if (isTrackComplete || isEndOfWorldReached || isVolumeConstraintReached ||
           isPathLimitReached || isTargetReached) {
         ACTS_VERBOSE(
@@ -405,15 +400,14 @@ class KalmanFitter {
 
           // Bind the parameter to the target surface
           auto transportRes =
-              stepper.transportToBound(state.stepping, *targetReached.surface);
+              stepper.transportToBound(state.stepping, *targetSurface);
           if (!transportRes.ok()) {
             ACTS_DEBUG("Error while transporting to the target surface: "
                        << transportRes.error() << " "
                        << transportRes.error().message());
             return transportRes.error();
           }
-          auto res =
-              stepper.boundParameters(state.stepping, *targetReached.surface);
+          auto res = stepper.boundParameters(state.stepping, *targetSurface);
           if (!res.ok()) {
             ACTS_DEBUG("Error while binding to the target surface: "
                        << res.error() << " " << res.error().message());
@@ -431,7 +425,7 @@ class KalmanFitter {
     template <typename propagator_state_t, typename stepper_t,
               typename navigator_t>
     bool checkAbort(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
-                    const navigator_t& /*navigator*/, const result_type& result,
+                    const navigator_t& /*navigator*/, const State& result,
                     const Logger& /*logger*/) const {
       return result.finished;
     }
@@ -451,7 +445,7 @@ class KalmanFitter {
               typename navigator_t>
     Result<void> filter(const Surface& surface, propagator_state_t& state,
                         const stepper_t& stepper, const navigator_t& navigator,
-                        result_type& result) const {
+                        State& result) const {
       const bool precedingMeasurementExists = result.measurementStates > 0;
       const bool surfaceIsSensitive = surface.isSensitive();
       const bool surfaceHasMaterial = surface.hasMaterial();
@@ -752,7 +746,7 @@ class KalmanFitter {
                                const Surface* targetSurface,
                                bool reverseDirection) const {
     using KalmanActor = Actor;
-    using Actors = ActorList<KalmanActor>;
+    using Actors = ActorList<DefaultActor, KalmanActor>;
     using PropagatorOptions = typename propagator_t::template Options<Actors>;
 
     const std::size_t nMeasurements = std::distance(it, end);
@@ -792,9 +786,9 @@ class KalmanFitter {
     }
 
     // Catch the actor and set the measurements
-    auto& kalmanActor = propagatorOptions.actorList.template get<KalmanActor>();
+    auto& kalmanActor = propagatorOptions.actor.template get<KalmanActor>();
     kalmanActor.inputMeasurements = std::move(inputMeasurements);
-    kalmanActor.targetReached.surface = targetSurface;
+    kalmanActor.targetSurface = targetSurface;
     kalmanActor.multipleScattering = kfOptions.multipleScattering;
     kalmanActor.energyLoss = kfOptions.energyLoss;
     kalmanActor.freeToBoundCorrection = kfOptions.freeToBoundCorrection;
@@ -809,12 +803,13 @@ class KalmanFitter {
             TrackContainerFrontend track_container_t>
   auto filter_impl(const BoundTrackParameters& sParameters,
                    const propagator_options_t& propagatorOptions,
+                   const Surface* targetSurface,
                    track_container_t& trackContainer) const
       -> Result<typename track_container_t::TrackProxy> {
     auto propagatorState = m_propagator.makeState(propagatorOptions);
 
     auto propagatorInitResult =
-        m_propagator.initialize(propagatorState, sParameters, nullptr);
+        m_propagator.initialize(propagatorState, sParameters, targetSurface);
     if (!propagatorInitResult.ok()) {
       ACTS_DEBUG("Propagation initialization failed: "
                  << propagatorInitResult.error());
@@ -822,7 +817,7 @@ class KalmanFitter {
     }
 
     auto& kalmanResult =
-        propagatorState.template get<KalmanFitterResult<traj_t>>();
+        propagatorState.actor.template get<KalmanFitterResult<traj_t>>();
     kalmanResult.fittedStates = &trackContainer.trackStateContainer();
 
     // Run the fitter
@@ -884,8 +879,8 @@ class KalmanFitter {
     auto forwardPropagatorOptions =
         make_propagator_options(it, end, kfOptions, sSequence, nullptr, false);
 
-    auto forwardFilterResult =
-        filter_impl(sParameters, forwardPropagatorOptions, trackContainer);
+    auto forwardFilterResult = filter_impl(
+        sParameters, forwardPropagatorOptions, nullptr, trackContainer);
 
     if (!forwardFilterResult.ok()) {
       ACTS_DEBUG("KalmanFilter failed: "
@@ -921,8 +916,9 @@ class KalmanFitter {
           kfOptions.reverseFilteringCovarianceScaling;
       auto reversePropagatorOptions = make_propagator_options(
           it, end, kfOptions, sSequence, kfOptions.referenceSurface, true);
-      auto reverseFilterResult = filter_impl(
-          reverseStartParameters, reversePropagatorOptions, trackContainer);
+      auto reverseFilterResult =
+          filter_impl(reverseStartParameters, reversePropagatorOptions,
+                      kfOptions.referenceSurface, trackContainer);
 
       if (!reverseFilterResult.ok()) {
         ACTS_DEBUG("Reversed KalmanFilter failed: "
@@ -973,6 +969,8 @@ class KalmanFitter {
     if (!track.hasReferenceSurface() && kfOptions.referenceSurface != nullptr) {
       typename propagator_t::template Options<> extrapolationOptions(
           kfOptions.geoContext, kfOptions.magFieldContext);
+      // The reference surface may lie outside the world
+      extrapolationOptions.stopAtEndOfWorld = false;
       auto extrapolationResult = extrapolateTrackToReferenceSurface(
           track, *kfOptions.referenceSurface, m_propagator,
           extrapolationOptions, kfOptions.referenceSurfaceStrategy, logger());

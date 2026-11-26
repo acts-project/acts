@@ -19,6 +19,7 @@
 #include "traccc/edm/spacepoint_collection.hpp"
 #include "traccc/seeding/detail/seeding_config.hpp"
 #include "traccc/seeding/detail/spacepoint_grid.hpp"
+#include "traccc/seeding/detail/strip_spacepoint_calibration.hpp"
 
 namespace traccc::device {
 
@@ -27,10 +28,14 @@ namespace traccc::device {
 /// Based on the information collected by @c traccc::device::count_triplets it
 /// can fill collection with the specific triplets that exist in the event.
 ///
+/// @tparam use_strip_info Whether to apply the strip aware triplet check
+///
 /// @param[in] globalIndex       The index of the current thread
 /// @param[in] config            Seedfinder configuration
 /// @param[in] filter_config     Seedfilter configuration
 /// @param[in] spacepoints       All spacepoints in the event
+/// @param[in] strip_calibrations Strip calibrations of the spacepoints, only
+///                              read with @c use_strip_info
 /// @param[in] sp_view           The spacepoint grid to find triplets on
 /// @param[in] dc_view           Collection of doublet counters
 /// @param[in] mid_top_doublet_view Collection with the mid top doublets
@@ -39,11 +44,13 @@ namespace traccc::device {
 /// midBot doublet
 /// @param[out] triplet_view     Collection of triplets
 ///
-TRACCC_HOST_DEVICE
-inline void find_triplets(
+template <bool use_strip_info>
+TRACCC_HOST_DEVICE inline void find_triplets(
     global_index_t globalIndex, const seedfinder_config& config,
     const seedfilter_config& filter_config,
     const edm::spacepoint_collection::const_view& spacepoints,
+    const strip_spacepoint_calibration_collection_types::const_view&
+        strip_calibrations,
     const traccc::details::spacepoint_grid_types::const_view& sp_view,
     const doublet_counter_collection_types::const_view& dc_view,
     const device_doublet_collection_types::const_view& mid_top_doublet_view,

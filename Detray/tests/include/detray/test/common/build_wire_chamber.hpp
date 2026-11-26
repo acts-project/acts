@@ -50,8 +50,7 @@ struct wire_chamber_config {
   /// Configuration for the homogeneous material generator
   hom_material_config<scalar_t> m_material_config{};
   /// Volume builder configuration
-  volume_builder_options m_builder_opts{.m_deduplicate = false,
-                                        .m_sort = false};
+  volume_builder_options m_builder_opts{.m_deduplicate = true, .m_sort = false};
   /// Do a full detector consistency check after building
   bool m_do_check{true};
 

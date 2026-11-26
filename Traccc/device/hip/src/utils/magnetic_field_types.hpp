@@ -26,10 +26,9 @@ namespace traccc::hip {
 /// Inhomogeneous B-field backend type using HIP global memory
 template <typename scalar_t>
 using inhom_global_bfield_backend_t =
-    covfie::backend::affine<covfie::backend::linear<covfie::backend::clamp<
-        covfie::backend::strided<covfie::vector::vector_d<std::size_t, 3>,
-                                 covfie::backend::hip_device_array<
-                                     covfie::vector::vector_d<scalar_t, 3>>>>>>;
+    traccc::details::inhom_bfield_transformer_t<
+        covfie::backend::hip_device_array<
+            covfie::vector::vector_d<scalar_t, 3>>>;
 // Test that the type is a valid backend for a field
 static_assert(
     covfie::concepts::field_backend<inhom_global_bfield_backend_t<float>>,

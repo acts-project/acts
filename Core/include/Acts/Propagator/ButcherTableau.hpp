@@ -105,10 +105,8 @@ class ButcherTableau {
   /// @return the shared tableau
   static std::shared_ptr<const ButcherTableau> dormandPrince54();
 
-  /// The "most efficient" Verner 9(8) pair. The method is described in
-  /// J. H. Verner, Numerically optimal Runge-Kutta pairs with interpolants,
-  /// Numerical Algorithms 53 (2010) 383-396, doi:10.1007/s11075-009-9290-3.
-  /// The coefficients are from J. H. Verner, https://www.sfu.ca/~jverner/,
+  /// The "most efficient" Verner 9(8) pair, described in @cite Verner:2010.
+  /// The coefficients are from J. H. Verner's
   /// file RKV98.IIa.Efficient.000000349.081210.CoeffsOnlyRADandFLOATS. The
   /// stepper propagates the ninth-order solution and uses the eighth-order
   /// solution for the error estimate.

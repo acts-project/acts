@@ -72,10 +72,12 @@ GTEST_TEST(detray_core, static_mask_store) {
                                             2.0f);
   store.emplace_back<mask_id::e_trapezoid2D>(empty_context{}, 0u, 0.5f, 1.5f,
                                              4.0f, 1.f / 8.f);
-  store.emplace_back<mask_id::e_rectangle2D>(empty_context{}, 0u, 1.0f, 2.0f);
-  store.emplace_back<mask_id::e_rectangle2D>(empty_context{}, 0u, 2.0f, 1.0f);
-  store.emplace_back<mask_id::e_rectangle2D>(empty_context{}, 0u, 10.0f,
-                                             100.0f);
+  store.emplace_back<mask_id::e_rectangle2D>(empty_context{}, 0u, -1.0f, -2.0f,
+                                             1.0f, 2.0f);
+  store.emplace_back<mask_id::e_rectangle2D>(empty_context{}, 0u, -2.0f, -1.0f,
+                                             2.0f, 1.0f);
+  store.emplace_back<mask_id::e_rectangle2D>(empty_context{}, 0u, -10.0f,
+                                             -100.0f, 10.0f, 100.0f);
 
   ASSERT_TRUE(store.empty<mask_id::e_annulus2D>());
   ASSERT_EQ(store.size<mask_id::e_cylinder3D>(), 2);

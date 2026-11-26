@@ -1358,7 +1358,14 @@ jobs:
           access-key-id: ${{ secrets.S3_ACCESS_KEY_ID }}
           secret-access-key: ${{ secrets.S3_SECRET_ACCESS_KEY }}
 
+      - name: Install Geant4 nuclide data for unit tests
+        run: >
+          CI/dependencies/run.sh .env
+          uv run CI/dependencies/download_geant4_datasets.py --dataset G4ENSDFSTATE
+
       - name: Unit tests
+        env:
+          GEANT4_DATA_DIR: ${{ github.workspace }}/dependencies/view/share/Geant4/data
         run: >
           CI/dependencies/run.sh .env
           cmake --build build --target test
@@ -1412,7 +1419,7 @@ jobs:
           persist-credentials: false
 
       - name: Setup CMVFS
-        uses: cvmfs-contrib/github-action-cvmfs@72f2a8d366043978d6aebee154bc9ed321c2f2a8 # v5.6
+        uses: cvmfs-contrib/github-action-cvmfs@d705955b32075b4b0178f3a0160b6fe527483cf8 # v5.7
 
       - name: Set up uv for cache transfers
         uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
@@ -1608,7 +1615,7 @@ jobs:
         shell: bash
         run: |
           source "${KEY4HEP_VIEW}/setup.sh"
-          export CMAKE_BUILD_PARALLEL_LEVEL="$(nproc)"
+          export CMAKE_BUILD_PARALLEL_LEVEL="$(( $(nproc) < 6 ? $(nproc) : 6 ))"
 
           pushd acts
           ccache -z

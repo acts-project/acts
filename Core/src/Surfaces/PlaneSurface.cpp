@@ -26,6 +26,7 @@
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <numbers>
 #include <numeric>
@@ -169,15 +170,13 @@ double PlaneSurface::pathCorrection(const GeometryContext& gctx,
   return 1. / std::abs(normal(gctx).dot(direction));
 }
 
-MultiIntersection3D PlaneSurface::intersect(
-    const GeometryContext& gctx, const Vector3& position,
-    const Vector3& direction, const BoundaryTolerance& boundaryTolerance,
-    double tolerance) const {
-  // Get the contextual transform
-  const auto& gctxTransform = localToGlobalTransform(gctx);
-  // Use the intersection helper for planar surfaces
-  auto intersection =
-      PlanarHelper::intersect(gctxTransform, position, direction, tolerance);
+namespace {
+
+// Apply identical physical bounds to ray and curvature-corrected predictions.
+inline MultiIntersection3D boundedIntersection(
+    const PlaneSurface& surface, const Transform3& gctxTransform,
+    const Intersection3D& intersection,
+    const BoundaryTolerance& boundaryTolerance) {
   auto status = intersection.status();
   // Evaluate boundary check if requested (and reachable)
   if (intersection.status() != IntersectionStatus::unreachable) {
@@ -185,8 +184,8 @@ MultiIntersection3D PlaneSurface::intersect(
     const auto& tMatrix = gctxTransform.matrix();
     // Create the reference vector in local
     const Vector3 vecLocal(intersection.position() - tMatrix.block<3, 1>(0, 3));
-    if (!insideBounds(tMatrix.block<3, 2>(0, 0).transpose() * vecLocal,
-                      boundaryTolerance)) {
+    if (!surface.insideBounds(tMatrix.block<3, 2>(0, 0).transpose() * vecLocal,
+                              boundaryTolerance)) {
       status = IntersectionStatus::unreachable;
     }
   }
@@ -194,11 +193,81 @@ MultiIntersection3D PlaneSurface::intersect(
                                             intersection.pathLength(), status));
 }
 
+}  // namespace
+
+MultiIntersection3D PlaneSurface::intersect(
+    const GeometryContext& gctx, const Vector3& position,
+    const Vector3& direction, const BoundaryTolerance& boundaryTolerance,
+    double tolerance) const {
+  // Get the contextual transform
+  const auto& gctxTransform = localToGlobalTransform(gctx);
+  // Use the intersection helper for planar surfaces
+  auto intersection = Acts::detail::PlanarHelper::intersect(
+      gctxTransform, position, direction, tolerance);
+  return boundedIntersection(*this, gctxTransform, intersection,
+                             boundaryTolerance);
+}
+
+MultiIntersection3D PlaneSurface::intersect(
+    const GeometryContext& gctx, const Vector3& position,
+    const Vector3& direction, const Vector3& curvature,
+    const BoundaryTolerance& boundaryTolerance, double tolerance) const {
+  if (curvature.isZero(0.) || !curvature.allFinite()) {
+    return intersect(gctx, position, direction, boundaryTolerance, tolerance);
+  }
+  // Get the contextual transform
+  const auto& gctxTransform = localToGlobalTransform(gctx);
+  // Use the intersection helper for planar surfaces
+  auto intersection = detail::PlanarHelper::intersect(
+      gctxTransform, position, direction, curvature, tolerance);
+  return boundedIntersection(*this, gctxTransform, intersection,
+                             boundaryTolerance);
+}
+
 Matrix<2, 3> PlaneSurface::localCartesianToBoundLocalDerivative(
     const GeometryContext& /*gctx*/, const Vector3& /*position*/,
     const Vector3& /*direction*/) const {
   const Matrix<2, 3> loc3DToLocBound = Matrix<2, 3>::Identity();
   return loc3DToLocBound;
+}
+
+bool PlaneSurface::contains(const GeometryContext& gctx, const Surface& other,
+                            double tolerance) const {
+  const auto* plane = dynamic_cast<const PlaneSurface*>(&other);
+  if (plane == nullptr) {
+    return false;
+  }
+  // Polygons, so that the vertices describe the bounds exactly. A polygon
+  // lies within a convex polygon if its vertices do.
+  auto isPolygon = [](const SurfaceBounds& bounds) {
+    switch (bounds.type()) {
+      case SurfaceBounds::eRectangle:
+      case SurfaceBounds::eTrapezoid:
+      case SurfaceBounds::eDiamond:
+      case SurfaceBounds::eConvexPolygon:
+        return true;
+      default:
+        return false;
+    }
+  };
+  if (!isPolygon(bounds()) || !isPolygon(plane->bounds())) {
+    return false;
+  }
+
+  // The other surface in the frame of this one
+  const Transform3 otherLocal = localToGlobalTransform(gctx).inverse() *
+                                plane->localToGlobalTransform(gctx);
+  if (otherLocal.linear().col(2).head<2>().norm() > tolerance ||
+      std::abs(otherLocal.translation().z()) > tolerance) {
+    return false;
+  }
+
+  return std::ranges::all_of(
+      plane->m_bounds->vertices(), [&](const Vector2& vertex) {
+        const Vector2 local =
+            (otherLocal * Vector3{vertex.x(), vertex.y(), 0}).head<2>();
+        return bounds().inside(local) || bounds().distance(local) <= tolerance;
+      });
 }
 
 std::pair<std::shared_ptr<PlaneSurface>, bool> PlaneSurface::mergedWith(

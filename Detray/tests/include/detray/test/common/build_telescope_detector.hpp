@@ -90,8 +90,7 @@ struct tel_det_config {
   /// Safety envelope between the test surfaces and the portals
   scalar_t m_envelope{0.1f * unit<scalar_t>::mm};
   /// Volume builder configuration
-  volume_builder_options m_builder_opts{.m_deduplicate = false,
-                                        .m_sort = false};
+  volume_builder_options m_builder_opts{.m_deduplicate = true, .m_sort = false};
   /// Run detector consistency check after reading
   bool m_do_check{true};
 
@@ -257,6 +256,8 @@ inline auto build_telescope_detector(
     vecmem::memory_resource &resource,
     const tel_det_config<algebra_t, mask_shape_t, trajectory_t> &cfg =
         tel_det_config<algebra_t, mask_shape_t, trajectory_t>{
+            -20.f * unit<dscalar<algebra_t>>::mm,
+            -20.f * unit<dscalar<algebra_t>>::mm,
             20.f * unit<dscalar<algebra_t>>::mm,
             20.f * unit<dscalar<algebra_t>>::mm}) {
   using scalar_t = dscalar<algebra_t>;

@@ -35,6 +35,16 @@ set(VECMEM_BUILD_CUDA_LIBRARY
     CACHE BOOL
     "Build the VecMem CUDA library if CUDA is enabled in ACTS"
 )
+set(VECMEM_BUILD_HIP_LIBRARY
+    ${_acts_traccc_build_hip_utils}
+    CACHE BOOL
+    "Build the VecMem HIP library if the traccc HIP utilities are built"
+)
+set(VECMEM_BUILD_SYCL_LIBRARY
+    ${_acts_traccc_build_sycl_utils}
+    CACHE BOOL
+    "Build the VecMem SYCL library if the traccc SYCL utilities are built"
+)
 
 # Now set up its build.
 FetchContent_MakeAvailable(VecMem)

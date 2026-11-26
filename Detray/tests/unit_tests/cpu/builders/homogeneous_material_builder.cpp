@@ -41,7 +41,7 @@ using point3 = test::point3;
 using metadata_t = test::default_metadata;
 using detector_t = host::detector<metadata_t>;
 
-constexpr scalar tol{std::numeric_limits<scalar>::epsilon()};
+constexpr scalar tol{1e-8f};
 
 }  // anonymous namespace
 
@@ -69,25 +69,24 @@ TEST(detray_builders, homogeneous_material_factory) {
   // Add material for a few rectangle surfaces
   mat_factory->push_back({surface_id::e_sensitive,
                           transform3(point3{0.f, 0.f, -1.f}), 1u,
-                          std::vector<scalar>{10.f, 8.f}});
+                          std::vector<scalar>{-10.f, -8.f, 10.f, 8.f}});
   mat_factory->add_material(material_id::e_material_slab,
                             {1.f * unit<scalar>::mm, silicon<scalar>()});
   mat_factory->push_back({surface_id::e_sensitive,
                           transform3(point3{0.f, 0.f, 1.f}), 1u,
-                          std::vector<scalar>{20.f, 16.f}});
+                          std::vector<scalar>{-20.f, -16.f, 20.f, 16.f}});
   mat_factory->add_material(material_id::e_material_slab,
                             {10.f * unit<scalar>::mm, tungsten<scalar>()});
   // Pass the parameters for 'gold'
   mat_factory->push_back({surface_id::e_sensitive,
                           transform3(point3{0.f, 0.f, 1.f}), 1u,
-                          std::vector<scalar>{20.f, 16.f}});
+                          std::vector<scalar>{-20.f, -16.f, 20.f, 16.f}});
   mat_factory->add_material(
       material_id::e_material_rod,
       {0.1f * unit<scalar>::mm,
        std::vector<scalar>{
            3.344f * unit<scalar>::mm, 101.6f * unit<scalar>::mm, 196.97f, 79,
-           19.32f * unit<scalar>::g / (1.f * unit<scalar>::cm3)},
-       material_state::e_solid});
+           static_cast<scalar>(19.32 * unit<double>::g / unit<double>::cm3)}});
 
   EXPECT_EQ(mat_factory->size(), 3u);
 

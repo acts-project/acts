@@ -15,7 +15,12 @@ import argparse
 
 import acts
 import acts.examples
-from acts.examples.reconstruction import addGnn
+import acts.examples.root
+from acts.examples.reconstruction import (
+    addGnn,
+    addSpacePointsMaking,
+    addTrackWriters,
+)
 from acts.examples.simulation import ParticleSelectorConfig, addDigiParticleSelection
 from acts.gnn import (
     ModuleMapCuda,
@@ -38,6 +43,12 @@ def runGNN4ITk(
     useEdgeLayerConnector: bool = False,
     trackBuilder: str = "junctionremoval",
     edgeClassifierCut: float | None = None,
+    pixelOnly: bool = False,
+    numFeatures: int = 12,
+    trackingGeometry=None,
+    field=None,
+    geometryIdMap=None,
+    geoSelectionConfigFile: Path | None = None,
     logLevel=acts.logging.INFO,
 ):
     """
@@ -57,6 +68,18 @@ def runGNN4ITk(
         trackBuilder: Track builder to run: junctionremoval, edgelayerconnector, or dwalk
         edgeClassifierCut: Optional edge classifier cut. Defaults to 0.01 for D-WALK and
                            0.5 for the other builders.
+        pixelOnly: Run on pixel space points only (for pixel-only GNN models)
+        numFeatures: Number of node features the model expects: 4 (space point
+                     R, Phi, Z, Eta) or 12 (space point + 2 clusters)
+        trackingGeometry: Optional ITk tracking geometry. If given, the measurements
+                          are projected onto its surfaces and the CKF is run from
+                          the GNN tracks, e.g. to extend pixel-only tracks into
+                          the strips
+        field: Magnetic field, needed for the CKF
+        geometryIdMap: Athena <-> ACTS geometry identifier map, needed for the CKF
+                       (see acts.examples.readCsvGeometryIdMap)
+        geoSelectionConfigFile: JSON file with the pixel volumes of the tracking
+                                geometry, needed for the CKF seeding space points
         logLevel: Logging level
     """
     # Validate inputs
@@ -68,6 +91,15 @@ def runGNN4ITk(
         moduleMapPath + ".triplets.root"
     ).exists(), f"Module map not found: {moduleMapPath}.triplets.root"
     assert gnnModel.exists(), f"Model file not found: {gnnModel}"
+    if numFeatures not in (4, 12):
+        raise ValueError(f"Unsupported number of features: {numFeatures}")
+    if trackingGeometry is not None and (
+        field is None or geometryIdMap is None or geoSelectionConfigFile is None
+    ):
+        raise ValueError(
+            "The CKF needs a magnetic field, a geometry id map and a geometry "
+            "selection file"
+        )
 
     # Avoid an expensive recursive source-tree scan for automatic FPE masks on
     # large CFS-mounted ACTS workspaces.
@@ -83,6 +115,7 @@ def runGNN4ITk(
         treename="GNN4ITk",
         inputfiles=[str(inputRootDump)],
         outputSpacePoints="spacepoints",
+        outputPixelSpacePoints="pixel_spacepoints",
         outputClusters="clusters",
         outputMeasurements="measurements",
         outputMeasurementSubset="measurement_subset",
@@ -92,6 +125,8 @@ def runGNN4ITk(
         skipOverlapSPsPhi=True,
         skipOverlapSPsEta=False,
         absBoundaryTolerance=0.01 * u.mm,
+        trackingGeometry=trackingGeometry,
+        geometryIdMap=geometryIdMap,
     )
 
     if bufferEvents is not None:
@@ -190,7 +225,8 @@ def runGNN4ITk(
             doJunctionRemoval=True,
         )
 
-    # Node features: ITk 12-feature configuration (space point + 2 clusters)
+    # Node features: ITk 12-feature configuration (space point + 2 clusters),
+    # truncated to the space point features for 4-feature models
     e = NodeFeature
     nodeFeatures = [
         e.R,
@@ -207,6 +243,10 @@ def runGNN4ITk(
         e.Cluster2Eta,
     ]
     featureScales = [1000.0, 3.141592654, 1000.0, 1.0] * 3
+    nodeFeatures = nodeFeatures[:numFeatures]
+    featureScales = featureScales[:numFeatures]
+
+    spacePoints = "pixel_spacepoints" if pixelOnly else "spacepoints"
 
     # Add GNN tracking (space points already created by reader, so no trackingGeometry)
     addGnn(
@@ -216,11 +256,87 @@ def runGNN4ITk(
         trackBuilder=trackBuilderObj,
         nodeFeatures=nodeFeatures,
         featureScales=featureScales,
-        inputSpacePoints="spacepoints",
+        inputSpacePoints=spacePoints,
         inputClusters="clusters",
         outputDirRoot=str(outputDir),
+        geometryIdMap=geometryIdMap,
         logLevel=logLevel,
     )
+
+    # Stage 4 (optional): CKF from the GNN tracks, e.g. into the strips
+    if trackingGeometry is not None:
+        # Space points for the seeds made from the measurements, as in the
+        # standard seeding
+        s.addWhiteboardAlias("ckf_measurement_subset", "measurement_subset")
+        ckfSpacePoints = addSpacePointsMaking(
+            s,
+            trackingGeometry,
+            geoSelectionConfigFile,
+            None,
+            logLevel,
+            prefix="ckf_",
+        )
+
+        parametersConfig = {
+            "level": logLevel,
+            "inputProtoTracks": "gnn-protoTracks",
+            "inputSpacePoints": ckfSpacePoints,
+            "outputSeeds": "gnn-seeds",
+            "outputParameters": "gnn-parameters",
+            "outputProtoTracks": "gnn-protoTracks-with-parameters",
+            "geometry": trackingGeometry,
+            "magneticField": field,
+            "spacePointSelection": acts.examples.SeedSpacePointSelection.SpreadTriplet,
+        }
+        parametersAlg = acts.examples.ProtoTracksToParameters(**parametersConfig)
+        s.addAlgorithm(parametersAlg)
+
+        ckfConfig = {
+            "level": logLevel,
+            "inputProtoTracks": parametersAlg.config.outputProtoTracks,
+            "inputMeasurements": "measurements",
+            "inputInitialTrackParameters": parametersAlg.config.outputParameters,
+            "outputTracks": "ckf-tracks",
+            # chi2 cut 20, one measurement per surface
+            "measurementSelectorCfg": acts.MeasurementSelector.Config(
+                [(acts.GeometryIdentifier(), ([], [20.0], [], [1]))]
+            ),
+            "trackingGeometry": trackingGeometry,
+            "magneticField": field,
+            "findTracks": acts.examples.TrackFindingAlgorithm.makeTrackFinderFunction(
+                trackingGeometry, field, logLevel
+            ),
+        }
+        ckfAlg = acts.examples.gnn.TrackFindingFromProtoTracksAlgorithm(**ckfConfig)
+        s.addAlgorithm(ckfAlg)
+
+        matchAlg = acts.examples.TrackTruthMatcher(
+            level=logLevel,
+            inputTracks=ckfAlg.config.outputTracks,
+            inputParticles="particles",
+            inputMeasurementParticlesMap="measurement_particles_map",
+            outputTrackParticleMatching="ckf_track_particle_matching",
+            outputParticleTrackMatching="ckf_particle_track_matching",
+            doubleMatching=False,
+        )
+        s.addAlgorithm(matchAlg)
+        s.addWhiteboardAlias(
+            "track_particle_matching", matchAlg.config.outputTrackParticleMatching
+        )
+        s.addWhiteboardAlias(
+            "particle_track_matching", matchAlg.config.outputParticleTrackMatching
+        )
+
+        addTrackWriters(
+            s,
+            name="ckf",
+            tracks=ckfAlg.config.outputTracks,
+            outputDirRoot=outputDir,
+            writeSummary=True,
+            writeFinderPerformance=True,
+            writeFinderNTuple=True,
+            logLevel=logLevel,
+        )
 
     s.run()
     return s
@@ -285,6 +401,20 @@ if __name__ == "__main__":
         default=None,
         help="Override the edge classifier score cut",
     )
+    argparser.add_argument(
+        "--pixelOnly",
+        action="store_true",
+        default=False,
+        help="Run on pixel space points only (for pixel-only GNN models)",
+    )
+    argparser.add_argument(
+        "--numFeatures",
+        type=int,
+        choices=[4, 12],
+        default=12,
+        help="Number of node features the model expects: 4 (space point R, Phi, Z, "
+        "Eta) or 12 (space point + 2 clusters)",
+    )
     argparser.add_argument("--debug", action="store_true")
 
     args = argparser.parse_args()
@@ -299,5 +429,7 @@ if __name__ == "__main__":
         useEdgeLayerConnector=args.useEdgeLayerConnector,
         trackBuilder=args.trackBuilder,
         edgeClassifierCut=args.edgeClassifierCut,
+        pixelOnly=args.pixelOnly,
+        numFeatures=args.numFeatures,
         logLevel=acts.logging.DEBUG if args.debug else acts.logging.INFO,
     )

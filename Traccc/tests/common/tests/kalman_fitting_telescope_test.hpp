@@ -53,7 +53,7 @@ class KalmanFittingTelescopeTests
 
   // Rectangle mask for the telescope geometry
   static constexpr detray::mask<detray::rectangle2D, traccc::default_algebra>
-      rectangle{0u, 100000.f, 100000.f};
+      rectangle{0u, -100000.f, -100000.f, 100000.f, 100000.f};
 
   /// Measurement smearing parameters
   static constexpr std::array<scalar, 2u> smearing{
@@ -105,10 +105,11 @@ class KalmanFittingTelescopeTests
     // Write detector file
     auto writer_cfg = detray::io::detector_writer_config{}
                           .format(detray::io::format::json)
+                          .source("Traccc tests")
                           .replace_files(true)
                           .write_material(true)
                           .path(std::get<0>(GetParam()));
-    detray::io::write_detector(det, name_map, writer_cfg);
+    detray::io::write_detector_json(det, name_map, writer_cfg);
   }
 };
 

@@ -82,6 +82,8 @@ class ConeSurface : public RegularSurface {
               const Transform3& shift);
 
  public:
+  using Surface::intersect;
+
   ~ConeSurface() override = default;
 
   /// Assignment operator

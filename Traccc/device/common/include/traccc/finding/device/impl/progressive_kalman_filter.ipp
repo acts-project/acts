@@ -91,7 +91,8 @@ TRACCC_HOST_DEVICE inline void progressive_kalman_filter(
   track.params() = seed;
   track.ndf() = static_cast<scalar_t>(ndf_sum);
   track.chi2() = trk_stats.chi2_sum;
-  track.pval() = prob(trk_stats.chi2_sum, static_cast<scalar_t>(ndf_sum));
+  track.pval() = prob(static_cast<scalar_t>(trk_stats.chi2_sum),
+                      static_cast<scalar_t>(ndf_sum));
   track.nholes() = static_cast<unsigned int>(trk_stats.n_holes);
   track.constituent_links().resize(n_track_states);
 

@@ -55,6 +55,15 @@ DETRAY_HOST_DEVICE inline std::size_t n_passives(const detector_t& det) {
   return n_passives;
 }
 
+/// @returns the total number of surfaces in the detector @param det
+template <concepts::detector detector_t>
+DETRAY_HOST_DEVICE inline std::size_t n_surfaces(const detector_t& det) {
+  assert(det.surfaces().size() ==
+         (n_portals(det) + n_sensitives(det) + n_passives(det)));
+
+  return det.surfaces().size();
+}
+
 /// Count grid collections in a detector store.
 /// @tparam I current compile-time collection index
 /// @param store store whose collections are inspected

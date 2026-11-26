@@ -229,6 +229,9 @@ jobs:
             echo "If a link is a false positive (e.g. a site that blocks automated"
             echo "requests), add it to the ignore list:"
             echo "https://github.com/acts-project/linkcheck-ignore"
+            echo
+            echo "Use ignore-403.json for URLs blocked by bot protection: only"
+            echo "HTTP 403 is accepted there; other failures are still reported."
           } > issue-body.md
 
           gh label create "$LABEL" --color B60205 --description "Broken links found by the docs link checker" --force || true

@@ -17,6 +17,7 @@
 
 // System include(s).
 #include <cassert>
+#include <stdexcept>
 
 namespace traccc::device {
 
@@ -49,7 +50,9 @@ triplet_seeding_algorithm::triplet_seeding_algorithm(
       algorithm_base{mr, copy},
       m_data{std::make_unique<data>(
           grid_config, finder_config, filter_config,
-          get_axes(grid_config, (mr.host ? *(mr.host) : mr.main)))} {}
+          get_axes(grid_config, (mr.host ? *(mr.host) : mr.main)))} {
+  m_data->m_finder_config.resolve_fallbacks();
+}
 
 triplet_seeding_algorithm::~triplet_seeding_algorithm() = default;
 
@@ -59,6 +62,29 @@ auto triplet_seeding_algorithm::operator()(
   // A small sanity check.
   assert(m_data);
 
+  if (m_data->m_finder_config.useStripInfo) {
+    throw std::runtime_error(
+        "Strip aware triplet finding needs the per spacepoint strip "
+        "calibrations; use the operator taking them.");
+  }
+
+  return execute(spacepoints, {});
+}
+
+auto triplet_seeding_algorithm::operator()(
+    const edm::spacepoint_collection::const_view& spacepoints,
+    const strip_spacepoint_calibration_collection_types::const_view&
+        strip_calibrations) const -> output_type {
+  // A small sanity check.
+  assert(m_data);
+
+  return execute(spacepoints, strip_calibrations);
+}
+
+auto triplet_seeding_algorithm::execute(
+    const edm::spacepoint_collection::const_view& spacepoints,
+    const strip_spacepoint_calibration_collection_types::const_view&
+        strip_calibrations) const -> output_type {
   // Get the number of spacepoints. In an asynchronous way if possible.
   edm::spacepoint_collection::const_view::size_type n_spacepoints = 0u;
   if (mr().host) {
@@ -193,9 +219,9 @@ auto triplet_seeding_algorithm::operator()(
 
   // Launch the triplet counting kernel.
   count_triplets_kernel({globalCounter_host->m_nMidBot, m_data->m_finder_config,
-                         spacepoints, grid_buffer, doublet_counter_buffer,
-                         doublet_buffer_mb, doublet_buffer_mt,
-                         triplet_counter_spM_buffer,
+                         spacepoints, strip_calibrations, grid_buffer,
+                         doublet_counter_buffer, doublet_buffer_mb,
+                         doublet_buffer_mt, triplet_counter_spM_buffer,
                          triplet_counter_midBot_buffer});
   // Launch the triplet count reduction kernel.
   triplet_counts_reduction_kernel({n_doublets, doublet_counter_buffer,
@@ -231,9 +257,9 @@ auto triplet_seeding_algorithm::operator()(
 
   // Launch the triplet finding kernel.
   find_triplets_kernel({n_midBotTriplets, m_data->m_finder_config,
-                        m_data->m_filter_config, spacepoints, grid_buffer,
-                        doublet_counter_buffer, doublet_buffer_mt,
-                        triplet_counter_spM_buffer,
+                        m_data->m_filter_config, spacepoints,
+                        strip_calibrations, grid_buffer, doublet_counter_buffer,
+                        doublet_buffer_mt, triplet_counter_spM_buffer,
                         triplet_counter_midBot_buffer, triplet_buffer});
   // Launch the triplet weight updating/filling kernel.
   update_triplet_weights_kernel(

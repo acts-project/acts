@@ -36,6 +36,9 @@ class bin_storage : public detray::ranges::view_interface<
   using bin_type = detray::ranges::range_value_t<bin_range_t>;
   /// Backend storage type for the grid
   using bin_container_type = vector_t<bin_t>;
+  /// Type of pointer to the underlying data containers
+  using pointer_type = bin_container_type*;
+  using const_pointer_type = bin_container_type const*;
 
   // Vecmem based view type
   using view_type = dvector_view<bin_type>;
@@ -72,22 +75,49 @@ class bin_storage : public detray::ranges::view_interface<
   /// container @param bin_data and the number of bins @param size
   template <bool owner = is_owning>
     requires(!owner)
-  DETRAY_HOST_DEVICE bin_storage(bin_container_type& bin_data, dindex offset,
+  DETRAY_HOST_DEVICE bin_storage(pointer_type const bin_data, dindex offset,
                                  dindex size)
-      : m_bin_data(bin_data, dindex_range{offset, offset + size}) {}
+      : m_bin_data(*bin_data, dindex_range{offset, offset + size}) {}
 
   /// Construct the non-owning type from the @param offset into the global
   /// container @param bin_data and the number of bins @param size
   template <bool owner = is_owning>
     requires(!owner)
-  DETRAY_HOST_DEVICE bin_storage(const bin_container_type& bin_data,
+  DETRAY_HOST_DEVICE bin_storage(const_pointer_type const bin_data,
                                  dindex offset, dindex size)
-      : m_bin_data(bin_data, dindex_range{offset, offset + size}) {}
+      : m_bin_data(*(const_cast<pointer_type>(bin_data)),
+                   dindex_range{offset, offset + size}) {}
 
   /// Construct bin storage from its vecmem view
   template <concepts::device_view view_t>
   DETRAY_HOST_DEVICE explicit bin_storage(const view_t& view)
       : m_bin_data(view) {}
+
+  /// @returns access to the underlying bin container
+  template <bool owner = is_owning>
+    requires(owner)
+  DETRAY_HOST_DEVICE pointer_type data() {
+    return &m_bin_data;
+  }
+
+  /// @returns access to the underlying bin container
+  template <bool owner = is_owning>
+    requires(owner)
+  DETRAY_HOST_DEVICE const_pointer_type data() const {
+    return &m_bin_data;
+  }
+
+  /// @returns resolve access to the bin container
+  DETRAY_HOST_DEVICE
+  static pointer_type data_ptr(bin_container_type& bin_data) {
+    return &bin_data;
+  }
+
+  /// @returns resolve access to the bin container
+  DETRAY_HOST_DEVICE
+  static const_pointer_type data_ptr(const bin_container_type& bin_data) {
+    return &bin_data;
+  }
 
   /// begin and end of the bin range
   /// @{
@@ -373,6 +403,10 @@ class bin_storage<is_owning, detray::bins::dynamic_array<entry_t>, containers>
   using bin_type = bin_t;
   /// Backend storage type for the grid
   using bin_container_type = dynamic_bin_container<bin_t, containers>;
+  /// Type of pointer to the underlying data containers
+  using pointer_type = std::pair<vector_t<bin_data_t>*, vector_t<entry_t>*>;
+  using const_pointer_type =
+      std::pair<vector_t<bin_data_t> const*, vector_t<entry_t> const*>;
 
   // Vecmem based view type
   using view_type =
@@ -405,15 +439,19 @@ class bin_storage<is_owning, detray::bins::dynamic_array<entry_t>, containers>
         m_entry_data(std::move(bin_data.entries)) {}
 
   /// Construct the non-owning type from the @param offset into the global
-  /// containers @param bin_data and the number of bins @param size
+  /// containers pointed to by @param bin_data and the number of bins @param size
   template <bool owner = is_owning>
     requires(!owner)
-  DETRAY_HOST_DEVICE bin_storage(bin_container_type& bin_data, dindex offset,
+  DETRAY_HOST_DEVICE bin_storage(const_pointer_type bin_data, dindex offset,
                                  dindex size)
-      : m_bin_data(bin_data.bins, dindex_range{offset, offset + size}),
+      : m_bin_data(*(const_cast<vector_t<bin_data_t>*>(bin_data.first)),
+                   dindex_range{offset, offset + size}),
         m_entry_data(
-            bin_data.entries,
-            dindex_range{0u, static_cast<dindex>(bin_data.entries.size())}) {}
+            *(const_cast<vector_t<entry_t>*>(bin_data.second)),
+            dindex_range{0u, static_cast<dindex>(bin_data.second->size())}) {
+    assert(bin_data.first != nullptr);
+    assert(bin_data.second != nullptr);
+  }
 
   /// Construct bin storage from its vecmem view
   template <concepts::device_view view_t>
@@ -428,6 +466,34 @@ class bin_storage<is_owning, detray::bins::dynamic_array<entry_t>, containers>
 
   const bin_range_t& bin_data() const { return m_bin_data; }
   const entry_range_t& entry_data() const { return m_entry_data; }
+
+  /// @returns access to the underlying bin container
+  template <bool owner = is_owning>
+    requires(owner)
+  DETRAY_HOST_DEVICE const_pointer_type data() const {
+    return {&m_bin_data, &m_entry_data};
+  }
+
+  /// @returns access to the underlying bin container
+  template <bool owner = is_owning>
+    requires(owner)
+  DETRAY_HOST_DEVICE pointer_type data() {
+    return {&m_bin_data, &m_entry_data};
+  }
+
+  /// @returns resolve access to the bin container
+  DETRAY_HOST_DEVICE
+  static pointer_type data_ptr(bin_container_type& bin_data) {
+    return {&(bin_data.bins), &(bin_data.entries)};
+  }
+
+  /// @returns resolve access to the bin container
+  DETRAY_HOST_DEVICE
+  static const_pointer_type data_ptr(const bin_container_type& bin_data) {
+    vector_t<bin_data_t> const* ptr1 = &(bin_data.bins);
+    vector_t<entry_t> const* ptr2 = &(bin_data.entries);
+    return {ptr1, ptr2};
+  }
 
   /// begin and end of the bin range
   /// @{

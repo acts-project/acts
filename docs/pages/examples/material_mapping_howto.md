@@ -208,12 +208,14 @@ detector elements of their own:
   @ref ActsPlugins::TGeoBlueprintBuilderBackend "TGeoBlueprintBuilderBackend",
   which share the shape conversion in
   @ref ActsPlugins::TGeoSurfaceConverter::cylinderVolume "TGeoSurfaceConverter::cylinderVolume".
-- @ref ActsPlugins::DD4hep::DD4hepBackend::makeMaterialCollector "DD4hepBackend::makeMaterialCollector"
-  creates a synthetic volume with no corresponding DD4hep element at all: a
+- @ref Acts::BlueprintBuilder::makeMaterialCollector "BlueprintBuilder::makeMaterialCollector"
+  creates a synthetic volume with no corresponding detector element at all: a
   catch-all surface placed just outside the tracker envelope, so that material
   mapping attributes interactions in nearby non-tracker material (e.g. the gap
   before the calorimeter) to a dedicated surface instead of misattributing them
-  to the nearest real tracker surface. See
+  to the nearest real tracker surface. Unlike `makePassiveElement`, it needs no
+  backend-specific shape conversion and is therefore available on every
+  backend unconditionally. See
   `addCaloMaterialCollector`/`addCaloMaterialCollectorDisc` in
   `OpenDataDetectorBuilder.cpp` for how the ODD uses this for its calorimeter.
 
@@ -310,6 +312,10 @@ is a million tracks; `--eta-range` and `--phi-range` restrict the solid angle.
 This step is independent of your surface choices — you only need to redo it if
 the detailed geometry changes, not when you retune binning. It is by far the
 slowest step, so record generously once and reuse the file.
+
+Run material recording with `numThreads=1`. ACTS reuses one Geant4 run across
+events, so start a new run if you change the geometry, materials, regions, or
+production cuts.
 
 ### Recording a DD4hep detector with ddsim
 
