@@ -13,7 +13,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/Result.hpp"
 
-namespace Acts {
+namespace Acts::detail {
 
 /// Geometric seed from two local helical trajectories, without a covariance.
 struct TwoTrackVertexSeed {
@@ -38,8 +38,10 @@ struct TwoTrackVertexSeed {
 /// for parallel straight tracks or concentric circles with no unique seed.
 /// @note Curved tracks must both be charged and have nonzero transverse momentum.
 /// This is an initial estimate, not a fit or an exact three-dimensional DCA.
+/// The geometric strategy follows Athena TrkVKalVrtCore vkvFastV (VKvFast.cxx),
+/// adapted to ACTS conventions without its reference-vertex pointing heuristic.
 Result<TwoTrackVertexSeed> estimateTwoTrackVertexSeed(
     const BoundTrackParameters& first, const BoundTrackParameters& second,
     const GeometryContext& gctx, double fieldZ);
 
-}  // namespace Acts
+}  // namespace Acts::detail

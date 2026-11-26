@@ -9,8 +9,9 @@
 #include "Acts/Vertexing/TwoTrackVertexFinder.hpp"
 
 #include "Acts/MagneticField/MagneticFieldQuery.hpp"
-#include "Acts/Vertexing/TwoTrackVertexSeed.hpp"
+#include "Acts/Vertexing/IVertexFitter.hpp"
 #include "Acts/Vertexing/VertexingError.hpp"
+#include "Acts/Vertexing/detail/TwoTrackVertexSeed.hpp"
 
 #include <algorithm>
 #include <array>
@@ -83,8 +84,8 @@ Result<std::vector<Vertex>> TwoTrackVertexFinder::find(
           field->head<2>().norm() > 1e-6 * std::abs(field->z())) {
         return VertexingError::InvalidInput;
       }
-      auto seed = estimateTwoTrackVertexSeed(first, second, options.geoContext,
-                                             field->z());
+      auto seed = detail::estimateTwoTrackVertexSeed(
+          first, second, options.geoContext, field->z());
       if (!seed.ok()) {
         if (seed.error() == VertexingError::SeedingError) {
           continue;

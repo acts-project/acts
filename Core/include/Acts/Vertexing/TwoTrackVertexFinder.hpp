@@ -10,19 +10,89 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Vertexing/IVertexFinder.hpp"
-#include "Acts/Vertexing/IVertexFitter.hpp"
+#include "Acts/Vertexing/TrackAtVertex.hpp"
 
 #include <memory>
 
 namespace Acts {
 
+class IVertexFitter;
+
+/// @ingroup vertexing
 /// Minimal pairwise vertex finder for displaced two-track candidates.
-/// Fits each accepted pair independently, without overlap removal, mass
-/// tagging, primary-vertex selection or a displacement cut. Complexity is
-/// quadratic in the number of input tracks. Intended as a seed-and-fit building
-/// block. Seeding approximates the field by its axial component at the pair
-/// midpoint; non-axial fields are rejected. Fitting uses the supplied fitter's
-/// propagation.
+/// Fits each accepted pair independently through IVertexFitter, without a
+/// primary-vertex or mass constraint. This is a reconstruction building block,
+/// not a production secondary-vertex selection.
+///
+/// @par Usage
+/// @code{.cpp}
+/// Acts::TwoTrackVertexFinder::Config cfg;
+/// cfg.vertexFitter = fitter;  // shared_ptr<const IVertexFitter>
+/// cfg.field = fieldProvider;  // shared_ptr<const MagneticFieldProvider>
+/// cfg.extractParameters.connect<&Acts::InputTrack::extractParameters>();
+/// Acts::TwoTrackVertexFinder finder(cfg);
+/// auto state = finder.makeState(mctx);
+/// Acts::VertexingOptions options(gctx, mctx);  // Unconstrained fit.
+/// auto result = finder.find(inputTracks, options, state);
+/// @endcode
+///
+/// @par Seeding and selection
+/// The internal estimator uses transverse circle intersections and longitudinal
+/// track separation to choose a seed. For nonintersecting circles it uses their
+/// closest transverse points; in zero field it uses closest points on straight
+/// lines. Its point separation is not an exact three-dimensional helix DCA.
+/// Only the nearest half-turn of each trajectory is considered. Parallel lines
+/// and concentric circles without a unique seed reject the pair.
+///
+/// The field is sampled at the midpoint of the input track positions and
+/// approximated as uniform and axial for seeding. Non-axial fields are
+/// rejected; the fitter remains responsible for propagation. Its propagator and
+/// the finder's field provider must describe the same field.
+///
+/// The default selection requires opposite charges, seed separation at most
+/// 1 mm, and total fit chi-squared at most 25. These are prototype cuts, not
+/// calibrated physics working points. There is no displacement cut, mass
+/// tagging, overlap resolution or vertex merging. Output vertices may share
+/// tracks. Do not pass a primary vertex as a fit constraint: constrained
+/// options are rejected. Runtime scales quadratically with the input
+/// multiplicity.
+///
+/// @par State and failures
+/// Keep the field context alive and unchanged while using the state, and use
+/// the same context in VertexingOptions. Construct a fresh state for each
+/// event. setTracksToRemove() excludes tracks on subsequent calls with that
+/// state. Inputs are deduplicated by track identity. Seed degeneracies reject
+/// the pair; other seed errors, field errors and fitter errors fail the call.
+///
+/// @par Synthetic validation
+/// The TwoTrackVertexFinder unit-test executable generates correlated pion
+/// pairs from a 497.611 MeV parent, boosted to momenta of 1, 2 and 5 GeV, at
+/// transverse radii of 1, 10, 50 and 100 mm. The parent moves transversely;
+/// vertex z is uniform within +/-20 mm, and the rest-frame angular sample has
+/// |cos(theta)| < 0.8. There are 20 pairs per radius/momentum bin.
+///
+/// An Eigen stepper propagates the daughters through a uniform axial 2 T field
+/// to a common origin perigee. Unsmeared seeds must recover the known
+/// production point. Independent Gaussian smearing then assumes 20 micrometers
+/// in d0, 50 micrometers in z0, 0.2 mrad in each angle, 0.1 percent in q/p and
+/// 0.1 ns in time. Billoir receives these diagonal covariances, but neither the
+/// true vertex nor a mass constraint.
+///
+/// Run the scan and print its per-bin acceptance and aggregate residual, pull
+/// and mass diagnostics with:
+/// @code{.sh}
+/// cmake --build build --target ActsUnitTestTwoTrackVertexFinder
+/// build/bin/ActsUnitTestTwoTrackVertexFinder --log_level=message
+/// @endcode
+/// The fixed-sample regression checks require at least 16/20 accepted pairs in
+/// each bin, spatial residual RMS below 2 mm, mean mass within 3 MeV of the
+/// injected mass, and spatial pull RMS between 0.5 and 1.5. Other tests cover
+/// analytic geometry, interface dispatch, error forwarding and track exclusion.
+///
+/// This track-level sample has no parent transport, physical decay-radius
+/// distribution, detector hits, material, pattern recognition or realistic
+/// combinatorial background. Acceptance measures seed-and-fit behavior for
+/// supplied tracks, not detector efficiency or a calibration of uncertainties.
 class TwoTrackVertexFinder final : public IVertexFinder {
  public:
   /// Finder configuration.

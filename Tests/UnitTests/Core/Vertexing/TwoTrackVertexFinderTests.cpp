@@ -18,8 +18,8 @@
 #include "Acts/Vertexing/FullBilloirVertexFitter.hpp"
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
 #include "Acts/Vertexing/TwoTrackVertexFinder.hpp"
-#include "Acts/Vertexing/TwoTrackVertexSeed.hpp"
 #include "Acts/Vertexing/VertexingError.hpp"
+#include "Acts/Vertexing/detail/TwoTrackVertexSeed.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <algorithm>
@@ -91,21 +91,21 @@ BOOST_AUTO_TEST_CASE(two_track_straight_seed) {
   const Vector3 truth(20., -5., 12.);
   const auto a = trackAt(truth - Vector3(2., 0., 0.), Vector3::UnitX(), 1.);
   const auto b = trackAt(truth - Vector3(0., 3., 0.), Vector3::UnitY(), -1.);
-  auto seed = estimateTwoTrackVertexSeed(a, b, gctx, 0.);
+  auto seed = detail::estimateTwoTrackVertexSeed(a, b, gctx, 0.);
   BOOST_REQUIRE(seed.ok());
   CHECK_CLOSE_ABS(seed->position, truth, 1e-12);
   BOOST_CHECK_SMALL(seed->separation, 1e-12);
   const auto skew =
       trackAt(truth + Vector3(0., -3., 2.), Vector3::UnitY(), -1.);
-  seed = estimateTwoTrackVertexSeed(a, skew, gctx, 0.);
+  seed = detail::estimateTwoTrackVertexSeed(a, skew, gctx, 0.);
   BOOST_REQUIRE(seed.ok());
   CHECK_CLOSE_ABS(seed->position, truth + Vector3(0., 0., 1.), 1e-12);
   CHECK_CLOSE_ABS(seed->separation, 2., 1e-12);
   const auto parallel = trackAt(Vector3::Zero(), Vector3(1., 1e-8, 0.), -1.);
-  auto failure = estimateTwoTrackVertexSeed(a, parallel, gctx, 0.);
+  auto failure = detail::estimateTwoTrackVertexSeed(a, parallel, gctx, 0.);
   BOOST_REQUIRE(!failure.ok());
   BOOST_CHECK(failure.error() == VertexingError::SeedingError);
-  BOOST_CHECK(!estimateTwoTrackVertexSeed(
+  BOOST_CHECK(!detail::estimateTwoTrackVertexSeed(
                    a, b, gctx, std::numeric_limits<double>::quiet_NaN())
                    .ok());
 }
@@ -114,37 +114,38 @@ BOOST_AUTO_TEST_CASE(two_track_circle_geometry) {
   // Unit axial field and q/p=-1/r give counterclockwise circles.
   const auto first = trackAt(Vector3(5., 0., 0.), Vector3::UnitY(), -0.2);
   const auto second = trackAt(Vector3(13., 0., 0.), Vector3::UnitY(), -0.2);
-  auto seed = estimateTwoTrackVertexSeed(first, second, gctx, 1.);
+  auto seed = detail::estimateTwoTrackVertexSeed(first, second, gctx, 1.);
   BOOST_REQUIRE(seed.ok());
   CHECK_CLOSE_ABS(seed->position.x(), 4., 1e-12);
   CHECK_CLOSE_ABS(std::abs(seed->position.y()), 3., 1e-12);
   BOOST_CHECK_SMALL(seed->separation, 1e-12);
-  const auto reversed = estimateTwoTrackVertexSeed(second, first, gctx, 1.);
+  const auto reversed =
+      detail::estimateTwoTrackVertexSeed(second, first, gctx, 1.);
   BOOST_REQUIRE(reversed.ok());
   CHECK_CLOSE_ABS(reversed->separation, seed->separation, 1e-12);
   // Reverse both charges and the field: the trajectories are unchanged.
   const auto positive1 = trackAt(Vector3(5., 0., 0.), Vector3::UnitY(), 0.2);
   const auto positive2 = trackAt(Vector3(13., 0., 0.), Vector3::UnitY(), 0.2);
   const auto flipped =
-      estimateTwoTrackVertexSeed(positive1, positive2, gctx, -1.);
+      detail::estimateTwoTrackVertexSeed(positive1, positive2, gctx, -1.);
   BOOST_REQUIRE(flipped.ok());
   CHECK_CLOSE_ABS(flipped->position, seed->position, 1e-12);
   const auto disjoint = trackAt(Vector3(17., 0., 0.), Vector3::UnitY(), -0.2);
-  seed = estimateTwoTrackVertexSeed(first, disjoint, gctx, 1.);
+  seed = detail::estimateTwoTrackVertexSeed(first, disjoint, gctx, 1.);
   BOOST_REQUIRE(seed.ok());
   CHECK_CLOSE_ABS(seed->position, Vector3(6., 0., 0.), 1e-12);
   CHECK_CLOSE_ABS(seed->separation, 2., 1e-12);
   const auto nested = trackAt(Vector3(3., 0., 0.), Vector3::UnitY(), -0.5);
-  seed = estimateTwoTrackVertexSeed(first, nested, gctx, 1.);
+  seed = detail::estimateTwoTrackVertexSeed(first, nested, gctx, 1.);
   BOOST_REQUIRE(seed.ok());
   CHECK_CLOSE_ABS(seed->position, Vector3(4., 0., 0.), 1e-12);
   CHECK_CLOSE_ABS(seed->separation, 2., 1e-12);
   const auto tangent = trackAt(Vector3(15., 0., 0.), Vector3::UnitY(), -0.2);
-  seed = estimateTwoTrackVertexSeed(first, tangent, gctx, 1.);
+  seed = detail::estimateTwoTrackVertexSeed(first, tangent, gctx, 1.);
   BOOST_REQUIRE(seed.ok());
   CHECK_CLOSE_ABS(seed->position, Vector3(5., 0., 0.), 1e-12);
   BOOST_CHECK_SMALL(seed->separation, 1e-12);
-  auto failure = estimateTwoTrackVertexSeed(first, first, gctx, 1.);
+  auto failure = detail::estimateTwoTrackVertexSeed(first, first, gctx, 1.);
   BOOST_REQUIRE(!failure.ok());
   BOOST_CHECK(failure.error() == VertexingError::SeedingError);
 }
@@ -307,7 +308,7 @@ BOOST_AUTO_TEST_CASE(displaced_two_body_pion_gun) {
           tracks.emplace_back(origin, measured, covariance,
                               ParticleHypothesis::pion());
         }
-        const auto exactSeed = estimateTwoTrackVertexSeed(
+        const auto exactSeed = detail::estimateTwoTrackVertexSeed(
             exactTracks[0], exactTracks[1], gctx, 2_T);
         BOOST_REQUIRE(exactSeed.ok());
         CHECK_CLOSE_ABS(exactSeed->position, truth, 1e-3_mm);

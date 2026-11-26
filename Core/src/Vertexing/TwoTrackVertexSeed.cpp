@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Vertexing/TwoTrackVertexSeed.hpp"
+#include "Acts/Vertexing/detail/TwoTrackVertexSeed.hpp"
 
 #include "Acts/Vertexing/VertexingError.hpp"
 
@@ -16,7 +16,7 @@
 #include <limits>
 #include <utility>
 
-namespace Acts {
+namespace Acts::detail {
 namespace {
 struct Circle {
   Vector3 position;
@@ -130,4 +130,4 @@ Result<TwoTrackVertexSeed> estimateTwoTrackVertexSeed(
   }
   return best;
 }
-}  // namespace Acts
+}  // namespace Acts::detail
