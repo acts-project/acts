@@ -17,8 +17,7 @@
 namespace ActsPlugins::detail {
 
 /// Every operation in this plugin that needs a GPU, declared without naming a
-/// CUDA type: `cudaStream_t` here is the forward-declared `CUstream_st *` from
-/// Tensor.hpp, which is the type the CUDA runtime uses too.
+/// CUDA type.
 ///
 /// Exactly one implementation is linked -- the `.cu` translation units when the
 /// plugin is built with CUDA, DeviceOpsNoCuda.cpp otherwise -- so callers below
@@ -29,7 +28,8 @@ namespace ActsPlugins::detail {
 /// first, which cudaCreateTensorMemory refuses, so the no-CUDA definitions are
 /// unreachable rather than merely unsupported.
 
-/// Allocate device memory for a tensor. @p ctx must carry a stream.
+/// Allocate device memory for a tensor. @p ctx must carry a stream and a
+/// memory resource.
 TensorPtr cudaCreateTensorMemory(std::size_t nbytes,
                                  const ExecutionContext &ctx);
 
@@ -39,11 +39,11 @@ void cudaCopyTensorMemory(void *dst, const void *src, std::size_t nbytes,
                           Device from, const ExecutionContext &to);
 
 /// Apply the logistic function to @p tensor in place.
-void cudaSigmoid(Tensor<float> &tensor, cudaStream_t stream);
+void cudaSigmoid(Tensor<float> &tensor, const ExecutionContext &execContext);
 
 /// Element-wise `scores > cut`.
 Tensor<bool> cudaScoreMask(const Tensor<float> &scores, float cut,
-                           cudaStream_t stream);
+                           const ExecutionContext &execContext);
 
 /// Gather the rows of @p tensor selected by @p mask.
 template <typename T>

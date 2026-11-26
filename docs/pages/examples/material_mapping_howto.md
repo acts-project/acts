@@ -313,6 +313,10 @@ This step is independent of your surface choices — you only need to redo it if
 the detailed geometry changes, not when you retune binning. It is by far the
 slowest step, so record generously once and reuse the file.
 
+Run material recording with `numThreads=1`. ACTS reuses one Geant4 run across
+events, so start a new run if you change the geometry, materials, regions, or
+production cuts.
+
 ### Recording a DD4hep detector with ddsim
 
 For a DD4hep detector, the recording can also run directly in `ddsim`, on the

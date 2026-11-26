@@ -24,12 +24,13 @@ void cudaCopyTensorMemory(void * /*dst*/, const void * /*src*/,
   throwNoCudaSupport("copy CUDA tensor memory");
 }
 
-void cudaSigmoid(Tensor<float> & /*tensor*/, cudaStream_t /*stream*/) {
+void cudaSigmoid(Tensor<float> & /*tensor*/,
+                 const ExecutionContext & /*execContext*/) {
   throwNoCudaSupport("apply sigmoid to CUDA tensor");
 }
 
 Tensor<bool> cudaScoreMask(const Tensor<float> & /*scores*/, float /*cut*/,
-                           cudaStream_t /*stream*/) {
+                           const ExecutionContext & /*execContext*/) {
   throwNoCudaSupport("compute score mask on CUDA tensor");
 }
 

@@ -28,10 +28,10 @@ class Surface;
 inline BoundVector reflectBoundParameters(const BoundVector& boundParams) {
   BoundVector reflected = boundParams;
   auto [phi, theta] =
-      detail::normalizePhiTheta(boundParams[eBoundPhi] - std::numbers::pi,
-                                std::numbers::pi - boundParams[eBoundTheta]);
-  reflected[eBoundPhi] = phi;
-  reflected[eBoundTheta] = theta;
+      detail::normalizePhiTheta(boundParams[eBoundDir0] - std::numbers::pi,
+                                std::numbers::pi - boundParams[eBoundDir1]);
+  reflected[eBoundDir0] = phi;
+  reflected[eBoundDir1] = theta;
   reflected[eBoundQOverP] = -boundParams[eBoundQOverP];
   return reflected;
 }

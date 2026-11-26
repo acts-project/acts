@@ -118,8 +118,8 @@ ProcessCode TrackParameterSmearing::execute(const AlgorithmContext& ctx) const {
     // smear direction angles phi,theta ensuring correct bounds
     const auto [newPhi, newTheta] = Acts::detail::normalizePhiTheta(
         phi + sigmaPhi * stdNormal(rng), theta + sigmaTheta * stdNormal(rng));
-    params[Acts::eBoundPhi] = newPhi;
-    params[Acts::eBoundTheta] = newTheta;
+    params[Acts::eBoundDir0] = newPhi;
+    params[Acts::eBoundDir1] = newTheta;
     // compute smeared q/p
     params[Acts::eBoundQOverP] = qOverP + sigmaQOverP * stdNormal(rng);
 
@@ -167,8 +167,8 @@ ProcessCode TrackParameterSmearing::execute(const AlgorithmContext& ctx) const {
     ACTS_VERBOSE("   to: " << outputTrackParameters.position(ctx.recoGeoContext)
                                   .transpose()
                            << ", " << params[Acts::eBoundTime] << ", "
-                           << params[Acts::eBoundPhi] << ", "
-                           << params[Acts::eBoundTheta] << ", "
+                           << params[Acts::eBoundDir0] << ", "
+                           << params[Acts::eBoundDir1] << ", "
                            << params[Acts::eBoundQOverP]);
   }
 

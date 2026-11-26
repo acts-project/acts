@@ -54,7 +54,6 @@ endif()
 # core related options
 # Formatting needs to be preserved here for parsing
 # gersemi: off
-set(ACTS_PARAMETER_DEFINITIONS_HEADER "" CACHE FILEPATH "Use a different (track) parameter definitions header")
 set(ACTS_SOURCELINK_SBO_SIZE "" CACHE STRING "Customize the SBO size used by SourceLink")
 option(ACTS_FORCE_ASSERTIONS "Force assertions regardless of build type" OFF)
 option(ACTS_FAIL_ON_WARNINGS "Treat compiler warnings in Acts' own code as errors" OFF)
@@ -264,6 +263,8 @@ set_option_if(
     AND
     ACTS_BUILD_PLUGIN_GNN
 )
+
+set_option_if(ACTS_SETUP_VECMEM ACTS_BUILD_PLUGIN_GNN)
 
 set_option_if(ACTS_BUILD_PYTHON_BINDINGS ACTS_BUILD_PYTHON_WHEEL)
 set_option_if(ACTS_BUILD_ALIGNMENT ACTS_BUILD_PLUGIN_MILLE)
@@ -727,9 +728,9 @@ if(ACTS_SETUP_DETRAY)
 
     if(ACTS_BUILD_TRACCC)
         set(DETRAY_SET_LOGGING "${ACTS_TRACCC_DEVICE_LOG_LEVEL}")
-        # Some detray validation tools are used in optional traccc libraries
+        # The detray test utilities are used in optional traccc libraries
         set_option_if(
-            DETRAY_BUILD_VALIDATION_TOOLS
+            DETRAY_BUILD_TEST_UTILS
             ACTS_TRACCC_BUILD_PERFORMANCE
             OR
             ACTS_TRACCC_BUILD_TESTS

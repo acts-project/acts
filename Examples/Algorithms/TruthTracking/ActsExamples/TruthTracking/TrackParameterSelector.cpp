@@ -42,13 +42,13 @@ ProcessCode TrackParameterSelector::execute(const AlgorithmContext& ctx) const {
     return (min <= x) && (x < max);
   };
   auto isValidTrack = [&](const auto& trk) {
-    const auto theta = trk.template get<Acts::eBoundTheta>();
+    const auto theta = trk.template get<Acts::eBoundDir1>();
     const auto eta = Acts::AngleHelpers::etaFromTheta(theta);
     // define charge selection
     return within(trk.transverseMomentum(), m_cfg.ptMin, m_cfg.ptMax) &&
            within(std::abs(eta), m_cfg.absEtaMin, m_cfg.absEtaMax) &&
            within(eta, m_cfg.etaMin, m_cfg.etaMax) &&
-           within(trk.template get<Acts::eBoundPhi>(), m_cfg.phiMin,
+           within(trk.template get<Acts::eBoundDir0>(), m_cfg.phiMin,
                   m_cfg.phiMax) &&
            within(trk.template get<Acts::eBoundLoc0>(), m_cfg.loc0Min,
                   m_cfg.loc0Max) &&

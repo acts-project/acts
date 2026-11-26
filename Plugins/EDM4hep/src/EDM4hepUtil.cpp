@@ -229,17 +229,17 @@ Parameters convertTrackParametersToEdm4hep(const GeometryContext& gctx,
 
   // Only run covariance conversion if we have a covariance input
   if (targetCov) {
-    SquareMatrix<6> J = jacobianToEdm4hep(targetPars[eBoundTheta],
-                                          targetPars[eBoundQOverP], Bz);
+    SquareMatrix<6> J =
+        jacobianToEdm4hep(targetPars[eBoundDir1], targetPars[eBoundQOverP], Bz);
     result.covariance = J * targetCov.value() * J.transpose();
   }
 
   result.values[0] = targetPars[eBoundLoc0];
   result.values[1] = targetPars[eBoundLoc1];
-  result.values[2] = targetPars[eBoundPhi];
-  result.values[3] = std::tan(std::numbers::pi / 2. - targetPars[eBoundTheta]);
+  result.values[2] = targetPars[eBoundDir0];
+  result.values[3] = std::tan(std::numbers::pi / 2. - targetPars[eBoundDir1]);
   result.values[4] =
-      targetPars[eBoundQOverP] / std::sin(targetPars[eBoundTheta]) * Bz;
+      targetPars[eBoundQOverP] / std::sin(targetPars[eBoundDir1]) * Bz;
   result.values[5] = targetPars[eBoundTime];
 
   result.particleHypothesis = params.particleHypothesis();
@@ -261,10 +261,10 @@ BoundTrackParameters convertTrackParametersFromEdm4hep(
 
   targetPars[eBoundLoc0] = params.values[0];
   targetPars[eBoundLoc1] = params.values[1];
-  targetPars[eBoundPhi] = params.values[2];
-  targetPars[eBoundTheta] = std::numbers::pi / 2. - std::atan(params.values[3]);
+  targetPars[eBoundDir0] = params.values[2];
+  targetPars[eBoundDir1] = std::numbers::pi / 2. - std::atan(params.values[3]);
   targetPars[eBoundQOverP] =
-      params.values[4] * std::sin(targetPars[eBoundTheta]) / Bz;
+      params.values[4] * std::sin(targetPars[eBoundDir1]) / Bz;
   targetPars[eBoundTime] = params.values[5];
 
   return {params.surface, targetPars, cov, params.particleHypothesis};

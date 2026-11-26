@@ -228,6 +228,7 @@
                 "ACTS_BUILD_EXAMPLES_UNITTESTS": "OFF",
                 "ACTS_USE_SYSTEM_NLOHMANN_JSON": "ON",
                 "ACTS_USE_SYSTEM_PYBIND11": "ON",
+                "ACTS_USE_SYSTEM_VECMEM": "ON",
                 "ACTS_USE_SYSTEM_MODULEMAPGRAPH": "ON"
             }
         },

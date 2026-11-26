@@ -126,8 +126,8 @@ void NeuralCalibrator::calibrate(
   Vector2 localCovariance{measurement.covariance()(boundLoc0, boundLoc0),
                           measurement.covariance()(boundLoc1, boundLoc1)};
 
-  Vector3 dir = makeDirectionFromPhiTheta(trackParameters[eBoundPhi],
-                                          trackParameters[eBoundTheta]);
+  Vector3 dir = makeDirectionFromPhiTheta(trackParameters[eBoundDir0],
+                                          trackParameters[eBoundDir1]);
   Vector3 globalPosition =
       referenceSurface.localToGlobal(gctx, localPosition, dir);
 

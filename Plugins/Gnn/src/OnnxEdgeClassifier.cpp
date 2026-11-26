@@ -238,8 +238,8 @@ PipelineTensors OnnxEdgeClassifier::operator()(
                inputTensors.size(), outputNames.data(), outputTensors.data(),
                outputNames.size());
 
-  sigmoid(scores, execContext.stream);
-  auto mask = scoreMask(scores, m_cfg.cut, execContext.stream);
+  sigmoid(scores, execContext);
+  auto mask = scoreMask(scores, m_cfg.cut, execContext);
   auto newScores = selectRows(scores, mask, execContext);
   auto newEdgeIndex = selectCols(tensors.edgeIndex, mask, execContext);
   std::optional<Tensor<float>> newEdgeFeatures;

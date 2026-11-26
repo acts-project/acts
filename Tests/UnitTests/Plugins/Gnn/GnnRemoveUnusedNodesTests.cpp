@@ -11,7 +11,10 @@
 #include "ActsPlugins/Gnn/Stages.hpp"
 
 #ifdef ACTS_GNN_WITH_CUDA
+#include "ActsPlugins/Gnn/detail/async_device_memory_resource.hpp"
+
 #include <cuda_runtime_api.h>
+#include <vecmem/utils/cuda/stream_wrapper.hpp>
 #endif
 
 using namespace ActsPlugins;
@@ -22,7 +25,10 @@ namespace {
 
 const ExecutionContext execContextCpu{Device::Cpu(), {}};
 #ifdef ACTS_GNN_WITH_CUDA
-const ExecutionContext execContextCuda{Device::Cuda(0), cudaStreamLegacy};
+const vecmem::cuda::stream_wrapper cudaStream(cudaStreamLegacy);
+detail::async_device_memory_resource cudaMemoryResource(cudaStream);
+const ExecutionContext execContextCuda{Device::Cuda(0), &cudaStream,
+                                       &cudaMemoryResource};
 #endif
 
 // Build a PipelineTensors on the given device from flat CPU data.

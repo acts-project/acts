@@ -55,9 +55,9 @@ ProcessCode SeedFilterMLAlgorithm::execute(const AlgorithmContext& ctx) const {
   for (std::size_t i = 0; i < seeds.size(); i++) {
     // Compute the track parameters
     double pT = std::abs(1.0 / params[i].parameters()[eBoundQOverP]) *
-                std::sin(params[i].parameters()[eBoundTheta]);
-    double eta = std::atanh(std::cos(params[i].parameters()[eBoundTheta]));
-    double phi = params[i].parameters()[eBoundPhi];
+                std::sin(params[i].parameters()[eBoundDir1]);
+    double eta = std::atanh(std::cos(params[i].parameters()[eBoundDir1]));
+    double phi = params[i].parameters()[eBoundDir0];
 
     // Fill and weight the clustering inputs
     clusteringParams.push_back({phi / m_cfg.clusteringWeighPhi,

@@ -21,6 +21,7 @@
 #include <NvInferRuntimeBase.h>
 #include <cuda_runtime.h>
 
+#include "CudaStream.hpp"
 #include "printCudaMemInfo.hpp"
 
 using namespace Acts;
@@ -161,9 +162,8 @@ class TensorRTEdgeClassifier::Impl {
                    << nEdges << ") exceeds maximum, shrink edge tensor to "
                    << m_maxEdges);
 
-      auto [newEdgeIndex, newEdgeFeatures] =
-          applyEdgeLimit(tensors.edgeIndex, tensors.edgeFeatures, m_maxEdges,
-                         execContext.stream);
+      auto [newEdgeIndex, newEdgeFeatures] = applyEdgeLimit(
+          tensors.edgeIndex, tensors.edgeFeatures, m_maxEdges, execContext);
       tensors.edgeIndex = std::move(newEdgeIndex);
       tensors.edgeFeatures = std::move(newEdgeFeatures);
     }
@@ -209,7 +209,7 @@ class TensorRTEdgeClassifier::Impl {
 
     t2 = std::chrono::high_resolution_clock::now();
 
-    auto stream = execContext.stream.value();
+    auto stream = detail::getCudaStream(execContext);
     auto status = context->enqueueV3(stream);
     if (!status) {
       throw std::runtime_error("Failed to execute TensorRT model");
@@ -226,12 +226,12 @@ class TensorRTEdgeClassifier::Impl {
     // Increment the count after the context have been put back in the vector
     m_count->release();
 
-    sigmoid(scores, execContext.stream);
+    sigmoid(scores, execContext);
 
     ACTS_VERBOSE("Size after classifier: " << scores.shape()[0]);
     printCudaMemInfo(logger());
 
-    auto mask = scoreMask(scores, m_cfg.cut, execContext.stream);
+    auto mask = scoreMask(scores, m_cfg.cut, execContext);
     auto newScores = selectRows(scores, mask, execContext);
     auto newEdgeIndex = selectCols(tensors.edgeIndex, mask, execContext);
     std::optional<Tensor<float>> newEdgeFeatures;
