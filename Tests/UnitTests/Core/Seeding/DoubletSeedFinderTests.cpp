@@ -90,6 +90,36 @@ SpacePointContainer makeContainer() {
       SpacePointColumns::StripCalibrationDetails);
 }
 
+// Adds a pixel space point at (x, y), with z on a line of cotTheta 0.5 from
+// the origin
+void addPixelSpacePoint(SpacePointContainer& container, float x, float y) {
+  auto sp = container.createSpacePoint();
+  const float r = std::hypot(x, y);
+  sp.xy() = {x, y};
+  sp.zr() = {0.5f * r, r};
+  sp.varianceZ() = 0.01_mm;
+  sp.varianceR() = 0.01_mm;
+}
+
+// Finds the doublets of the first space point among those from `first` to
+// before `last`, with the interaction point cut
+DoubletsForMiddleSp findPixelDoublets(const SpacePointContainer& container,
+                                      Direction direction,
+                                      SpacePointIndex first,
+                                      SpacePointIndex last) {
+  DoubletSeedFinder::Config config;
+  config.candidateDirection = direction;
+  config.interactionPointCut = true;
+  const auto finder =
+      DoubletSeedFinder::create(DoubletSeedFinder::DerivedConfig(config, 2_T));
+
+  const ConstSpacePointProxy middle = container[0];
+  DoubletsForMiddleSp doublets;
+  finder->createDoublets(middle, DoubletSeedFinder::computeMiddleSpInfo(middle),
+                         container.range({first, last}), doublets);
+  return doublets;
+}
+
 }  // namespace
 
 BOOST_AUTO_TEST_SUITE(SeedingSuite)
@@ -117,6 +147,63 @@ BOOST_AUTO_TEST_CASE(DoubletStripCalibrationRejectsMissedStrips) {
 
   BOOST_CHECK_EQUAL(findDoublets(container, std::nullopt).size(), 1u);
   BOOST_CHECK_EQUAL(findDoublets(container, 1.1f).size(), 0u);
+}
+
+BOOST_AUTO_TEST_CASE(DoubletInteractionPointCutsOverBlocks) {
+  // more candidates than two blocks of the finder, every third far from the
+  // interaction point and too curved, the others on lines through it: one
+  // call over all of them gives the same doublets in the same order as one
+  // call per candidate
+  constexpr std::size_t nCandidates = 600;
+  for (const bool isBottom : {false, true}) {
+    const float rM = isBottom ? 400_mm : 100_mm;
+    SpacePointContainer container(
+        SpacePointColumns::PackedXY | SpacePointColumns::PackedZR |
+        SpacePointColumns::VarianceZ | SpacePointColumns::VarianceR);
+    addPixelSpacePoint(container, rM, 0);
+    for (std::size_t i = 0; i < nCandidates; ++i) {
+      const float r = isBottom ? 60_mm + 0.46_mm * i : 150_mm + 0.3_mm * i;
+      if (i % 3 == 0) {
+        const float slope = isBottom ? -0.3f : 0.6f;
+        addPixelSpacePoint(container, r, slope * (r - rM));
+      } else {
+        const float phi = 1e-4f * static_cast<float>(i % 5);
+        addPixelSpacePoint(container, r * std::cos(phi), r * std::sin(phi));
+      }
+    }
+    const Direction direction =
+        isBottom ? Direction::Backward() : Direction::Forward();
+
+    const auto last = static_cast<SpacePointIndex>(container.size());
+    const DoubletsForMiddleSp together =
+        findPixelDoublets(container, direction, 1, last);
+    DoubletsForMiddleSp alone;
+    for (SpacePointIndex i = 1; i < last; ++i) {
+      const DoubletsForMiddleSp one =
+          findPixelDoublets(container, direction, i, i + 1);
+      for (const auto doublet : one) {
+        alone.emplace_back(doublet.spacePointIndex(), doublet.cotTheta(),
+                           doublet.iDeltaR(), doublet.er(), doublet.u(),
+                           doublet.v(), doublet.x(), doublet.y());
+      }
+    }
+
+    BOOST_CHECK_GT(together.size(), 0u);
+    BOOST_CHECK_LT(together.size(), 2 * nCandidates / 3 + 1);
+    BOOST_REQUIRE_EQUAL(together.size(), alone.size());
+    // exact: the same expressions on the same inputs, so the same bits
+    for (DoubletsForMiddleSp::Index k = 0; k < together.size(); ++k) {
+      BOOST_CHECK_EQUAL(together[k].spacePointIndex(),
+                        alone[k].spacePointIndex());
+      BOOST_CHECK_EQUAL(together[k].cotTheta(), alone[k].cotTheta());
+      BOOST_CHECK_EQUAL(together[k].iDeltaR(), alone[k].iDeltaR());
+      BOOST_CHECK_EQUAL(together[k].er(), alone[k].er());
+      BOOST_CHECK_EQUAL(together[k].u(), alone[k].u());
+      BOOST_CHECK_EQUAL(together[k].v(), alone[k].v());
+      BOOST_CHECK_EQUAL(together[k].x(), alone[k].x());
+      BOOST_CHECK_EQUAL(together[k].y(), alone[k].y());
+    }
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
