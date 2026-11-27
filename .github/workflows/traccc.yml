@@ -108,14 +108,14 @@ jobs:
           # Release runs both test suites; Debug also compiles Alpaka.
           - name: CPU
             container: ghcr.io/acts-project/ubuntu2604:91
-            options: --preset host-fp32 -DTRACCC_BUILD_ALPAKA=ON
+            options: -DDETRAY_CUSTOM_SCALARTYPE=float -DACTS_BUILD_PLUGIN_ROOT=ON -DACTS_TRACCC_BUILD_ALPAKA=ON
             run_tests: true
             flavor: ""
           # Distinct name because merge-sentinel deduplicates result items by
           # normalised name: two legs called CPU collapse into one check.
           - name: CPU_FP64
             container: ghcr.io/acts-project/ubuntu2604:91
-            options: --preset host-fp64
+            options: -DDETRAY_CUSTOM_SCALARTYPE=double -DACTS_BUILD_PLUGIN_ROOT=ON
             run_tests: false
             flavor: ""
         build:
@@ -124,7 +124,7 @@ jobs:
         include:
           # CUDA fp32 is spelled out per build type rather than riding the
           # `platform` x `build` cross: the two legs want opposite things from
-          # TRACCC_BUILD_TESTING.
+          # ACTS_TRACCC_BUILD_TESTS.
           #
           # Release builds the tests and ships the tree to `cuda-test` below,
           # so the device code it compiles is the device code that runs. The
@@ -133,13 +133,13 @@ jobs:
           # way, and trimming would drop the toy-detector CKF tests from the
           # GPU run.
           #
-          # TRACCC_BUILD_ALPAKA is additive: alpaka's targets are gated on it
-          # alone, so the alpaka backend rides along without a second baseline
-          # build. The flavor's alpaka is built `backend=serial,cuda`.
+          # ACTS_TRACCC_BUILD_ALPAKA is additive: alpaka's targets are gated on
+          # it alone, so the alpaka backend rides along without a second
+          # baseline build. The flavor's alpaka is built `backend=serial,cuda`.
           - platform:
               name: CUDA
               container: ghcr.io/acts-project/ubuntu2604:91
-              options: --preset cuda-fp32-ci -DTRACCC_BUILD_ALPAKA=ON -Dalpaka_ACC_GPU_CUDA_ENABLE=ON
+              options: -DDETRAY_CUSTOM_SCALARTYPE=float -DACTS_ENABLE_CUDA=ON -DACTS_TRACCC_BUILD_CUDA=ON -DACTS_USE_SYSTEM_THRUST=ON -DCMAKE_CUDA_ARCHITECTURES=75 -DACTS_TRACCC_BUILD_ALPAKA=ON -Dalpaka_ACC_GPU_CUDA_ENABLE=ON
               run_tests: false
               upload_build: true
               flavor: cuda13
@@ -151,33 +151,35 @@ jobs:
           - platform:
               name: CUDA
               container: ghcr.io/acts-project/ubuntu2604:91
-              options: --preset cuda-fp32-ci -DTRACCC_BUILD_TESTING=FALSE
+              options: -DDETRAY_CUSTOM_SCALARTYPE=float -DACTS_ENABLE_CUDA=ON -DACTS_TRACCC_BUILD_CUDA=ON -DACTS_USE_SYSTEM_THRUST=ON -DCMAKE_CUDA_ARCHITECTURES=75 -DACTS_TRACCC_BUILD_TESTS=OFF
               run_tests: false
               flavor: cuda13
             build: Debug
           # Distinct name for the sentinel dedup reason above -- as plain CUDA
           # this and the fp32 Release leg both render as "CUDA-Release". Tests
           # off: this is a compile check, no GPU job consumes an fp64 build,
-          # and the preset would otherwise build the whole suite to discard it.
+          # and the common flags would otherwise build the whole suite to discard it.
           - platform:
               name: CUDA_FP64
               container: ghcr.io/acts-project/ubuntu2604:91
-              options: --preset cuda-fp64-ci -DTRACCC_BUILD_TESTING=FALSE
+              options: -DDETRAY_CUSTOM_SCALARTYPE=double -DACTS_ENABLE_CUDA=ON -DACTS_TRACCC_BUILD_CUDA=ON -DACTS_USE_SYSTEM_THRUST=ON -DCMAKE_CUDA_ARCHITECTURES=75 -DACTS_TRACCC_BUILD_TESTS=OFF
               run_tests: false
               flavor: cuda13
             build: Release
           # Compile check: no runner has an AMD GPU, but tests/hip is built.
-          # TRACCC_USE_SYSTEM_ROCTHRUST keeps Thrust matched to the flavor's
+          # ACTS_USE_SYSTEM_ROCTHRUST keeps Thrust matched to the flavor's
           # hip; CMAKE_HIP_ARCHITECTURES narrows the gfx list to gfx90a.
+          # ACTS does not set CMAKE_HIP_STANDARD, and the traccc and detray
+          # standard checks need it.
           #
-          # TRACCC_BUILD_ALPAKA is additive as on the CUDA leg above; the
+          # ACTS_TRACCC_BUILD_ALPAKA is additive as on the CUDA leg above; the
           # flavor's alpaka is built `backend=serial,hip`. RelWithDebInfo
           # because ROCm 7's device compiler crashes on device/alpaka at -O3
           # (#5877, ROCm/llvm-project#3995).
           - platform:
               name: "HIP"
               container: ghcr.io/acts-project/ubuntu2604:91
-              options: --preset hip-fp32-ci -DCMAKE_HIP_PLATFORM=amd -DCMAKE_HIP_ARCHITECTURES=gfx90a -DTRACCC_USE_SYSTEM_ROCTHRUST=ON -DTRACCC_BUILD_ALPAKA=ON -Dalpaka_ACC_GPU_HIP_ENABLE=ON -Dalpaka_DISABLE_VENDOR_RNG=ON -DCMAKE_HIP_COMPILE_FEATURES=hip_std_20
+              options: -DDETRAY_CUSTOM_SCALARTYPE=float -DACTS_TRACCC_BUILD_HIP=ON -DACTS_SETUP_THRUST=OFF -DCMAKE_HIP_STANDARD=20 -DCMAKE_HIP_PLATFORM=amd -DCMAKE_HIP_ARCHITECTURES=gfx90a -DACTS_USE_SYSTEM_ROCTHRUST=ON -DACTS_TRACCC_BUILD_ALPAKA=ON -Dalpaka_ACC_GPU_HIP_ENABLE=ON -Dalpaka_DISABLE_VENDOR_RNG=ON -DCMAKE_HIP_COMPILE_FEATURES=hip_std_20
               run_tests: false
               flavor: rocm7
             build: RelWithDebInfo
@@ -189,7 +191,7 @@ jobs:
           #     name: "HIP"
           #     container: ghcr.io/acts-project/ubuntu2604_clang22:91
           #     compiler: clang++-22
-          #     options: --preset hip-fp32-ci -DCMAKE_HIP_PLATFORM=amd -DCMAKE_HIP_ARCHITECTURES=gfx90a -DTRACCC_USE_SYSTEM_ROCTHRUST=ON -DTRACCC_BUILD_ALPAKA=ON -Dalpaka_ACC_GPU_HIP_ENABLE=ON -Dalpaka_DISABLE_VENDOR_RNG=ON -DCMAKE_HIP_COMPILE_FEATURES=hip_std_20 -DCMAKE_C_COMPILER=clang-22 -DCMAKE_CXX_COMPILER=clang++-22
+          #     options: -DDETRAY_CUSTOM_SCALARTYPE=float -DACTS_TRACCC_BUILD_HIP=ON -DACTS_SETUP_THRUST=OFF -DCMAKE_HIP_STANDARD=20 -DCMAKE_HIP_PLATFORM=amd -DCMAKE_HIP_ARCHITECTURES=gfx90a -DACTS_USE_SYSTEM_ROCTHRUST=ON -DACTS_TRACCC_BUILD_ALPAKA=ON -Dalpaka_ACC_GPU_HIP_ENABLE=ON -Dalpaka_DISABLE_VENDOR_RNG=ON -DCMAKE_HIP_COMPILE_FEATURES=hip_std_20 -DCMAKE_C_COMPILER=clang-22 -DCMAKE_CXX_COMPILER=clang++-22
           #     run_tests: false
           #     flavor: rocm7
           #   build: Release
@@ -222,10 +224,10 @@ jobs:
 
       # vecmem, covfie, alpaka, actsvg and TBB come from spack on every leg: the
       # host lockfile carries them and each flavor overlays its own build, so no
-      # per-leg gating is needed. TRACCC_USE_SYSTEM_ALPAKA is unconditional
-      # because traccc only acts on it under TRACCC_SETUP_ALPAKA. actsvg is
-      # needed because extern/acts forces ACTS_BUILD_PLUGIN_ACTSVG on for
-      # detray's validation tools, so without the flag every leg compiles it.
+      # per-leg gating is needed. ACTS_USE_SYSTEM_ALPAKA is unconditional
+      # because traccc only acts on it under ACTS_TRACCC_BUILD_ALPAKA. actsvg is
+      # needed because ACTS sets it up for detray's SVG display, so without the
+      # flag every leg compiles it.
       #
       # TBB too: the FetchContent oneTBB turns IPO on, which under a clang
       # host is ThinLTO, leaving bitcode the ROCm linker cannot read.
@@ -243,21 +245,23 @@ jobs:
             -DCMAKE_BUILD_TYPE=${{ matrix.build }} \
             ${{ matrix.platform.options }} \
             -DCMAKE_CXX_STANDARD=23 \
+            -DACTS_BUILD_TRACCC=ON \
+            -DACTS_TRACCC_BUILD_TESTS=ON \
+            -DACTS_TRACCC_BUILD_EXAMPLES=ON \
+            -DACTS_FAIL_ON_WARNINGS=ON \
+            -DACTS_FORCE_ASSERTIONS=ON \
+            -DDETRAY_BUILD_VALIDATION_TOOLS=ON \
+            -DDETRAY_SVG_DISPLAY=ON \
             -DACTS_USE_SYSTEM_NLOHMANN_JSON=ON \
             -DACTS_USE_SYSTEM_COVFIE=ON \
             -DACTS_USE_SYSTEM_VECMEM=ON \
             -DACTS_USE_SYSTEM_EIGEN3=OFF \
             -DACTS_USE_SYSTEM_ACTSVG=ON \
-            -DTRACCC_USE_SYSTEM_VECMEM=ON \
-            -DTRACCC_USE_SYSTEM_COVFIE=ON \
-            -DTRACCC_USE_SYSTEM_ALPAKA=ON \
-            -DTRACCC_USE_SYSTEM_TBB=ON \
-            -DDETRAY_USE_SYSTEM_NLOHMANN=ON \
-            -DDETRAY_USE_SYSTEM_GOOGLETEST=ON \
-            -DTRACCC_USE_SYSTEM_GOOGLETEST_DEFAULT=ON \
-            -DTRACCC_SETUP_GOOGLETEST=ON \
-            -DTRACCC_SUPPORTED_DETECTORS="default_detector;odd_detector;telescope_detector;toy_detector;itk_detector" \
-            -S ${GITHUB_WORKSPACE}/Traccc \
+            -DACTS_USE_SYSTEM_ALPAKA=ON \
+            -DACTS_USE_SYSTEM_TBB=ON \
+            -DACTS_USE_SYSTEM_GOOGLETEST=ON \
+            -DACTS_TRACCC_SUPPORTED_DETECTORS="default_detector;odd_detector;telescope_detector;toy_detector;itk_detector" \
+            -S ${GITHUB_WORKSPACE} \
             -B build
       - name: Build
         run: |
@@ -292,9 +296,9 @@ jobs:
         if: "matrix.platform.run_tests && matrix.build == 'Release'"
         run: |
           source ${GITHUB_WORKSPACE}/.env
-          cd build
+          cd build/Traccc
           source ${GITHUB_WORKSPACE}/Traccc/.github/ci_setup.sh ${{ matrix.platform.name }}
-          ctest --output-on-failure
+          ctest --output-on-failure --no-tests=error
       - name: FP64 Compliance
         if: "matrix.platform.name == 'CUDA' && matrix.build == 'Debug'"
         continue-on-error: true
@@ -389,4 +393,4 @@ jobs:
       - name: Test
         run: |
           source ${GITHUB_WORKSPACE}/.env
-          ctest --test-dir build --output-on-failure --no-tests=error -R "[Cc][Uu][Dd][Aa]"
+          ctest --test-dir build/Traccc --output-on-failure --no-tests=error -R "[Cc][Uu][Dd][Aa]"
