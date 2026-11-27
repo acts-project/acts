@@ -13,6 +13,7 @@
 #include "detray/builders/homogeneous_material_builder.hpp"
 #include "detray/builders/homogeneous_volume_material_builder.hpp"
 #include "detray/builders/material_map_builder.hpp"
+#include "detray/builders/volume_brute_force_builder.hpp"
 #include "detray/builders/volume_builder.hpp"
 #include "detray/core/concepts.hpp"
 #include "detray/core/detail/container_buffers.hpp"
@@ -22,14 +23,18 @@
 #include "detray/definitions/algebra.hpp"
 #include "detray/definitions/containers.hpp"
 #include "detray/definitions/detail/qualifiers.hpp"
+#include "detray/definitions/geometry.hpp"
+#include "detray/geometry/tracking_volume.hpp"
 #include "detray/geometry/volume_descriptor.hpp"
 #include "detray/utils/concepts.hpp"
+#include "detray/utils/grid/concepts.hpp"
 #include "detray/utils/print_detector.hpp"
 
 // Vecmem include(s)
 #include <vecmem/memory/memory_resource.hpp>
 
 // System include(s)
+#include <cassert>
 #include <sstream>
 #include <string>
 #include <string_view>
@@ -67,6 +72,8 @@ class detector {
       detector<metadata_t, container_t>>;
   template <concepts::detector, std::size_t, typename>
   friend class detray::material_map_builder;
+  friend class detray::volume_brute_force_builder<
+      detector<metadata_t, container_t>>;
   /// @todo Remove
   friend void set_transform<detector<metadata_t, container_t>,
                             dtransform3D<typename metadata_t::algebra_type>>(
@@ -253,22 +260,73 @@ class detector {
     return _volumes.at(names.at(volume_name));
   }
 
+  /// Find the index of the volume that contains a global point.
+  ///
+  /// Finds the top-level volume first: Either with the world volume
+  /// accelerator (index 0 of the default volume accelerator), or by testing
+  /// all top-level volumes. Then descends into the daughter volumes, until no
+  /// daughter volume contains the point. A point on the boundary of a
+  /// daughter volume belongs to the daughter volume.
+  ///
+  /// @param p global Cartesian position to locate
+  /// @param ctx the geometry context
+  ///
+  /// @returns the volume index, or an invalid index if the point is outside
+  /// of the detector
+  DETRAY_HOST_DEVICE
+  inline dindex volume_index(const point3_type &p,
+                             const geometry_context &ctx = {}) const {
+    const auto n_volumes{static_cast<dindex>(_volumes.size())};
+    dindex current{dindex_invalid};
+
+    // World volume accelerator (if present)
+    _accelerators.template visit<volume_search>(
+        accel_link{accel::id::e_volume_default, 0u}, *this, p, ctx, &current);
+
+    // Otherwise: test all top-level volumes
+    if (current == dindex_invalid) {
+      for (const auto &vol_desc : _volumes) {
+        if (!vol_desc.has_mother() &&
+            is_contained(tracking_volume{*this, vol_desc}.is_inside(p, ctx))) {
+          current = vol_desc.index();
+          break;
+        }
+      }
+    }
+
+    // Descend into the daughter volumes
+    for (dindex i = 0u; i < n_volumes && current != dindex_invalid; ++i) {
+      const tracking_volume vol{*this, current};
+      if (!vol.has_daughters()) {
+        break;
+      }
+
+      dindex daughter{dindex_invalid};
+      vol.template visit_accelerator<geo_obj_ids::e_volume, volume_search>(
+          *this, p, ctx, &daughter);
+
+      if (daughter == dindex_invalid) {
+        break;
+      }
+      current = daughter;
+    }
+
+    return current;
+  }
+
   /// Find the volume containing a global point.
   /// @param p global Cartesian position to locate
-  /// @return the volume by global cartesian @p p - const access
+  /// @param ctx the geometry context
+  /// @return a copy of the volume descriptor that contains @p p . If no volume
+  /// contains @p p , the descriptor is invalid (invalid volume index).
   DETRAY_HOST_DEVICE
-  inline const auto &volume(const point3_type &p) const {
-    // Allow to call the volume search data structure
-    // TODO: Add volume accelerator builder
-    volume_type v_desc{};
-    v_desc.template set_accel_link<geo_obj_ids::e_volume>(
-        accel::id::e_volume_default, 0u);
-    tracking_volume world{*this, v_desc};
-
-    dindex volume_index{0u};
-    world.template visit_accelerator<geo_obj_ids::e_volume, volume_search>(
-        p, &volume_index);
-    return _volumes[volume_index];
+  inline auto volume(const point3_type &p,
+                     const geometry_context &ctx = {}) const -> volume_type {
+    const dindex vol_idx{volume_index(p, ctx)};
+    if (vol_idx >= _volumes.size()) {
+      return volume_type{};
+    }
+    return _volumes[vol_idx];
   }
 
   /// @returns all portals - const
@@ -346,22 +404,63 @@ class detector {
     return os;
   }
 
-  /// Volume lookup in the volume acceleration data structures
+  /// @param vc the result of a volume containment test
+  ///
+  /// @returns true if the volume containment result counts as contained
+  /// (points on the boundary belong to the volume)
+  DETRAY_HOST_DEVICE
+  static constexpr bool is_contained(const volume_containment vc) {
+    return vc == volume_containment::e_inside ||
+           vc == volume_containment::e_on_boundary;
+  }
+
+  /// Volume lookup in a volume acceleration data structure: Finds a volume
+  /// in the acceleration structure that contains a point.
   struct volume_search {
-    /// @todo Move this visitor into a volume-search grid type.
+    /// @param coll the collection of volume acceleration structures
+    /// @param index the index of the acceleration structure
+    /// @param det the detector
+    /// @param p the global position
+    /// @param ctx the geometry context
+    /// @param result the volume index (output, unchanged if none found)
     template <concepts::accelerator_collection accel_coll_t,
               typename accel_index_t>
     DETRAY_HOST_DEVICE inline void operator()(const accel_coll_t &coll,
                                               const accel_index_t index,
+                                              const detector &det,
                                               const point3_type &p,
+                                              const geometry_context &ctx,
                                               dindex *const result) const {
       using accel_type = typename accel_coll_t::value_type;
 
       if constexpr (concepts::volume_accelerator<accel_type>) {
+        // The acceleration structure was not built
+        if (static_cast<dindex>(index) >= coll.size()) {
+          return;
+        }
         const auto volume_accelerator = coll[index];
 
-        // Only one entry per bin
-        *result = volume_accelerator.search(p).value();
+        if constexpr (concepts::grid<accel_type>) {
+          // Volume grid: Only one entry per bin
+          *result = volume_accelerator.search(p).value();
+        } else {
+          // Test the volume candidates: Use a point query, if the
+          // acceleration structure provides one
+          auto test_candidates = [&det, &p, &ctx, result](const auto &cands) {
+            for (const dindex vol_idx : cands) {
+              if (is_contained(
+                      tracking_volume{det, vol_idx}.is_inside(p, ctx))) {
+                *result = vol_idx;
+                return;
+              }
+            }
+          };
+          if constexpr (requires { volume_accelerator.search(p); }) {
+            test_candidates(volume_accelerator.search(p));
+          } else {
+            test_candidates(volume_accelerator.all());
+          }
+        }
       }
     }
   };

@@ -12,6 +12,7 @@
 #include "detray/definitions/units.hpp"
 #include "detray/geometry/concepts.hpp"
 #include "detray/geometry/mask.hpp"
+#include "detray/utils/ranges.hpp"
 
 // Detray test include(s)
 #include "detray/test/framework/types.hpp"
@@ -98,4 +99,24 @@ GTEST_TEST(detray_masks, ring2D_ratio_test) {
   const scalar world{size * size};
 
   ASSERT_NEAR(ratio, area / world, 0.001f);
+}
+
+/// This tests the vertices of a ring (on the inner and outer circle)
+GTEST_TEST(detray_masks, ring2D_vertices) {
+  constexpr scalar inner_r{2.f * unit<scalar>::mm};
+  constexpr scalar outer_r{5.f * unit<scalar>::mm};
+
+  mask<ring2D, test_algebra> r2{0u, inner_r, outer_r};
+
+  const auto vertices = r2.vertices(8u);
+  ASSERT_EQ(vertices.size(), 16u);
+  for (const auto &[i, v] : detray::views::enumerate(vertices)) {
+    const scalar exp_r{i < 8u ? inner_r : outer_r};
+    EXPECT_NEAR(vector::perp(v), exp_r, 1e-4f) << i;
+    EXPECT_NEAR(v[2], 0.f, 1e-4f) << i;
+  }
+
+  // A disc has no inner circle; at least 4 segments are used
+  mask<ring2D, test_algebra> disc{0u, 0.f, outer_r};
+  EXPECT_EQ(disc.vertices(1u).size(), 4u);
 }

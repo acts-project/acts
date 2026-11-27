@@ -10,6 +10,9 @@
 
 // Project include(s)
 #include "detray/core/concepts.hpp"
+#include "detray/definitions/units.hpp"
+#include "detray/geometry/detail/vertexer.hpp"
+#include "detray/geometry/shapes.hpp"
 #include "detray/geometry/surface.hpp"
 #include "detray/geometry/tracking_volume.hpp"
 #include "detray/material/concepts.hpp"
@@ -140,6 +143,198 @@ struct surface_checker {
   }
 };
 
+/// A functor that checks the daughter volumes in the volume accelerator of a
+/// mother volume
+struct daughter_checker {
+  /// Check a daughter volume of a mother volume
+  ///
+  /// @tparam detector_t the type of the detector
+  ///
+  /// @param daughter_idx index of the daughter volume in the accelerator
+  /// @param det the detector
+  /// @param mother_idx index of the mother volume
+  /// @param query_idx index of a volume that is searched for
+  /// @param n_found number of times the queried volume was found (output)
+  template <concepts::detector detector_t>
+  DETRAY_HOST void operator()(const dindex daughter_idx, const detector_t &det,
+                              const dindex mother_idx, const dindex query_idx,
+                              dindex &n_found) const {
+    std::stringstream err_stream{};
+    if (daughter_idx >= det.volumes().size()) {
+      err_stream << "Daughter volume index " << daughter_idx
+                 << " out of bounds in mother volume " << mother_idx;
+      DETRAY_FATAL_HOST(err_stream.str());
+      throw std::invalid_argument(err_stream.str());
+    }
+    if (const dindex mother{det.volume(daughter_idx).mother()};
+        mother != mother_idx) {
+      err_stream << "Daughter volume " << daughter_idx
+                 << " in volume accelerator of volume " << mother_idx
+                 << " has a different mother volume: " << mother;
+      DETRAY_FATAL_HOST(err_stream.str());
+      throw std::invalid_argument(err_stream.str());
+    }
+    if (daughter_idx == query_idx) {
+      ++n_found;
+    }
+  }
+};
+
+/// A functor that checks that the accelerator link of a root volume points to
+/// an existing volume acceleration structure
+struct volume_accel_link_checker {
+  /// @tparam accel_coll_t the type of the accelerator collection
+  /// @tparam accel_index_t the type of the index into the collection
+  ///
+  /// @param coll the collection of acceleration structures
+  /// @param index the index of the acceleration structure
+  ///
+  /// @returns whether the link points to an existing volume accelerator
+  template <concepts::accelerator_collection accel_coll_t,
+            typename accel_index_t>
+  DETRAY_HOST bool operator()(const accel_coll_t &coll,
+                              const accel_index_t index) const {
+    using accel_type = typename accel_coll_t::value_type;
+
+    return concepts::volume_accelerator<accel_type> &&
+           static_cast<dindex>(index) < coll.size();
+  }
+};
+
+/// A functor that checks that the daughter volumes are inside their root
+/// volume: All vertices of the daughter portals must be inside of the root
+/// volume or on its boundary.
+///
+/// @note This is a necessary condition only: Curved portal boundaries are
+/// tested at a finite number of points.
+struct containment_checker {
+  /// @tparam detector_t the type of the detector
+  ///
+  /// @param daughter_idx index of the daughter volume in the accelerator
+  /// @param det the detector
+  /// @param root_idx index of the root volume
+  template <concepts::detector detector_t>
+  DETRAY_HOST void operator()(const dindex daughter_idx, const detector_t &det,
+                              const dindex root_idx) const {
+    using algebra_t = typename detector_t::algebra_type;
+    using scalar_t = dscalar<algebra_t>;
+    using vertexer_t = vertexer<dpoint2D<algebra_t>, dpoint3D<algebra_t>>;
+
+    // Tolerance for daughter portals on the boundary of the root volume
+    constexpr scalar_t tol{10.f * unit<scalar_t>::um};
+    // Number of segments for the curved portal boundaries
+    constexpr dindex n_seg{16u};
+
+    const typename detector_t::geometry_context ctx{};
+    const auto root = tracking_volume{det, root_idx};
+
+    for (const auto &pt_desc : tracking_volume{det, daughter_idx}.portals()) {
+      const auto pt = detray::geometry::surface{det, pt_desc};
+      const auto &trf = pt.transform(ctx);
+
+      for (const auto &mask_vertices :
+           pt.template visit_mask<vertexer_t>(n_seg)) {
+        for (const auto &loc_vertex : mask_vertices) {
+          const auto vertex = trf.point_to_global(loc_vertex);
+          if (root.is_inside(vertex, ctx, tol) ==
+              volume_containment::e_outside) {
+            std::stringstream err_stream{};
+            err_stream << "Daughter volume " << daughter_idx
+                       << " is not contained in its mother volume " << root_idx
+                       << ": Portal " << pt_desc.index()
+                       << " has a vertex outside of the mother volume at ("
+                       << vertex[0] << ", " << vertex[1] << ", " << vertex[2]
+                       << ")";
+            DETRAY_FATAL_HOST(err_stream.str());
+            throw std::invalid_argument(err_stream.str());
+          }
+        }
+      }
+    }
+  }
+};
+
+/// A functor that gets the vertices of the portal masks of a volume in local
+/// coordinates (only for shapes that can form a volume boundary)
+struct portal_vertices_getter {
+  /// @tparam mask_group_t the type of the mask collection
+  /// @tparam mask_range_t the type of the mask index (range) of the portal
+  ///
+  /// @param mask_group the collection of masks of the same type
+  /// @param mask_range the index (range) of the masks of the portal
+  /// @param n_seg the number of segments for curved mask boundaries
+  ///
+  /// @returns the vertices of all masks of the portal (local frame)
+  template <typename mask_group_t, typename mask_range_t>
+  DETRAY_HOST auto operator()(const mask_group_t &mask_group,
+                              const mask_range_t &mask_range,
+                              const dindex n_seg) const {
+    using mask_t = typename mask_group_t::value_type;
+    using shape_t = typename mask_t::shape;
+
+    dvector<typename mask_t::point3_type> vertices{};
+    if constexpr (std::same_as<shape_t, rectangle2D> ||
+                  std::same_as<shape_t, trapezoid2D> ||
+                  std::same_as<shape_t, annulus2D> ||
+                  std::same_as<shape_t, ring2D> ||
+                  std::same_as<shape_t, cylinder2D> ||
+                  std::same_as<shape_t, concentric_cylinder2D>) {
+      for (const auto &mask :
+           detray::ranges::subrange(mask_group, mask_range)) {
+        for (const auto &v : mask.vertices(n_seg)) {
+          vertices.push_back(v);
+        }
+      }
+    }
+    return vertices;
+  }
+};
+
+/// @brief Checks that all portal vertices of a volume lie on its boundary
+///
+/// The inside check of the volume uses only some of the portals (e.g. only
+/// the discs and mantles of a cylinder). Make sure that the portals form a
+/// consistent boundary, e.g. that no portal covers only a part of a face.
+///
+/// @param det the detector
+/// @param vol the volume to be checked
+/// @param err_stream the stream for error messages
+///
+/// @throws std::invalid_argument if a portal vertex is not on the boundary
+template <concepts::detector detector_t, typename volume_t>
+inline void check_portal_vertices(const detector_t &det, const volume_t &vol,
+                                  std::stringstream &err_stream) {
+  using scalar_t = dscalar<typename detector_t::algebra_type>;
+
+  // Tolerance for the vertex positions
+  constexpr scalar_t tol{10.f * unit<scalar_t>::um};
+  // Number of segments for curved mask boundaries
+  constexpr dindex n_seg{16u};
+
+  const typename detector_t::geometry_context ctx{};
+
+  for (const auto &pt_desc : vol.portals()) {
+    const auto pt = detray::geometry::surface{det, pt_desc};
+    const auto &trf = pt.transform(ctx);
+
+    for (const auto &loc_vertex :
+         pt.template visit_mask<portal_vertices_getter>(n_seg)) {
+      const auto vertex = trf.point_to_global(loc_vertex);
+      if (const auto vc = vol.is_inside(vertex, ctx, tol);
+          vc != volume_containment::e_on_boundary) {
+        err_stream << "Portal " << pt_desc.index() << " has a vertex that is "
+                   << vc << " of its volume at (" << vertex[0] << ", "
+                   << vertex[1] << ", " << vertex[2]
+                   << "): The portals do not form a consistent volume "
+                      "boundary:\n"
+                   << vol;
+        DETRAY_FATAL_HOST(err_stream.str());
+        throw std::invalid_argument(err_stream.str());
+      }
+    }
+  }
+}
+
 /// A functor that checks the material parametrization for a surface/volume
 struct material_checker {
   /// Error message for material consistency check
@@ -232,6 +427,94 @@ struct material_checker {
     }
   }
 };
+
+/// @brief Checks the links between a volume and its mother and daughters
+///
+/// - The volume hierarchy has no cycles
+/// - The accelerator link to the daughter volumes is valid
+/// - The mother volume lists the volume exactly once as a daughter
+/// - All daughters of the volume have the volume as mother
+/// - All daughters are inside the volume (axis aligned bounding boxes)
+///
+/// @param det the detector
+/// @param vol the volume to be checked
+/// @param err_stream the stream for error messages
+///
+/// @throws std::invalid_argument if a check fails
+template <concepts::detector detector_t, typename volume_t>
+inline void check_volume_hierarchy(const detector_t &det, const volume_t &vol,
+                                   std::stringstream &err_stream) {
+  const auto n_volumes{static_cast<dindex>(det.volumes().size())};
+
+  auto throw_error = [&err_stream]() {
+    DETRAY_FATAL_HOST(err_stream.str());
+    throw std::invalid_argument(err_stream.str());
+  };
+
+  // The daughter accelerator of a root volume must exist
+  auto check_accel_link = [&det, &err_stream, &throw_error](const auto &v) {
+    constexpr auto vol_obj_id{detector_t::geo_obj_ids::e_volume};
+    if (!det.accelerator_store().template visit<volume_accel_link_checker>(
+            det.volume(v.index()).template accel_link<vol_obj_id>())) {
+      err_stream << "Invalid link to the daughter volume accelerator:\n" << v;
+      throw_error();
+    }
+  };
+
+  if (!vol.is_top_level()) {
+    // Walk up the tree: Must reach a top-level volume
+    dindex current{vol.mother()};
+    dindex n_steps{0u};
+    while (current != dindex_invalid) {
+      if (current >= n_volumes) {
+        err_stream << "Mother volume index " << current
+                   << " out of bounds in the volume hierarchy of:\n"
+                   << vol;
+        throw_error();
+      }
+      if (current == vol.index() || n_steps >= n_volumes) {
+        err_stream << "Cycle in volume hierarchy:\n" << vol;
+        throw_error();
+      }
+      current = det.volume(current).mother();
+      ++n_steps;
+    }
+
+    // The mother must list the volume exactly once
+    const auto mother = tracking_volume{det, vol.mother()};
+    dindex n_found{0u};
+    if (mother.has_daughters()) {
+      check_accel_link(mother);
+      mother.template visit_daughter_volumes<daughter_checker>(
+          det, mother.index(), vol.index(), n_found);
+    }
+    // TODO: Make this an error, once the volume grid builders are added
+    if (n_found == 0u) {
+      DETRAY_WARN_HOST(
+          "Volume is not part of any volume accelerator of its "
+          "mother volume "
+          << mother.index() << ":\n"
+          << vol);
+    } else if (n_found != 1u) {
+      err_stream << "Volume is registered " << n_found
+                 << " times with its mother volume " << mother.index()
+                 << " (expected once):\n"
+                 << vol;
+      throw_error();
+    }
+  }
+
+  // All daughters must have this volume as mother
+  if (vol.has_daughters()) {
+    check_accel_link(vol);
+
+    dindex n_found{0u};
+    vol.template visit_daughter_volumes<daughter_checker>(
+        det, vol.index(), dindex_invalid, n_found);
+
+    vol.template visit_daughter_volumes<containment_checker>(det, vol.index());
+  }
+}
 
 /// @brief Checks whether the data containers of a detector are empty
 ///
@@ -339,6 +622,12 @@ inline bool check_consistency(const detector_t &det, const bool verbose = false,
       DETRAY_FATAL_HOST(err_stream.str());
       throw std::invalid_argument(err_stream.str());
     }
+
+    // Check that the portals form a consistent volume boundary
+    detail::check_portal_vertices(det, vol, err_stream);
+
+    // Check the volume hierarchy
+    detail::check_volume_hierarchy(det, vol, err_stream);
 
     // Check that only surfaces belonging to this volume are in the surface
     // range of the detector

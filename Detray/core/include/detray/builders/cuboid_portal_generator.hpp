@@ -9,6 +9,7 @@
 #pragma once
 
 // Project include(s)
+#include "detray/builders/detail/bounding_box_creator.hpp"
 #include "detray/builders/surface_factory_interface.hpp"
 #include "detray/core/concepts.hpp"
 #include "detray/core/detail/data_context.hpp"
@@ -36,25 +37,6 @@ class cuboid_portal_generator final
   using algebra_type = typename detector_t::algebra_type;
   using scalar_type = dscalar<algebra_type>;
   using transform3_type = dtransform3D<algebra_type>;
-
-  /// A functor to construct global bounding boxes around masks
-  struct bounding_box_creator {
-    using aabb_t = axis_aligned_bounding_volume<cuboid3D, algebra_type>;
-
-    template <typename mask_group_t, typename idx_range_t>
-    DETRAY_HOST_DEVICE inline void operator()(
-        const mask_group_t &mask_group, const idx_range_t &idx_range,
-        const scalar_type envelope, const transform3_type &trf,
-        std::vector<aabb_t> &boxes) const {
-      for (const auto &mask : detray::ranges::subrange(mask_group, idx_range)) {
-        // Local minimum bounding box
-        aabb_t box{mask, boxes.size(), envelope};
-        // Bounding box in global coordinates (might no longer be
-        // minimum)
-        boxes.push_back(box.transform(trf));
-      }
-    }
-  };
 
  public:
   /// Use @param env as portal envelope
@@ -132,7 +114,7 @@ class cuboid_portal_generator final
     boxes.reserve(n_surfaces);
 
     for (const auto &sf : surfaces) {
-      masks.template visit<bounding_box_creator>(
+      masks.template visit<detail::bounding_box_creator<algebra_type>>(
           sf.mask(), m_envelope, transforms.at(sf.transform(), ctx), boxes);
     }
     // Build an aabb in the global space around the surface aabbs

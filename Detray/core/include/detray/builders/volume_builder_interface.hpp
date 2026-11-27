@@ -111,6 +111,24 @@ class volume_builder_interface {
   DETRAY_HOST
   virtual std::string_view name() = 0;
 
+  /// Place the volume inside a mother volume
+  ///
+  /// The mother volume must contain the volume fully and the volume must not
+  /// overlap with the other daughters of the same mother. If the mother is
+  /// not registered as root with a volume accelerator builder, it finds its
+  /// daughter volumes through the mother links, after all volumes are built
+  /// (@see @c detector_builder::add_volume_accelerator ).
+  ///
+  /// @param mother_idx index of the mother volume in the detector volume
+  ///                   container. Use @c dindex_invalid for a top-level
+  ///                   volume.
+  DETRAY_HOST
+  virtual void set_mother(dindex mother_idx) = 0;
+
+  /// @returns the index of the mother volume (invalid for top-level volumes)
+  DETRAY_HOST
+  virtual auto mother() const -> dindex = 0;
+
   /// Returns const access to the volume being built.
   /// @returns reading access to the volume
   DETRAY_HOST
@@ -233,6 +251,18 @@ class volume_decorator : public volume_builder_interface<detector_t> {
   /// Returns the wrapped volume's name.
   /// @returns The volume name.
   DETRAY_HOST std::string_view name() override { return m_builder->name(); }
+
+  /// Sets the mother volume of the wrapped volume.
+  /// @param mother_idx Index of the mother volume (invalid for top-level).
+  DETRAY_HOST
+  void set_mother(dindex mother_idx) override {
+    m_builder->set_mother(mother_idx);
+  }
+
+  /// Returns the mother volume index of the wrapped volume.
+  /// @returns The mother volume index (invalid for top-level volumes).
+  DETRAY_HOST
+  auto mother() const -> dindex override { return m_builder->mother(); }
 
   /// Builds the wrapped volume in the detector.
   /// @param det Detector receiving the volume.

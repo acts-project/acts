@@ -82,6 +82,10 @@ class surface_grid_writer final : public detail::grid_writer<detector_t> {
       // Start a 1, because the first acceleration structure is always
       // the brute force method
       for (dindex i = 1u; i < multi_link.size(); ++i) {
+        // Volume acceleration structures are not surface grids
+        if (i == static_cast<dindex>(detector_t::geo_obj_ids::e_volume)) {
+          continue;
+        }
         const auto& acc_link = multi_link[i];
         // Don't look at empty links
         if (acc_link.is_invalid()) {

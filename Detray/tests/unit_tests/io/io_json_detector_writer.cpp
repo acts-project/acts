@@ -23,6 +23,7 @@
 #include "detray/io/utils/create_path.hpp"
 
 // Detray test include(s)
+#include "detray/test/common/build_nested_detector.hpp"
 #include "detray/test/common/build_telescope_detector.hpp"
 #include "detray/test/common/build_toy_detector.hpp"
 #include "detray/test/common/build_wire_chamber.hpp"
@@ -120,6 +121,37 @@ GTEST_TEST(io, json_telescope_geometry_writer) {
   ASSERT_TRUE(payload.header.geometry.has_value());
   EXPECT_EQ(payload.header.geometry->n_volumes, det.volumes().size());
   EXPECT_EQ(payload.header.geometry->n_surfaces, det.surfaces().size());
+}
+
+/// Test the writing of a detector geometry with daughter volumes to json
+GTEST_TEST(io, json_nested_geometry_writer) {
+  using detector_t = host::detector<nested_volumes_metadata<test_algebra>>;
+
+  vecmem::host_memory_resource host_mr;
+  auto [det, names] = build_nested_detector<test_algebra>(host_mr);
+
+  io::detector_payload payload{};
+  io::geometry_writer<detector_t>{}.to_payload(det, names, payload);
+
+  write_component(det, names, payload, writer_cfg);
+  EXPECT_TRUE(io::file_exists(file_path + "/nested_detector_geometry.json"));
+
+  // Mother links, but no links to the daughter volume accelerators
+  ASSERT_EQ(payload.geometry.volumes.size(), det.volumes().size());
+  for (const auto& vol_data : payload.geometry.volumes) {
+    const auto& vol_desc = det.volume(vol_data.index.link);
+
+    ASSERT_EQ(vol_data.mother.has_value(), vol_desc.has_mother())
+        << vol_data.name;
+    if (vol_desc.has_mother()) {
+      EXPECT_EQ(vol_data.mother->link, vol_desc.mother()) << vol_data.name;
+    }
+    if (vol_data.acc_links.has_value()) {
+      for (const auto& acc_link : *vol_data.acc_links) {
+        EXPECT_NE(acc_link.type, io::accel_id::unknown) << vol_data.name;
+      }
+    }
+  }
 }
 
 /// Test the writing of the toy detector material to json

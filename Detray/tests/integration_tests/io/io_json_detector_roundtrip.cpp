@@ -21,6 +21,7 @@
 #include "detray/io/json/json_converter.hpp"
 
 // Detray test include(s)
+#include "detray/test/common/build_nested_detector.hpp"
 #include "detray/test/common/build_telescope_detector.hpp"
 #include "detray/test/common/build_toy_detector.hpp"
 #include "detray/test/common/build_wire_chamber.hpp"
@@ -33,8 +34,10 @@
 #include <gtest/gtest.h>
 
 // System include(s)
+#include <algorithm>
 #include <filesystem>
 #include <ios>
+#include <vector>
 
 using namespace detray;
 
@@ -226,6 +229,104 @@ GTEST_TEST(io, json_telescope_detector_reader_deduplicated) {
 
   EXPECT_EQ(det_io.volumes().size(), 1u);
   EXPECT_EQ(slabs.size(), 1u);
+}
+
+/// Collect the daughter volume indices of a volume
+struct daughter_collector {
+  void operator()(const dindex daughter_idx,
+                  std::vector<dindex>& daughters) const {
+    daughters.push_back(daughter_idx);
+  }
+};
+
+/// Test the reading and writing of a detector with daughter volumes
+GTEST_TEST(io, json_nested_detector_roundtrip) {
+  using test_algebra = test::algebra;
+  using point3 = test::point3;
+
+  vecmem::host_memory_resource host_mr;
+  const auto [nested_det, nested_names] =
+      build_nested_detector<test_algebra>(host_mr);
+
+  std::map<std::string, std::string, std::less<>> file_names;
+  file_names["geometry"] = "nested_detector_geometry.json";
+
+  auto [det_io, names_io] =
+      test_detector_json_io(nested_det, nested_names, file_names, host_mr);
+
+  ASSERT_EQ(det_io.volumes().size(), nested_det.volumes().size());
+
+  // Same mother and daughter volumes
+  auto get_daughters = [](const auto& det, const dindex vol_idx) {
+    std::vector<dindex> daughters{};
+    const auto vol = tracking_volume{det, vol_idx};
+    if (vol.has_daughters()) {
+      vol.template visit_daughter_volumes<daughter_collector>(daughters);
+    }
+    std::ranges::sort(daughters);
+    return daughters;
+  };
+
+  for (const auto& vol_desc : nested_det.volumes()) {
+    const dindex vol_idx{vol_desc.index()};
+    const auto& vol_desc_io = det_io.volume(vol_idx);
+
+    EXPECT_EQ(vol_desc_io.mother(), vol_desc.mother())
+        << nested_names.at(vol_idx);
+    EXPECT_EQ(get_daughters(det_io, vol_idx),
+              get_daughters(nested_det, vol_idx))
+        << nested_names.at(vol_idx);
+  }
+
+  // Same volume lookup for points in all hierarchy levels
+  const std::vector<point3> points{{0.f, 0.f, 0.f},     {0.f, 0.f, -100.f},
+                                   {0.f, 0.f, -130.f},  {0.f, 0.f, 160.f},
+                                   {0.f, 130.f, 0.f},   {0.f, 130.f, 60.f},
+                                   {150.f, 0.f, 150.f}, {250.f, 0.f, 0.f}};
+
+  for (const auto& [i, p] : detray::views::enumerate(points)) {
+    EXPECT_EQ(det_io.volume_index(p), nested_det.volume_index(p))
+        << "point #" << i;
+  }
+}
+
+/// Test that broken mother links in the geometry payload are rejected
+GTEST_TEST(io, json_nested_detector_mother_links) {
+  using test_algebra = test::algebra;
+  using toy_detector_t = host::detector<toy_metadata<test_algebra>>;
+
+  vecmem::host_memory_resource host_mr;
+  const auto [nested_det, nested_names] =
+      build_nested_detector<test_algebra>(host_mr);
+  using nested_detector_t = std::remove_cvref_t<decltype(nested_det)>;
+
+  // Fill the payload from the nested detector
+  io::detector_payload payload{};
+  auto writer_cfg = io::detector_writer_config{}.source("detray test");
+  io::write_detector(nested_det, nested_names, writer_cfg, payload);
+
+  // The mother links restore the daughter volumes (default brute force)
+  EXPECT_NO_THROW(io::read_detector<nested_detector_t>(
+      host_mr, io::detector_reader_config{}, payload));
+
+  // Mother volume does not exist
+  io::detector_payload broken_payload{payload};
+  broken_payload.geometry.volumes.at(2u).mother->link = 100u;
+  EXPECT_THROW(io::read_detector<nested_detector_t>(
+                   host_mr, io::detector_reader_config{}, broken_payload),
+               std::invalid_argument);
+
+  // Wrong mother volume: Box G (in box A) is not contained in box B
+  broken_payload = payload;
+  broken_payload.geometry.volumes.at(2u).mother->link = 3u;
+  EXPECT_THROW(io::read_detector<nested_detector_t>(
+                   host_mr, io::detector_reader_config{}, broken_payload),
+               std::invalid_argument);
+
+  // The toy detector type cannot hold daughter volumes (only a warning,
+  // until volume grids exist)
+  EXPECT_NO_THROW(io::read_detector<toy_detector_t>(
+      host_mr, io::detector_reader_config{}, payload));
 }
 
 /// Test the reading and writing of a toy detector geometry

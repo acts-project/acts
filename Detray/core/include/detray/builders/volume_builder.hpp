@@ -91,6 +91,17 @@ class volume_builder : public volume_builder_interface<detector_t> {
     return m_volume_name;
   }
 
+  /// @copydoc volume_builder_interface::set_mother
+  DETRAY_HOST
+  void set_mother(const dindex mother_idx) override {
+    m_volume.set_mother(mother_idx);
+    DETRAY_VERBOSE_HOST("Set mother volume: " << mother_idx);
+  }
+
+  /// @copydoc volume_builder_interface::mother
+  DETRAY_HOST
+  auto mother() const -> dindex override { return m_volume.mother(); }
+
   /// Access to the volume under construction - const
   /// @returns Const reference to the volume descriptor.
   DETRAY_HOST

@@ -685,27 +685,254 @@ inline auto build_adjacency(
   return adj_matrix;
 }
 
+/// @brief Build the portal and module traces for a detector with nested
+/// volumes (mother and daughter volumes).
+///
+/// A track crosses into a daughter volume through a single portal surface
+/// that belongs to the daughter volume. It leaves the daughter volume through
+/// a single portal, too, unless it crosses into a touching neighbour volume
+/// (portal pair). If a daughter volume touches the boundary of its mother
+/// volume, the portals of both volumes are at the same position: The track
+/// can enter (or leave) several volumes at the same position.
+///
+/// The portals at the same position (within @p tol ) are processed as a
+/// group, in this order:
+/// - a portal of the current volume: The track leaves the current volume
+///   (the portal pair partner, if present, is removed from the group)
+/// - a portal of a volume that the track left in this group, or of one of
+///   its mother volumes: Is skipped (covered portal)
+/// - a portal of a daughter volume of the current volume: The track enters
+///   the daughter volume
+///
+/// @param intersection_records the sorted intersection records of the track
+/// @param det the detector
+/// @param start_volume the volume that contains the track origin
+/// @param tol tolerance for portals at the same position
+///
+/// @returns the portal trace, the module trace and the error code
+template <concepts::detector detector_t>
+inline auto trace_nested_intersections(
+    const dvector<intersection_record<detector_t>> &intersection_records,
+    const detector_t &det, dindex start_volume = 0u,
+    const double tol = 1e-4 * unit<double>::mm) {
+  using trace_entry = std::pair<dindex, dindex>;
+  std::vector<std::pair<trace_entry, trace_entry>> portal_trace = {};
+  std::vector<trace_entry> module_trace = {};
+  std::stringstream err_stream;
+  bool error_code{true};
+
+  const auto n_volumes{static_cast<dindex>(det.volumes().size())};
+
+  // Same value as the volume link of a portal that leaves the detector
+  using nav_link_t = typename detector_t::surface_type::navigation_link;
+  constexpr auto leaving_world{
+      static_cast<dindex>(detray::detail::invalid_value<nav_link_t>())};
+
+  auto print_err = [&error_code, &err_stream]() {
+    std::cerr << "\n<<<<<<<<<<<<<<< ERROR intersection trace (nested)\n"
+              << std::endl;
+    std::cerr << err_stream.str() << std::endl;
+    std::cerr << "\n>>>>>>>>>>>>>>>\n" << std::endl;
+    error_code = false;
+  };
+
+  // @returns true if volume 'anc' is 'vol' or one of its mother volumes
+  auto is_ancestor_or_self = [&det, n_volumes](const dindex anc,
+                                               const dindex vol) {
+    dindex current{vol};
+    for (dindex i = 0u; i < n_volumes && current != dindex_invalid; ++i) {
+      if (current == anc) {
+        return true;
+      }
+      current = det.volume(current).mother();
+    }
+    return false;
+  };
+
+  auto to_dindex = [](const auto link) { return static_cast<dindex>(link); };
+
+  dindex current_vol{start_volume};
+
+  // The first entry is the dummy record that preserves initial track
+  // parameters, skip it
+  std::size_t rec{0u};
+  if (!intersection_records.empty() && intersection_records.front()
+                                           .intersection()
+                                           .surface()
+                                           .identifier()
+                                           .is_invalid()) {
+    rec = 1u;
+  }
+
+  while (rec < intersection_records.size()) {
+    const auto &inters = intersection_records.at(rec).intersection();
+    const auto &sf = inters.surface();
+
+    // Modules: Must belong to the current volume
+    if (!sf.is_portal()) {
+      if (static_cast<dindex>(sf.volume()) != current_vol) {
+        err_stream << "Surface " << sf.index()
+                   << " outside of its volume (Found in: " << current_vol
+                   << ", belongs in: " << sf.volume() << ")";
+        print_err();
+        break;
+      }
+      module_trace.emplace_back(sf.index(), current_vol);
+      ++rec;
+      continue;
+    }
+
+    // Collect the group of portals at the same position
+    std::vector<std::size_t> group{};
+    while (rec < intersection_records.size()) {
+      const auto &other = intersection_records.at(rec).intersection();
+      if (!other.surface().is_portal() ||
+          std::abs(other.path() - inters.path()) > tol) {
+        break;
+      }
+      group.push_back(rec);
+      ++rec;
+    }
+
+    // Volumes that the track left at this position
+    std::vector<dindex> left_volumes{};
+
+    while (!group.empty() && current_vol != leaving_world) {
+      auto vol_of = [&intersection_records](const std::size_t idx) {
+        return static_cast<dindex>(
+            intersection_records.at(idx).intersection().surface().volume());
+      };
+      auto link_of = [&intersection_records,
+                      &to_dindex](const std::size_t idx) {
+        return to_dindex(
+            intersection_records.at(idx).intersection().volume_link());
+      };
+      auto sf_idx_of = [&intersection_records](const std::size_t idx) {
+        return static_cast<dindex>(
+            intersection_records.at(idx).intersection().surface().index());
+      };
+
+      // Leave the current volume through one of its portals
+      auto own = std::ranges::find_if(group, [&](const std::size_t idx) {
+        return vol_of(idx) == current_vol;
+      });
+      if (own != group.end()) {
+        const std::size_t own_idx{*own};
+        const dindex next_vol{link_of(own_idx)};
+        group.erase(own);
+
+        // Remove the portal pair partner in the next volume
+        dindex partner_sf{sf_idx_of(own_idx)};
+        if (auto partner = std::ranges::find_if(
+                group,
+                [&](const std::size_t idx) {
+                  return next_vol != leaving_world && vol_of(idx) == next_vol &&
+                         link_of(idx) == current_vol;
+                });
+            partner != group.end()) {
+          partner_sf = sf_idx_of(*partner);
+          group.erase(partner);
+        }
+
+        portal_trace.emplace_back(trace_entry{sf_idx_of(own_idx), current_vol},
+                                  trace_entry{partner_sf, next_vol});
+        left_volumes.push_back(current_vol);
+        current_vol = next_vol;
+        continue;
+      }
+
+      // Skip the covered portals of volumes that the track left
+      auto covered = std::ranges::find_if(group, [&](const std::size_t idx) {
+        return std::ranges::any_of(left_volumes, [&](const dindex left) {
+          return is_ancestor_or_self(vol_of(idx), left);
+        });
+      });
+      if (covered != group.end()) {
+        group.erase(covered);
+        continue;
+      }
+
+      // Enter a daughter volume
+      auto entry = std::ranges::find_if(group, [&](const std::size_t idx) {
+        return det.volume(vol_of(idx)).mother() == current_vol;
+      });
+      if (entry != group.end()) {
+        const dindex daughter{vol_of(*entry)};
+        portal_trace.emplace_back(trace_entry{sf_idx_of(*entry), current_vol},
+                                  trace_entry{sf_idx_of(*entry), daughter});
+        current_vol = daughter;
+        group.erase(entry);
+        continue;
+      }
+
+      // None of the rules applies
+      err_stream << "Could not resolve portal crossing at surface "
+                 << sf_idx_of(group.front()) << " (volume "
+                 << vol_of(group.front()) << ") from volume " << current_vol;
+      print_err();
+      return std::make_tuple(portal_trace, module_trace, error_code);
+    }
+
+    // Remaining portals after leaving the world: Must be covered portals
+    for (const std::size_t idx : group) {
+      const auto vol{static_cast<dindex>(
+          intersection_records.at(idx).intersection().surface().volume())};
+      if (!std::ranges::any_of(left_volumes, [&](const dindex left) {
+            return is_ancestor_or_self(vol, left);
+          })) {
+        err_stream
+            << "Unresolved portal after leaving the detector: surface "
+            << intersection_records.at(idx).intersection().surface().index();
+        print_err();
+        return std::make_tuple(portal_trace, module_trace, error_code);
+      }
+    }
+
+    if (current_vol == leaving_world) {
+      break;
+    }
+  }
+
+  if (current_vol != leaving_world) {
+    err_stream << "Track did not leave the detector (last volume: "
+               << current_vol << ")";
+    print_err();
+  }
+
+  return std::make_tuple(portal_trace, module_trace, error_code);
+}
+
 /// Run all checks on an intersection trace.
 ///
 /// @param[in] intersection_trace the intersection records along the track
 /// @param[in] start_index the index of the intended start volume
 /// @param[out] adj_mat_scan adjacency matrix to be filled for the detector
 /// @param[out] obj_hashes objects in a volume that were already visisted
+/// @param[in] det the detector (needed for nested volumes, optional)
 ///
 /// @return true if the checks were successful
 template <concepts::detector detector_t>
 inline bool check_trace(
     const dvector<intersection_record<detector_t>> &intersection_trace,
     const dindex start_index, dvector<dindex> &adj_mat_scan,
-    std::unordered_set<dindex> &obj_hashes) {
+    std::unordered_set<dindex> &obj_hashes, const detector_t *det = nullptr) {
   using nav_link_t = typename detector_t::surface_type::navigation_link;
   static constexpr auto leaving_world{
       detray::detail::invalid_value<nav_link_t>()};
 
   // Create a trace of the volume indices that were encountered
   // and check that portal intersections are connected
+  // Detectors with nested volumes need the volume hierarchy for the check
+  const bool is_nested{det != nullptr &&
+                       std::ranges::any_of(det->volumes(), [](const auto &v) {
+                         return v.has_mother();
+                       })};
+
   auto [portal_trace, surface_trace, err_code] =
-      detector_scanner::trace_intersections(intersection_trace, start_index);
+      is_nested ? detector_scanner::trace_nested_intersections(
+                      intersection_trace, *det, start_index)
+                : detector_scanner::trace_intersections(intersection_trace,
+                                                        start_index);
 
   DETRAY_DEBUG_HOST("portal_trace " << portal_trace.size() << ", surface_trace "
                                     << surface_trace.size());

@@ -191,16 +191,23 @@ class ring2D {
 
   /// Generate vertices in local cartesian frame
   ///
-  /// Boundary values define the vertices in the local frame.
-  /// The optional segment count controls tessellation of the curved boundary.
+  /// The vertices lie on the inner and outer circle of the ring.
+  ///
+  /// @param bounds the boundary values for this shape
+  /// @param n_seg the number of segments along each circle (at least 4)
   ///
   /// @return a generated list of vertices
   template <concepts::algebra algebra_t>
   DETRAY_HOST dvector<dpoint3D<algebra_t>> vertices(
-      const bounds_type<dscalar<algebra_t>> & /*unused*/,
-      dindex /*unused*/) const {
-    throw std::runtime_error("Vertex generation for rings is not implemented");
-    return {};
+      const bounds_type<dscalar<algebra_t>> &bounds, dindex n_seg) const {
+    dvector<dpoint3D<algebra_t>> vertices{};
+    if (bounds[e_inner_r] > 0.f) {
+      detail::add_circle_vertices<algebra_t>(bounds[e_inner_r], 0.f, n_seg,
+                                             vertices);
+    }
+    detail::add_circle_vertices<algebra_t>(bounds[e_outer_r], 0.f, n_seg,
+                                           vertices);
+    return vertices;
   }
 
   /// @brief Check consistency of boundary values.

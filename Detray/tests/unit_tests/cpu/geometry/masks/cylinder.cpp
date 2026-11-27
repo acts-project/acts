@@ -10,8 +10,10 @@
 #include "detray/definitions/units.hpp"
 #include "detray/geometry/concepts.hpp"
 #include "detray/geometry/mask.hpp"
+#include "detray/geometry/shapes/concentric_cylinder2D.hpp"
 #include "detray/geometry/shapes/cylinder2D.hpp"
 #include "detray/geometry/shapes/cylinder3D.hpp"
+#include "detray/utils/ranges.hpp"
 
 // Detray test include(s)
 #include "detray/test/framework/types.hpp"
@@ -177,4 +179,18 @@ GTEST_TEST(detray_masks, cylinder3D_ratio_test) {
   const scalar world{size * size * size};
 
   ASSERT_NEAR(ratio, volume / world, 0.001f);
+}
+
+/// This tests the vertices of a 2D cylinder (on the circles at the z bounds)
+GTEST_TEST(detray_masks, cylinder2D_vertices) {
+  mask<cylinder2D, test_algebra> c{0u, r, -hz, hz};
+  mask<concentric_cylinder2D, test_algebra> cc{0u, r, -hz, hz};
+
+  for (const auto &vertices : {c.vertices(6u), cc.vertices(6u)}) {
+    ASSERT_EQ(vertices.size(), 12u);
+    for (const auto &[i, v] : detray::views::enumerate(vertices)) {
+      EXPECT_NEAR(vector::perp(v), r, tol) << i;
+      EXPECT_NEAR(v[2], i < 6u ? -hz : hz, tol) << i;
+    }
+  }
 }

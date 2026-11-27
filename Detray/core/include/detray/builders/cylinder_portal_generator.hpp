@@ -9,6 +9,7 @@
 #pragma once
 
 // Project include(s)
+#include "detray/builders/detail/bounding_box_creator.hpp"
 #include "detray/builders/surface_factory_interface.hpp"
 #include "detray/builders/volume_builder.hpp"
 #include "detray/core/concepts.hpp"
@@ -166,25 +167,6 @@ class cylinder_portal_generator final
   using material_id = typename detector_t::material::id;
   using material_link_t = typename surface_type::material_link;
 
-  /// A functor to construct global bounding boxes around masks
-  struct bounding_box_creator {
-    using aabb_t = axis_aligned_bounding_volume<cuboid3D, algebra_t>;
-
-    template <typename mask_group_t, typename idx_range_t>
-    DETRAY_HOST_DEVICE inline void operator()(
-        const mask_group_t &mask_group, const idx_range_t &idx_range,
-        const scalar_t envelope, const transform3_t &trf,
-        std::vector<aabb_t> &boxes) const {
-      for (const auto &mask : detray::ranges::subrange(mask_group, idx_range)) {
-        // Local minimum bounding box
-        aabb_t box{mask, boxes.size(), envelope};
-        // Bounding box in global coordinates (might no longer be
-        // minimum)
-        boxes.push_back(box.transform(trf));
-      }
-    }
-  };
-
  public:
   /// Save the boundaries of the cylinder after autofitting the portals
   struct boundaries {
@@ -273,7 +255,7 @@ class cylinder_portal_generator final
       boxes.reserve(n_surfaces);
 
       for (const auto &sf : surfaces) {
-        masks.template visit<bounding_box_creator>(
+        masks.template visit<detail::bounding_box_creator<algebra_t>>(
             sf.mask(), m_cfg.envelope(), transforms.at(sf.transform(), ctx),
             boxes);
       }

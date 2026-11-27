@@ -40,6 +40,7 @@ struct intersection_initialize {
   /// @param contextual_transforms is the input transform container
   /// @param mask_tolerance is the tolerance for mask size
   /// @param overstep_tol negative cutoff for the path
+  /// @param use_portal_tolerance apply the mask tolerance also to portals
   ///
   /// @return the number of valid intersections
   template <typename mask_group_t, typename mask_range_t,
@@ -52,7 +53,8 @@ struct intersection_initialize {
       const transform_container_t &contextual_transforms,
       const typename transform_container_t::context_type &ctx,
       const intersection::config &cfg,
-      const scalar_t external_mask_tolerance = 0.f) const {
+      const scalar_t external_mask_tolerance = 0.f,
+      const bool use_portal_tolerance = false) const {
     using mask_t = typename mask_group_t::value_type;
     using shape_t = typename mask_t::shape;
     using algebra_t = typename mask_t::algebra_type;
@@ -109,11 +111,11 @@ struct intersection_initialize {
 
         // Build the resulting intersection(s) from the intersection point
         if constexpr (n_sol > 1) {
-          resolve_mask(is, traj, result[i], sf_desc, mask, ctf, cfg,
-                       external_mask_tolerance);
+          resolve_mask_impl(is, traj, result[i], sf_desc, mask, ctf, cfg,
+                            external_mask_tolerance, use_portal_tolerance);
         } else {
-          resolve_mask(is, traj, result, sf_desc, mask, ctf, cfg,
-                       external_mask_tolerance);
+          resolve_mask_impl(is, traj, result, sf_desc, mask, ctf, cfg,
+                            external_mask_tolerance, use_portal_tolerance);
         }
 
         if (is.is_probably_inside()) {
@@ -172,6 +174,7 @@ struct intersection_update {
   /// @param contextual_transforms is the input transform container
   /// @param mask_tolerance is the tolerance for mask size
   /// @param overstep_tol negative cutoff for the path
+  /// @param use_portal_tolerance apply the mask tolerance also to portals
   ///
   /// @return the intersection
   template <typename mask_group_t, typename mask_range_t, typename traj_t,
@@ -183,7 +186,8 @@ struct intersection_update {
       const transform_container_t &contextual_transforms,
       const typename transform_container_t::context_type &ctx,
       const intersection::config &cfg,
-      const scalar_t external_mask_tolerance = 0.f) const {
+      const scalar_t external_mask_tolerance = 0.f,
+      const bool use_portal_tolerance = false) const {
     using mask_t = typename mask_group_t::value_type;
     using shape_t = typename mask_t::shape;
     using algebra_t = typename mask_t::algebra_type;
@@ -234,11 +238,11 @@ struct intersection_update {
     for (const auto &mask : detray::ranges::subrange(mask_group, mask_range)) {
       // Build the resulting intersecion(s) from the intersection point
       if constexpr (n_sol > 1) {
-        resolve_mask(sfi, traj, result[0], sfi.surface(), mask, ctf, cfg,
-                     external_mask_tolerance);
+        resolve_mask_impl(sfi, traj, result[0], sfi.surface(), mask, ctf, cfg,
+                          external_mask_tolerance, use_portal_tolerance);
       } else {
-        resolve_mask(sfi, traj, result, sfi.surface(), mask, ctf, cfg,
-                     external_mask_tolerance);
+        resolve_mask_impl(sfi, traj, result, sfi.surface(), mask, ctf, cfg,
+                          external_mask_tolerance, use_portal_tolerance);
       }
 
       if (sfi.is_probably_inside()) {

@@ -104,6 +104,12 @@ class geometry_reader final : public reader_interface<detector_t> {
       // Set the volume name
       vbuilder->set_name(vol_data.name);
 
+      // Set the mother volume
+      if (vol_data.mother.has_value()) {
+        vbuilder->set_mother(
+            detail::basic_converter::from_payload(*vol_data.mother));
+      }
+
       DETRAY_DEBUG_HOST("Volume placement for " << vol_data.name << " is\n"
                                                 << vol_data.transform);
       // Volume placement

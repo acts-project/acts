@@ -172,7 +172,12 @@ struct intersector_base : public intersector_t {
   }
 };
 
+namespace detail {
+
 /// @brief Fill an intersection with the result of the intersection alg.
+///
+/// Implementation of @c resolve_mask , which can also apply the mask
+/// tolerance to portals.
 ///
 /// @param is Intersection object to populate.
 /// @param traj Trajectory used to evaluate the global intersection position.
@@ -182,17 +187,19 @@ struct intersector_base : public intersector_t {
 /// @param trf Transform from the surface frame to the global frame.
 /// @param cfg Tolerances and path cutoff used for classification.
 /// @param external_mask_tolerance Additional tolerance for the mask boundary.
+/// @param use_portal_tolerance Apply the mask tolerances also to a portal
+///                             (e.g. the portals of daughter volumes).
 template <typename intersection_t, typename trajectory_t,
           concepts::algebra algebra_t, concepts::point point_t,
           typename surface_descr_t, typename mask_t,
           concepts::transform3D transform3_t, concepts::scalar scalar_t>
-DETRAY_HOST_DEVICE constexpr void resolve_mask(
+DETRAY_HOST_DEVICE constexpr void resolve_mask_impl(
     intersection_t &is, const trajectory_t &traj,
     const intersection_point<algebra_t, point_t, intersection::contains_pos>
         &ip,
     const surface_descr_t sf_desc, const mask_t &mask, const transform3_t &trf,
-    const intersection::config &cfg = {},
-    const scalar_t external_mask_tolerance = 0.f) {
+    const intersection::config &cfg, const scalar_t external_mask_tolerance,
+    const bool use_portal_tolerance) {
   // Mask out solutions that don't meet the overstepping tolerance (SoA)
   if constexpr (concepts::soa<algebra_t>) {
     using status_t = typename intersection_t::status_type;
@@ -234,7 +241,7 @@ DETRAY_HOST_DEVICE constexpr void resolve_mask(
   scalar_t ext_tol = 0.f;
 
   // Tol.: scale with distance of surface to account for track bending
-  if (!sf_desc.is_portal() ||
+  if (!sf_desc.is_portal() || use_portal_tolerance ||
       cfg.min_mask_tolerance == std::numeric_limits<float>::max()) {
     ext_tol = external_mask_tolerance;
     base_tol =
@@ -265,6 +272,33 @@ DETRAY_HOST_DEVICE constexpr void resolve_mask(
   is.set_surface(sf_desc);
   is.set_direction(!math::signbit(ip.path));
   is.set_volume_link(mask.volume_link());
+}
+
+}  // namespace detail
+
+/// @brief Fill an intersection with the result of the intersection alg.
+///
+/// @param is Intersection object to populate.
+/// @param traj Trajectory used to evaluate the global intersection position.
+/// @param ip Geometric intersection candidate returned by the intersector.
+/// @param sf_desc Surface descriptor associated with the mask.
+/// @param mask Mask used to classify the candidate's local position.
+/// @param trf Transform from the surface frame to the global frame.
+/// @param cfg Tolerances and path cutoff used for classification.
+/// @param external_mask_tolerance Additional tolerance for the mask boundary.
+template <typename intersection_t, typename trajectory_t,
+          concepts::algebra algebra_t, concepts::point point_t,
+          typename surface_descr_t, typename mask_t,
+          concepts::transform3D transform3_t, concepts::scalar scalar_t>
+DETRAY_HOST_DEVICE constexpr void resolve_mask(
+    intersection_t &is, const trajectory_t &traj,
+    const intersection_point<algebra_t, point_t, intersection::contains_pos>
+        &ip,
+    const surface_descr_t sf_desc, const mask_t &mask, const transform3_t &trf,
+    const intersection::config &cfg = {},
+    const scalar_t external_mask_tolerance = 0.f) {
+  detail::resolve_mask_impl(is, traj, ip, sf_desc, mask, trf, cfg,
+                            external_mask_tolerance, false);
 }
 
 }  // namespace detray

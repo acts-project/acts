@@ -17,6 +17,7 @@
 // System include(s)
 #include <concepts>
 #include <type_traits>
+#include <vector>
 
 namespace detray::concepts {
 
@@ -44,7 +45,7 @@ concept metadata = requires {
 
 /// Check if a type can be used as a detector
 template <typename D>
-concept detector = requires(const D& d) {
+concept detector = requires(const D &d) {
   requires viewable<D>;
   requires bufferable<D>;
 
@@ -83,13 +84,13 @@ concept detector = requires(const D& d) {
 
   { d.name(typename D::name_map()) } -> std::same_as<std::string>;
 
-  { d.volumes() } -> std::same_as<const typename D::volume_container&>;
+  { d.volumes() } -> std::same_as<const typename D::volume_container &>;
 
-  { d.volume(dindex()) } -> std::same_as<const typename D::volume_type&>;
+  { d.volume(dindex()) } -> std::same_as<const typename D::volume_type &>;
 
   {
     d.volume(std::string_view(), typename D::name_map())
-  } -> std::same_as<const typename D::volume_type&>;
+  } -> std::same_as<const typename D::volume_type &>;
 
   /// @todo: Not yet implemented correctly
   /*{
@@ -98,19 +99,23 @@ concept detector = requires(const D& d) {
 
   { d.portals() };
 
-  { d.surfaces() } -> std::same_as<const typename D::surface_lookup_container&>;
+  {
+    d.surfaces()
+  } -> std::same_as<const typename D::surface_lookup_container &>;
 
   {
     d.transform_store(typename D::geometry_context())
-  } -> std::same_as<const typename D::transform_container&>;
+  } -> std::same_as<const typename D::transform_container &>;
 
-  { d.mask_store() } -> std::same_as<const typename D::mask_container&>;
+  { d.mask_store() } -> std::same_as<const typename D::mask_container &>;
 
-  { d.material_store() } -> std::same_as<const typename D::material_container&>;
+  {
+    d.material_store()
+  } -> std::same_as<const typename D::material_container &>;
 
   {
     d.accelerator_store()
-  } -> std::same_as<const typename D::accelerator_container&>;
+  } -> std::same_as<const typename D::accelerator_container &>;
 };
 
 /// Check if a type is a host (mutable) detector type
@@ -135,6 +140,20 @@ concept has_grids =
 template <class D>
 concept has_surface_grids =
     detector<D> && detail::contains_surface_grids_v<typename D::accel>;
+
+/// Check for the the presence of a volume brute force accelerator in a
+/// detector definition, which holds the daughter volumes of mother volumes
+///
+/// The accelerator id @c e_volume_brute_force must select a collection that
+/// accepts a list of volume indices (host detector only).
+template <class D>
+concept has_volume_brute_force =
+    detector<D> && requires { D::accel::id::e_volume_brute_force; } &&
+    requires(typename D::accelerator_container &store,
+             const std::vector<dindex> &daughters) {
+      store.template get<D::accel::id::e_volume_brute_force>().push_back(
+          daughters);
+    };
 
 /// Check for the the presence of material slabs in a detector definition
 template <class D>
