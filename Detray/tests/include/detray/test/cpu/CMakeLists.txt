@@ -19,7 +19,7 @@ add_library(
     "detector_consistency.hpp"
     "detector_scan.hpp"
     "material_scan.hpp"
-    "navigation_validation.hpp"
+    "material_validation.hpp"
     "navigation_validation.hpp"
     "toy_detector_test.hpp"
 )

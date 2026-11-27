@@ -131,6 +131,7 @@ if(DETRAY_BUILD_VALIDATION_TOOLS)
             vecmem::core
             detray::core
             detray::test_utils
+            detray::test_common
             detray::csv_io
             detray::svgtools
     )

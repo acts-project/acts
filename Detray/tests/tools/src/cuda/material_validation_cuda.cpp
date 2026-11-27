@@ -18,21 +18,22 @@
 #include "detray/options/parse_options.hpp"
 #include "detray/options/propagation_options.hpp"
 #include "detray/options/track_generator_options.hpp"
-#include "detray/test/cpu/material_scan.hpp"
 #include "detray/test/device/cuda/material_validation.hpp"
-#include "detray/test/framework/register_checks.hpp"
+#include "detray/test/validation/material_validation.hpp"
+#include "detray/test/validation/material_validation_config.hpp"
 
 // Vecmem include(s)
 #include <vecmem/memory/cuda/device_memory_resource.hpp>
 #include <vecmem/memory/host_memory_resource.hpp>
 
 // GTest include(s)
-#include <gtest/gtest.h>
-
 // Boost
 #include "detray/options/boost_program_options.hpp"
 
 // System include(s)
+#include <cstddef>
+#include <cstdlib>
+#include <iostream>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -46,9 +47,6 @@ int main(int argc, char **argv) {
   using metadata_t = test::default_metadata;
   using detector_t = host::detector<metadata_t>;
 
-  // Filter out the google test flags
-  ::testing::InitGoogleTest(&argc, argv);
-
   // Specific options for this test
   po::options_description desc("\ndetray CUDA material validation options");
 
@@ -60,12 +58,18 @@ int main(int argc, char **argv) {
       "Tolerance for comparing the material traces [%]")(
       "overlaps_tol",
       po::value<float>()->default_value(stepping::config{}.min_stepsize),
-      "Tolerance for considering surfaces to be overlapping [mm]");
+      "Tolerance for considering surfaces to be overlapping [mm]")(
+      "step_contingency",
+      po::value<std::size_t>()->default_value(
+          test::material_validation_config<test::algebra>{}.step_contingency()),
+      "Additional material steps per track on top of the material scan")(
+      "truth_from_file",
+      "Read the truth material from file instead of running the ray scan");
 
   // Configs to be filled
   detray::io::detector_reader_config reader_cfg{};
-  detray::test::material_validation<detector_t>::config mat_val_cfg{};
-  test::material_scan<detector_t>::config mat_scan_cfg{};
+  test::material_validation_config<test::algebra> mat_val_cfg{};
+  test::material_scan_config<test::algebra> mat_scan_cfg{};
 
   po::variables_map vm = detray::options::parse_options(
       desc, argc, argv, reader_cfg, mat_scan_cfg.track_generator(),
@@ -78,6 +82,8 @@ int main(int argc, char **argv) {
   if (vm.count("overlaps_tol") != 0u) {
     mat_scan_cfg.overlaps_tol(vm["overlaps_tol"].as<float>());
   }
+  mat_val_cfg.step_contingency(vm["step_contingency"].as<std::size_t>());
+  mat_scan_cfg.read_from_file(vm.count("truth_from_file") != 0u);
   const auto data_dir{vm["data_dir"].as<std::string>()};
 
   /// Vecmem memory resource for the device allocations
@@ -87,24 +93,29 @@ int main(int argc, char **argv) {
   const auto [det, names] =
       detray::io::read_detector_json<detector_t>(host_mr, reader_cfg);
 
-  auto white_board = std::make_shared<test::whiteboard>();
   detector_t::geometry_context ctx{};
 
   // Print the detector's material as recorded by a ray scan
   mat_scan_cfg.name("material_scan_for_cuda");
   mat_scan_cfg.track_generator().uniform_eta(true);
   mat_scan_cfg.material_file(data_dir + "/material_scan_for_cuda");
-  detray::test::register_checks<test::material_scan>(det, names, mat_scan_cfg,
-                                                     ctx, white_board);
+  const auto scan_data =
+      material_validator::material_scan(ctx, det, names, mat_scan_cfg);
 
   // Now trace the material during navigation and compare
   mat_val_cfg.name("material_validation_cuda");
   mat_val_cfg.material_file(data_dir + "/navigation_material_trace");
   mat_val_cfg.device_mr(&dev_mr);
 
-  test::register_checks<detray::cuda::material_validation>(
-      det, names, mat_val_cfg, ctx, white_board);
+  const auto result =
+      material_validator::material_validation<cuda::run_material_validation>(
+          &host_mr, det, names, scan_data, mat_val_cfg);
 
-  // Run the checks
-  return RUN_ALL_TESTS();
+  if (!result.passed()) {
+    std::cerr << result.n_failed << " of " << result.n_tracks
+              << " tracks have a material discrepancy" << std::endl;
+    return EXIT_FAILURE;
+  }
+
+  return EXIT_SUCCESS;
 }
