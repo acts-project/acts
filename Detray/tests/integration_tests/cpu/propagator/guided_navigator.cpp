@@ -112,8 +112,9 @@ GTEST_TEST(detray_navigation, guided_navigator) {
     const auto &candidate = obj_tracer[i].intersection();
     auto geo_id = geometry::identifier{};
     geo_id.set_volume(0u).set_index(sf_sequence[i]);
-    // The first transform in the detector belongs to the volume
-    geo_id.set_transform(sf_sequence[i] + 1);
+    // The first transform in the detector belongs to the volume. The first
+    // module is placed at the origin and shares this transform (deduplicated)
+    geo_id.set_transform(sf_sequence[i]);
     geo_id.set_id((i == 11u) ? surface_id::e_portal : surface_id::e_sensitive);
     EXPECT_TRUE(candidate.surface().identifier() == geo_id)
         << "error at intersection on surface:\n"

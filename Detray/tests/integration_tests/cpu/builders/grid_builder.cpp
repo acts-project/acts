@@ -166,7 +166,8 @@ GTEST_TEST(detray_builders, decorator_grid_builder) {
   EXPECT_EQ(d.mask_store().template size<mask_id::e_concentric_cylinder2D>(),
             3u);
   EXPECT_EQ(d.mask_store().template size<mask_id::e_ring2D>(), 0u);
-  EXPECT_EQ(d.mask_store().template size<mask_id::e_rectangle2D>(), 3u);
+  // The rectangles have identical bounds and are deduplicated
+  EXPECT_EQ(d.mask_store().template size<mask_id::e_rectangle2D>(), 1u);
   EXPECT_EQ(d.mask_store().template size<mask_id::e_trapezoid2D>(), 1u);
 
   // check the portals in the detector
@@ -184,7 +185,9 @@ GTEST_TEST(detray_builders, decorator_grid_builder) {
       d.accelerator_store()
           .template get<
               detector_t::accel::id::e_surface_concentric_cylinder2D_grid>()[0];
-  dindex trf_idx{3u};
+  // The volume, the portals and the passive cylinder share the identity
+  // transform (deduplicated), so the sensitive transforms start at index 1
+  dindex trf_idx{1u};
   for (const auto& sf : cyl_grid.all()) {
     EXPECT_TRUE(sf.is_sensitive());
     EXPECT_EQ(sf.volume(), 0u);

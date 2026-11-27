@@ -142,11 +142,15 @@ inline bool toy_detector_test(
   // Check number of geometry objects
   EXPECT_EQ(volumes.size(), 22u);
   EXPECT_EQ(toy_det.surfaces().size(), 3230);
-  EXPECT_EQ(transforms.size(ctx), 3252u);
+  // Identical transforms are shared, if the detector is deduplicated
+  const std::size_t n_trfs{deduplicated ? 3167u : 3252u};
+  EXPECT_EQ(transforms.size(ctx), n_trfs);
   EXPECT_EQ(masks.template size<mask_id::e_rectangle2D>(), 4u);
   EXPECT_EQ(masks.template size<mask_id::e_trapezoid2D>(), 12u);
   EXPECT_EQ(masks.template size<mask_id::e_concentric_cylinder2D>(), 56u);
-  EXPECT_EQ(masks.template size<mask_id::e_ring2D>(), 60u);
+  // Identical portal discs are shared, if the detector is deduplicated
+  const std::size_t n_rings{deduplicated ? 41u : 60u};
+  EXPECT_EQ(masks.template size<mask_id::e_ring2D>(), n_rings);
   EXPECT_EQ(accel.template size<accel_id::e_surface_brute_force>(), 22u);
   if (has_grids) {
     EXPECT_EQ(
@@ -186,6 +190,56 @@ inline bool toy_detector_test(
               << "expected: " << ref_sf << ", result: " << result_sf;
       }
   }*/
+
+  // No transform is stored twice in a deduplicated detector
+  if (deduplicated) {
+    for (dindex i = 0u; i < transforms.size(ctx); ++i) {
+      for (dindex j = i + 1u; j < transforms.size(ctx); ++j) {
+        EXPECT_FALSE(transforms.at(i, ctx) == transforms.at(j, ctx))
+            << "duplicate transforms at " << i << " and " << j;
+      }
+    }
+  }
+
+  /// Test the transform link of a surface
+  ///
+  /// @param sf_desc the surface descriptor
+  /// @param trf_index the transform index without deduplication
+  auto test_trf_link = [&](const typename detector_t::surface_type& sf_desc,
+                           const dindex trf_index) {
+    if (deduplicated) {
+      // A deduplicated surface can only reuse a transform that was added
+      // before it
+      EXPECT_LT(sf_desc.transform(), transforms.size(ctx));
+      EXPECT_LE(sf_desc.transform(), trf_index);
+    } else {
+      EXPECT_EQ(sf_desc.transform(), trf_index);
+    }
+  };
+
+  /// Test the mask link of a portal
+  ///
+  /// @param sf_desc the surface descriptor
+  /// @param mask_link the mask link without deduplication
+  auto test_portal_mask_link =
+      [&](const typename detector_t::surface_type& sf_desc,
+          const mask_link_t& mask_link) {
+        if (deduplicated) {
+          // The mask contents are tested through the volume links
+          EXPECT_EQ(sf_desc.mask().id(), mask_link.id());
+          EXPECT_EQ(sf_desc.mask().index().size(), mask_link.index().size());
+          // Toy detector portals are rings or concentric cylinders
+          ASSERT_TRUE(mask_link.id() == mask_id::e_ring2D ||
+                      mask_link.id() == mask_id::e_concentric_cylinder2D);
+          const dindex n_masks{
+              mask_link.id() == mask_id::e_ring2D
+                  ? masks.template size<mask_id::e_ring2D>()
+                  : masks.template size<mask_id::e_concentric_cylinder2D>()};
+          EXPECT_LE(sf_desc.mask().index().upper(), n_masks);
+        } else {
+          EXPECT_EQ(sf_desc.mask(), mask_link);
+        }
+      };
 
   /// Test the surface ranges in the volume
   auto check_sf_ranges = [](const typename detector_t::volume_type& vol,
@@ -236,8 +290,8 @@ inline bool toy_detector_test(
       EXPECT_EQ(sf_itr->index(), pti);
       // The volume index compensates for the number of volume
       // transforms in the transform store
-      EXPECT_EQ(sf_itr->transform(), trf_index + vol_index + 1);
-      EXPECT_EQ(sf_itr->mask(), mask_link);
+      test_trf_link(*sf_itr, trf_index + vol_index + 1);
+      test_portal_mask_link(*sf_itr, mask_link);
       const geometry::surface sf{toy_det, *sf_itr};
       const auto m_volume_links = sf.volume_links();
       EXPECT_EQ(m_volume_links.size(), mask_link.index().size());
@@ -302,7 +356,7 @@ inline bool toy_detector_test(
       EXPECT_EQ(sf_itr->index(), pti);
       // The volume index compensates for the number of volume
       // transforms in the transform store
-      EXPECT_EQ(sf_itr->transform(), trf_index + vol_index + 1);
+      test_trf_link(*sf_itr, trf_index + vol_index + 1);
       EXPECT_EQ(sf_itr->mask(), mask_link);
       const geometry::surface sf{toy_det, *sf_itr};
       const auto m_volume_links = sf.volume_links();
