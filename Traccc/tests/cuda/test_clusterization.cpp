@@ -142,14 +142,14 @@ TEST(CUDAClustering, SingleModule) {
   // Create cell collection
   traccc::edm::silicon_cell_collection::host cells{mng_mr};
   cells.reserve(8u);
-  cells.push_back({1u, 2u, 1.f, 0.f, 0u});
-  cells.push_back({2u, 2u, 1.f, 0.f, 0u});
-  cells.push_back({3u, 2u, 1.f, 0.f, 0u});
-  cells.push_back({6u, 4u, 1.f, 0.f, 0u});
-  cells.push_back({5u, 5u, 1.f, 0.f, 0u});
-  cells.push_back({6u, 5u, 1.f, 0.f, 0u});
-  cells.push_back({7u, 5u, 1.f, 0.f, 0u});
-  cells.push_back({6u, 6u, 1.f, 0.f, 0u});
+  cells.push_back({1u, 2u, 1.f, 0.f, 0u, 0u});
+  cells.push_back({2u, 2u, 1.f, 0.f, 0u, 0u});
+  cells.push_back({3u, 2u, 1.f, 0.f, 0u, 0u});
+  cells.push_back({6u, 4u, 1.f, 0.f, 0u, 0u});
+  cells.push_back({5u, 5u, 1.f, 0.f, 0u, 0u});
+  cells.push_back({6u, 5u, 1.f, 0.f, 0u, 0u});
+  cells.push_back({7u, 5u, 1.f, 0.f, 0u, 0u});
+  cells.push_back({6u, 6u, 1.f, 0.f, 0u, 0u});
 
   edm::measurement_collection::host references{mng_mr};
   references.push_back({{2.5f, 2.5f},
@@ -188,14 +188,14 @@ TEST(CUDAClustering, SingleModuleUnsorted) {
   // Create cell collection
   traccc::edm::silicon_cell_collection::host cells{mng_mr};
   cells.reserve(8u);
-  cells.push_back({7u, 5u, 1.f, 0.f, 0u});
-  cells.push_back({3u, 2u, 1.f, 0.f, 0u});
-  cells.push_back({5u, 5u, 1.f, 0.f, 0u});
-  cells.push_back({6u, 5u, 1.f, 0.f, 0u});
-  cells.push_back({2u, 2u, 1.f, 0.f, 0u});
-  cells.push_back({1u, 2u, 1.f, 0.f, 0u});
-  cells.push_back({6u, 6u, 1.f, 0.f, 0u});
-  cells.push_back({6u, 4u, 1.f, 0.f, 0u});
+  cells.push_back({7u, 5u, 1.f, 0.f, 0u, 0u});
+  cells.push_back({3u, 2u, 1.f, 0.f, 0u, 0u});
+  cells.push_back({5u, 5u, 1.f, 0.f, 0u, 0u});
+  cells.push_back({6u, 5u, 1.f, 0.f, 0u, 0u});
+  cells.push_back({2u, 2u, 1.f, 0.f, 0u, 0u});
+  cells.push_back({1u, 2u, 1.f, 0.f, 0u, 0u});
+  cells.push_back({6u, 6u, 1.f, 0.f, 0u, 0u});
+  cells.push_back({6u, 4u, 1.f, 0.f, 0u, 0u});
 
   edm::measurement_collection::host references{mng_mr};
   references.push_back({{2.5f, 2.5f},
