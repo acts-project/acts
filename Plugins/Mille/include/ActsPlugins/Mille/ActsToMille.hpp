@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsAlignment/Kernel/Alignment.hpp"
+#include "ActsAlignment/Kernel/TrackAlignmentState.hpp"
 
 #include "Mille/IMilleReader.h"
 #include "Mille/MilleDecoder.h"
@@ -35,7 +35,7 @@ using Mille::MilleRecord;
 /// that a measurement projects onto are always kept.
 /// @param logger Logger, reports measured parameters that the
 /// removal criterion would have dropped.
-void dumpToMille(const ActsAlignment::detail::TrackAlignmentState& state,
+void dumpToMille(const ActsAlignment::TrackAlignmentState& state,
                  MilleRecord& record, bool removeUnconstrainedTrackPar,
                  const Acts::Logger& logger);
 
@@ -55,7 +55,7 @@ void dumpToMille(const ActsAlignment::detail::TrackAlignmentState& state,
 /// The targetState will only be modified if the result is 'ok'.
 Mille::MilleDecoder::ReadResult unpackMilleRecord(
     Mille::IMilleReader& reader,
-    ActsAlignment::detail::TrackAlignmentState& targetState,
+    ActsAlignment::TrackAlignmentState& targetState,
     const std::unordered_map<const Acts::Surface*, std::size_t>&
         idxedAlignSurfaces,
     const Acts::Logger& logger);

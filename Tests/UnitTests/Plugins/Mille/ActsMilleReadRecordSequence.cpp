@@ -14,7 +14,7 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsAlignment/Kernel/detail/AlignmentEngine.hpp"
+#include "ActsAlignment/Kernel/TrackAlignmentState.hpp"
 #include "ActsPlugins/Mille/ActsToMille.hpp"
 
 #include <algorithm>
@@ -116,7 +116,7 @@ BOOST_AUTO_TEST_CASE(ReuseStateAcrossRecords) {
   BOOST_REQUIRE(reader->open(fname));
 
   // one state for all records, as in ActsSolverFromMille
-  ActsAlignment::detail::TrackAlignmentState state;
+  ActsAlignment::TrackAlignmentState state;
   for (const auto& hits : records) {
     BOOST_REQUIRE(ActsPlugins::ActsToMille::unpackMilleRecord(
                       *reader, state, idxedAlignSurfaces, logger()) ==
@@ -198,7 +198,7 @@ BOOST_AUTO_TEST_CASE(UnknownSurfaceIsReadError) {
   // the read error below is expected: do not fail on it
   Acts::Logging::ScopedFailureThreshold threshold{Acts::Logging::FATAL};
 #endif
-  ActsAlignment::detail::TrackAlignmentState state;
+  ActsAlignment::TrackAlignmentState state;
   BOOST_REQUIRE(ActsPlugins::ActsToMille::unpackMilleRecord(
                     *reader, state, idxedAlignSurfaces, logger()) ==
                 Mille::MilleDecoder::ReadResult::OK);
@@ -246,7 +246,7 @@ BOOST_AUTO_TEST_CASE(GlobalsWithoutLocalsIsReadError) {
   // the read error below is expected: do not fail on it
   Acts::Logging::ScopedFailureThreshold threshold{Acts::Logging::FATAL};
 #endif
-  ActsAlignment::detail::TrackAlignmentState state;
+  ActsAlignment::TrackAlignmentState state;
   BOOST_REQUIRE(ActsPlugins::ActsToMille::unpackMilleRecord(
                     *reader, state, idxedAlignSurfaces, logger()) ==
                 Mille::MilleDecoder::ReadResult::OK);

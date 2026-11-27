@@ -15,7 +15,7 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsAlignment/Kernel/detail/AlignmentEngine.hpp"
+#include "ActsAlignment/Kernel/TrackAlignmentState.hpp"
 #include "ActsPlugins/Mille/ActsToMille.hpp"
 
 #include <memory>
@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE(MeasuredParametersAreKept) {
       Acts::Transform3::Identity(),
       std::make_shared<Acts::RectangleBounds>(10., 10.));
 
-  ActsAlignment::detail::TrackAlignmentState state;
+  ActsAlignment::TrackAlignmentState state;
   state.measurementDim = nMeas;
   state.trackParametersDim = nPar;
   state.alignmentDof = Acts::eAlignmentSize;

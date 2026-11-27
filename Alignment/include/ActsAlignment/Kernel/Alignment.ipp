@@ -22,7 +22,7 @@
 
 template <typename fitter_t>
 template <typename source_link_t, typename fit_options_t>
-Acts::Result<ActsAlignment::detail::TrackAlignmentState>
+Acts::Result<ActsAlignment::TrackAlignmentState>
 ActsAlignment::Alignment<fitter_t>::evaluateTrackAlignmentState(
     const Acts::GeometryContext& gctx,
     const std::vector<source_link_t>& sourceLinks,
@@ -87,7 +87,7 @@ void ActsAlignment::Alignment<fitter_t>::calculateAlignmentParameters(
   alignResult.chi2 = 0;
   alignResult.measurementDim = 0;
   alignResult.numTracks = trajectoryCollection.size();
-  std::vector<detail::TrackAlignmentState> alignmentStates;
+  std::vector<TrackAlignmentState> alignmentStates;
   for (unsigned int iTraj = 0; iTraj < trajectoryCollection.size(); iTraj++) {
     const auto& sourceLinks = trajectoryCollection.at(iTraj);
     const auto& sParameters = startParametersCollection.at(iTraj);
@@ -111,7 +111,7 @@ void ActsAlignment::Alignment<fitter_t>::calculateAlignmentParameters(
 
 template <typename fitter_t>
 void ActsAlignment::Alignment<fitter_t>::calculateAlignmentParameters(
-    const std::vector<detail::TrackAlignmentState>& trackAlignmentStates,
+    const std::vector<TrackAlignmentState>& trackAlignmentStates,
     AlignmentResult& alignResult) const {
   // Delegate to the out-of-line, fitter-independent implementation so its Eigen
   // algebra is not re-instantiated for every Alignment<fitter_t>.
