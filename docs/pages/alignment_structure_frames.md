@@ -160,7 +160,47 @@ parameter. Without a structure frame, the helper differentiates
 with respect to local surface translations and rotations and applies the mask
 in the surface frame.
 
-This helper does not activate structure solving. The native solver still uses
-module indexing and calls it without a structure frame. Shared parameter
-indexing, structure accumulation, and rigid member updates remain follow-up
-work.
+The native solver currently calls this derivative helper without a structure
+frame and continues to align individual modules.
+
+## Selecting alignables and numbering parameters
+
+`detail::makeAlignmentParameterDirectory()` assigns positions in the alignment
+correction vector to selected modules and structures. The caller supplies the
+standalone module mask; each structure supplies its own mask.
+
+Registering a structure makes it available for selection. Selected structures
+with enabled parameters must have members and no children, and every member must
+have a surface placement. A structure with mask `None` is omitted, leaving its
+members available for standalone selection.
+Standalone modules remain selected even with mask `None`. A placement cannot
+belong to two selected alignables, regardless of their masks. The registered
+hierarchy must be acyclic, with each structure and placement registered once.
+Null entries and duplicate selections are rejected.
+
+The result contains three fields:
+
+- `alignables` lists standalone modules first, then active structures, in the
+  supplied order. Each `AlignableUnit` entry points to the selected object and
+  holds its parameter indices.
+- `placementToAlignable` maps each member placement to its position in `alignables`.
+- `numParameters` counts the enabled parameters.
+
+The factory passes a module or structure pointer and a mask to `addAlignable()`,
+which creates an entry and numbers its enabled parameters. It then uses
+`registerPlacement()` to associate each module placement with that entry.
+Registering a placement twice fails without replacing its existing association.
+Selection validation remains in the factory.
+
+Parameter indices start at zero. Within each alignable, translations `Center0..2`
+precede rotations `Rotation0..2`; fixed components have no index. For example,
+if the only selected object is a structure with mask `Center0 | Rotation2`, every
+member uses indices 0 and 1. Geometry IDs do not affect numbering.
+An empty selection or a selection with no enabled parameters is valid.
+
+The directory holds non-owning pointers. Callers must keep all selected structures
+and placements alive and rebuild the directory after changing selection,
+membership, or masks. Building it visits the hierarchy and selected members; no
+track data is involved. Track processing, numerical constraints, solving, and
+geometry updates remain separate work. The existing solver does not yet use this
+directory.
