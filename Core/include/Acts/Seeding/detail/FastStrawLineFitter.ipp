@@ -25,19 +25,21 @@ std::optional<FastStrawLineFitter::FitResult> FastStrawLineFitter::fit(
     return std::nullopt;
   }
 
-  auto result = fit(fillAuxiliaries(measurements, signs));
+  const FitAuxiliaries fitPars{fillAuxiliaries(measurements, signs)};
+  auto result = fit(fitPars);
   if (!result) {
     return std::nullopt;
   }
   // Calculate the chi2
   calcPostFitChi2(measurements, *result);
+  toCommonFrame(fitPars, ResidualIdx::bending, *result);
   return result;
 }
 
 template <CompositeSpacePointContainer StrawCont_t>
 void FastStrawLineFitter::calcPostFitChi2(const StrawCont_t& measurements,
                                           FitResult& result) const {
-  const TrigonomHelper angles{result.theta};
+  const TrigonomHelper angles{result.tanTheta};
   result.chi2 = 0.;
   for (const auto& strawMeas : measurements) {
     result.chi2 += chi2Term(angles, result.y0, *strawMeas);
@@ -131,8 +133,10 @@ std::optional<FastStrawLineFitter::FitResult> FastStrawLineFitter::fit(
             : strip->toNextSensor()};
 
     if (!centerSet) {
-      auxVars.centerY = centerOfGravity.dot(measDir);
-      auxVars.centerZ = centerOfGravity.dot(strip->planeNormal());
+      auxVars.eY = measDir;
+      auxVars.eZ = strip->planeNormal();
+      auxVars.centerY = centerOfGravity.dot(auxVars.eY);
+      auxVars.centerZ = centerOfGravity.dot(auxVars.eZ);
       centerSet = true;
     }
 
@@ -143,7 +147,11 @@ std::optional<FastStrawLineFitter::FitResult> FastStrawLineFitter::fit(
     auxVars.T_zzyy += invCov * (Acts::square(z) - Acts::square(y));
     auxVars.T_yz += invCov * z * y;
   }
-  return fit(auxVars);
+  auto result = fit(auxVars);
+  if (result) {
+    toCommonFrame(auxVars, projection, *result);
+  }
+  return result;
 }
 
 template <CompositeSpacePointContainer StrawCont_t,
@@ -154,7 +162,7 @@ void FastStrawLineFitter::calcPostFitChi2(const Acts::CalibrationContext& ctx,
                                           const StrawCont_t& measurements,
                                           const Calibrator_t& calibrator,
                                           FitResultT0& result) const {
-  const TrigonomHelper angles{result.theta};
+  const TrigonomHelper angles{result.tanTheta};
   result.chi2 = 0.;
   for (const auto& strawMeas : measurements) {
     result.chi2 += chi2Term(angles, result.y0, *strawMeas,
@@ -223,8 +231,10 @@ FastStrawLineFitter::FitAuxiliaries FastStrawLineFitter::fillAuxiliaries(
       continue;
     }
     if (!centerSet) {
-      auxVars.centerY = centerOfGravity.dot(strawMeas->toNextSensor());
-      auxVars.centerZ = centerOfGravity.dot(strawMeas->planeNormal());
+      auxVars.eY = strawMeas->toNextSensor();
+      auxVars.eZ = strawMeas->planeNormal();
+      auxVars.centerY = centerOfGravity.dot(auxVars.eY);
+      auxVars.centerZ = centerOfGravity.dot(auxVars.eZ);
       centerSet = true;
     }
     const Vector pos = strawMeas->localPosition() - centerOfGravity;
@@ -264,7 +274,7 @@ std::optional<FastStrawLineFitter::FitResultT0> FastStrawLineFitter::fit(
 
   FitAuxiliariesWithT0 fitPars{
       fillAuxiliaries(ctx, calibrator, measurements, signs, result.t0)};
-  result.theta = startTheta(fitPars);
+  result.tanTheta = startTheta(fitPars);
   result.nDoF = fitPars.nDoF;
   ACTS_DEBUG(__func__ << "() - " << __LINE__
                       << ": Initial fit parameters: " << result);
@@ -274,6 +284,7 @@ std::optional<FastStrawLineFitter::FitResultT0> FastStrawLineFitter::fit(
          UpdateStatus::Exceeded) {
     if (iterStatus == UpdateStatus::Converged) {
       calcPostFitChi2(ctx, measurements, calibrator, result);
+      toCommonFrame(fitPars, ResidualIdx::bending, result);
       return result;
     }
     fitPars = fillAuxiliaries(ctx, calibrator, measurements, signs, result.t0);

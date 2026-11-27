@@ -36,6 +36,9 @@ class Line3DWithPartialDerivatives {
   static constexpr auto s_nPars = static_cast<std::size_t>(ParIndex::nPars);
   /// Abrivation of the parameter vector type
   using ParamVector = std::array<T, s_nPars>;
+  /// Jacobian of the slope parameters (y0, tanBeta, x0, tanAlpha) w.r.t. the
+  /// line parameters (y0, theta, x0, phi)
+  using LineJacobian_t = Eigen::Matrix<T, s_nPars, s_nPars>;
   /// Default constructor
   Line3DWithPartialDerivatives() = default;
   /// Default copy constructor
@@ -79,6 +82,29 @@ class Line3DWithPartialDerivatives {
   Vector point(const double lambda) const;
   /// Returns the currently set parameters
   ParamVector parameters() const;
+
+  /// Jacobian of (y0, tanBeta, x0, tanAlpha) w.r.t. (y0, theta, x0, phi).
+  /// It is indexed by ParIndex: each slope takes the slot of its angle.
+  /// Identity for the intercepts. The jacobian is defined for theta !=
+  /// 90 deg, where the slopes are not defined.
+  /// @param pars: Line parameters (theta and phi, theta != 90 deg)
+  /// @return The 4x4 Jacobian
+  template <std::size_t N>
+  static LineJacobian_t lineToSlopesJacobian(
+      const std::array<T, N>& pars) noexcept
+    requires(N >= s_nPars);
+
+  /// Jacobian of (y0, theta, x0, phi) w.r.t. (y0, tanBeta, x0, tanAlpha),
+  /// the inverse of lineToSlopesJacobian. It is indexed by ParIndex: each
+  /// slope takes the slot of its angle. Identity for the intercepts.
+  /// The jacobian is defined for theta != 90 deg, where the slopes are
+  /// not defined, and != 0 deg, where phi is not defined.
+  /// @param pars: Line parameters (theta and phi, theta != 0, 90 deg)
+  /// @return The 4x4 Jacobian
+  template <std::size_t N>
+  static LineJacobian_t slopesToLineJacobian(
+      const std::array<T, N>& pars) noexcept
+    requires(N >= s_nPars);
 
  private:
   /// Current line position
