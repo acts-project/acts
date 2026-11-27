@@ -31,7 +31,7 @@ namespace traccc::io {
 ///
 /// @param event is the event index
 /// @param directory is the directory for the output cell file
-/// @param format is the data format (e.g. csv or binary) of output file
+/// @param format is the data format (csv only right now) of output file
 /// @param cells is the cell collection to write
 /// @param dd is the silicon detector description
 /// @param use_acts_geometry_id is a flag to use the ACTS geometry ID (or the
@@ -48,24 +48,14 @@ void write(std::size_t event, std::string_view directory,
 ///
 /// @param event is the event index
 /// @param directory is the directory for the output spacepoint file
-/// @param format is the data format (e.g. csv or binary) of output file
+/// @param format is the data format (obj only right now) of output file
 /// @param spacepoints is the spacepoint collection to write
-/// @param measurements is the measurement collection to write
+/// @param measurements is the measurement collection (unused by the obj
+///                     format)
 ///
 void write(std::size_t event, std::string_view directory,
            traccc::data_format format,
            edm::spacepoint_collection::const_view spacepoints,
-           edm::measurement_collection::const_view measurements);
-
-/// Function for measurement file writing
-///
-/// @param event is the event index
-/// @param directory is the directory for the output measurement file
-/// @param format is the data format (e.g. csv or binary) of output file
-/// @param measurements is the measurement collection to write
-///
-void write(std::size_t event, std::string_view directory,
-           traccc::data_format format,
            edm::measurement_collection::const_view measurements);
 
 /// Function for seed writing

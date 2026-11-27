@@ -16,7 +16,6 @@
 #include "obj/write_tracks.hpp"
 #include "traccc/geometry/host_detector.hpp"
 #include "traccc/io/utils.hpp"
-#include "write_binary.hpp"
 
 // System include(s).
 #include <filesystem>
@@ -31,14 +30,6 @@ void write(std::size_t event, std::string_view directory,
            traccc::detector_conditions_description::const_view det_cond_view,
            bool use_acts_geometry_id) {
   switch (format) {
-    case data_format::binary:
-      details::write_binary_soa(
-          get_absolute_path(
-              (std::filesystem::path(directory) /
-               std::filesystem::path(get_event_filename(event, "-cells.dat")))
-                  .native()),
-          traccc::edm::silicon_cell_collection::const_device{cells});
-      break;
     case data_format::csv:
       csv::write_cells(
           get_absolute_path(
@@ -52,25 +43,11 @@ void write(std::size_t event, std::string_view directory,
   }
 }
 
-void write(std::size_t event, std::string_view directory,
-           traccc::data_format format,
-           edm::spacepoint_collection::const_view spacepoints,
-           edm::measurement_collection::const_view measurements) {
+void write(
+    std::size_t event, std::string_view directory, traccc::data_format format,
+    edm::spacepoint_collection::const_view spacepoints,
+    [[maybe_unused]] edm::measurement_collection::const_view measurements) {
   switch (format) {
-    case data_format::binary:
-      details::write_binary_soa(
-          get_absolute_path(
-              (std::filesystem::path(directory) /
-               std::filesystem::path(get_event_filename(event, "-hits.dat")))
-                  .native()),
-          edm::spacepoint_collection::const_device{spacepoints});
-      details::write_binary_soa(
-          get_absolute_path((std::filesystem::path(directory) /
-                             std::filesystem::path(get_event_filename(
-                                 event, "-measurements.dat")))
-                                .native()),
-          edm::measurement_collection::const_device{measurements});
-      break;
     case data_format::obj:
       obj::write_spacepoints(
           get_absolute_path((std::filesystem::path(directory) /
@@ -78,23 +55,6 @@ void write(std::size_t event, std::string_view directory,
                                  get_event_filename(event, "-spacepoints.obj")))
                                 .native()),
           spacepoints);
-      break;
-    default:
-      throw std::invalid_argument("Unsupported data format");
-  }
-}
-
-void write(std::size_t event, std::string_view directory,
-           traccc::data_format format,
-           edm::measurement_collection::const_view measurements) {
-  switch (format) {
-    case data_format::binary:
-      details::write_binary_soa(
-          get_absolute_path((std::filesystem::path(directory) /
-                             std::filesystem::path(get_event_filename(
-                                 event, "-measurements.dat")))
-                                .native()),
-          edm::measurement_collection::const_device{measurements});
       break;
     default:
       throw std::invalid_argument("Unsupported data format");

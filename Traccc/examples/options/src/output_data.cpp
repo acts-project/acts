@@ -42,8 +42,6 @@ void output_data::read(const boost::program_options::variables_map& vm) {
         vm[data_format_option].as<data_format_type>();
     if (input_format_string == "csv") {
       format = data_format::csv;
-    } else if (input_format_string == "binary") {
-      format = data_format::binary;
     } else if (input_format_string == "json") {
       format = data_format::json;
     } else if (input_format_string == "obj") {

@@ -10,7 +10,6 @@
 #include "traccc/io/read_cells.hpp"
 
 #include "csv/read_cells.hpp"
-#include "read_binary.hpp"
 #include "traccc/io/utils.hpp"
 
 // System include(s).
@@ -35,15 +34,6 @@ void read_cells(edm::silicon_cell_collection::host& cells, std::size_t event,
                  use_acts_geometry_id);
       break;
 
-    case data_format::binary:
-      read_cells(cells,
-                 get_absolute_path((std::filesystem::path(directory) /
-                                    std::filesystem::path(get_event_filename(
-                                        event, "-cells.dat")))
-                                       .native()),
-                 ilogger->clone(), det_cond, format, deduplicate);
-      break;
-
     default:
       throw std::invalid_argument("Unsupported data format");
   }
@@ -59,10 +49,6 @@ void read_cells(edm::silicon_cell_collection::host& cells,
     case data_format::csv:
       csv::read_cells(cells, filename, ilogger->clone(), det_cond, deduplicate,
                       use_acts_geometry_id);
-      break;
-
-    case data_format::binary:
-      details::read_binary_soa(cells, filename);
       break;
 
     default:
