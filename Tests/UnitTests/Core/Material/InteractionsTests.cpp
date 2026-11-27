@@ -47,6 +47,46 @@ BOOST_AUTO_TEST_SUITE(interactions)
 
 // Check the derivatives against the functions they differentiate, including
 // non-relativistic beta and either side of the density correction threshold.
+/// The no-log Highland model (the option for trajectories crossing many thin
+/// layers): the theta0 is exactly the 13.6 MeV formula without the logarithmic
+/// correction, and the default (Highland) is unchanged by the option's
+/// presence.
+BOOST_AUTO_TEST_CASE(multiple_scattering_no_log) {
+  using namespace Acts::UnitLiterals;
+
+  Acts::Material mat =
+      Acts::Material::fromMassDensity(93.7_mm, 465.2_mm, 28.085f, 14.f, 2.32f);
+  Acts::MaterialSlab slab(mat, 0.1_mm);
+  const float m = 139.57f * Acts::UnitConstants::MeV;
+  const float qOverP = 1.f / 10._GeV;
+  const float absQ = 1.f;
+
+  const float t0 = Acts::computeMultipleScatteringTheta0(
+      slab, Acts::PdgParticle::ePionPlus, m, qOverP, absQ);
+  const float t0Log = Acts::computeMultipleScatteringTheta0(
+      slab, Acts::PdgParticle::ePionPlus, m, qOverP, absQ,
+      Acts::ScatteringModel::Highland);
+  const float t0NoLog = Acts::computeMultipleScatteringTheta0(
+      slab, Acts::PdgParticle::ePionPlus, m, qOverP, absQ,
+      Acts::ScatteringModel::HighlandNoLog);
+
+  // The default keeps the standard Highland formula
+  BOOST_CHECK_EQUAL(t0, t0Log);
+
+  // Exact closed forms: the plain 13.6 MeV formula and the Highland log
+  // correction
+  const float xOverX0 = slab.thicknessInX0();
+  const float momentumInv = std::abs(qOverP / absQ);
+  const float p = 1.f / momentumInv;
+  const float q2OverBeta2 = (absQ * absQ) * (p * p + m * m) / (p * p);
+  const float expectedNoLog = 13.6f * Acts::UnitConstants::MeV * momentumInv *
+                              std::sqrt(xOverX0 * q2OverBeta2);
+  BOOST_CHECK_CLOSE(t0NoLog, expectedNoLog, 1e-3f);
+  BOOST_CHECK_CLOSE(
+      t0Log, expectedNoLog * (1.f + 0.038f * std::log(xOverX0 * q2OverBeta2)),
+      1e-2f);
+}
+
 BOOST_AUTO_TEST_CASE(energy_loss_derivatives) {
   const MaterialSlab slab(material, 1_mm);
   for (float m : {105.7_MeV, 938.3_MeV}) {

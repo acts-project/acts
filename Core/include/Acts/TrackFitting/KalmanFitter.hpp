@@ -166,6 +166,9 @@ struct KalmanFitterOptions {
 
   /// Whether to consider multiple scattering
   bool multipleScattering = true;
+  /// The multiple-scattering model (the Highland formula without the log term
+  /// for many thin layers)
+  ScatteringModel scatteringModel = ScatteringModel::Highland;
 
   /// Whether to consider energy loss
   bool energyLoss = true;
@@ -298,6 +301,7 @@ class KalmanFitter {
 
     /// Whether to consider multiple scattering.
     bool multipleScattering = true;
+    ScatteringModel scatteringModel = ScatteringModel::Highland;
 
     /// Whether to consider energy loss.
     bool energyLoss = true;
@@ -470,7 +474,7 @@ class KalmanFitter {
                 detail::determineMaterialUpdateMode(
                     state, navigator, MaterialUpdateMode::PreUpdate),
                 NoiseUpdateMode::addNoise, multipleScattering, energyLoss,
-                logger());
+                scatteringModel, logger());
         if (!materialInteractionPreRes.ok()) {
           ACTS_DEBUG("Material interaction failed during filter: "
                      << materialInteractionPreRes.error().message());
@@ -575,7 +579,7 @@ class KalmanFitter {
                 detail::determineMaterialUpdateMode(
                     state, navigator, MaterialUpdateMode::PostUpdate),
                 NoiseUpdateMode::addNoise, multipleScattering, energyLoss,
-                logger());
+                scatteringModel, logger());
         if (!materialInteractionPostRes.ok()) {
           ACTS_DEBUG("Material interaction failed during filter: "
                      << materialInteractionPostRes.error().message());
@@ -666,7 +670,7 @@ class KalmanFitter {
                 detail::determineMaterialUpdateMode(
                     state, navigator, MaterialUpdateMode::FullUpdate),
                 NoiseUpdateMode::addNoise, multipleScattering, energyLoss,
-                logger());
+                scatteringModel, logger());
         if (!materialInteractionRes.ok()) {
           ACTS_DEBUG("Material interaction failed during filter: "
                      << materialInteractionRes.error().message());
@@ -790,6 +794,7 @@ class KalmanFitter {
     kalmanActor.inputMeasurements = std::move(inputMeasurements);
     kalmanActor.targetSurface = targetSurface;
     kalmanActor.multipleScattering = kfOptions.multipleScattering;
+    kalmanActor.scatteringModel = kfOptions.scatteringModel;
     kalmanActor.energyLoss = kfOptions.energyLoss;
     kalmanActor.freeToBoundCorrection = kfOptions.freeToBoundCorrection;
     kalmanActor.calibrationContext = &kfOptions.calibrationContext.get();

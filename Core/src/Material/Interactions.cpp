@@ -503,9 +503,10 @@ inline float theta0RossiGreisen(float xOverX0, float momentumInv,
 
 }  // namespace
 
-float Acts::computeMultipleScatteringTheta0(const MaterialSlab& slab,
-                                            PdgParticle absPdg, float m,
-                                            float qOverP, float absQ) {
+namespace Acts {
+float computeMultipleScatteringTheta0(const MaterialSlab& slab,
+                                      PdgParticle absPdg, float m, float qOverP,
+                                      float absQ, ScatteringModel model) {
   assert((absPdg == Acts::makeAbsolutePdgParticle(absPdg)) &&
          "pdg is not absolute");
 
@@ -521,6 +522,13 @@ float Acts::computeMultipleScatteringTheta0(const MaterialSlab& slab,
   // q²/beta²; a smart compiler should be able to remove the unused computations
   const float q2OverBeta2 = RelativisticQuantities(m, qOverP, absQ).q2OverBeta2;
 
+  // Highland without the logarithmic correction (13.6 MeV formula): for
+  // trajectories crossing many thin layers, where the per-layer log is not
+  // additive
+  if (model == ScatteringModel::HighlandNoLog) {
+    return 13.6f * UnitConstants::MeV * momentumInv *
+           std::sqrt(xOverX0 * q2OverBeta2);
+  }
   // electron or positron
   if (absPdg == PdgParticle::eElectron) {
     return theta0RossiGreisen(xOverX0, momentumInv, q2OverBeta2);
@@ -528,6 +536,7 @@ float Acts::computeMultipleScatteringTheta0(const MaterialSlab& slab,
     return theta0Highland(xOverX0, momentumInv, q2OverBeta2);
   }
 }
+}  // namespace Acts
 
 float Acts::approximateHighlandScattering(float xOverX0) {
   // similar to `theta0Highland` but without momentum and charge

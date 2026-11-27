@@ -200,9 +200,22 @@ float deriveEnergyLossModeQOverP(const MaterialSlab& slab, PdgParticle absPdg,
 /// @return Projected scattering angle standard deviation @f$\theta_0@f$ in radians
 /// @see @ref approximateHighlandScattering for a charge- and momentum-independent
 ///   approximation
-float computeMultipleScatteringTheta0(const MaterialSlab& slab,
-                                      PdgParticle absPdg, float m, float qOverP,
-                                      float absQ);
+/// Multiple-scattering model selection (the Highland formula of PDG RPP2018
+/// eq. 33.15).
+///
+/// HighlandNoLog omits the logarithmic correction (1 + 0.038 ln(x/X0
+/// q^2/beta^2)). The correction overestimates the scattering when a trajectory
+/// crosses many thin layers (its per-layer log is not additive); experiments
+/// (e.g. LHCb since 2015) disable it in that regime. The default is the full
+/// PDG formula.
+enum class ScatteringModel : int {
+  Highland = 0,  ///< PDG RPP2018 eq. 33.15, with the logarithmic correction
+  HighlandNoLog = 1,  ///< the 13.6 MeV formula without the logarithmic term
+};
+
+float computeMultipleScatteringTheta0(
+    const MaterialSlab& slab, PdgParticle absPdg, float m, float qOverP,
+    float absQ, ScatteringModel model = ScatteringModel::Highland);
 
 /// Approximate the core width of the projected planar scattering distribution
 /// with Highland's formula.
