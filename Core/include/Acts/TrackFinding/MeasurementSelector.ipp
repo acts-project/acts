@@ -10,6 +10,7 @@
 
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
 
+#include <algorithm>
 #include <cmath>
 
 namespace Acts {
@@ -21,6 +22,45 @@ Result<
 MeasurementSelector::select(
     std::vector<typename traj_t::TrackStateProxy>& candidates, bool& isOutlier,
     const Logger& logger) const {
+  return selectImpl<traj_t>(
+      candidates, isOutlier, logger,
+      [this](auto& trackState, const Cuts& /*cuts*/) {
+        return calculateChi2(
+            trackState.effectiveCalibrated().data(),
+            trackState.effectiveCalibratedCovariance().data(),
+            trackState.predicted(), trackState.predictedCovariance(),
+            trackState.projectorSubspaceIndices(), trackState.calibratedSize());
+      });
+}
+
+template <typename traj_t>
+Result<
+    std::pair<typename std::vector<typename traj_t::TrackStateProxy>::iterator,
+              typename std::vector<typename traj_t::TrackStateProxy>::iterator>>
+MeasurementSelector::selectWithTail(
+    std::vector<typename traj_t::TrackStateProxy>& candidates,
+    const ScatteringTailPrior& scatteringTail, bool& isOutlier,
+    const Logger& logger) const {
+  return selectImpl<traj_t>(
+      candidates, isOutlier, logger,
+      [&scatteringTail](const auto& trackState, const Cuts& cuts) {
+        // above every cut, so the bound cannot change the selection, even
+        // across measurement dimensions
+        return scatteringTailChi2(
+                   trackState, scatteringTail,
+                   std::max(std::ranges::max(cuts.chi2Measurement),
+                            std::ranges::max(cuts.chi2Outlier)))
+            .first;
+      });
+}
+
+template <typename traj_t, typename chi2_function_t>
+Result<
+    std::pair<typename std::vector<typename traj_t::TrackStateProxy>::iterator,
+              typename std::vector<typename traj_t::TrackStateProxy>::iterator>>
+MeasurementSelector::selectImpl(
+    std::vector<typename traj_t::TrackStateProxy>& candidates, bool& isOutlier,
+    const Logger& logger, const chi2_function_t& chi2Function) const {
   using Result = Result<std::pair<
       typename std::vector<typename traj_t::TrackStateProxy>::iterator,
       typename std::vector<typename traj_t::TrackStateProxy>::iterator>>;
@@ -60,16 +100,7 @@ MeasurementSelector::select(
   for (std::size_t i(0ul); i < candidates.size(); ++i) {
     auto& trackState = candidates[i];
 
-    // We access the dynamic size of the matrix here but use them later
-    // through a template function which accesses the data pointer
-    // with compile time size. That way the Eigen math operations are
-    // still done with compile time size and no dynamic memory allocation
-    // is needed.
-    double chi2 = calculateChi2(
-        trackState.effectiveCalibrated().data(),
-        trackState.effectiveCalibratedCovariance().data(),
-        trackState.predicted(), trackState.predictedCovariance(),
-        trackState.projectorSubspaceIndices(), trackState.calibratedSize());
+    double chi2 = chi2Function(trackState, cuts);
     trackState.chi2() = chi2;
 
     // A diverging fit can inflate the predicted covariance until inverting it

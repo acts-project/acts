@@ -23,6 +23,8 @@
 
 namespace Acts {
 
+struct ScatteringTailPrior;
+
 /// @addtogroup track_finding
 /// @{
 namespace CkfTypes {
@@ -68,6 +70,8 @@ struct TrackStateCreatorArguments {
   TrackIndexType prevTip{};
   /// The trajectory the new track states are added to
   std::reference_wrapper<traj_t> trajectory;
+  /// The scattering tail of the prediction, nullptr if there is none
+  const ScatteringTailPrior* scatteringTail{nullptr};
 };
 
 }  // namespace CkfTypes
