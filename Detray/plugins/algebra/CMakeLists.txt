@@ -39,3 +39,7 @@ endif()
 if(DETRAY_VC_SOA_PLUGIN)
     add_subdirectory(vc_soa)
 endif()
+
+if(DETRAY_ARRAY_SOA_PLUGIN)
+    add_subdirectory(array_soa)
+endif()

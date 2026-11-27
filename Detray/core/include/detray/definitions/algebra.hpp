@@ -8,30 +8,45 @@
 
 #pragma once
 
-#if DETRAY_ALGEBRA_ARRAY
-#include "algebra/array.hpp"
-#elif DETRAY_ALGEBRA_EIGEN
-#include "algebra/eigen.hpp"
-#elif DETRAY_ALGEBRA_FASTOR
-#include "algebra/fastor.hpp"
-#elif DETRAY_ALGEBRA_SMATRIX
-#include "algebra/smatrix.hpp"
-#elif DETRAY_ALGEBRA_VC_AOS || DETRAY_ALGEBRA_VC_SOA
-
-#if DETRAY_ALGEBRA_VC_AOS
-#include "algebra/vc_aos.hpp"
+// The generic algebra implementation calls the math and comparison functions
+// with a namespace qualifier (@c algebra::math, @c algebra::approx_equal). A
+// qualified call only finds the overloads that are declared before the generic
+// headers. The other plugins include the generic headers, so the SIMD overloads
+// of the SoA plugins come first.
+#if DETRAY_ALGEBRA_ARRAY_SOA
+#include "algebra/impl/array_soa_approximately_equal.hpp"
+#include "algebra/impl/array_soa_math.hpp"
+#endif
+#if DETRAY_ALGEBRA_VC_SOA
+#include "algebra/impl/vc_aos_approximately_equal.hpp"
+#include "algebra/impl/vc_soa_math.hpp"
 #endif
 
+#if DETRAY_ALGEBRA_ARRAY
+#include "algebra/array.hpp"
+#endif
+#if DETRAY_ALGEBRA_ARRAY_SOA
+#include "algebra/array_soa.hpp"
+#endif
 #if DETRAY_ALGEBRA_VC_SOA
 #include "algebra/vc_soa.hpp"
 #endif
-
-#else
-#error "No algebra plugin selected! Please link to one of the algebra plugins."
+#if DETRAY_ALGEBRA_VC_AOS
+#include "algebra/vc_aos.hpp"
+#endif
+#if DETRAY_ALGEBRA_EIGEN
+#include "algebra/eigen.hpp"
+#endif
+#if DETRAY_ALGEBRA_FASTOR
+#include "algebra/fastor.hpp"
+#endif
+#if DETRAY_ALGEBRA_SMATRIX
+#include "algebra/smatrix.hpp"
 #endif
 
 // Algebra-plugins include(s)
 #include "detray/algebra/common/boolean.hpp"
+#include "detray/algebra/common/constants.hpp"
 #include "detray/algebra/common/math.hpp"
 #include "detray/algebra/utils/approximately_equal.hpp"
 #include "detray/algebra/utils/casts.hpp"

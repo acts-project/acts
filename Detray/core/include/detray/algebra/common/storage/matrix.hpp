@@ -8,7 +8,7 @@
 #pragma once
 
 // Project include(s).
-#include "detray/algebra/common/vector.hpp"
+#include "detray/algebra/common/storage/vector.hpp"
 #include "detray/algebra/concepts.hpp"
 #include "detray/algebra/type_traits.hpp"
 
@@ -34,9 +34,9 @@ struct DETRAY_ALIGN(alignof(algebra::storage::vector<ROW, scalar_t, array_t>))
   /// Construct from given column vectors @p v
   /// @param v Column vectors, one for each matrix column.
   template <concepts::vector... vector_t>
-  DETRAY_HOST_DEVICE
     requires(sizeof...(vector_t) == COL)
-  explicit matrix(vector_t &&...v) : m_storage{std::forward<vector_t>(v)...} {}
+  DETRAY_HOST_DEVICE explicit matrix(vector_t &&...v)
+      : m_storage{std::forward<vector_t>(v)...} {}
 
   /// Subscript operator
   /// @{
@@ -78,26 +78,18 @@ struct DETRAY_ALIGN(alignof(algebra::storage::vector<ROW, scalar_t, array_t>))
   DETRAY_HOST_DEVICE friend constexpr bool operator==(
       const matrix<A, S, R, C> &lhs, const matrix<A, S, R, C> &rhs);
 
-  /// Sets the trailing uninitialized values to zero.
-  /// @{
-  // AoS
+  /// Checks for equality over all columns
+  ///
+  /// @tparam I Column indices
+  ///
+  /// @param rhs Matrix to compare with.
+  ///
+  /// @returns true if all columns are equal
   template <std::size_t... I>
-  DETRAY_HOST_DEVICE
-    requires(!std::is_scalar_v<scalar_t>)
-  constexpr bool equal(const matrix &rhs,
-                       std::index_sequence<I...> /*unused*/) const {
+  DETRAY_HOST_DEVICE constexpr bool equal(
+      const matrix &rhs, std::index_sequence<I...> /*unused*/) const {
     return (... && (m_storage[I] == rhs[I]));
   }
-
-  // SoA
-  template <std::size_t... I>
-  DETRAY_HOST
-    requires(std::is_scalar_v<scalar_t>)
-  constexpr bool equal(const matrix &rhs,
-                       std::index_sequence<I...> /*unused*/) const {
-    return (... && ((m_storage[I].get() == rhs[I].get()).isFull()));
-  }
-  /// @}
 
   /// Arithmetic operators
   /// @{
@@ -138,72 +130,6 @@ struct DETRAY_ALIGN(alignof(algebra::storage::vector<ROW, scalar_t, array_t>))
   std::array<vector_type, COL> m_storage;
 
 };  // struct matrix
-
-/// Get a zero-initialized matrix
-template <concepts::matrix matrix_t, std::size_t COLS = matrix_t::columns()>
-DETRAY_HOST_DEVICE constexpr matrix_t zero() noexcept {
-  matrix_t m;
-
-  DETRAY_UNROLL_N(COLS)
-  for (std::size_t j = 0u; j < COLS; ++j) {
-    // Fill zero initialized vector
-    m[j] = typename matrix_t::vector_type{};
-  }
-
-  return m;
-}
-
-/// Set a matrix to zero
-template <concepts::matrix matrix_t>
-DETRAY_HOST_DEVICE constexpr void set_zero(matrix_t &m) noexcept {
-  m = zero<matrix_t>();
-}
-
-/// Build an identity matrix
-template <concepts::matrix matrix_t,
-          std::size_t R = detray::traits::max_rank<matrix_t>>
-DETRAY_HOST_DEVICE constexpr matrix_t identity() noexcept {
-  // Zero initialized
-  matrix_t m{zero<matrix_t>()};
-
-  DETRAY_UNROLL_N(R)
-  for (std::size_t i = 0u; i < R; ++i) {
-    m[i][i] = typename matrix_t::scalar_type(1);
-  }
-
-  return m;
-}
-
-/// Set a matrix to zero
-template <concepts::matrix matrix_t>
-DETRAY_HOST_DEVICE constexpr void set_identity(matrix_t &m) noexcept {
-  m = identity<matrix_t>();
-}
-
-/// Transpose the matrix @param m
-template <std::size_t ROW, std::size_t COL, concepts::scalar scalar_t,
-          template <typename, std::size_t> class array_t, std::size_t... I>
-DETRAY_HOST_DEVICE constexpr auto transpose(
-    const matrix<array_t, scalar_t, ROW, COL> &m,
-    std::index_sequence<I...> /*unused*/) noexcept {
-  using matrix_T_t = matrix<array_t, scalar_t, COL, ROW>;
-  using column_t = typename matrix_T_t::vector_type;
-
-  matrix_T_t res_m;
-
-  DETRAY_UNROLL_N(ROW)
-  for (std::size_t j = 0u; j < ROW; ++j) {
-    res_m[j] = column_t{m[I][j]...};
-  }
-
-  return res_m;
-}
-
-/// Build an identity matrix
-template <concepts::matrix matrix_t>
-DETRAY_HOST_DEVICE constexpr auto transpose(const matrix_t &m) noexcept {
-  return transpose(m, std::make_index_sequence<matrix_t::columns()>());
-}
 
 /// Equality operator between two matrices
 template <std::size_t ROW, std::size_t COL, typename scalar_t,

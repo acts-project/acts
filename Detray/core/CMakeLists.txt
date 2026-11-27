@@ -14,7 +14,9 @@ file(
     GLOB _detray_core_public_headers
     RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
     "include/detray/algebra/common/*.hpp"
+    "include/detray/algebra/common/impl/*.hpp"
     "include/detray/algebra/generic/*.hpp"
+    "include/detray/algebra/generic/impl/*.hpp"
     "include/detray/algebra/utils/*.hpp"
     "include/detray/builders/*.hpp"
     "include/detray/core/*.hpp"
@@ -109,6 +111,14 @@ target_link_libraries(
     detray_core_array
     INTERFACE detray::core detray::algebra_array
 )
+
+if(DETRAY_ARRAY_SOA_PLUGIN)
+    detray_add_library( detray_core_array_soa core_array_soa )
+    target_link_libraries(
+        detray_core_array_soa
+        INTERFACE detray::core detray::algebra_array_soa
+    )
+endif()
 
 if(DETRAY_EIGEN_PLUGIN)
     detray_add_library(detray_core_eigen core_eigen)

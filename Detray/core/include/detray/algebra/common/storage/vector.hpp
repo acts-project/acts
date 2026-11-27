@@ -13,7 +13,7 @@
 #endif
 
 // Project include(s)
-#include "detray/algebra/common/array_operators.hpp"
+#include "detray/algebra/common/storage/array_operators.hpp"
 #include "detray/algebra/concepts.hpp"
 #include "detray/definitions/detail/qualifiers.hpp"
 
@@ -56,6 +56,10 @@ class DETRAY_ALIGN(
   static consteval std::size_t simd_size() {
     return concepts::value<scalar_t> ? detail::nearest_power_of_two(N, 2u) : N;
   }
+
+  /// @returns the number of vector elements
+  DETRAY_HOST_DEVICE
+  static consteval std::size_t size() { return N; }
 
   /// Value type is a simd vector in SoA and a scalar in AoS
   using scalar_type = scalar_t;
@@ -213,11 +217,27 @@ class DETRAY_ALIGN(
 
     DETRAY_UNROLL_N(N)
     for (unsigned int i{0u}; i < N; ++i) {
-      // Ducktyping the Vc::Vector::MaskType
-      is_full = is_full && comp[i].isFull();
+      is_full = is_full && all_lanes_set(comp[i]);
     }
 
     return is_full;
+  }
+
+  /// @returns true if all lanes of the mask @p m are set
+  ///
+  /// @note The masks of the array SoA plugin provide @c is_full(), the
+  /// @c Vc::Mask types provide @c isFull()
+  ///
+  /// @tparam mask_t SIMD mask type
+  ///
+  /// @param m the mask
+  template <typename mask_t>
+  DETRAY_HOST_DEVICE static constexpr bool all_lanes_set(const mask_t &m) {
+    if constexpr (requires { m.is_full(); }) {
+      return m.is_full();
+    } else {
+      return m.isFull();
+    }
   }
   /// @}
 
@@ -266,34 +286,36 @@ class DETRAY_ALIGN(
             template <typename, std::size_t> class array_t>                    \
   DETRAY_HOST_DEVICE constexpr decltype(auto) operator OP(                     \
       const vector<N, scalar_t, array_t> &lhs, value_t rhs) noexcept {         \
-    return lhs.m_data OP static_cast<scalar_t>(rhs);                           \
+    return vector<N, scalar_t, array_t>{                                       \
+        lhs.m_data OP static_cast<scalar_t>(rhs)};                             \
   }                                                                            \
   template <std::size_t N, concepts::scalar scalar_t, concepts::value value_t, \
             template <typename, std::size_t> class array_t>                    \
   DETRAY_HOST_DEVICE constexpr decltype(auto) operator OP(                     \
       value_t lhs, const vector<N, scalar_t, array_t> &rhs) noexcept {         \
-    return static_cast<scalar_t>(lhs) OP rhs.m_data;                           \
+    return vector<N, scalar_t, array_t>{static_cast<scalar_t>(lhs)             \
+                                            OP rhs.m_data};                    \
   }                                                                            \
   template <std::size_t N, concepts::scalar scalar_t,                          \
             template <typename, std::size_t> class array_t>                    \
   DETRAY_HOST_DEVICE constexpr decltype(auto) operator OP(                     \
       const vector<N, scalar_t, array_t> &lhs,                                 \
       const vector<N, scalar_t, array_t> &rhs) noexcept {                      \
-    return lhs.m_data OP rhs.m_data;                                           \
+    return vector<N, scalar_t, array_t>{lhs.m_data OP rhs.m_data};             \
   }                                                                            \
   template <std::size_t N, concepts::scalar scalar_t,                          \
             template <typename, std::size_t> class array_t, typename other_t>  \
     requires(concepts::vector<other_t> || concepts::simd_scalar<other_t>)      \
   DETRAY_HOST_DEVICE constexpr decltype(auto) operator OP(                     \
       const vector<N, scalar_t, array_t> &lhs, const other_t &rhs) noexcept {  \
-    return lhs.m_data OP rhs;                                                  \
+    return vector<N, scalar_t, array_t>{lhs.m_data OP rhs};                    \
   }                                                                            \
   template <std::size_t N, concepts::scalar scalar_t,                          \
             template <typename, std::size_t> class array_t, typename other_t>  \
     requires(concepts::vector<other_t> || concepts::simd_scalar<other_t>)      \
   DETRAY_HOST_DEVICE constexpr decltype(auto) operator OP(                     \
       const other_t &lhs, const vector<N, scalar_t, array_t> &rhs) noexcept {  \
-    return lhs OP rhs.m_data;                                                  \
+    return vector<N, scalar_t, array_t>{lhs OP rhs.m_data};                    \
   }
 
 // Implement all arithmetic operations on top of @c vector.

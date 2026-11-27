@@ -60,15 +60,12 @@ DETRAY_HOST_DEVICE constexpr auto approx_equal(
     // Calculate the difference.
     const simd1_t diff{Vc::abs(a - b)};
 
-    // If the numbers are is close to zero
-    if ((diff <= simd1_t(max_error)).isFull()) {
-      return true;
-    }
-
     // Find the largest entries and scale the epsilon
     const simd1_t largest = Vc::max(Vc::abs(a), Vc::abs(b));
 
-    return (diff <= (largest * rel_error)).isFull();
+    // Every lane has to be close to zero or within the relative tolerance
+    return ((diff <= simd1_t(max_error)) || (diff <= (largest * rel_error)))
+        .isFull();
   }
 }
 
