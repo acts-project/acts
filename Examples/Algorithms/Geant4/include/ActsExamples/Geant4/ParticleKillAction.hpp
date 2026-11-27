@@ -33,7 +33,7 @@ class ParticleKillAction : public G4UserSteppingAction {
   /// Configuration of the Stepping action
   struct Config {
     /// event store
-    std::shared_ptr<EventStore> eventStore;
+    std::shared_ptr<EventContext> eventContext;
 
     /// particles outside this volume will be terminated
     std::shared_ptr<const Acts::Volume> volume;
@@ -58,7 +58,7 @@ class ParticleKillAction : public G4UserSteppingAction {
 
  private:
   /// Private access method to the event store
-  EventStore& eventStore() const { return *m_cfg.eventStore; }
+  EventStore& eventStore() const { return m_cfg.eventContext->current(); }
 
   const Acts::Logger& logger() const { return *m_logger; }
 

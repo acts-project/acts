@@ -34,7 +34,7 @@ class SimParticleTranslation final : public G4VUserPrimaryGeneratorAction {
   /// Nested configuration struct that contains the
   /// input particle collection name,
   struct Config {
-    std::shared_ptr<EventStore> eventStore;
+    std::shared_ptr<EventContext> eventContext;
 
     /// Force pdgCode & mass & charge in G4 units (this is needed for Geantino
     /// simulation)
@@ -72,7 +72,7 @@ class SimParticleTranslation final : public G4VUserPrimaryGeneratorAction {
   const Acts::Logger& logger() const { return *m_logger; }
 
   /// Private access method to the event store
-  EventStore& eventStore() const { return *m_cfg.eventStore; }
+  EventStore& eventStore() const { return m_cfg.eventContext->current(); }
 
   /// The looging instance
   std::unique_ptr<const Acts::Logger> m_logger;

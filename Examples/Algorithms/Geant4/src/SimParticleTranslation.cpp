@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Geant4/EventStore.hpp"
 #include "ActsExamples/Geant4/UnitConversion.hpp"
 
@@ -44,23 +43,11 @@ void SimParticleTranslation::GeneratePrimaries(G4Event* eventPtr) {
 
   ACTS_DEBUG("Primary Generator Action for Event: " << eventID);
 
-  if (eventStore().store == nullptr) {
-    ACTS_WARNING("No WhiteBoard instance could be found for this event!");
-    return;
-  }
-
-  if (eventStore().inputParticles == nullptr) {
-    ACTS_WARNING("No input particle handle found");
-    return;
-  }
-
-  // Get the number of input particles
-  const auto inputParticles =
-      (*eventStore().inputParticles)(*eventStore().store);
+  const auto& inputParticles = eventStore().inputParticles;
 
   // Reserve hopefully enough hit space
-  eventStore().hits.reserve(inputParticles.size() *
-                            m_cfg.reserveHitsPerParticle);
+  eventStore().result.hits.reserve(inputParticles.size() *
+                                   m_cfg.reserveHitsPerParticle);
 
   // Default particle kinematic
   G4ParticleTable* particleTable = G4ParticleTable::GetParticleTable();
