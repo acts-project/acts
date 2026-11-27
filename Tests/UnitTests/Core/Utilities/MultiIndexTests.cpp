@@ -11,10 +11,13 @@
 
 #include "Acts/Utilities/MultiIndex.hpp"
 
+#include <algorithm>
 #include <array>
+#include <concepts>
 #include <cstddef>
 #include <cstdint>
 #include <unordered_set>
+#include <vector>
 
 #include <boost/mpl/list.hpp>
 
@@ -94,6 +97,29 @@ BOOST_AUTO_TEST_CASE(index64_set_overflow) {
                       std::out_of_range);
     lvl += 1;
   }
+}
+
+BOOST_AUTO_TEST_CASE(wide_levels) {
+  // levels with 32 or more bits, which do not fit into an int
+  using Index3232 = Acts::MultiIndex<std::uint64_t, 32, 32>;
+  constexpr std::uint64_t max32 = 0xffffffffu;
+  BOOST_CHECK_EQUAL(Index3232::Zeros().maxValue(0), max32);
+  BOOST_CHECK_EQUAL(Index3232::Zeros().maxValue(1), max32);
+
+  auto idx = Index3232::Encode(max32, 7u);
+  BOOST_CHECK_EQUAL(idx.value(), 0xffffffff00000007u);
+  BOOST_CHECK_EQUAL(idx.level(0), max32);
+  BOOST_CHECK_EQUAL(idx.level(1), 7u);
+  BOOST_CHECK_THROW(Index3232::Zeros().set(0, max32 + 1), std::out_of_range);
+  BOOST_CHECK_THROW(Index3232::Zeros().set(1, max32 + 1), std::out_of_range);
+  // ordering is lexicographic over the levels
+  BOOST_CHECK(Index3232::Encode(0u, max32) < Index3232::Encode(1u, 0u));
+
+  // a single level using the full storage
+  using Index64Full = Acts::MultiIndex<std::uint64_t, 64>;
+  constexpr std::uint64_t max64 = 0xffffffffffffffffu;
+  BOOST_CHECK_EQUAL(Index64Full::Zeros().maxValue(0), max64);
+  BOOST_CHECK_EQUAL(Index64Full::Encode(max64).level(0), max64);
 }
 
 BOOST_AUTO_TEST_CASE(index32_encode) {
@@ -225,6 +251,23 @@ BOOST_AUTO_TEST_CASE(index64_as_key) {
   BOOST_CHECK(!set.count(Index64(0u)));
   BOOST_CHECK(!set.count(Index64(std::numeric_limits<std::uint64_t>::max())));
   BOOST_CHECK_EQUAL(set.size(), 3);
+}
+
+BOOST_AUTO_TEST_CASE_TEMPLATE(ordering, T, Indices) {
+  static_assert(std::totally_ordered<T>);
+  const T a = T::Encode(1u, 2u);
+  const T b = T::Encode(2u, 0u);
+  BOOST_CHECK(a < b);
+  BOOST_CHECK(b > a);
+  BOOST_CHECK(a <= a);
+  BOOST_CHECK(b >= a);
+  BOOST_CHECK(a != b);
+
+  // lexicographic over the levels, i.e. usable as a sort key
+  std::vector<T> indices = {b, T::Encode(1u, 3u), a, T::Encode(1u)};
+  std::ranges::sort(indices);
+  BOOST_CHECK(
+      (indices == std::vector<T>{T::Encode(1u), a, T::Encode(1u, 3u), b}));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
