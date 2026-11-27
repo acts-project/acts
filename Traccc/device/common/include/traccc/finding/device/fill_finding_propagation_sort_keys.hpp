@@ -24,7 +24,8 @@ namespace traccc::device {
 /// traccc::device::fill_finding_propagation_sort_keys function
 struct fill_finding_propagation_sort_keys_payload {
   /**
-   * @brief View object to the vector of bound track parameters
+   * @brief View object to the find_tracks scratch track parameters of the
+   * current step, in their uncondensed order
    */
   bound_track_parameters_collection_types::const_view params_view;
 
@@ -33,6 +34,12 @@ struct fill_finding_propagation_sort_keys_payload {
    * liveness of each parameter
    */
   vecmem::data::vector_view<const unsigned int> param_liveness_view;
+
+  /**
+   * @brief View object to the map from condensed parameter index to the slot
+   * in @c params_view
+   */
+  vecmem::data::vector_view<const unsigned int> condensed_param_map_view;
 
   /**
    * @brief View object to the vector of sort keys

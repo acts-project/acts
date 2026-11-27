@@ -17,8 +17,9 @@
 
 namespace {
 template <typename T>
-auto get_sized_view(unsigned int size, vecmem::data::vector_buffer<T>& buff) {
-  return vecmem::data::vector_view<T>(size, buff.ptr());
+auto get_sized_view(unsigned int size, vecmem::data::vector_buffer<T>& buff,
+                    unsigned int offset = 0) {
+  return vecmem::data::vector_view<T>(size, buff.ptr() + offset);
 }
 }  // namespace
 
@@ -246,6 +247,7 @@ auto combinatorial_kalman_filter_algorithm::operator()(
     unsigned int find_tracks_tmp_links_buffer_size = 0;
     vecmem::data::vector_buffer<candidate_link> tmp_links_buffer;
     bound_track_parameters_collection_types::buffer tmp_params_buffer;
+    vecmem::data::vector_buffer<unsigned int> tmp_condensed_param_map_buffer;
     unsigned int param_ids_buffer_size = 0;
     vecmem::data::vector_buffer<unsigned int> param_ids_buffer;
     unsigned int link_last_measurement_buffer_size = 0;
@@ -414,6 +416,10 @@ auto combinatorial_kalman_filter_algorithm::operator()(
           tmp_params_buffer = bound_track_parameters_collection_types::buffer{
               find_tracks_tmp_links_buffer_size, mr().main};
           copy().setup(vecmem::ignore_event, tmp_params_buffer);
+          tmp_condensed_param_map_buffer =
+              vecmem::data::vector_buffer<unsigned int>{
+                  find_tracks_tmp_links_buffer_size, mr().main};
+          copy().setup(vecmem::ignore_event, tmp_condensed_param_map_buffer);
         }
 
         auto in_params_view = get_sized_view(n_in_params, in_params_buffer);
@@ -431,6 +437,8 @@ auto combinatorial_kalman_filter_algorithm::operator()(
             get_sized_view(n_max_candidates, tmp_params_buffer);
         auto tmp_links_view =
             get_sized_view(n_max_candidates, tmp_links_buffer);
+        auto tmp_condensed_parameter_map_view =
+            get_sized_view(n_max_candidates, tmp_condensed_param_map_buffer);
 
         // Launch the track finding kernel.
         find_tracks_kernel(
@@ -467,6 +475,7 @@ auto combinatorial_kalman_filter_algorithm::operator()(
              .in_params_index_view = out_params_index_view,
              .out_params_view = updated_params_view,
              .out_params_liveness_view = updated_params_liveness_view,
+             .out_condensed_param_map_view = tmp_condensed_parameter_map_view,
              .tips_view = tips_buffer,
              .tip_lengths_view = tip_length_buffer,
              .link_filtered_parameter_view = link_filtered_parameter_buffer});
@@ -487,10 +496,6 @@ auto combinatorial_kalman_filter_algorithm::operator()(
             step_to_link_idx_map[step + 1] - step_to_link_idx_map[step];
       }
 
-      auto params_view = get_sized_view(n_candidates, in_params_buffer);
-      auto params_liveness_view =
-          get_sized_view(n_candidates, in_params_liveness_buffer);
-
       // Set up the buffer used in the next few steps
       if (n_candidates > param_ids_buffer_size) {
         param_ids_buffer_size = n_candidates;
@@ -500,6 +505,14 @@ auto combinatorial_kalman_filter_algorithm::operator()(
       }
 
       auto param_ids_view = get_sized_view(n_candidates, param_ids_buffer);
+
+      // If no more CKF step is expected, the tips and links are
+      // populated, and any further time-consuming action is avoided. Note
+      // that the condensing kernel marks every parameter dead on the last
+      // step, so duplicate removal would be a no-op there anyway.
+      if (step == (cfg.max_track_candidates_per_track - 1)) {
+        break;
+      }
 
       /*
        * On later steps, we can duplicate removal which will attempt to
@@ -525,12 +538,15 @@ auto combinatorial_kalman_filter_algorithm::operator()(
          */
         fill_finding_duplicate_removal_sort_keys_kernel(
             n_candidates,
-            {.links_view = links_buffer,
-             .param_liveness_view = params_liveness_view,
+            {.prev_links_view = links_buffer,
+             .curr_links_view = tmp_links_buffer,
+             .param_liveness_view =
+                 get_sized_view(n_candidates, in_params_liveness_buffer),
              .link_last_measurement_view = link_last_measurement_view,
              .param_ids_view = param_ids_view,
+             .condensed_param_map_view = get_sized_view(
+                 n_max_candidates, tmp_condensed_param_map_buffer),
              .n_links = n_candidates,
-             .curr_links_idx = step_to_link_idx_map[step],
              .n_measurements = n_measurements});
 
         sort_param_ids_by_last_measurement(link_last_measurement_view,
@@ -541,20 +557,17 @@ auto combinatorial_kalman_filter_algorithm::operator()(
          */
         remove_duplicates_kernel(
             n_candidates, cfg,
-            {.links_view = links_buffer,
+            {.prev_links_view = links_buffer,
+             .curr_links_view = tmp_links_buffer,
              .link_last_measurement_view = link_last_measurement_view,
              .param_ids_view = param_ids_view,
-             .param_liveness_view = params_liveness_view,
+             .param_liveness_view =
+                 get_sized_view(n_candidates, in_params_liveness_buffer),
+             .condensed_param_map_view = get_sized_view(
+                 n_max_candidates, tmp_condensed_param_map_buffer),
              .n_links = n_candidates,
-             .curr_links_idx = step_to_link_idx_map[step],
              .n_measurements = n_measurements,
              .step = step});
-      }
-
-      // If no more CKF step is expected, the tips and links are
-      // populated, and any further time-consuming action is avoided
-      if (step == (cfg.max_track_candidates_per_track - 1)) {
-        break;
       }
 
       if (n_candidates > 0) {
@@ -572,23 +585,67 @@ auto combinatorial_kalman_filter_algorithm::operator()(
           auto keys_view = get_sized_view(n_candidates, keys_buffer);
 
           fill_finding_propagation_sort_keys_kernel(
-              n_candidates, {.params_view = params_view,
-                             .param_liveness_view = params_liveness_view,
-                             .keys_view = keys_view,
-                             .ids_view = param_ids_view});
+              n_candidates,
+              {.params_view =
+                   get_sized_view(n_max_candidates, tmp_params_buffer),
+               .param_liveness_view =
+                   get_sized_view(n_candidates, in_params_liveness_buffer),
+               .condensed_param_map_view = get_sized_view(
+                   n_max_candidates, tmp_condensed_param_map_buffer),
+               .keys_view = keys_view,
+               .ids_view = param_ids_view});
 
           // Sort the key and values
           sort_param_ids_by_keys(keys_view, param_ids_view);
         }
+
+        if (n_candidates > updated_params_buffer_size) {
+          updated_params_buffer_size = n_candidates;
+          updated_params_buffer =
+              bound_track_parameters_collection_types::buffer{
+                  updated_params_buffer_size, mr().main};
+          copy().setup(vecmem::ignore_event, updated_params_buffer);
+          updated_params_liveness_buffer =
+              vecmem::data::vector_buffer<unsigned int>{
+                  updated_params_buffer_size, mr().main};
+          copy().setup(vecmem::ignore_event, updated_params_liveness_buffer);
+        }
+
+        permute_tracks_kernel(
+            n_candidates,
+            permute_tracks_payload{
+                .n_in_params = n_candidates,
+                .curr_links_idx = step_to_link_idx_map[step],
+                .in_params_view =
+                    get_sized_view(n_max_candidates, tmp_params_buffer),
+                .in_param_liveness_view =
+                    get_sized_view(n_candidates, in_params_liveness_buffer),
+                .in_links_view = tmp_links_buffer,
+                .in_params_index_view = param_ids_view,
+                .in_condensed_param_map_view = get_sized_view(
+                    n_max_candidates, tmp_condensed_param_map_buffer),
+                .out_params_view =
+                    get_sized_view(n_candidates, updated_params_buffer),
+                .out_param_liveness_view = get_sized_view(
+                    n_candidates, updated_params_liveness_buffer),
+                .out_links_view = get_sized_view(n_candidates, links_buffer,
+                                                 step_to_link_idx_map[step]),
+                .out_link_filtered_parameter_view =
+                    link_filtered_parameter_buffer,
+            });
+
+        std::swap(in_params_buffer, updated_params_buffer);
+        std::swap(in_params_liveness_buffer, updated_params_liveness_buffer);
+        std::swap(in_params_buffer_size, updated_params_buffer_size);
 
         /*****************************************************************
          * Propagate to the next surface
          *****************************************************************/
         propagate_to_next_surface_kernel(
             n_candidates, cfg, det, device_detector, bfield,
-            {.params_view = params_view,
-             .params_liveness_view = params_liveness_view,
-             .param_ids_view = param_ids_view,
+            {.params_view = get_sized_view(n_candidates, in_params_buffer),
+             .params_liveness_view =
+                 get_sized_view(n_candidates, in_params_liveness_buffer),
              .links_view = links_buffer,
              .link_predicted_parameter_view = link_predicted_parameter_buffer,
              .prev_links_idx = step_to_link_idx_map[step],

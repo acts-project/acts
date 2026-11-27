@@ -66,6 +66,13 @@ struct condense_tracks_payload {
   vecmem::data::vector_view<unsigned int> out_params_liveness_view;
 
   /**
+   * @brief View object to the output map from condensed parameter index to
+   * the slot in the find_tracks scratch buffers (@c in_tmp_params_view and
+   * @c in_tmp_links_view)
+   */
+  vecmem::data::vector_view<unsigned int> out_condensed_param_map_view;
+
+  /**
    * @brief View object to the vector of tips
    */
   vecmem::data::vector_view<unsigned int> tips_view;
@@ -111,6 +118,8 @@ TRACCC_HOST_DEVICE inline void condense_tracks(
   vecmem::device_vector<unsigned int> tip_lengths(payload.tip_lengths_view);
   bound_track_parameters_collection_types::device link_filtered_parameters(
       payload.link_filtered_parameter_view);
+  vecmem::device_vector<unsigned int> out_condensed_param_map(
+      payload.out_condensed_param_map_view);
 
   unsigned int num_parameters;
   unsigned int idx;
@@ -129,13 +138,18 @@ TRACCC_HOST_DEVICE inline void condense_tracks(
     const unsigned int link_out_index =
         param_out_index + payload.curr_links_idx;
 
-    out_params.at(param_out_index) = in_tmp_params.at(in_offset);
+    out_condensed_param_map.at(param_out_index) = in_offset;
+
     out_params_liveness.at(param_out_index) =
         static_cast<unsigned int>(!last_step);
-    links.at(link_out_index) = in_tmp_links.at(in_offset);
 
-    if (link_filtered_parameters.capacity() > 0) {
-      link_filtered_parameters.at(link_out_index) = in_tmp_params.at(in_offset);
+    if (last_step) {
+      out_params.at(param_out_index) = in_tmp_params.at(in_offset);
+      links.at(link_out_index) = in_tmp_links.at(in_offset);
+      if (link_filtered_parameters.capacity() > 0) {
+        link_filtered_parameters.at(link_out_index) =
+            in_tmp_params.at(in_offset);
+      }
     }
 
     const unsigned int n_cands =
