@@ -20,7 +20,7 @@
 
 namespace ActsExamples {
 
-class DD4hepDetector;
+class DD4hepDetectorBase;
 
 /// Read in a measurement collection from EDM4hep TrackerHitLocal format.
 class EDM4hepMeasurementInputConverter final : public PodioInputConverter {
@@ -40,7 +40,7 @@ class EDM4hepMeasurementInputConverter final : public PodioInputConverter {
     /// DD4hep detector for cellID to geometry identifier resolution.
     /// Mutually exclusive with @p geometryMapper: exactly one of the two
     /// must be set.
-    std::shared_ptr<DD4hepDetector> dd4hepDetector;
+    std::shared_ptr<DD4hepDetectorBase> dd4hepDetector;
 
     /// Custom cellID to geometry identifier mapper, for use with tracking
     /// geometries that are not backed by DD4hep. Mutually exclusive with

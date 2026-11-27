@@ -1,6 +1,35 @@
 #!/usr/bin/env python3
 
 import sys, os, argparse, pathlib
+import tempfile, urllib.request
+
+# Provisional Gen3 map, produced locally and hosted as a release asset on a
+# personal fork; not yet the ODD repo's official map (which is still
+# Gen1-keyed and incompatible with Gen3 surfaces).
+PROVISIONAL_GEN3_MATERIAL_MAP_URL = (
+    "https://github.com/LeaBaumann/acts/releases/download/"
+    "gen3-material-map-provisional-v1/odd_gen3_map.json.zst"
+)
+
+
+def volumeIdsWhere(trackingGeometry, predicate):
+    """Collect geometryId.volume for every TrackingVolume whose name matches
+    predicate(name). Used to derive CKF volume lists (pixelVolumes,
+    stripVolumes, constrainToVolumes) by name instead of hardcoding numeric
+    GeometryIdentifiers, which shift whenever the blueprint gains or loses
+    volumes (e.g. passive elements, material collectors, gap fillers)."""
+    import acts
+
+    ids = set()
+
+    class _Visitor(acts.TrackingGeometryMutableVisitor):
+        def visitVolume(self, volume: acts.Volume):
+            name = volume.volumeName if isinstance(volume, acts.TrackingVolume) else ""
+            if predicate(name):
+                ids.add(volume.geometryId.volume)
+
+    trackingGeometry.apply(_Visitor())
+    return sorted(ids)
 
 
 def parse_args():
@@ -313,6 +342,7 @@ def full_chain(args):
         decorators = detector.contextDecorators()
     elif args.odd:
         import acts.examples.odd
+        import acts.json
         etaRange = (-3.0, 3.0)
         ptMin = 1.0 * u.GeV
         rhoMax = 24.0 * u.mm
@@ -327,13 +357,36 @@ def full_chain(args):
         if args.gbts_connection_table is None:
             args.gbts_connection_table = actsDir / "Examples/Configs/odd-gbts-connection-table.json"
         if args.material_config is None:
-            args.material_config = geoDir / "data/odd-material-maps.root"
+            # Gen3's default: the shipped ODD map (data/odd-material-maps.root)
+            # is Gen1-keyed and incompatible with Gen3 surfaces, so fall back
+            # to the provisional Gen3 map instead (same one physmon uses).
+            args.material_config = (
+                pathlib.Path(tempfile.gettempdir())
+                / "odd-material-maps-gen3-provisional.json.zst"
+            )
+            urllib.request.urlretrieve(
+                PROVISIONAL_GEN3_MATERIAL_MAP_URL, args.material_config
+            )
         args.bf_constant = True
         detector = acts.examples.odd.getOpenDataDetector(
             odd_dir=geoDir,
-            materialDecorator=acts.IMaterialDecorator.fromFile(args.material_config),
+            materialDecorator=acts.json.MaterialMapDecorator(
+                acts.json.TrackingGeometryMaterialJsonConverter().fromFile(
+                    args.material_config
+                )
+            ),
         )
         trackingGeometry = detector.trackingGeometry()
+        # CKF volume lists derived by name: the Gen1 literal IDs do not exist in
+        # the Gen3 geometry (see full_chain_odd.py).
+        pixelVolumes = volumeIdsWhere(trackingGeometry, lambda n: "Pixel" in n)
+        # short strips only, as in the Gen1 lists ([23, 24, 25]): long-strip holes
+        # are not counted towards maxStripHoles
+        stripVolumes = volumeIdsWhere(trackingGeometry, lambda n: "ShortStrip" in n)
+        constrainToVolumes = volumeIdsWhere(
+            trackingGeometry,
+            lambda n: n != "World" and not n.startswith("CaloMaterialCollector"),
+        )
         decorators = detector.contextDecorators()
     elif args.itk:
         import acts.examples.itk as itk
@@ -697,27 +750,11 @@ def full_chain(args):
 
     if args.odd:
         ckfConfig = ckfConfig._replace(
-            pixelVolumes=[16, 17, 18],
-            stripVolumes=[23, 24, 25],
+            pixelVolumes=pixelVolumes,
+            stripVolumes=stripVolumes,
             maxPixelHoles=1,
             maxStripHoles=2,
-            constrainToVolumes=[
-                2,  # beam pipe
-                32,
-                4,  # beam pip gap
-                16,
-                17,
-                18,  # pixel
-                20,  # PST
-                23,
-                24,
-                25,  # short strip
-                26,
-                8,  # long strip gap
-                28,
-                29,
-                30,  # long strip
-            ],
+            constrainToVolumes=constrainToVolumes,
         )
     elif args.itk:
         ckfConfig = ckfConfig._replace(

@@ -6,8 +6,7 @@
             "technology": "pixel",
             "surfaces": [
                 {
-                    "volume": 16,
-                    "layer": 4
+                    "volume": 36
                 }
             ]
         },
@@ -17,8 +16,7 @@
             "technology": "pixel",
             "surfaces": [
                 {
-                    "volume": 16,
-                    "layer": 6
+                    "volume": 35
                 }
             ]
         },
@@ -28,8 +26,7 @@
             "technology": "pixel",
             "surfaces": [
                 {
-                    "volume": 16,
-                    "layer": 8
+                    "volume": 34
                 }
             ]
         },
@@ -39,8 +36,7 @@
             "technology": "pixel",
             "surfaces": [
                 {
-                    "volume": 16,
-                    "layer": 10
+                    "volume": 33
                 }
             ]
         },
@@ -50,8 +46,7 @@
             "technology": "pixel",
             "surfaces": [
                 {
-                    "volume": 16,
-                    "layer": 12
+                    "volume": 32
                 }
             ]
         },
@@ -61,8 +56,7 @@
             "technology": "pixel",
             "surfaces": [
                 {
-                    "volume": 16,
-                    "layer": 14
+                    "volume": 31
                 }
             ]
         },
@@ -72,8 +66,7 @@
             "technology": "pixel",
             "surfaces": [
                 {
-                    "volume": 16,
-                    "layer": 16
+                    "volume": 30
                 }
             ]
         },
@@ -83,8 +76,7 @@
             "technology": "pixel",
             "surfaces": [
                 {
-                    "volume": 17,
-                    "layer": 2
+                    "volume": 17
                 }
             ]
         },
@@ -94,8 +86,7 @@
             "technology": "pixel",
             "surfaces": [
                 {
-                    "volume": 17,
-                    "layer": 4
+                    "volume": 18
                 }
             ]
         },
@@ -105,8 +96,7 @@
             "technology": "pixel",
             "surfaces": [
                 {
-                    "volume": 17,
-                    "layer": 6
+                    "volume": 19
                 }
             ]
         },
@@ -116,8 +106,7 @@
             "technology": "pixel",
             "surfaces": [
                 {
-                    "volume": 17,
-                    "layer": 8
+                    "volume": 20
                 }
             ]
         },
@@ -127,8 +116,7 @@
             "technology": "pixel",
             "surfaces": [
                 {
-                    "volume": 18,
-                    "layer": 2
+                    "volume": 47
                 }
             ]
         },
@@ -138,8 +126,7 @@
             "technology": "pixel",
             "surfaces": [
                 {
-                    "volume": 18,
-                    "layer": 4
+                    "volume": 48
                 }
             ]
         },
@@ -149,8 +136,7 @@
             "technology": "pixel",
             "surfaces": [
                 {
-                    "volume": 18,
-                    "layer": 6
+                    "volume": 49
                 }
             ]
         },
@@ -160,8 +146,7 @@
             "technology": "pixel",
             "surfaces": [
                 {
-                    "volume": 18,
-                    "layer": 8
+                    "volume": 50
                 }
             ]
         },
@@ -171,8 +156,7 @@
             "technology": "pixel",
             "surfaces": [
                 {
-                    "volume": 18,
-                    "layer": 10
+                    "volume": 51
                 }
             ]
         },
@@ -182,8 +166,7 @@
             "technology": "pixel",
             "surfaces": [
                 {
-                    "volume": 18,
-                    "layer": 12
+                    "volume": 52
                 }
             ]
         },
@@ -193,8 +176,7 @@
             "technology": "pixel",
             "surfaces": [
                 {
-                    "volume": 18,
-                    "layer": 14
+                    "volume": 53
                 }
             ]
         },
@@ -204,8 +186,7 @@
             "technology": "strip",
             "surfaces": [
                 {
-                    "volume": 23,
-                    "layer": 2
+                    "volume": 77
                 }
             ]
         },
@@ -215,8 +196,7 @@
             "technology": "strip",
             "surfaces": [
                 {
-                    "volume": 23,
-                    "layer": 4
+                    "volume": 76
                 }
             ]
         },
@@ -226,8 +206,7 @@
             "technology": "strip",
             "surfaces": [
                 {
-                    "volume": 23,
-                    "layer": 6
+                    "volume": 75
                 }
             ]
         },
@@ -237,8 +216,7 @@
             "technology": "strip",
             "surfaces": [
                 {
-                    "volume": 23,
-                    "layer": 8
+                    "volume": 74
                 }
             ]
         },
@@ -248,8 +226,7 @@
             "technology": "strip",
             "surfaces": [
                 {
-                    "volume": 23,
-                    "layer": 10
+                    "volume": 73
                 }
             ]
         },
@@ -259,8 +236,7 @@
             "technology": "strip",
             "surfaces": [
                 {
-                    "volume": 23,
-                    "layer": 12
+                    "volume": 72
                 }
             ]
         },
@@ -270,8 +246,7 @@
             "technology": "strip",
             "surfaces": [
                 {
-                    "volume": 24,
-                    "layer": 2
+                    "volume": 61
                 }
             ]
         },
@@ -281,8 +256,7 @@
             "technology": "strip",
             "surfaces": [
                 {
-                    "volume": 24,
-                    "layer": 4
+                    "volume": 62
                 }
             ]
         },
@@ -292,8 +266,7 @@
             "technology": "strip",
             "surfaces": [
                 {
-                    "volume": 24,
-                    "layer": 6
+                    "volume": 63
                 }
             ]
         },
@@ -303,8 +276,7 @@
             "technology": "strip",
             "surfaces": [
                 {
-                    "volume": 24,
-                    "layer": 8
+                    "volume": 64
                 }
             ]
         },
@@ -314,8 +286,7 @@
             "technology": "strip",
             "surfaces": [
                 {
-                    "volume": 25,
-                    "layer": 2
+                    "volume": 85
                 }
             ]
         },
@@ -325,8 +296,7 @@
             "technology": "strip",
             "surfaces": [
                 {
-                    "volume": 25,
-                    "layer": 4
+                    "volume": 86
                 }
             ]
         },
@@ -336,8 +306,7 @@
             "technology": "strip",
             "surfaces": [
                 {
-                    "volume": 25,
-                    "layer": 6
+                    "volume": 87
                 }
             ]
         },
@@ -347,8 +316,7 @@
             "technology": "strip",
             "surfaces": [
                 {
-                    "volume": 25,
-                    "layer": 8
+                    "volume": 88
                 }
             ]
         },
@@ -358,8 +326,7 @@
             "technology": "strip",
             "surfaces": [
                 {
-                    "volume": 25,
-                    "layer": 10
+                    "volume": 89
                 }
             ]
         },
@@ -369,8 +336,7 @@
             "technology": "strip",
             "surfaces": [
                 {
-                    "volume": 25,
-                    "layer": 12
+                    "volume": 90
                 }
             ]
         },
@@ -380,8 +346,7 @@
             "technology": "strip",
             "surfaces": [
                 {
-                    "volume": 28,
-                    "layer": 2
+                    "volume": 108
                 }
             ]
         },
@@ -391,8 +356,7 @@
             "technology": "strip",
             "surfaces": [
                 {
-                    "volume": 28,
-                    "layer": 4
+                    "volume": 107
                 }
             ]
         },
@@ -402,8 +366,7 @@
             "technology": "strip",
             "surfaces": [
                 {
-                    "volume": 28,
-                    "layer": 6
+                    "volume": 106
                 }
             ]
         },
@@ -413,8 +376,7 @@
             "technology": "strip",
             "surfaces": [
                 {
-                    "volume": 28,
-                    "layer": 8
+                    "volume": 105
                 }
             ]
         },
@@ -424,8 +386,7 @@
             "technology": "strip",
             "surfaces": [
                 {
-                    "volume": 28,
-                    "layer": 10
+                    "volume": 104
                 }
             ]
         },
@@ -435,8 +396,7 @@
             "technology": "strip",
             "surfaces": [
                 {
-                    "volume": 28,
-                    "layer": 12
+                    "volume": 103
                 }
             ]
         },
@@ -446,8 +406,7 @@
             "technology": "strip",
             "surfaces": [
                 {
-                    "volume": 29,
-                    "layer": 2
+                    "volume": 94
                 }
             ]
         },
@@ -457,8 +416,7 @@
             "technology": "strip",
             "surfaces": [
                 {
-                    "volume": 29,
-                    "layer": 4
+                    "volume": 95
                 }
             ]
         },
@@ -468,8 +426,7 @@
             "technology": "strip",
             "surfaces": [
                 {
-                    "volume": 30,
-                    "layer": 2
+                    "volume": 116
                 }
             ]
         },
@@ -479,8 +436,7 @@
             "technology": "strip",
             "surfaces": [
                 {
-                    "volume": 30,
-                    "layer": 4
+                    "volume": 117
                 }
             ]
         },
@@ -490,8 +446,7 @@
             "technology": "strip",
             "surfaces": [
                 {
-                    "volume": 30,
-                    "layer": 6
+                    "volume": 118
                 }
             ]
         },
@@ -501,8 +456,7 @@
             "technology": "strip",
             "surfaces": [
                 {
-                    "volume": 30,
-                    "layer": 8
+                    "volume": 119
                 }
             ]
         },
@@ -512,8 +466,7 @@
             "technology": "strip",
             "surfaces": [
                 {
-                    "volume": 30,
-                    "layer": 10
+                    "volume": 120
                 }
             ]
         },
@@ -523,8 +476,7 @@
             "technology": "strip",
             "surfaces": [
                 {
-                    "volume": 30,
-                    "layer": 12
+                    "volume": 121
                 }
             ]
         }

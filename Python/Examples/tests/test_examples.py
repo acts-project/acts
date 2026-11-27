@@ -1220,7 +1220,7 @@ def test_gnn_module_map(tmp_path, assert_root_hash, backend, hardware):
 @pytest.mark.parametrize("useEdgeLayerConnector", [False, True])
 def test_gnn4itk_example(tmp_path, assert_root_hash, useEdgeLayerConnector):
     from gnn4itk_example import runGNN4ITk
-    from acts.examples.odd import getOpenDataDetector, getOpenDataDetectorDirectory
+    from acts.examples.odd import getOpenDataDetector
     from acts.examples.simulation import (
         addParticleGun,
         ParticleConfig,
@@ -1247,9 +1247,8 @@ def test_gnn4itk_example(tmp_path, assert_root_hash, useEdgeLayerConnector):
     assert Path(module_map + ".triplets.root").exists()
 
     repo_root = Path(__file__).parent.parent.parent.parent
-    odd_dir = getOpenDataDetectorDirectory()
 
-    digi_config = odd_dir / "config/odd-digi-smearing-config.json"
+    digi_config = repo_root / "Examples/Configs/odd-digi-smearing-config.json"
     pixel_geo_selection = repo_root / "Examples/Configs/odd-seeding-config.json"
     strip_geo_selection = (
         repo_root / "Examples/Configs/odd-strip-spacepoint-selection.json"

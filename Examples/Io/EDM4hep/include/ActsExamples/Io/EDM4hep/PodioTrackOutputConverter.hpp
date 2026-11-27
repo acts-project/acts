@@ -42,7 +42,7 @@ class PodioTrackOutputConverter : public PodioOutputConverter {
     /// Input TrackerHitLocal collection
     std::string inputTrackerHitsLocal;
     /// DD4hep detector
-    std::shared_ptr<DD4hepDetector> detector;
+    std::shared_ptr<DD4hepDetectorBase> detector;
   };
 
   /// Constructor

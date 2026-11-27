@@ -5,31 +5,6 @@
     },
     "entries": [
         {
-            "volume": 16,
-            "value": {
-                "smearing": [
-                    {
-                        "index": 0,
-                        "stddev": 0.015,
-                        "type": "GaussClipped",
-                        "range": [
-                            -3,
-                            3
-                        ]
-                    },
-                    {
-                        "index": 1,
-                        "stddev": 0.015,
-                        "type": "GaussClipped",
-                        "range": [
-                            -3,
-                            3
-                        ]
-                    }
-                ]
-            }
-        },
-        {
             "volume": 17,
             "value": {
                 "smearing": [
@@ -80,12 +55,12 @@
             }
         },
         {
-            "volume": 23,
+            "volume": 19,
             "value": {
                 "smearing": [
                     {
                         "index": 0,
-                        "stddev": 0.043,
+                        "stddev": 0.015,
                         "type": "GaussClipped",
                         "range": [
                             -3,
@@ -94,7 +69,7 @@
                     },
                     {
                         "index": 1,
-                        "stddev": 1.2,
+                        "stddev": 0.015,
                         "type": "GaussClipped",
                         "range": [
                             -3,
@@ -105,12 +80,12 @@
             }
         },
         {
-            "volume": 24,
+            "volume": 20,
             "value": {
                 "smearing": [
                     {
                         "index": 0,
-                        "stddev": 0.043,
+                        "stddev": 0.015,
                         "type": "GaussClipped",
                         "range": [
                             -3,
@@ -119,64 +94,7 @@
                     },
                     {
                         "index": 1,
-                        "stddev": 1.2,
-                        "type": "GaussClipped",
-                        "range": [
-                            -3,
-                            3
-                        ]
-                    }
-                ]
-            }
-        },
-        {
-            "volume": 25,
-            "value": {
-                "smearing": [
-                    {
-                        "index": 0,
-                        "stddev": 0.043,
-                        "type": "GaussClipped",
-                        "range": [
-                            -3,
-                            3
-                        ]
-                    },
-                    {
-                        "index": 1,
-                        "stddev": 1.2,
-                        "type": "GaussClipped",
-                        "range": [
-                            -3,
-                            3
-                        ]
-                    }
-                ]
-            }
-        },
-        {
-            "volume": 28,
-            "value": {
-                "smearing": [
-                    {
-                        "index": 0,
-                        "stddev": 0.072,
-                        "type": "GaussClipped",
-                        "range": [
-                            -3,
-                            3
-                        ]
-                    }
-                ]
-            }
-        },
-        {
-            "volume": 29,
-            "value": {
-                "smearing": [
-                    {
-                        "index": 0,
-                        "stddev": 0.072,
+                        "stddev": 0.015,
                         "type": "GaussClipped",
                         "range": [
                             -3,
@@ -188,6 +106,964 @@
         },
         {
             "volume": 30,
+            "value": {
+                "smearing": [
+                    {
+                        "index": 0,
+                        "stddev": 0.015,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    },
+                    {
+                        "index": 1,
+                        "stddev": 0.015,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "volume": 31,
+            "value": {
+                "smearing": [
+                    {
+                        "index": 0,
+                        "stddev": 0.015,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    },
+                    {
+                        "index": 1,
+                        "stddev": 0.015,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "volume": 32,
+            "value": {
+                "smearing": [
+                    {
+                        "index": 0,
+                        "stddev": 0.015,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    },
+                    {
+                        "index": 1,
+                        "stddev": 0.015,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "volume": 33,
+            "value": {
+                "smearing": [
+                    {
+                        "index": 0,
+                        "stddev": 0.015,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    },
+                    {
+                        "index": 1,
+                        "stddev": 0.015,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "volume": 34,
+            "value": {
+                "smearing": [
+                    {
+                        "index": 0,
+                        "stddev": 0.015,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    },
+                    {
+                        "index": 1,
+                        "stddev": 0.015,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "volume": 35,
+            "value": {
+                "smearing": [
+                    {
+                        "index": 0,
+                        "stddev": 0.015,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    },
+                    {
+                        "index": 1,
+                        "stddev": 0.015,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "volume": 36,
+            "value": {
+                "smearing": [
+                    {
+                        "index": 0,
+                        "stddev": 0.015,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    },
+                    {
+                        "index": 1,
+                        "stddev": 0.015,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "volume": 47,
+            "value": {
+                "smearing": [
+                    {
+                        "index": 0,
+                        "stddev": 0.015,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    },
+                    {
+                        "index": 1,
+                        "stddev": 0.015,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "volume": 48,
+            "value": {
+                "smearing": [
+                    {
+                        "index": 0,
+                        "stddev": 0.015,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    },
+                    {
+                        "index": 1,
+                        "stddev": 0.015,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "volume": 49,
+            "value": {
+                "smearing": [
+                    {
+                        "index": 0,
+                        "stddev": 0.015,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    },
+                    {
+                        "index": 1,
+                        "stddev": 0.015,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "volume": 50,
+            "value": {
+                "smearing": [
+                    {
+                        "index": 0,
+                        "stddev": 0.015,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    },
+                    {
+                        "index": 1,
+                        "stddev": 0.015,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "volume": 51,
+            "value": {
+                "smearing": [
+                    {
+                        "index": 0,
+                        "stddev": 0.015,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    },
+                    {
+                        "index": 1,
+                        "stddev": 0.015,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "volume": 52,
+            "value": {
+                "smearing": [
+                    {
+                        "index": 0,
+                        "stddev": 0.015,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    },
+                    {
+                        "index": 1,
+                        "stddev": 0.015,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "volume": 53,
+            "value": {
+                "smearing": [
+                    {
+                        "index": 0,
+                        "stddev": 0.015,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    },
+                    {
+                        "index": 1,
+                        "stddev": 0.015,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "volume": 61,
+            "value": {
+                "smearing": [
+                    {
+                        "index": 0,
+                        "stddev": 0.043,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    },
+                    {
+                        "index": 1,
+                        "stddev": 1.2,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "volume": 62,
+            "value": {
+                "smearing": [
+                    {
+                        "index": 0,
+                        "stddev": 0.043,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    },
+                    {
+                        "index": 1,
+                        "stddev": 1.2,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "volume": 63,
+            "value": {
+                "smearing": [
+                    {
+                        "index": 0,
+                        "stddev": 0.043,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    },
+                    {
+                        "index": 1,
+                        "stddev": 1.2,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "volume": 64,
+            "value": {
+                "smearing": [
+                    {
+                        "index": 0,
+                        "stddev": 0.043,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    },
+                    {
+                        "index": 1,
+                        "stddev": 1.2,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "volume": 72,
+            "value": {
+                "smearing": [
+                    {
+                        "index": 0,
+                        "stddev": 0.043,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    },
+                    {
+                        "index": 1,
+                        "stddev": 1.2,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "volume": 73,
+            "value": {
+                "smearing": [
+                    {
+                        "index": 0,
+                        "stddev": 0.043,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    },
+                    {
+                        "index": 1,
+                        "stddev": 1.2,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "volume": 74,
+            "value": {
+                "smearing": [
+                    {
+                        "index": 0,
+                        "stddev": 0.043,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    },
+                    {
+                        "index": 1,
+                        "stddev": 1.2,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "volume": 75,
+            "value": {
+                "smearing": [
+                    {
+                        "index": 0,
+                        "stddev": 0.043,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    },
+                    {
+                        "index": 1,
+                        "stddev": 1.2,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "volume": 76,
+            "value": {
+                "smearing": [
+                    {
+                        "index": 0,
+                        "stddev": 0.043,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    },
+                    {
+                        "index": 1,
+                        "stddev": 1.2,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "volume": 77,
+            "value": {
+                "smearing": [
+                    {
+                        "index": 0,
+                        "stddev": 0.043,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    },
+                    {
+                        "index": 1,
+                        "stddev": 1.2,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "volume": 85,
+            "value": {
+                "smearing": [
+                    {
+                        "index": 0,
+                        "stddev": 0.043,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    },
+                    {
+                        "index": 1,
+                        "stddev": 1.2,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "volume": 86,
+            "value": {
+                "smearing": [
+                    {
+                        "index": 0,
+                        "stddev": 0.043,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    },
+                    {
+                        "index": 1,
+                        "stddev": 1.2,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "volume": 87,
+            "value": {
+                "smearing": [
+                    {
+                        "index": 0,
+                        "stddev": 0.043,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    },
+                    {
+                        "index": 1,
+                        "stddev": 1.2,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "volume": 88,
+            "value": {
+                "smearing": [
+                    {
+                        "index": 0,
+                        "stddev": 0.043,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    },
+                    {
+                        "index": 1,
+                        "stddev": 1.2,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "volume": 89,
+            "value": {
+                "smearing": [
+                    {
+                        "index": 0,
+                        "stddev": 0.043,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    },
+                    {
+                        "index": 1,
+                        "stddev": 1.2,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "volume": 90,
+            "value": {
+                "smearing": [
+                    {
+                        "index": 0,
+                        "stddev": 0.043,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    },
+                    {
+                        "index": 1,
+                        "stddev": 1.2,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "volume": 94,
+            "value": {
+                "smearing": [
+                    {
+                        "index": 0,
+                        "stddev": 0.072,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "volume": 95,
+            "value": {
+                "smearing": [
+                    {
+                        "index": 0,
+                        "stddev": 0.072,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "volume": 103,
+            "value": {
+                "smearing": [
+                    {
+                        "index": 0,
+                        "stddev": 0.072,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "volume": 104,
+            "value": {
+                "smearing": [
+                    {
+                        "index": 0,
+                        "stddev": 0.072,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "volume": 105,
+            "value": {
+                "smearing": [
+                    {
+                        "index": 0,
+                        "stddev": 0.072,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "volume": 106,
+            "value": {
+                "smearing": [
+                    {
+                        "index": 0,
+                        "stddev": 0.072,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "volume": 107,
+            "value": {
+                "smearing": [
+                    {
+                        "index": 0,
+                        "stddev": 0.072,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "volume": 108,
+            "value": {
+                "smearing": [
+                    {
+                        "index": 0,
+                        "stddev": 0.072,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "volume": 116,
+            "value": {
+                "smearing": [
+                    {
+                        "index": 0,
+                        "stddev": 0.072,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "volume": 117,
+            "value": {
+                "smearing": [
+                    {
+                        "index": 0,
+                        "stddev": 0.072,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "volume": 118,
+            "value": {
+                "smearing": [
+                    {
+                        "index": 0,
+                        "stddev": 0.072,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "volume": 119,
+            "value": {
+                "smearing": [
+                    {
+                        "index": 0,
+                        "stddev": 0.072,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "volume": 120,
+            "value": {
+                "smearing": [
+                    {
+                        "index": 0,
+                        "stddev": 0.072,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "volume": 121,
             "value": {
                 "smearing": [
                     {

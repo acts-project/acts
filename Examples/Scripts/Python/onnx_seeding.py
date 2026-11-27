@@ -11,9 +11,12 @@ Usage:
 
 import argparse
 import pathlib
+import tempfile
+import urllib.request
 
 import acts
 import acts.examples
+from acts.json import MaterialMapDecorator, TrackingGeometryMaterialJsonConverter
 from acts.examples.simulation import (
     MomentumConfig,
     EtaConfig,
@@ -40,6 +43,33 @@ from acts.examples.reconstruction import (
 )
 from acts.examples.odd import getOpenDataDetector, getOpenDataDetectorDirectory
 from guntam_transformer_seeder import guntam_transformer_seeder
+
+# Provisional Gen3 map, produced locally and hosted as a release asset on a
+# personal fork; not yet the ODD repo's official map (which is still
+# Gen1-keyed and incompatible with Gen3 surfaces).
+PROVISIONAL_GEN3_MATERIAL_MAP_URL = (
+    "https://github.com/LeaBaumann/acts/releases/download/"
+    "gen3-material-map-provisional-v1/odd_gen3_map.json.zst"
+)
+
+
+def volumeIdsWhere(trackingGeometry, predicate):
+    """Collect geometryId.volume for every TrackingVolume whose name matches
+    predicate(name). Used to derive CKF volume lists (pixelVolumes,
+    stripVolumes, constrainToVolumes) by name instead of hardcoding numeric
+    GeometryIdentifiers, which shift whenever the blueprint gains or loses
+    volumes (e.g. passive elements, material collectors, gap fillers)."""
+    ids = set()
+
+    class _Visitor(acts.TrackingGeometryMutableVisitor):
+        def visitVolume(self, volume: acts.Volume):
+            name = volume.volumeName if isinstance(volume, acts.TrackingVolume) else ""
+            if predicate(name):
+                ids.add(volume.geometryId.volume)
+
+    trackingGeometry.apply(_Visitor())
+    return sorted(ids)
+
 
 u = acts.UnitConstants
 
@@ -111,13 +141,31 @@ outputDir.mkdir(parents=True, exist_ok=True)
 geoDir = getOpenDataDetectorDirectory()
 actsDir = pathlib.Path(__file__).resolve().parents[3]
 
-oddMaterialMap = geoDir / "data/odd-material-maps.root"
+# Gen3's default: the shipped ODD map (data/odd-material-maps.root) is
+# Gen1-keyed and incompatible with Gen3 surfaces, so fall back to the
+# provisional Gen3 map instead (same one physmon uses).
+oddMaterialMap = (
+    pathlib.Path(tempfile.gettempdir()) / "odd-material-maps-gen3-provisional.json.zst"
+)
+urllib.request.urlretrieve(PROVISIONAL_GEN3_MATERIAL_MAP_URL, oddMaterialMap)
 oddDigiConfig = actsDir / "Examples/Configs/odd-digi-smearing-config.json"
 oddSeedingSel = actsDir / "Examples/Configs/odd-seeding-config.json"
 
-oddMaterialDeco = acts.IMaterialDecorator.fromFile(oddMaterialMap)
+oddMaterialDeco = MaterialMapDecorator(
+    TrackingGeometryMaterialJsonConverter().fromFile(oddMaterialMap)
+)
 detector = getOpenDataDetector(odd_dir=geoDir, materialDecorator=oddMaterialDeco)
 trackingGeometry = detector.trackingGeometry()
+# CKF volume lists derived by name: the Gen1 literal IDs do not exist in
+# the Gen3 geometry (see full_chain_odd.py).
+pixelVolumes = volumeIdsWhere(trackingGeometry, lambda n: "Pixel" in n)
+# short strips only, as in the Gen1 lists ([23, 24, 25]): long-strip holes
+# are not counted towards maxStripHoles
+stripVolumes = volumeIdsWhere(trackingGeometry, lambda n: "ShortStrip" in n)
+constrainToVolumes = volumeIdsWhere(
+    trackingGeometry,
+    lambda n: n != "World" and not n.startswith("CaloMaterialCollector"),
+)
 
 field = acts.ConstantBField(acts.Vector3(0.0, 0.0, 2.0 * u.T))
 rnd = acts.examples.RandomNumbers(seed=42)
@@ -246,27 +294,11 @@ addCKFTracks(
         numMeasurementsCutOff=2,
         seedDeduplication=True,
         stayOnSeed=False,
-        pixelVolumes=[16, 17, 18],
-        stripVolumes=[23, 24, 25],
+        pixelVolumes=pixelVolumes,
+        stripVolumes=stripVolumes,
         maxPixelHoles=1,
         maxStripHoles=2,
-        constrainToVolumes=[
-            2,  # beam pipe
-            32,
-            4,  # beam pipe gap
-            16,
-            17,
-            18,  # pixel
-            20,  # PST
-            23,
-            24,
-            25,  # short strip
-            26,
-            8,  # long strip gap
-            28,
-            29,
-            30,  # long strip
-        ],
+        constrainToVolumes=constrainToVolumes,
     ),
     outputDirRoot=outputDir if args.output_root else None,
     outputDirCsv=outputDir if args.output_csv else None,

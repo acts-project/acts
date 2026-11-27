@@ -21,6 +21,9 @@ def count_surfaces(geo):
 
 
 def check_extra_odd(srf):
+    # Gen1 only: the endcap rings are encoded in the extra field of the
+    # Gen1 volumes 16/18 (pixel), 23/25 (short strip), 28/30 (long strip).
+    # Gen3 has one volume per disc and leaves extra at 0.
     if srf.geometryId.volume in [28, 30, 23, 25, 16, 18]:
         assert srf.geometryId.extra != 0
     return
@@ -169,8 +172,8 @@ def test_telescopeGen3_geant4_geometry(rotDirection):
 
 
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep is not set up")
-def test_odd(odd_detector):
-    detector = odd_detector
+def test_odd(odd_detector_gen1):
+    detector = odd_detector_gen1
     trackingGeometry = detector.trackingGeometry()
 
     trackingGeometry.visitSurfaces(check_extra_odd)
@@ -207,29 +210,33 @@ def test_odd_tracker(gen3):
 
 
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep is not set up")
-def test_odd_tracker_calorimeter():
+@pytest.mark.parametrize("gen3", [False, True])
+def test_odd_tracker_calorimeter(gen3):
     from acts.examples.odd import getOpenDataDetector
 
     with getOpenDataDetector(
-        buildTracker=True, buildCalorimeter=True, buildMuonSystem=False
+        buildTracker=True, buildCalorimeter=True, buildMuonSystem=False, gen3=gen3
     ) as detector:
         trackingGeometry = detector.trackingGeometry()
 
-        trackingGeometry.visitSurfaces(check_extra_odd)
+        if not gen3:
+            trackingGeometry.visitSurfaces(check_extra_odd)
 
         assert count_surfaces(trackingGeometry) == 18824
 
 
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep is not set up")
-def test_odd_tracker_calorimeter_muon_system():
+@pytest.mark.parametrize("gen3", [False, True])
+def test_odd_tracker_calorimeter_muon_system(gen3):
     from acts.examples.odd import getOpenDataDetector
 
     with getOpenDataDetector(
-        buildTracker=True, buildCalorimeter=True, buildMuonSystem=True
+        buildTracker=True, buildCalorimeter=True, buildMuonSystem=True, gen3=gen3
     ) as detector:
         trackingGeometry = detector.trackingGeometry()
 
-        trackingGeometry.visitSurfaces(check_extra_odd)
+        if not gen3:
+            trackingGeometry.visitSurfaces(check_extra_odd)
 
         assert count_surfaces(trackingGeometry) == 18824
 
