@@ -14,6 +14,94 @@ Bethe-Bloch energy loss, Bethe-Heitler energy loss, and photon conversion. Since
 it operates on tracking surfaces rather than a full volumetric detector model,
 it is faster than a detailed Geant4 simulation but also less complete.
 
+## Synthetic space point events {#fatras_synthetic_events}
+
+@ref ActsFatras::Synthetic is a second, much smaller fast simulation that shares
+none of the machinery above. It fills an @ref Acts::SpacePointContainer directly
+-- no @ref Acts::TrackingGeometry, no @ref Acts::Propagator, no input data -- and
+makes an ATLAS-like pile-up of 200 in tens of milliseconds. It answers one
+question cheaply: what does a seeder see on a busy event? Space points carry the
+layer and the particle they came from, so that needs no truth matching.
+
+It is deliberately coarse: a tool for throughput and combinatorics studies rather
+than for physics performance.
+
+### Geometry
+
+A @ref ActsFatras::Synthetic::DetectorLayout is cylinders at fixed `r` and discs
+at fixed `z`, as plain structs, so a helix crosses every surface in closed form.
+Nothing is resolved in azimuth and a crossing leaves at most one hit. The
+restriction is on the *shape* alone -- every cylinder has its own half-length and
+every disc its own rings -- so an endcap can be described as the staggered discs
+and rings it is.
+
+A detector is written down as a @ref ActsFatras::Synthetic::DetectorDescription
+and expanded into that layout by @ref ActsFatras::Synthetic::makeLayout. The
+description is the form everything else works on, and it is a set of named
+@ref ActsFatras::Synthetic::SubsystemDescription -- the pixels, the strips, one of
+a detector's systems -- each fanning out into barrels and endcaps. A name is what
+makes a subsystem selectable and what material is keyed onto, so one detector can
+be built whole or a system at a time.
+
+- @ref ActsFatras::Synthetic::CylinderDescription and
+  @ref ActsFatras::Synthetic::DiscDescription are a barrel's and an endcap's
+  layers. Each carries its own material, module structure and overlap numbers,
+  and answers to a layer index of its own rather than to its position in a list.
+- @ref ActsFatras::Synthetic::EndcapPlacement lets an endcap say which sides of
+  the interaction point it is built on, positions being quoted as absolute `z`,
+  so a symmetric detector is written once and an asymmetric one can still be
+  spelled out.
+- @ref ActsFatras::Synthetic::PassiveSurfaceDescription adds the supports and
+  services a layer is carried on, which produce secondaries like any material.
+  The beam pipe is one of these and belongs to the detector rather than to any
+  subsystem, being the only material in front of the innermost layer.
+- @ref ActsFatras::Synthetic::SurfaceMaterial bands a surface along the
+  coordinate it extends in, so a ring is told from the support beside it. The
+  bands are the gaps between their edges and follow where the material actually
+  changes, not the rings; the shipped descriptions carry what the detector's own
+  material map reports.
+- @ref ActsFatras::Synthetic::DetectorLayoutBuilder assembles a layout surface by
+  surface where a description would be in the way. A description of the ACTS
+  Generic pixels ships in C++, and is the one detector that does.
+
+### Event content
+
+@ref ActsFatras::Synthetic::EventGenerator draws the primaries -- a rapidity
+plateau with a Fermi edge, Gaussian in `z0` and `d0`, with a Hagedorn spectrum
+-- then walks each track through the layout and makes what it makes.
+
+What a crossing does, each switchable in @ref ActsFatras::Synthetic::EventConfig:
+
+- **Secondaries**, at the material the surface carries times the path length
+  through it and nothing fitted on top. Electrons count per `X0` and nuclear
+  products per `L0`, in three channels: a radial electron, a forward cascade
+  product, and an isotropic evaporation product.
+- **Stubs**, where a daughter is too soft to leave the surface that made it.
+- **Multiple scattering and energy loss**, which displace a hit and leave the
+  trajectory alone. This is what gives a seed the spread a seeder cuts on. A
+  track that cannot pay for the surface in front of it ranges out.
+- **Module overlaps**, adjacent modules alternating in depth so that a track
+  through their common edge is measured twice.
+
+A track is followed past its outermost point, so a soft one curls back through
+the layers it has already crossed, bounded by
+@ref ActsFatras::Synthetic::PropagationConfig::maxTurns and by the escape bounds
+of the enclosing tracker. Neutral long-lived particles decaying near the beam
+line are the only secondaries produced away from a surface.
+
+### Configuration
+
+The detector enters the beam spot, the resolution and both yields, so a
+configuration belongs to a layout: positions and material are read off the
+detector description and the overlaps and secondary kinematics measured on a
+full simulation of it, leaving the yields, the spectrum and the beam spot to be
+fitted. The defaults of @ref ActsFatras::Synthetic::EventConfig belong to no
+detector in particular.
+
+Counting secondaries to fit against takes care -- a full simulation records one
+only above a truth-link threshold, and two thirds of the real ones fall below
+it. Compare non-primary space points rather than particle counts.
+
 ## Barcode identifiers {#fatras_barcode_identifiers}
 
 Fatras labels simulated particles and hits with @ref ActsFatras::Barcode. A
