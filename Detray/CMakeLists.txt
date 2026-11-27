@@ -67,6 +67,29 @@ include("${CMAKE_CURRENT_SOURCE_DIR}/../cmake/ActsWarningFlags.cmake")
 #
 include(CMakeDependentOption)
 
+# When detray is built as a component of ACTS, derive options from the ACTS
+# configuration. The normal variables shadow the options below (CMP0077).
+if(DETRAY_IS_ACTS_COMPONENT)
+    set_option_if(DETRAY_BUILD_CUDA ACTS_ENABLE_CUDA)
+    set_option_if(DETRAY_BUILD_BENCHMARKS ACTS_BUILD_BENCHMARKS)
+    set_option_if(DETRAY_BUILD_TUTORIALS ACTS_BUILD_EXAMPLES)
+    set_option_if(DETRAY_SVG_DISPLAY ACTS_BUILD_PLUGIN_ACTSVG)
+
+    # Enable dependencies of ACTS Detray plugin unit tests
+    set_option_if(DETRAY_BUILD_TEST_UTILS ACTS_BUILD_EXAMPLES_UNITTESTS)
+
+    if(ACTS_BUILD_TRACCC)
+        set(DETRAY_SET_LOGGING "${ACTS_TRACCC_DEVICE_LOG_LEVEL}")
+        # The detray test utilities are used in optional traccc libraries
+        set_option_if(
+            DETRAY_BUILD_TEST_UTILS
+            ACTS_TRACCC_BUILD_PERFORMANCE
+            OR
+            ACTS_TRACCC_BUILD_TESTS
+        )
+    endif()
+endif()
+
 # General
 option(DETRAY_USE_SYSTEM_LIBS "Use system libraries be default" FALSE)
 option(
@@ -250,6 +273,25 @@ cmake_dependent_option(
 # Configure dependencies
 #
 
+# When detray is built as a component of ACTS, ACTS sets up these dependencies
+# and detray must not set up its own copies. The normal variables shadow the
+# options below (CMP0077), so the options are not created and cannot turn the
+# setup back on.
+if(DETRAY_IS_ACTS_COMPONENT)
+    set(DETRAY_SETUP_VECMEM FALSE)
+    set(DETRAY_USE_SYSTEM_VECMEM FALSE)
+    set(DETRAY_SETUP_NLOHMANN FALSE)
+    set(DETRAY_USE_SYSTEM_NLOHMANN FALSE)
+    set(DETRAY_SETUP_EIGEN3 FALSE)
+    set(DETRAY_USE_SYSTEM_EIGEN3 FALSE)
+    set(DETRAY_SETUP_ACTSVG FALSE)
+    set(DETRAY_USE_SYSTEM_ACTSVG FALSE)
+    set(DETRAY_SETUP_COVFIE FALSE)
+    set(DETRAY_USE_SYSTEM_COVFIE FALSE)
+    set(DETRAY_SETUP_PYBIND11 FALSE)
+    set(DETRAY_USE_SYSTEM_PYBIND11 FALSE)
+endif()
+
 # Set up VecMem.
 option(DETRAY_SETUP_VECMEM "Set up the VecMem target(s) explicitly" TRUE)
 option(
@@ -410,6 +452,30 @@ if(DETRAY_SETUP_ACTSVG)
         )
     else()
         add_subdirectory(extern/actsvg)
+    endif()
+endif()
+
+# The SVG display needs actsvg. If nobody set up the actsvg targets, stop and
+# tell the user how to enable them.
+if(DETRAY_SVG_DISPLAY AND NOT (TARGET actsvg::core AND TARGET actsvg::meta))
+    if(DETRAY_IS_ACTS_COMPONENT)
+        message(
+            FATAL_ERROR
+            "Detray requires actsvg for its SVG display, but ACTS did not set "
+            "up actsvg. The SVG display is needed by the Detray validation "
+            "tools, which ACTS_BUILD_EXAMPLES enables through the Detray "
+            "tutorials. Configure ACTS with -DACTS_SETUP_ACTSVG=ON, or "
+            "disable the options that need the Detray validation tools."
+        )
+    else()
+        message(
+            FATAL_ERROR
+            "Detray requires actsvg because DETRAY_SVG_DISPLAY is enabled "
+            "(DETRAY_BUILD_VALIDATION_TOOLS, the tests and the tutorials "
+            "enable it), but the targets actsvg::core and actsvg::meta do not "
+            "exist. Configure detray with -DDETRAY_SETUP_ACTSVG=ON, or set up "
+            "the actsvg targets before detray is added."
+        )
     endif()
 endif()
 

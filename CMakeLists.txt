@@ -70,6 +70,7 @@ option(BUILD_SHARED_LIBS "Build using shared libraries" ON)
 option(ACTS_USE_SYSTEM_LIBS "Use system libraries by default" OFF)
 # plugins related options
 option(ACTS_USE_SYSTEM_ACTSVG "Use the ActSVG system library" ${ACTS_USE_SYSTEM_LIBS})
+option(ACTS_SETUP_ACTSVG "If we want to set up actsvg" OFF)
 option(ACTS_USE_SYSTEM_COVFIE "Use a system-provided covfie installation" ${ACTS_USE_SYSTEM_LIBS})
 option(ACTS_SETUP_COVFIE "If we want to set up covfie" OFF)
 option(ACTS_SETUP_DETRAY "If we want to set up detray" OFF)
@@ -290,6 +291,8 @@ set_option_if(ACTS_SETUP_COVFIE ACTS_SETUP_DETRAY)
 # Required for detray
 set_option_if(ACTS_SETUP_VECMEM ACTS_SETUP_DETRAY)
 set_option_if(ACTS_BUILD_PLUGIN_JSON ACTS_SETUP_DETRAY)
+# Required for the ActSVG plugin
+set_option_if(ACTS_SETUP_ACTSVG ACTS_BUILD_PLUGIN_ACTSVG)
 
 # feature tests
 include(CheckCXXSourceCompiles)
@@ -519,15 +522,9 @@ if(ACTS_BUILD_PYTHON_BINDINGS)
         add_subdirectory(thirdparty/pybind11)
     endif()
 endif()
-# Set up ActSVG when explicitly requested via plugin build, or when Detray's
-# SVG display path is enabled in the superbuild.
-if(
-    ACTS_BUILD_PLUGIN_ACTSVG
-    OR (
-        ACTS_SETUP_DETRAY
-        AND (NOT DEFINED DETRAY_SVG_DISPLAY OR DETRAY_SVG_DISPLAY)
-    )
-)
+# Set up ActSVG when requested. The ActSVG plugin enables this by itself.
+# Detray reports an error if it needs actsvg and actsvg is not set up.
+if(ACTS_SETUP_ACTSVG)
     if(ACTS_USE_SYSTEM_ACTSVG)
         find_package(actsvg ${_acts_actsvg_version} REQUIRED CONFIG)
     else()
@@ -704,39 +701,8 @@ if(ACTS_SETUP_COVFIE)
 endif()
 
 if(ACTS_SETUP_DETRAY)
-    # HACK: Temporary logic (aka technical debt) to make the detray component
-    # work in traccc.
-
-    # Let ACTS set up all of the dependencies
-    option(DETRAY_SETUP_VECMEM "" FALSE)
-    option(DETRAY_SETUP_NLOHMANN "" FALSE)
-    option(DETRAY_SETUP_EIGEN3 "" FALSE)
-    option(DETRAY_SETUP_ACTSVG "" FALSE)
-    option(DETRAY_SETUP_COVFIE "" FALSE)
-    option(DETRAY_SETUP_PYBIND11 "" FALSE)
-
-    # Enable optional components depending on ACTS configuration
-    set_option_if(DETRAY_BUILD_CUDA ACTS_ENABLE_CUDA)
-    set_option_if(DETRAY_BUILD_UNIT_TESTS ACTS_BUILD_UNITTESTS)
-    set_option_if(DETRAY_BUILD_INTEGRATION_TESTS ACTS_BUILD_INTEGRATIONTESTS)
-    set_option_if(DETRAY_BUILD_BENCHMARKS ACTS_BUILD_BENCHMARKS)
-    set_option_if(DETRAY_BUILD_TUTORIALS ACTS_BUILD_EXAMPLES)
-    set_option_if(DETRAY_SVG_DISPLAY ACTS_BUILD_PLUGIN_ACTSVG)
-
-    # Enable dependencies of ACTS Detray plugin unit tests
-    set_option_if(DETRAY_BUILD_TEST_UTILS ACTS_BUILD_EXAMPLES_UNITTESTS)
-
-    if(ACTS_BUILD_TRACCC)
-        set(DETRAY_SET_LOGGING "${ACTS_TRACCC_DEVICE_LOG_LEVEL}")
-        # The detray test utilities are used in optional traccc libraries
-        set_option_if(
-            DETRAY_BUILD_TEST_UTILS
-            ACTS_TRACCC_BUILD_PERFORMANCE
-            OR
-            ACTS_TRACCC_BUILD_TESTS
-        )
-    endif()
-
+    # Tell detray that it is built as a component of ACTS
+    set(DETRAY_IS_ACTS_COMPONENT TRUE)
     add_subdirectory(Detray)
 endif()
 
