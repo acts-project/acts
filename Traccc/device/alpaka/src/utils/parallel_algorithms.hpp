@@ -85,6 +85,30 @@ void sort_by_key(queue &q, const memory_resource &mr,
 #endif
 }
 
+template <typename RandomAccessIterator>
+void sort(queue &q, const memory_resource &mr,
+          RandomAccessIterator values_first, RandomAccessIterator values_last) {
+  auto execPolicy = getExecutionPolicy(q, mr);
+
+#if defined(ALPAKA_ACC_SYCL_ENABLED)
+  oneapi::dpl::sort(execPolicy, values_first, values_last);
+#else
+  thrust::sort(execPolicy, values_first, values_last);
+#endif
+}
+
+template <typename RandomAccessIterator, typename Compare>
+void sort(queue &q, const memory_resource &mr,
+          RandomAccessIterator values_first, RandomAccessIterator values_last,
+          Compare comp) {
+  auto execPolicy = getExecutionPolicy(q, mr);
+#if defined(ALPAKA_ACC_SYCL_ENABLED)
+  oneapi::dpl::sort(execPolicy, values_first, values_last, comp);
+#else
+  thrust::sort(execPolicy, values_first, values_last, comp);
+#endif
+}
+
 template <typename ForwardIt1, typename ForwardIt2, typename OutputIt,
           typename Compare>
 void upper_bound(queue &q, const memory_resource &mr, ForwardIt1 first1,
