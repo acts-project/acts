@@ -15,40 +15,10 @@
 
 namespace ActsExamples {
 
-/// @brief Create an aligned transform updater with an alignment store
-/// @param store An alignment store to update with aligned transforms
-/// @return An AlignedTransformUpdater that updates the provided store
+/// Updater that writes each aligned transform into @p store.
 ///
-/// @warning Not thread-safe: the updater writes transforms into the shared
-/// store while other events may read them through contextualTransform. Run
-/// the alignment job with numThreads = 1.
-///
-/// @todo Make the store update thread-safe, or apply it once in finalize()
-/// after tracks are collected across events.
-///
-/// Usage example:
-/// @code
-/// // 1. Create a store (this will be updated during alignment)
-/// auto alignmentStore = std::make_shared<GeoIdAlignmentStore>(
-///     std::unordered_map<Acts::GeometryIdentifier, Acts::Transform3>{});
-///
-/// // 2. Create the updater that will modify the store
-/// auto updater = makeAlignedTransformUpdater(alignmentStore);
-/// alignmentConfig.alignedTransformUpdater = updater;
-///
-/// // 3. Set up the AlignmentDecorator to use this store
-/// // The decorator will provide an AlignmentContext pointing to this store
-/// AlignmentDecorator::Config decoratorConfig;
-/// // Keep the simulation geometry fixed; only reconstruction sees the updates
-/// decoratorConfig.target = AlignmentDecorator::Target::eReco;
-/// // Use the store directly for all events
-/// decoratorConfig.iovStores = {{{0, 999999}, alignmentStore}};
-///
-/// // 4. During alignment iterations:
-/// // - AlignmentAlgorithm reads detector positions via AlignmentContext
-/// // - AlignmentAlgorithm updates alignmentStore via alignedTransformUpdater
-/// // - Next iteration sees the updated transforms automatically
-/// @endcode
+/// AlignmentAlgorithm calls this from finalize(), after event processing has
+/// finished. The store is not synchronized for concurrent updates.
 inline ActsAlignment::AlignedTransformUpdater makeAlignedTransformUpdater(
     const std::shared_ptr<GeoIdAlignmentStore>& store) {
   if (store == nullptr) {
