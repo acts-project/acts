@@ -245,6 +245,53 @@ BOOST_AUTO_TEST_CASE(LinearLookupWarnings) {
               std::string::npos);
 }
 
+BOOST_AUTO_TEST_CASE(RzGridUsesCompactCellLimit) {
+#ifdef ACTS_ENABLE_LOG_FAILURE_THRESHOLD
+  Logging::ScopedFailureThreshold threshold{Logging::ERROR};
+#endif
+  std::ostringstream output;
+  auto logger =
+      getDefaultLogger("CompactLookupTest", Logging::WARNING, &output);
+  auto world = std::make_shared<TrackingVolume>(
+      Transform3::Identity(),
+      std::make_shared<CylinderVolumeBounds>(0., 100., 100.));
+  auto child = std::make_unique<TrackingVolume>(
+      Transform3::Identity(),
+      std::make_shared<CylinderVolumeBounds>(5., 10., 20.));
+  const auto* expected = child.get();
+  world->addVolume(std::move(child));
+  RzGridVolumeLookup::Config config;
+  config.maxGridCells = 1;
+  config.fallbackWarningFraction = 0.;
+  // One envelope contributes two edges per Bound axis, hence exactly one cell.
+  const RzGridVolumeLookup lookup(gctx, *world, config, *logger);
+  BOOST_CHECK(output.str().empty());
+  BOOST_CHECK(lookup.findLowest(gctx, {7., 0., 0.}, 0.) == expected);
+}
+
+BOOST_AUTO_TEST_CASE(RzGridCollapsedAxisFallsBack) {
+#ifdef ACTS_ENABLE_LOG_FAILURE_THRESHOLD
+  Logging::ScopedFailureThreshold threshold{Logging::ERROR};
+#endif
+  Transform3 transform = Transform3::Identity();
+  transform.translation().z() = 1e20;
+  auto world = std::make_shared<TrackingVolume>(
+      transform, std::make_shared<CylinderVolumeBounds>(0., 100., 100.));
+  auto child = std::make_unique<TrackingVolume>(
+      transform, std::make_shared<CylinderVolumeBounds>(0., 1., 1.));
+  const auto* expected = child.get();
+  world->addVolume(std::move(child));
+  std::ostringstream output;
+  auto logger =
+      getDefaultLogger("CollapsedLookupTest", Logging::WARNING, &output);
+  RzGridVolumeLookup::Config config;
+  config.fallbackWarningFraction = 0.;
+  // At this scale both translated z edges round to the same double.
+  const RzGridVolumeLookup lookup(gctx, *world, config, *logger);
+  BOOST_CHECK(output.str().find("grid cell limit=1") != std::string::npos);
+  BOOST_CHECK(lookup.findLowest(gctx, {0.5, 0., 1e20}, 0.) == expected);
+}
+
 BOOST_AUTO_TEST_CASE(AcceleratorFallbackWarnings) {
   // These assertions deliberately exercise warning diagnostics.
 #ifdef ACTS_ENABLE_LOG_FAILURE_THRESHOLD
@@ -572,10 +619,10 @@ BOOST_AUTO_TEST_CASE(SubtreeLookupDelegatesThroughLinearToAnotherIndex) {
     auto logger = getDefaultLogger("DelegationTest", Logging::WARNING, &output);
     RzGridVolumeLookup::Config config;
     {
-      // One boundary entry fits in one regular cell (nine with reserved
-      // under-/overflow slots). Indexing through it would exceed
-      // this cap and warn, even if fallback happened to return the same result.
-      config.maxGridCells = 9;
+      // One boundary entry fits in one regular cell. Indexing through it
+      // would exceed this cap and warn, even if fallback returned the same
+      // result.
+      config.maxGridCells = 1;
     }
     world->setVolumeLookup(
         std::make_unique<RzGridVolumeLookup>(gctx, *world, config, *logger));

@@ -247,6 +247,10 @@ BOOST_AUTO_TEST_CASE(hough_plane_layers_hits) {
   const std::size_t nY = 1;
   HoughTransformUtils::HoughPlaneConfig config{nX, nY};
   HoughTransformUtils::HoughPlane<std::uint8_t> plane(config);
+  using Index = decltype(plane)::Index;
+
+  BOOST_CHECK_EQUAL(plane.globalBin({0, 0}), 0u);
+  BOOST_CHECK((plane.axisBins(0u) == Index{0u, 0u}));
 
   std::uint8_t nHits = 0;
   static constexpr std::uint8_t nLayers = 10;

@@ -102,9 +102,14 @@ struct RzGrid {
       const auto duplicates = std::ranges::unique(e);
       e.erase(duplicates.begin(), duplicates.end());
     }
-    // N edges give N-1 regular bins plus two reserved under-/overflow bins.
-    const auto nr = edges[0].size() + 1;
-    const auto nz = edges[1].size() + 1;
+    // Large translations can collapse distinct envelope edges at double
+    // precision.
+    if (edges[0].size() < 2 || edges[1].size() < 2) {
+      return false;
+    }
+    // Bound axes store only the N-1 regular bins defined by N edges.
+    const auto nr = edges[0].size() - 1;
+    const auto nz = edges[1].size() - 1;
     // Check nr*nz against the limit without overflowing the product.
     if (nr > config.maxGridCells / nz) {
       return false;

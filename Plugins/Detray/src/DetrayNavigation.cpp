@@ -198,10 +198,9 @@ std::optional<DetraySurfaceGrid> DetrayPayloadConverter::convertSurfaceArray(
       return [](unsigned int i) { return i; };
     }
 
-    // For Closed/Bound, detray does not have under/overflow bins.
-    // In ACTS, the bins a physically still present, so we only loop
-    // [1, N]. Detray's indices however still go [0, N-1], so we subtract 1 from
-    // the indices in the direction.
+    // For Closed/Bound, ACTS and detray both omit under/overflow bins.
+    // ACTS local indices run [1, N], while detray's indices run [0, N-1], so
+    // subtract one from the ACTS index.
     return [](unsigned int i) { return i - 1; };
   };
 
