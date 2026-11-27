@@ -14,12 +14,86 @@
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/detail/ContainerIterator.hpp"
 
+#include <array>
+#include <bit>
+#include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <limits>
 #include <optional>
+#include <span>
 #include <vector>
 
 namespace Acts {
+
+namespace detail {
+
+/// For each pattern of eight flags, given as the bits of a byte: the places
+/// of the flags that are set, and how many are set. The places are packed one
+/// a byte into a 64-bit word, so that one 8-byte store writes all of them.
+struct CompactionTable {
+  /// The places of the set flags in order, the first in the lowest byte
+  std::array<std::uint64_t, 256> positions{};
+  /// The number of set flags
+  std::array<std::uint8_t, 256> counts{};
+};
+
+constexpr CompactionTable makeCompactionTable() {
+  CompactionTable table;
+  for (std::size_t mask = 0; mask < 256; ++mask) {
+    std::uint64_t positions = 0;
+    std::uint8_t count = 0;
+    for (std::uint64_t bit = 0; bit < 8; ++bit) {
+      if (((mask >> bit) & 1u) != 0) {
+        positions |= bit << (8 * count);
+        ++count;
+      }
+    }
+    table.positions[mask] = positions;
+    table.counts[mask] = count;
+  }
+  return table;
+}
+
+inline constexpr CompactionTable kCompactionTable = makeCompactionTable();
+
+/// Collects the positions of the flags that are set, in order, eight flags at
+/// a time. The flags are a byte each, 0 or 1, and go on as 0 to a multiple of
+/// eight; the positions have room for eight more than are set.
+/// @param flags One flag a byte
+/// @param count Number of flags, at most 256
+/// @param positions Output: the positions of the set flags
+/// @return The number of set flags
+inline std::uint32_t collectSetFlags(const std::uint8_t* flags,
+                                     std::size_t count,
+                                     std::uint8_t* positions) {
+  std::uint32_t nSet = 0;
+  if constexpr (std::endian::native == std::endian::little) {
+    for (std::size_t i = 0; i < count; i += 8) {
+      // the eight flags, each a byte of 0 or 1, read as one 64-bit word
+      std::uint64_t eight = 0;
+      std::memcpy(&eight, flags + i, 8);
+      // the multiply gathers the low bit of each byte into the top byte, flag
+      // j into bit j: the pattern of the eight flags
+      const std::size_t mask = (eight * 0x0102040810204080ULL) >> 56;
+      // the pattern's places, i added to each byte, written in one store;
+      // the places past the set flags are overwritten by the next eight
+      const std::uint64_t places =
+          kCompactionTable.positions[mask] + i * 0x0101010101010101ULL;
+      std::memcpy(positions + nSet, &places, 8);
+      nSet += kCompactionTable.counts[mask];
+    }
+  } else {
+    // a big-endian word holds the bytes in the other order: one flag at a time
+    for (std::size_t i = 0; i < count; ++i) {
+      positions[nSet] = static_cast<std::uint8_t>(i);
+      nSet += flags[i];
+    }
+  }
+  return nSet;
+}
+
+}  // namespace detail
 
 /// Container for doublets found by the doublet seed finder.
 ///
@@ -429,6 +503,51 @@ class DoubletSeedFinder {
   virtual void createDoublets(
       const ConstSpacePointProxy& middleSp, const MiddleSpInfo& middleSpInfo,
       SpacePointContainer::ConstRange candidateSps,
+      DoubletsForMiddleSp& compatibleDoublets) const = 0;
+
+  /// Creates the compatible dublets of several ranges of candidates in one
+  /// call, in the order of the ranges: the same doublets as one call per
+  /// range.
+  ///
+  /// @param middleSp Space point candidate to be used as middle SP in a seed
+  /// @param middleSpInfo Information about the middle space point
+  /// @param candidateSpGroups Ranges of space points to be used as candidates
+  ///   for middle SP in a seed
+  /// @param compatibleDoublets Output container for compatible doublets
+  virtual void createDoublets(
+      const ConstSpacePointProxy& middleSp, const MiddleSpInfo& middleSpInfo,
+      std::span<const SpacePointContainer::ConstRange> candidateSpGroups,
+      DoubletsForMiddleSp& compatibleDoublets) const = 0;
+
+  /// Candidates copied out of their container into columns of their own: the
+  /// z and the radius of each, and its index in the container.
+  struct CandidateColumns {
+    /// z of each candidate. May go on past the candidates with any finite
+    /// values, which are read but make no doublets
+    std::vector<float> z;
+    /// Radius of each candidate. May go on past the candidates as z does
+    std::vector<float> r;
+    /// Index of each candidate in the space point container. May go on past
+    /// the candidates
+    std::vector<SpacePointIndex> indices;
+    /// Number of candidates
+    std::size_t count = 0;
+
+    /// Number of candidates
+    /// @return The number of candidates
+    std::size_t size() const { return count; }
+  };
+
+  /// Creates the compatible dublets of candidates given as columns, in their
+  /// order: the same doublets as for the same candidates given as a range.
+  ///
+  /// @param middleSp Space point candidate to be used as middle SP in a seed
+  /// @param middleSpInfo Information about the middle space point
+  /// @param candidates Candidates of the container of the middle space point
+  /// @param compatibleDoublets Output container for compatible doublets
+  virtual void createDoublets(
+      const ConstSpacePointProxy& middleSp, const MiddleSpInfo& middleSpInfo,
+      const CandidateColumns& candidates,
       DoubletsForMiddleSp& compatibleDoublets) const = 0;
 };
 
