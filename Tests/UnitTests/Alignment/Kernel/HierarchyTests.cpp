@@ -651,12 +651,12 @@ BOOST_FIXTURE_TEST_CASE(DirectoryRegistrationPreservesAssignments,
   BOOST_CHECK_EQUAL(*indices[eAlignmentRotation2], 1u);
   BOOST_CHECK(!indices[eAlignmentCenter0]);
 
-  BOOST_CHECK(directory.registerPlacement(*module, modulePosition));
-  BOOST_CHECK(directory.registerPlacement(*first, structurePosition));
-  BOOST_CHECK(directory.registerPlacement(*second, structurePosition));
+  BOOST_CHECK(directory.registerPlacement(module.get(), modulePosition));
+  BOOST_CHECK(directory.registerPlacement(first.get(), structurePosition));
+  BOOST_CHECK(directory.registerPlacement(second.get(), structurePosition));
   // Reject repeated registration without replacing the original association.
-  BOOST_CHECK(!directory.registerPlacement(*module, structurePosition));
-  BOOST_CHECK(!directory.registerPlacement(*first, structurePosition));
+  BOOST_CHECK(!directory.registerPlacement(module.get(), structurePosition));
+  BOOST_CHECK(!directory.registerPlacement(first.get(), structurePosition));
   BOOST_CHECK_EQUAL(directory.placementToAlignable.size(), 3u);
   BOOST_CHECK_EQUAL(directory.placementToAlignable.at(module.get()),
                     modulePosition);

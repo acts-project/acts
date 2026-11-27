@@ -93,8 +93,8 @@ std::size_t AlignmentParameterDirectory::addAlignable(AlignableUnit unit,
 }
 
 bool AlignmentParameterDirectory::registerPlacement(
-    const Acts::SurfacePlacementBase& placement, std::size_t alignableIndex) {
-  return placementToAlignable.emplace(&placement, alignableIndex).second;
+    const Acts::SurfacePlacementBase* placement, std::size_t alignableIndex) {
+  return placementToAlignable.emplace(placement, alignableIndex).second;
 }
 
 Acts::Result<AlignmentParameterDirectory, AlignmentSelectionError>
@@ -115,7 +115,7 @@ makeAlignmentParameterDirectory(
                                      "Null standalone module"};
     }
     const auto position = directory.addAlignable({module, {}}, moduleMask);
-    if (!directory.registerPlacement(*module, position)) {
+    if (!directory.registerPlacement(module, position)) {
       return AlignmentSelectionError{AlignmentError::InvalidAlignmentSelection,
                                      "Duplicate standalone module"};
     }
@@ -153,7 +153,7 @@ makeAlignmentParameterDirectory(
             AlignmentError::InvalidAlignmentSelection,
             "Selected member has no placement"};
       }
-      if (!directory.registerPlacement(*placement, position)) {
+      if (!directory.registerPlacement(placement, position)) {
         return AlignmentSelectionError{
             AlignmentError::InvalidAlignmentSelection,
             "Overlapping alignment selections"};
