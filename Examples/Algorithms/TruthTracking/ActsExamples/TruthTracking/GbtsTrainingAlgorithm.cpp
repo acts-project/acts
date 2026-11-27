@@ -128,7 +128,9 @@ ProcessCode GbtsTrainingAlgorithm::finalize() {
   std::vector<Acts::Experimental::GbtsLayerConnection> connections;
   for (const auto& layerPair : layerTable) {
     // swap order as we want outward -> inward ordering
-    connections.push_back({.src = layerPair.second, .dst = layerPair.first});
+    connections.push_back({.src = layerPair.second,
+                           .dst = layerPair.first,
+                           .minSeedLevel = m_cfg.minSeedLevel});
   }
   Acts::Experimental::writeGbtsConnections(m_cfg.outputFileDir, connections);
 

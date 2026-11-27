@@ -90,13 +90,6 @@ class GbtsGraphBuilder {
     /// Maximum number of GBTS edges/doublets per space point.
     float maxEdgesPerSP = 30.0f;
 
-    /// Leave out edges whose chain cannot grow beyond the edge itself, too
-    /// short for a seed. An edge of an inner bin that no connection leads into
-    /// is never extended inwards, so it is kept only if it links to an outer
-    /// edge, and outer nodes without edges are not tried for it. The seeds are
-    /// unchanged unless the edge array reaches `maxEdgesPerSP`.
-    bool dropDeadEnds = true;
-
     /// Minimum delta radius between layers.
     float minDeltaRadius = 2.0f * Acts::UnitConstants::mm;
 
@@ -168,10 +161,6 @@ class GbtsGraphBuilder {
     /// disables it.
     std::int32_t matchBeforeCreateMaxBarrelOrder = 1;
 
-    /// Leave out edges and outer nodes that cannot be on a chain long enough
-    /// for a seed, see `buildTheGraph`.
-    bool pruneShortChains = false;
-
     /// Half-width of the z0 window against which a node is matched in the
     /// histogram.
     float z0Resolution = 2.5f * Acts::UnitConstants::mm;
@@ -207,24 +196,18 @@ class GbtsGraphBuilder {
   /// @param roi Region of interest descriptor
   /// @param nodeStorage Data storage containing nodes
   /// @param bFieldInZ Magnetic field in z, in GeV/(e*mm)
-  /// @param minEdgeLevel The level a chain needs to be a seed, for
-  ///        `pruneShortChains`; 0 for no pruning
   /// @return The graph, with its edges and the links between them
   GbtsGraph buildTheGraph(const GbtsRoiDescriptor& roi,
-                          GbtsNodeStorage& nodeStorage, float bFieldInZ,
-                          std::uint32_t minEdgeLevel = 0) const;
+                          GbtsNodeStorage& nodeStorage, float bFieldInZ) const;
 
  private:
   Config m_cfg;
 
   std::shared_ptr<const GbtsGeometry> m_geometry;
 
-  /// Per eta bin, whether a connection leads into it from an inner bin.
-  std::vector<bool> m_binHasInnerLink;
-
-  /// Per eta bin, the most connection steps a chain can still go further in,
-  /// saturated.
-  std::vector<std::uint32_t> m_binInnerSteps;
+  /// Per eta bin, the lowest level an edge whose inner node is in it needs to
+  /// be on a chain long enough for a seed.
+  std::vector<std::uint32_t> m_binMinEdgeLevel;
 
   std::unique_ptr<const Acts::Logger> m_logger;
 

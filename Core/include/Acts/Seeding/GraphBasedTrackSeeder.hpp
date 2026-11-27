@@ -37,6 +37,10 @@ class GbtsGraphBuilder;
 /// Seed finder implementing the GBTS seeding workflow.
 class GraphBasedTrackSeeder {
  public:
+  /// Smallest `GbtsLayerConnection::minSeedLevel`: a seed has at least three
+  /// space points
+  static constexpr std::uint8_t kSmallestMinSeedLevel = 2;
+
   /// Configuration struct for the GBTS seeding algorithm.
   struct Config {
     /// Accepted tau range per cluster width bin, needed by the cluster width
@@ -52,16 +56,6 @@ class GraphBasedTrackSeeder {
     /// Longest chain of edges taken into account. Edges in longer chains take
     /// no part in the seed extraction.
     std::uint32_t maxChainLength = 15;
-    /// Chain length a seed candidate must reach: a triplet plus one
-    /// confirmation.
-    std::uint8_t minSeedLevel = 3;
-    /// optionally add 3 sp seeds within a certain eta range
-    ///
-    /// @note Matters most where there are few layers.
-    bool addTriplets = false;
-    /// the maximum allowed eta value in which
-    /// three spacepoint seeds are passed through
-    float maxAbsEtaAddTriplets = 1.5;
     /// Smallest seed size that is split into drop-out candidates.
     std::uint32_t minSplitSeedSize = 4;
     /// Largest seed size that is split.
@@ -202,10 +196,6 @@ class GraphBasedTrackSeeder {
   DerivedConfig m_cfg;
 
   std::shared_ptr<const GbtsGeometry> m_geometry;
-
-  /// The level a chain needs to be a seed, for
-  /// `GbtsGraphBuilder::Config::pruneShortChains`.
-  std::uint32_t m_minEdgeLevel{};
 
   std::unique_ptr<const Acts::Logger> m_logger =
       Acts::getDefaultLogger("Finder", Acts::Logging::Level::INFO);

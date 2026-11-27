@@ -11,6 +11,7 @@
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Seeding/GbtsLayerConnection.hpp"
 #include "Acts/Seeding/GbtsLayerConnectionTool.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
@@ -21,6 +22,7 @@
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
+#include <cstdint>
 #include <map>
 #include <optional>
 #include <string>
@@ -52,6 +54,10 @@ class GbtsTrainingAlgorithm final : public IAlgorithm {
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
     /// output directory for layer connection table
     std::string outputFileDir{};
+    /// `Acts::Experimental::GbtsLayerConnection::minSeedLevel` written for
+    /// every trained connection
+    std::uint8_t minSeedLevel =
+        Acts::Experimental::GbtsLayerConnection{}.minSeedLevel;
   };
 
   /// Constructor for GBTS training algorithm

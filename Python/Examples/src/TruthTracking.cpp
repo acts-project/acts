@@ -54,7 +54,7 @@ void addTruthTracking(py::module& mex) {
       GbtsTrainingAlgorithm, mex, "GbtsTrainingAlgorithm", inputParticles,
       inputParticleMeasurementsMap, inputMeasurements, inputSimHits,
       inputMeasurementSimHitsMap, gbtsLayerConnectionToolConfig,
-      geometryFileDir, trackingGeometry, outputFileDir);
+      geometryFileDir, trackingGeometry, outputFileDir, minSeedLevel);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ParticleTrackParamExtractor, mex,
                                 "ParticleTrackParamExtractor", inputParticles,

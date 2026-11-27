@@ -43,12 +43,6 @@ GraphBasedTrackSeeder::GraphBasedTrackSeeder(
         "GraphBasedTrackSeeder: the cluster width cuts need a tau lookup "
         "table");
   }
-
-  // A seed's chain needs minSeedLevel edges, less what addTriplets may take
-  // off, and at least two, a seed having three space points.
-  const std::uint32_t allowance = m_cfg.addTriplets ? 1 : 0;
-  m_minEdgeLevel =
-      std::max<std::uint32_t>(m_cfg.minSeedLevel, allowance + 2) - allowance;
 }
 
 GbtsNodeStorage GraphBasedTrackSeeder::makeNodeStorage() const {
@@ -91,8 +85,8 @@ void GraphBasedTrackSeeder::createSeeds(
     std::vector<std::optional<GbtsSeedFit>>* outputFits) const {
   ACTS_DEBUG("Loaded " << nodeStorage.numberOfNodes() << " graph nodes");
 
-  GbtsGraph graph = graphBuilder.buildTheGraph(
-      roi, nodeStorage, options.bFieldInZ, m_minEdgeLevel);
+  GbtsGraph graph =
+      graphBuilder.buildTheGraph(roi, nodeStorage, options.bFieldInZ);
 
   ACTS_DEBUG("Created graph with " << graph.edgeStorage.size() << " edges and "
                                    << graph.neighbours.size() << " edge links");
@@ -397,7 +391,8 @@ GraphBasedTrackSeeder::extractBestPathPerEdge(
   // The complete path with the best score per space point is the candidate
   // of the edge.
   std::vector<FittedPath> candidates;
-  std::uint32_t minLength = 0;
+  // the shortest chain any root completes, which bounds the search
+  const std::uint32_t minLength = kSmallestMinSeedLevel;
   std::vector<std::uint32_t> path;
   std::vector<std::uint32_t> bestPath;
   float bestQuality = 0;
@@ -416,7 +411,7 @@ GraphBasedTrackSeeder::extractBestPathPerEdge(
           m_cfg.postFitCurvatureFactor > 0 &&
           std::abs(state.x[2]) * m_cfg.postFitCurvatureFactor >
               filter.m_cfg.maxCurvature;
-      if (!maxCurvatureCut && path.size() >= minLength &&
+      if (!maxCurvatureCut && path.size() >= edgeStorage[e].minSeedLevel &&
           quality < bestQuality) {
         bestQuality = quality;
         bestState = state;
@@ -455,13 +450,6 @@ GraphBasedTrackSeeder::extractBestPathPerEdge(
 
   for (const std::uint32_t head : linkedEdges) {
     const detail::GbtsEdge& headEdge = edgeStorage[head];
-
-    // `addTriplets` accepts a path one edge short at low eta
-    minLength = m_cfg.minSeedLevel;
-    if (m_cfg.addTriplets && minLength > 0 &&
-        std::abs(-std::log(headEdge.p[0])) <= m_cfg.maxAbsEtaAddTriplets) {
-      --minLength;
-    }
 
     if (edgesToRoot[head] == 0 || edgesToRoot[head] < minLength) {
       continue;

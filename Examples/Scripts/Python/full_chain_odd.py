@@ -392,12 +392,7 @@ if args.reco:
                 seedingAlgorithm=SeedingAlgorithm.Gbts,
                 layerMappingConfigFile=oddGbtsLayerMap,
                 connectorInputConfigFile=oddGbtsConnectionTable,
-                # with four pixel barrel layers a seed needs only two linked
-                # doublets and no z0 histogram cut, which asks for a fourth hit
                 gbtsConfigArg=GbtsConfigArg(
-                    seederConfig=acts.examples.GraphBasedSeedingConfig(
-                        minSeedLevel=2,
-                    ),
                     graphConfig=acts.examples.GbtsGraphBuilderConfig(
                         minPt=0.9 * u.GeV,
                         z0HistogramMaxBarrelOrder=-1,
