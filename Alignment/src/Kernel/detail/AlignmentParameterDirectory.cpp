@@ -79,9 +79,11 @@ Acts::Result<StructureSet, AlignmentSelectionError> collectStructures(
 
 }  // namespace
 
-std::size_t AlignmentParameterDirectory::addAlignable(AlignableUnit unit,
-                                                      AlignmentMask mask) {
-  unit.parameterIndices.fill(std::nullopt);
+std::size_t AlignmentParameterDirectory::addAlignable(
+    std::variant<const Acts::SurfacePlacementBase*, const AlignableStructure*>
+        alignable,
+    AlignmentMask mask) {
+  AlignableUnit unit{alignable, {}};
   for (const auto& [dof, bit] : namedDofs) {
     if (ACTS_CHECK_BIT(mask, bit)) {
       unit.parameterIndices[dof] = numParameters++;
@@ -114,7 +116,7 @@ makeAlignmentParameterDirectory(
       return AlignmentSelectionError{AlignmentError::InvalidAlignmentSelection,
                                      "Null standalone module"};
     }
-    const auto position = directory.addAlignable({module, {}}, moduleMask);
+    const auto position = directory.addAlignable(module, moduleMask);
     if (!directory.registerPlacement(module, position)) {
       return AlignmentSelectionError{AlignmentError::InvalidAlignmentSelection,
                                      "Duplicate standalone module"};
@@ -143,7 +145,7 @@ makeAlignmentParameterDirectory(
           AlignmentError::InvalidAlignmentSelection,
           "Active structure must be a nonempty leaf"};
     }
-    const auto position = directory.addAlignable({structure.get(), {}}, mask);
+    const auto position = directory.addAlignable(structure.get(), mask);
     // Members share one entry. Registering them also detects overlap with
     // the standalone modules already in the lookup.
     for (const auto& surface : structure->surfacePointers()) {

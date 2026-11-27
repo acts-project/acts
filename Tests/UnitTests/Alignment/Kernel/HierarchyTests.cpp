@@ -632,9 +632,9 @@ BOOST_FIXTURE_TEST_CASE(DirectoryRegistrationPreservesAssignments,
                         ParameterDirectoryFixture) {
   AlignDetail::AlignmentParameterDirectory directory;
   const auto modulePosition =
-      directory.addAlignable({module.get(), {}}, AlignmentMask::None);
+      directory.addAlignable(module.get(), AlignmentMask::None);
   const auto structurePosition = directory.addAlignable(
-      {group.get(), {}}, AlignmentMask::Center1 | AlignmentMask::Rotation2);
+      group.get(), AlignmentMask::Center1 | AlignmentMask::Rotation2);
   BOOST_CHECK_EQUAL(modulePosition, 0u);
   BOOST_CHECK_EQUAL(structurePosition, 1u);
   BOOST_REQUIRE_EQUAL(directory.alignables.size(), 2u);
@@ -667,17 +667,19 @@ BOOST_FIXTURE_TEST_CASE(DirectoryRegistrationPreservesAssignments,
   BOOST_CHECK_EQUAL(directory.numParameters, 2u);
 }
 
-BOOST_FIXTURE_TEST_CASE(DirectoryRenumbersCopiedUnits,
+BOOST_FIXTURE_TEST_CASE(DirectoriesNumberSameAlignableIndependently,
                         ParameterDirectoryFixture) {
   const auto original = makeParameterDirectory({group}, {group});
   BOOST_REQUIRE(original.ok());
   AlignDetail::AlignmentParameterDirectory directory;
-  directory.addAlignable({module.get(), {}}, AlignmentMask::Center0);
-  const auto position = directory.addAlignable(original->alignables.front(),
-                                               AlignmentMask::Rotation1);
+  directory.addAlignable(module.get(), AlignmentMask::Center0);
+  const auto position = directory.addAlignable(
+      original->alignables.front().alignable, AlignmentMask::Rotation1);
   BOOST_REQUIRE_EQUAL(directory.alignables.size(), 2u);
   BOOST_CHECK_EQUAL(position, 1u);
   BOOST_CHECK_EQUAL(directory.numParameters, 2u);
+  BOOST_CHECK(directory.alignables[position].alignable ==
+              original->alignables.front().alignable);
   const auto& indices = directory.alignables[position].parameterIndices;
   BOOST_REQUIRE(indices[eAlignmentRotation1]);
   BOOST_CHECK_EQUAL(*indices[eAlignmentRotation1], 1u);
