@@ -301,8 +301,6 @@ class hough_transform_seeding_algorithm
   virtual void select_hits_kernel(const select_hits_payload& payload) const = 0;
   virtual void make_seeds_kernel(const make_seeds_payload& payload) const = 0;
 
-  virtual void synchronize() const = 0;
-
   config_type m_config;
 };
 

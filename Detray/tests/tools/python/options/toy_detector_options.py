@@ -48,12 +48,12 @@ def fill_toy_detector_config(args, config):
     if args.homogeneous_material and args.material_maps:
         raise ValueError("Please specify only one material description")
 
-    config.nBarrelLayers = args.barrel_layers
-    config.nEndcapLayers = args.endcap_layers
+    config.n_brl_layers = args.barrel_layers
+    config.n_edc_layers = args.endcap_layers
 
     if args.homogeneous_material:
-        config.useMaterialMaps = False
+        config.use_material_maps = False
     if args.material_maps:
-        config.useMaterialMaps = True
+        config.use_material_maps = True
 
     return config

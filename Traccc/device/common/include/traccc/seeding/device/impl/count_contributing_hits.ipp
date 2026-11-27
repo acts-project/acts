@@ -62,9 +62,10 @@ inline void count_contributing_hits(
       spacepoint_bfield_z_view);
 
   unsigned int n_contributing_hits = 0u;
+  const unsigned long long wedge_id = (1ULL << wedge_idx);
   for (unsigned int i(0); i < spacepoint_r.capacity(); ++i) {
     // contributes to wedge
-    if ((spacepoint_wedge_association[i] & (1ULL << wedge_idx)) == 0ULL) {
+    if ((spacepoint_wedge_association[i] & wedge_id) == 0ULL) {
       continue;
     }
     scalar min_value_y = transform(min_x, spacepoint_r[i], spacepoint_phi[i],

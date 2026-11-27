@@ -47,7 +47,10 @@ void DoubletsForMiddleSp::sortByCotTheta(
     return item.cotTheta;
   };
 
-  detail::sortByKey(std::span(indexAndCotTheta), storage, cotThetaOf);
+  detail::ensureSortByKeyBuffers(std::span(indexAndCotTheta), storage.scratch,
+                                 storage.buckets);
+  detail::sortByKey(std::span(indexAndCotTheta), std::span(storage.scratch),
+                    std::span(storage.buckets), cotThetaOf);
 }
 
 namespace {

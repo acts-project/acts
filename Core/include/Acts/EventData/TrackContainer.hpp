@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/EventData/DynamicColumnInfo.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryBackendConcept.hpp"
 #include "Acts/EventData/TrackContainerBackendConcept.hpp"
@@ -273,6 +274,17 @@ class TrackContainer {
   /// @return true if the column exists
   constexpr bool hasColumn(HashedString key) const {
     return m_container->hasColumn_impl(key);
+  }
+
+  /// Iterate over dynamic track columns in unspecified order.
+  /// @return An input range of DynamicColumnInfo. Keep the backend alive and
+  /// its column schema unchanged while using the range or its borrowed names.
+  detail::DynamicColumnInfoRange auto dynamicColumns() const
+    requires requires(const track_container_t& backend) {
+      { backend.dynamicColumns_impl() } -> detail::DynamicColumnInfoRange;
+    }
+  {
+    return container().dynamicColumns_impl();
   }
 
   /// Helper function to make this track container match the dynamic columns of

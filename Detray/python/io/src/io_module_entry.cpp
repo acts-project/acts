@@ -1,0 +1,151 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+// Detray core include(s)
+#include "detray/core/detector.hpp"
+#include "detray/definitions/algebra.hpp"
+#include "detray/detectors/default_metadata.hpp"
+#include "detray/detectors/toy_metadata.hpp"
+
+// Detray IO include(s)
+#include "detray/io/frontend/detector_reader_config.hpp"
+#include "detray/io/frontend/detector_writer_config.hpp"
+#include "detray/io/json/detector_reader.hpp"
+#include "detray/io/json/detector_writer.hpp"
+
+// Vecmem include(s)
+#include <vecmem/memory/memory_resource.hpp>
+
+// Pybind11 include(s)
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+
+// System include(s)
+#include <memory>
+#include <sstream>
+#include <string>
+#include <utility>
+
+namespace py = pybind11;
+
+namespace {
+
+using scalar_t = DETRAY_CUSTOM_SCALARTYPE;
+using algebra_t = detray::array<scalar_t>;
+using detector_t = detray::host::detector<detray::default_metadata<algebra_t>>;
+using toy_detector_t = detray::host::detector<detray::toy_metadata<algebra_t>>;
+using reader_config_t = detray::io::detector_reader_config;
+using writer_config_t = detray::io::detector_writer_config;
+
+template <typename T>
+std::string to_string(const T &obj) {
+  std::ostringstream os;
+  os << obj;
+  return os.str();
+}
+
+/// Read a detector (default metadata) using @p mr as configured by @p cfg .
+///
+/// The memory resource object is automatically kept alive at least as long as
+/// the returned detector object.
+std::pair<py::object, detray::name_map> read_detector(
+    std::shared_ptr<vecmem::memory_resource> mr, const reader_config_t &cfg) {
+  auto [det, names] = detray::io::read_detector_json<detector_t>(*mr, cfg);
+
+  py::object detector = py::cast(std::move(det));
+  py::detail::keep_alive_impl(detector, py::cast(std::move(mr)));
+
+  return {std::move(detector), std::move(names)};
+}
+
+}  // namespace
+
+PYBIND11_MODULE(detray_io_python_bindings, m) {
+  m.doc() = "Detray io bindings";
+
+  py::class_<reader_config_t>(m, "DetectorReaderConfig")
+      .def(py::init<>())
+      .def_property_readonly("files", &reader_config_t::files, "Input files")
+      .def_property(
+          "do_check", [](const reader_config_t &c) { return c.do_check(); },
+          [](reader_config_t &c, bool v) { c.do_check(v); },
+          "Do detector consistency check")
+      .def_property(
+          "verbose_check",
+          [](const reader_config_t &c) { return c.verbose_check(); },
+          [](reader_config_t &c, bool v) { c.verbose_check(v); },
+          "Verbosity of the detector consistency check")
+      .def_property(
+          "deduplicate",
+          [](const reader_config_t &c) { return c.deduplicate(); },
+          [](reader_config_t &c, bool v) { c.deduplicate(v); },
+          "Data deduplication in the detector")
+      .def(
+          "add_file",
+          [](reader_config_t &c, const std::string &f) -> reader_config_t & {
+            return c.add_file(f);
+          },
+          py::arg("file_name"), py::return_value_policy::reference_internal,
+          "Add an input file")
+      .def(
+          "add_files",
+          [](reader_config_t &c, const py::args &args) -> reader_config_t & {
+            std::vector<std::string> files{};
+            for (const auto &arg : args) {
+              files.push_back(arg.cast<std::string>());
+            }
+            return c.add_files(std::move(files));
+          },
+          py::return_value_policy::reference_internal,
+          "Append multiple input files")
+      .def("__repr__", &to_string<reader_config_t>);
+
+  m.def("read_detector_json", &read_detector, py::arg("memory_resource"),
+        py::arg("config"),
+        "Read a detector using the given memory resource as configured by a "
+        "DetectorReaderConfig. The returned detector keeps the memory resource "
+        "alive for as long as it is used");
+
+  py::class_<writer_config_t>(m, "DetectorWriterConfig")
+      .def(py::init<>())
+      .def_property(
+          "path", [](const writer_config_t &c) { return c.path(); },
+          [](writer_config_t &c, const std::string &p) { c.path(p); },
+          "Path to the output files")
+      .def_property(
+          "replace_files",
+          [](const writer_config_t &c) { return c.replace_files(); },
+          [](writer_config_t &c, bool b) { c.replace_files(b); },
+          "Replace files in case they already exist")
+      .def_property(
+          "compactify_json",
+          [](const writer_config_t &c) { return c.compactify_json(); },
+          [](writer_config_t &c, bool b) { c.compactify_json(b); },
+          "Compactify the json output")
+      .def_property(
+          "write_material",
+          [](const writer_config_t &c) { return c.write_material(); },
+          [](writer_config_t &c, bool b) { c.write_material(b); },
+          "Whether to write the material to file")
+      .def_property(
+          "write_grids",
+          [](const writer_config_t &c) { return c.write_grids(); },
+          [](writer_config_t &c, bool b) { c.write_grids(b); },
+          "Whether to write the accelerator grids to file")
+      .def("__repr__", &to_string<writer_config_t>);
+
+  m.def(
+      "write_detector_json",
+      [](toy_detector_t &det, const typename toy_detector_t::name_map &names,
+         writer_config_t &cfg) {
+        detray::io::write_detector_json(det, names, cfg);
+      },
+      py::arg("detector"), py::arg("names"), py::arg("config"),
+      "Write a detector to file as configured by a DetectorWriterConfig. The "
+      "config is modified in place if the detector carries no material");
+}

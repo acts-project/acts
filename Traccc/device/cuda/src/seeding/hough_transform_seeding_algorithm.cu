@@ -221,7 +221,7 @@ void hough_transform_seeding_algorithm::define_plane_edges_kernel(
     const define_plane_edges_kernel_payload& payload) const {
   unsigned int maxValues =
       std::max(payload.config.n_cols, payload.config.n_rows);
-  const unsigned int n_threads = warp_size() * 4;
+  const unsigned int n_threads = 128;
   const unsigned int n_blocks = (maxValues + n_threads - 1) / n_threads;
   kernels::define_plane_edges<<<n_blocks, n_threads, 0,
                                 details::get_stream(stream())>>>(
@@ -232,7 +232,7 @@ void hough_transform_seeding_algorithm::define_plane_edges_kernel(
 
 void hough_transform_seeding_algorithm::precompute_spacepoint_variables_kernel(
     const precompute_spacepoint_variables_payload& payload) const {
-  const unsigned int n_threads = warp_size() * 8;
+  const unsigned int n_threads = 256;
   const unsigned int n_blocks =
       (payload.n_spacepoints + n_threads - 1) / n_threads;
   magnetic_field_visitor<bfield_type_list<scalar>>(
@@ -251,7 +251,7 @@ void hough_transform_seeding_algorithm::precompute_spacepoint_variables_kernel(
 
 void hough_transform_seeding_algorithm::fill_hough_plane_kernel(
     const fill_hough_planes_kernel_payload& payload) const {
-  const unsigned int n_threads = warp_size() * 8;
+  const unsigned int n_threads = 256;
   const unsigned int n_blocks =
       (payload.n_spacepoints + n_threads - 1) / n_threads;
   kernels::fill_hough_plane<unsigned short>
@@ -266,7 +266,7 @@ void hough_transform_seeding_algorithm::fill_hough_plane_kernel(
 
 void hough_transform_seeding_algorithm::count_bits_kernel(
     const count_bits_kernel_payload& payload) const {
-  const unsigned int n_threads = warp_size() * 8;
+  const unsigned int n_threads = 256;
   const unsigned int n_blocks = (payload.n_entries + n_threads - 1) / n_threads;
   kernels::
       count_bits<<<n_blocks, n_threads, 0, details::get_stream(stream())>>>(
@@ -276,7 +276,7 @@ void hough_transform_seeding_algorithm::count_bits_kernel(
 
 void hough_transform_seeding_algorithm::count_maxima_kernel(
     const count_maxima_payload& payload) const {
-  const unsigned int n_threads = warp_size() * 8;
+  const unsigned int n_threads = 256;
   const unsigned int n_blocks =
       (payload.config.n_cols * payload.config.n_rows + n_threads - 1) /
       n_threads;
@@ -289,7 +289,7 @@ void hough_transform_seeding_algorithm::count_maxima_kernel(
 
 void hough_transform_seeding_algorithm::find_maxima_kernel(
     const find_maxima_payload& payload) const {
-  const unsigned int n_threads = warp_size() * 8;
+  const unsigned int n_threads = 256;
   const unsigned int n_blocks =
       (payload.config.n_cols * payload.config.n_rows + n_threads - 1) /
       n_threads;
@@ -314,7 +314,7 @@ void hough_transform_seeding_algorithm::take_picture_kernel(
 
 void hough_transform_seeding_algorithm::evaluate_nn_kernel(
     const evaluate_nn_payload& payload) const {
-  const unsigned int n_threads = warp_size() * 8;
+  const unsigned int n_threads = 256;
   const unsigned int n_blocks = (payload.n_images + n_threads - 1) / n_threads;
   kernels::
       evaluate_nn<<<n_blocks, n_threads, 0, details::get_stream(stream())>>>(
@@ -325,7 +325,7 @@ void hough_transform_seeding_algorithm::evaluate_nn_kernel(
 
 void hough_transform_seeding_algorithm::count_contributing_hits_kernel(
     const count_contributing_hits_payload& payload) const {
-  const unsigned int n_threads = warp_size() * 8;
+  const unsigned int n_threads = 256;
   const unsigned int n_blocks = (payload.n_images + n_threads - 1) / n_threads;
   kernels::count_contributing_hits<<<n_blocks, n_threads, 0,
                                      details::get_stream(stream())>>>(
@@ -338,7 +338,7 @@ void hough_transform_seeding_algorithm::count_contributing_hits_kernel(
 
 void hough_transform_seeding_algorithm::find_contributing_hits_kernel(
     const find_contributing_hits_payload& payload) const {
-  const unsigned int n_threads = warp_size() * 4;
+  const unsigned int n_threads = 128;
   const unsigned int n_blocks = (payload.n_images + n_threads - 1) / n_threads;
   kernels::find_contributing_hits<<<n_blocks, n_threads, 0,
                                     details::get_stream(stream())>>>(
@@ -363,7 +363,7 @@ void hough_transform_seeding_algorithm::compute_cottheta_matrix_kernel(
 
 void hough_transform_seeding_algorithm::select_hits_kernel(
     const select_hits_payload& payload) const {
-  const unsigned int n_threads = warp_size() * 4;
+  const unsigned int n_threads = 128;
   const unsigned int n_blocks = (payload.n_images + n_threads - 1) / n_threads;
   kernels::
       select_hits<<<n_blocks, n_threads, 0, details::get_stream(stream())>>>(
@@ -374,17 +374,13 @@ void hough_transform_seeding_algorithm::select_hits_kernel(
 
 void hough_transform_seeding_algorithm::make_seeds_kernel(
     const make_seeds_payload& payload) const {
-  const unsigned int n_threads = warp_size() * 4;
+  const unsigned int n_threads = 128;
   const unsigned int n_blocks = (payload.n_images + n_threads - 1) / n_threads;
   kernels::
       make_seeds<<<n_blocks, n_threads, 0, details::get_stream(stream())>>>(
           payload.n_images, payload.spacepoints_r, payload.nn_outcome,
           payload.hits, payload.cot_theta_matrix, payload.mode_values,
           payload.best_matches, payload.filtered_hits, payload.seeds);
-}
-
-void hough_transform_seeding_algorithm::synchronize() const {
-  stream().synchronize();
 }
 
 }  // namespace traccc::cuda

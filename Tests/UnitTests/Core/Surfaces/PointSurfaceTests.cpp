@@ -200,7 +200,7 @@ BOOST_AUTO_TEST_CASE(PointSurfaceIntersectionBounds) {
 
 // Build a free vector from a bound vector consistent with the surface frame
 FreeVector boundToFree(const PointSurface& surface, const BoundVector& b) {
-  Vector3 dir = makeDirectionFromPhiTheta(b[eBoundPhi], b[eBoundTheta]);
+  Vector3 dir = makeDirectionFromPhiTheta(b[eBoundDir0], b[eBoundDir1]);
   Vector3 pos = surface.localToGlobal(
       tgContext, Vector2(b[eBoundLoc0], b[eBoundLoc1]), dir);
   FreeVector f = FreeVector::Zero();

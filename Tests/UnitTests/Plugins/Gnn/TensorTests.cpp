@@ -10,16 +10,25 @@
 
 #include "ActsPlugins/Gnn/Tensor.hpp"
 
+#include <sstream>
+#include <stdexcept>
+
 using namespace Acts;
 using namespace ActsPlugins;
 
 #ifdef ACTS_GNN_WITH_CUDA
+#include "ActsPlugins/Gnn/detail/async_device_memory_resource.hpp"
+
 #include <cuda_runtime_api.h>
+#include <vecmem/utils/cuda/stream_wrapper.hpp>
 #endif
 
 const ExecutionContext execContextCpu{Device::Cpu(), {}};
 #ifdef ACTS_GNN_WITH_CUDA
-const ExecutionContext execContextCuda{Device::Cuda(0), cudaStreamLegacy};
+const vecmem::cuda::stream_wrapper cudaStream(cudaStreamLegacy);
+detail::async_device_memory_resource cudaMemoryResource(cudaStream);
+const ExecutionContext execContextCuda{Device::Cuda(0), &cudaStream,
+                                       &cudaMemoryResource};
 #endif
 
 template <typename T>
@@ -34,7 +43,7 @@ void testSigmoid(std::vector<float> input, ExecutionContext execContext) {
   auto tensor = createCpuTensor(input, {input.size(), 1ul});
 
   auto tensorTarget = tensor.clone(execContext);
-  sigmoid(tensorTarget, execContext.stream);
+  sigmoid(tensorTarget, execContext);
   auto result = tensorTarget.clone({Device::Cpu(), execContext.stream});
 
   std::vector<float> expected(input.size());
@@ -57,7 +66,7 @@ void testEdgeSelection(const std::vector<float>& scores,
   auto scoreTensorTarget = scoreTensor.clone(execContext);
   auto edgeTensorTarget = edgeTensor.clone(execContext);
 
-  auto mask = scoreMask(scoreTensorTarget, 0.5f, execContext.stream);
+  auto mask = scoreMask(scoreTensorTarget, 0.5f, execContext);
   auto selectedScores = selectRows(scoreTensorTarget, mask, execContext);
   auto selectedEdges = selectCols(edgeTensorTarget, mask, execContext);
 
@@ -228,7 +237,7 @@ void testEdgeSelectionWithFeatures(
   auto edgeTensorTarget = edgeTensor.clone(execContext);
   auto featureTensorTarget = featureTensor.clone(execContext);
 
-  auto mask = scoreMask(scoreTensorTarget, 0.5f, execContext.stream);
+  auto mask = scoreMask(scoreTensorTarget, 0.5f, execContext);
   auto selectedEdges = selectCols(edgeTensorTarget, mask, execContext);
   auto selectedFeatures = selectRows(featureTensorTarget, mask, execContext);
 
@@ -274,8 +283,8 @@ void testEdgeLimit(ExecutionContext execContext) {
       edgeFeatureTensor.clone(execContext);
 
   // Apply edge limit
-  auto [limitedEdges, limitedEdgeFeatures] = applyEdgeLimit(
-      edgeTensorTarget, edgeFeatureTensorTarget, 5, execContext.stream);
+  auto [limitedEdges, limitedEdgeFeatures] =
+      applyEdgeLimit(edgeTensorTarget, edgeFeatureTensorTarget, 5, execContext);
 
   // Clone results back to CPU
   auto limitedEdgesHost =
@@ -394,7 +403,7 @@ BOOST_AUTO_TEST_CASE(tensor_clone_roundtrip) {
   BOOST_CHECK(tensorCloneCuda.device().isCuda());
 
   auto tensorCloneHost =
-      tensorCloneCuda.clone({Device::Cpu(), cudaStreamLegacy});
+      tensorCloneCuda.clone({Device::Cpu(), execContextCuda.stream});
   BOOST_CHECK(tensorCloneHost.device().isCpu());
 
   BOOST_CHECK(tensorCloneHost.shape()[0] == 3);
@@ -448,6 +457,29 @@ BOOST_AUTO_TEST_CASE(tensor_edge_selection_with_features_cuda) {
 }
 
 #endif
+
+BOOST_AUTO_TEST_CASE(device_mps_description) {
+  const auto mps = Device::Mps();
+  BOOST_CHECK(mps.isMps());
+  BOOST_CHECK(!mps.isCpu());
+  BOOST_CHECK(!mps.isCuda());
+  BOOST_CHECK_EQUAL(mps, Device::Mps());
+
+  std::stringstream ss;
+  ss << mps;
+  BOOST_CHECK_EQUAL(ss.str(), "MPS");
+}
+
+// MPS only describes where a stage runs its model, so there is no tensor
+// memory on it
+BOOST_AUTO_TEST_CASE(tensor_create_mps_throws) {
+  const ExecutionContext execContextMps{Device::Mps(), {}};
+  BOOST_CHECK_THROW(Tensor<float>::Create({2, 2}, execContextMps),
+                    std::invalid_argument);
+
+  auto cpuTensor = createCpuTensor<float>({1.f, 2.f, 3.f, 4.f}, {2, 2});
+  BOOST_CHECK_THROW(cpuTensor.clone(execContextMps), std::invalid_argument);
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 

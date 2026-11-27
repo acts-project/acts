@@ -66,7 +66,7 @@ void measurement_sorting_algorithm::sorting_kernel(
                     stream_synchronizing_allocator(mr().main, stream()))
                     .on(str);
 
-  const unsigned int num_threads = warp_size() * 8;
+  const unsigned int num_threads = 256;
   const unsigned int num_blocks =
       (n_measurements + num_threads - 1) / num_threads;
 
@@ -82,10 +82,6 @@ void measurement_sorting_algorithm::sorting_kernel(
   kernels::fill_sorted_measurements<<<num_blocks, num_threads, 0, str>>>(
       payload.measurements, payload.output, payload.indices);
   TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
-}
-
-void measurement_sorting_algorithm::synchronize() const {
-  stream().synchronize();
 }
 
 }  // namespace traccc::cuda

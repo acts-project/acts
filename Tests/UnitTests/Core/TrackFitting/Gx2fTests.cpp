@@ -92,8 +92,8 @@ BoundTrackParameters makeParameters(
   stddev[eBoundLoc0] = 100_um;
   stddev[eBoundLoc1] = 100_um;
   stddev[eBoundTime] = 25_ns;
-  stddev[eBoundPhi] = 2_degree;
-  stddev[eBoundTheta] = 2_degree;
+  stddev[eBoundDir0] = 2_degree;
+  stddev[eBoundDir1] = 2_degree;
   stddev[eBoundQOverP] = 1 / 100_GeV;
   const BoundMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
   // define a track in the transverse plane along x
@@ -396,9 +396,8 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
   // the created measurements differ in the randomness
   BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc0], -11., 7e0);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc1], -15., 6e0);
-  BOOST_CHECK_CLOSE(track.parameters()[eBoundPhi], 1e-5, 1e3);
-  BOOST_CHECK_CLOSE(track.parameters()[eBoundTheta], std::numbers::pi / 2,
-                    1e-3);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundDir0], 1e-5, 1e3);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundDir1], std::numbers::pi / 2, 1e-3);
   BOOST_CHECK_EQUAL(track.parameters()[eBoundQOverP], 1);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundTime],
                     startParametersFit.parameters()[eBoundTime], 1e-6);
@@ -602,9 +601,8 @@ BOOST_AUTO_TEST_CASE(MixedDetector) {
   // the created measurements differ in the randomness
   BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc0], -11., 7e0);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc1], -15., 6e0);
-  BOOST_CHECK_CLOSE(track.parameters()[eBoundPhi], 1e-5, 1e3);
-  BOOST_CHECK_CLOSE(track.parameters()[eBoundTheta], std::numbers::pi / 2,
-                    1e-3);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundDir0], 1e-5, 1e3);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundDir1], std::numbers::pi / 2, 1e-3);
   BOOST_CHECK_EQUAL(track.parameters()[eBoundQOverP], 1);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundTime],
                     startParametersFit.parameters()[eBoundTime], 1e-6);
@@ -694,12 +692,11 @@ BOOST_AUTO_TEST_CASE(FitWithBfield) {
   // Parameters
   // We need quite coarse checks here, since on different builds
   // the created measurements differ in the randomness
-  // TODO investigate further the reference values for eBoundPhi and det(cov)
+  // TODO investigate further the reference values for eBoundDir0 and det(cov)
   BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc0], -11., 8e0);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc1], -15., 6e0);
-  BOOST_CHECK_CLOSE(track.parameters()[eBoundPhi], 1e-4, 1e3);
-  BOOST_CHECK_CLOSE(track.parameters()[eBoundTheta], std::numbers::pi / 2,
-                    1e-3);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundDir0], 1e-4, 1e3);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundDir1], std::numbers::pi / 2, 1e-3);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundQOverP], 0.5, 2e-1);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundTime],
                     startParametersFit.parameters()[eBoundTime], 1e-6);
@@ -791,9 +788,8 @@ BOOST_AUTO_TEST_CASE(relChi2changeCutOff) {
   // the created measurements differ in the randomness
   BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc0], -11., 7e0);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc1], -15., 6e0);
-  BOOST_CHECK_CLOSE(track.parameters()[eBoundPhi], 1e-5, 1e3);
-  BOOST_CHECK_CLOSE(track.parameters()[eBoundTheta], std::numbers::pi / 2,
-                    1e-3);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundDir0], 1e-5, 1e3);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundDir1], std::numbers::pi / 2, 1e-3);
   BOOST_CHECK_EQUAL(track.parameters()[eBoundQOverP], 1);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundTime],
                     startParametersFit.parameters()[eBoundTime], 1e-6);
@@ -1041,9 +1037,8 @@ BOOST_AUTO_TEST_CASE(FindHoles) {
   // the created measurements differ in the randomness
   BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc0], -11., 7e0);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc1], -15., 6e0);
-  BOOST_CHECK_CLOSE(track.parameters()[eBoundPhi], 1e-5, 1e3);
-  BOOST_CHECK_CLOSE(track.parameters()[eBoundTheta], std::numbers::pi / 2,
-                    1e-3);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundDir0], 1e-5, 1e3);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundDir1], std::numbers::pi / 2, 1e-3);
   BOOST_CHECK_EQUAL(track.parameters()[eBoundQOverP], 1);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundTime],
                     startParametersFit.parameters()[eBoundTime], 1e-6);
@@ -1189,9 +1184,8 @@ BOOST_AUTO_TEST_CASE(Material) {
   // the created measurements differ in the randomness
   BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc0], -11., 26e0);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc1], -15., 15e0);
-  BOOST_CHECK_CLOSE(track.parameters()[eBoundPhi], 1e-5, 1.1e3);
-  BOOST_CHECK_CLOSE(track.parameters()[eBoundTheta], std::numbers::pi / 2,
-                    2e-2);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundDir0], 1e-5, 1.1e3);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundDir1], std::numbers::pi / 2, 2e-2);
   BOOST_CHECK_EQUAL(track.parameters()[eBoundQOverP], 1);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundTime],
                     startParametersFit.parameters()[eBoundTime], 1e-6);

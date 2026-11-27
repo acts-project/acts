@@ -60,18 +60,18 @@ struct CyclicRadiusAngle {
 //! [angle description]
 template <Surface::SurfaceType type_t>
 struct AngleDescription {
-  using Desc = std::tuple<CyclicAngle<eBoundPhi>>;
+  using Desc = std::tuple<CyclicAngle<eBoundDir0>>;
 };
 
 template <>
 struct AngleDescription<Surface::Disc> {
-  using Desc = std::tuple<CyclicAngle<eBoundLoc1>, CyclicAngle<eBoundPhi>>;
+  using Desc = std::tuple<CyclicAngle<eBoundLoc1>, CyclicAngle<eBoundDir0>>;
 };
 
 template <>
 struct AngleDescription<Surface::Cylinder> {
   using Desc =
-      std::tuple<CyclicRadiusAngle<eBoundLoc0>, CyclicAngle<eBoundPhi>>;
+      std::tuple<CyclicRadiusAngle<eBoundLoc0>, CyclicAngle<eBoundDir0>>;
 };
 //! [angle description]
 

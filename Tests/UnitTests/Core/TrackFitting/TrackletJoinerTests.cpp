@@ -51,9 +51,9 @@ struct Node {
 
 BoundMatrix makeJacobian(double scale) {
   BoundMatrix f = BoundMatrix::Identity();
-  f(eBoundLoc0, eBoundPhi) = 0.3 * scale;
-  f(eBoundLoc1, eBoundTheta) = 0.2 * scale;
-  f(eBoundPhi, eBoundQOverP) = 0.1 * scale;
+  f(eBoundLoc0, eBoundDir0) = 0.3 * scale;
+  f(eBoundLoc1, eBoundDir1) = 0.2 * scale;
+  f(eBoundDir0, eBoundQOverP) = 0.1 * scale;
   f(eBoundLoc0, eBoundQOverP) = 0.05 * scale;
   f(eBoundTime, eBoundLoc1) = 0.1 * scale;
   return f;

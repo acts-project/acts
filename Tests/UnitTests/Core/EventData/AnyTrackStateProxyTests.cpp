@@ -481,20 +481,20 @@ BOOST_FIXTURE_TEST_CASE(ProjectorSubspaceIndices, TestTrackStateFixture) {
 
   // Test setting through any proxy
   BoundSubspaceIndices newIndices{};
-  newIndices[0] = eBoundPhi;
-  newIndices[1] = eBoundTheta;
+  newIndices[0] = eBoundDir0;
+  newIndices[1] = eBoundDir1;
   anyState.setProjectorSubspaceIndices(
       std::span<std::uint8_t>(newIndices.begin(), measdim));
 
   auto retrieved2 = anyState.projectorSubspaceIndices();
-  BOOST_CHECK_EQUAL(retrieved2[0], eBoundPhi);
-  BOOST_CHECK_EQUAL(retrieved2[1], eBoundTheta);
+  BOOST_CHECK_EQUAL(retrieved2[0], eBoundDir0);
+  BOOST_CHECK_EQUAL(retrieved2[1], eBoundDir1);
 
   // Test const proxy
   AnyConstTrackStateProxy constState(state);
   BOOST_CHECK(constState.hasProjector());
   auto constIndices = constState.projectorSubspaceIndices();
-  BOOST_CHECK_EQUAL(constIndices[0], eBoundPhi);
+  BOOST_CHECK_EQUAL(constIndices[0], eBoundDir0);
 }
 
 BOOST_FIXTURE_TEST_CASE(Chi2AndPathLength, TestTrackStateFixture) {

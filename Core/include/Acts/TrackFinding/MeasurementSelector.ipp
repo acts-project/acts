@@ -35,7 +35,7 @@ MeasurementSelector::select(
   // Get geoID of this surface
   GeometryIdentifier geoID = candidates.front().referenceSurface().geometryId();
   // Get the theta of the first track state
-  const double theta = candidates.front().predicted()[eBoundTheta];
+  const double theta = candidates.front().predicted()[eBoundDir1];
   // Find the appropriate cuts
   const auto cutsResult = getCuts(geoID, theta);
   if (!cutsResult.ok()) {

@@ -158,46 +158,46 @@ def fill_propagation_config(args, config):
             raise ValueError(
                 "Incorrect surface grid search window. Please provide two integer distances."
             )
-        navigation.searchWindow = [args.search_window[0], args.search_window[1]]
+        navigation.search_window = [args.search_window[0], args.search_window[1]]
 
     if args.min_mask_tol is not None:
-        intersection.minMaskTolerance = args.min_mask_tol * units.mm
+        intersection.min_mask_tolerance = args.min_mask_tol * units.mm
     if args.max_mask_tol is not None:
-        intersection.maxMaskTolerance = args.max_mask_tol * units.mm
+        intersection.max_mask_tolerance = args.max_mask_tol * units.mm
     if args.mask_tol_scalor is not None:
-        intersection.maskToleranceScalor = args.mask_tol_scalor
+        intersection.mask_tolerance_scalor = args.mask_tol_scalor
     if args.overstep_tol is not None:
-        intersection.overstepTolerance = args.overstep_tol * units.um
+        intersection.overstep_tolerance = args.overstep_tol * units.um
     if args.path_tol is not None:
-        intersection.pathTolerance = args.path_tol * units.um
+        intersection.path_tolerance = args.path_tol * units.um
 
     if args.estimate_scattering_noise:
-        navigation.estimateScatteringNoise = True
+        navigation.estimate_scattering_noise = True
 
         if args.n_scattering_stddev is not None:
-            navigation.nScatteringStddev = args.n_scattering_stddev
+            navigation.n_scattering_stddev = args.n_scattering_stddev
         if args.accumulated_error is not None:
-            navigation.accumulatedError = args.accumulated_error
+            navigation.accumulated_error = args.accumulated_error
     else:
-        navigation.estimateScatteringNoise = False
+        navigation.estimate_scattering_noise = False
 
     # Configure the stepper
     stepping = config.stepping
 
     if args.min_step_size is not None:
-        stepping.minStepsize = args.min_step_size * units.mm
+        stepping.min_stepsize = args.min_step_size * units.mm
     if args.max_step_size is not None:
-        stepping.stepConstraint = args.max_step_size * units.mm
+        stepping.step_constraint = args.max_step_size * units.mm
     if args.rk_error_tol is not None:
-        stepping.rkErrorTol = args.rk_error_tol * units.mm
+        stepping.rk_error_tol = args.rk_error_tol * units.mm
     if args.path_limit is not None:
-        stepping.pathLimit = args.path_limit * units.m
-    stepping.doCovarianceTransport = args.covariance_transport is True
+        stepping.path_limit = args.path_limit * units.m
+    stepping.do_covariance_transport = args.covariance_transport is True
     if args.bethe_energy_loss is not None:
-        stepping.useMeanLoss = args.bethe_energy_loss
+        stepping.use_mean_loss = args.bethe_energy_loss
     if args.energy_loss_grad is not None:
-        stepping.useElossGradient = args.energy_loss_grad
+        stepping.use_eloss_gradient = args.energy_loss_grad
     if args.bfield_grad is not None:
-        stepping.useFieldGradient = args.bfield_grad
+        stepping.use_field_gradient = args.bfield_grad
 
     return config

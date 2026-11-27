@@ -68,8 +68,8 @@ BOOST_AUTO_TEST_CASE(CorrectedFreeToBoundTrackParameters) {
   BoundMatrix sBoundCov = BoundMatrix::Zero();
   sBoundCov(eBoundLoc0, eBoundLoc0) = resLoc0 * resLoc0;
   sBoundCov(eBoundLoc1, eBoundLoc1) = resLoc1 * resLoc1;
-  sBoundCov(eBoundPhi, eBoundPhi) = resPhi * resPhi;
-  sBoundCov(eBoundTheta, eBoundTheta) = resTheta * resTheta;
+  sBoundCov(eBoundDir0, eBoundDir0) = resPhi * resPhi;
+  sBoundCov(eBoundDir1, eBoundDir1) = resTheta * resTheta;
   sBoundCov(eBoundQOverP, eBoundQOverP) = resQOverP * resQOverP;
   sBoundCov(eBoundTime, eBoundTime) = resTime * resTime;
 
@@ -127,7 +127,7 @@ BOOST_AUTO_TEST_CASE(CorrectedFreeToBoundTrackParameters) {
 
   // the loc0, phi are the same as that without correction
   CHECK_CLOSE_ABS(eCorrectedBoundParams[eBoundLoc0], loc0, 1e-12);
-  CHECK_CLOSE_ABS(eCorrectedBoundParams[eBoundPhi], phi, 1e-12);
+  CHECK_CLOSE_ABS(eCorrectedBoundParams[eBoundDir0], phi, 1e-12);
   CHECK_CLOSE_REL(eCorrectedBoundParams[eBoundLoc1], 11.2563, eps);
 
   BOOST_TEST_INFO("Corrected Bound Params: \n" << eCorrectedBoundParams);
