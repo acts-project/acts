@@ -158,20 +158,25 @@ class CompSpacePointAuxiliaries {
     Acts::Vector<s_nPars> gradient{Acts::Vector<s_nPars>::Zero()};
     /// Second derivative of the chi2 w.r.t. the fit parameters
     Acts::SquareMatrix<s_nPars> hessian{Acts::SquareMatrix<s_nPars>::Zero()};
-    /// Set the chi2, the gradient and hessian back to zero
+    /// Gauss-Newton approximation of the chi2 Hessian, i.e. without the
+    /// second derivatives of the residuals. Positive semi-definite by
+    /// construction and equal to the hessian if Config::useHessian is false
+    Acts::SquareMatrix<s_nPars> gaussNewtonHessian{
+        Acts::SquareMatrix<s_nPars>::Zero()};
+    /// Set the chi2, the gradient and both Hessians back to zero
     void reset();
   };
   /// Updates the passed chi2 object by adding up the residual contributions
   /// from the previous composite space point used to update the Auxiliary
-  /// class. For the Hessian term only the lower triangle is updated. The other
-  /// triangle needs to be copied later from the lower one.
+  /// class. For the Hessian terms only the lower triangle is updated. The
+  /// other triangle needs to be copied later from the lower one.
   /// @param chiSqObj: Chi2 & derivatives to be updated
   /// @param cov: The composite space point's covariance values
   void updateChiSq(ChiSqWithDerivatives& chiSqObj,
                    const std::array<double, 3>& cov) const;
-  /// Fills the upper triangle of the Hessian matrix with the values from the
-  /// lower triangle
-  /// @param chiSqObj: Reference to the chiSqObj carrying the Hessian
+  /// Fills the upper triangle of both Hessian matrices with the values from
+  /// the lower triangle
+  /// @param chiSqObj: Reference to the chiSqObj carrying the Hessians
   void symmetrizeHessian(ChiSqWithDerivatives& chiSqObj) const;
   /// Returns the previously calculated residual.
   const Vector& residual() const;
