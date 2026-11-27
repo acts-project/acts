@@ -20,7 +20,9 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/TrackHelpers.hpp"
+#include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
+#include "ActsExamples/EventData/MeasurementCalibration.hpp"
 #include "ActsExamples/EventData/Seed.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
@@ -83,6 +85,9 @@ class TrackFindingAlgorithm final : public IAlgorithm {
   struct Config {
     /// Input measurements collection.
     std::string inputMeasurements;
+    /// Input clusters for each measurement (optional). The calibrator can
+    /// need them.
+    std::string inputClusters;
     /// Input initial track parameter estimates for each seed (optional).
     /// Without them, the parameters are estimated from `inputSeeds` on the
     /// space point the search starts from.
@@ -93,6 +98,10 @@ class TrackFindingAlgorithm final : public IAlgorithm {
     std::string inputSeeds;
     /// Output find trajectories collection.
     std::string outputTracks;
+
+    /// The calibrator for the measurements (optional). Without it, the
+    /// measurements are used as they are.
+    std::shared_ptr<MeasurementCalibrator> calibrator;
 
     /// The estimate of the initial parameters from the seeds, if
     /// `inputInitialTrackParameters` is not given. An unset geometry or field
@@ -219,6 +228,7 @@ class TrackFindingAlgorithm final : public IAlgorithm {
   ReadDataHandle<TrackParametersContainer> m_inputInitialTrackParameters{
       this, "InputInitialTrackParameters"};
   ReadDataHandle<SeedContainer> m_inputSeeds{this, "InputSeeds"};
+  ReadDataHandle<ClusterContainer> m_inputClusters{this, "InputClusters"};
 
   WriteDataHandle<ConstTrackContainer> m_outputTracks{this, "OutputTracks"};
 

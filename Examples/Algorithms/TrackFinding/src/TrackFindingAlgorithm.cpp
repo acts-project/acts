@@ -333,6 +333,13 @@ TrackFindingAlgorithm::TrackFindingAlgorithm(
   m_inputInitialTrackParameters.maybeInitialize(
       m_cfg.inputInitialTrackParameters);
   m_inputSeeds.maybeInitialize(m_cfg.inputSeeds);
+  if (m_cfg.calibrator == nullptr) {
+    m_cfg.calibrator = std::make_shared<PassThroughCalibrator>();
+  }
+  if (m_cfg.calibrator->needsClusters() && m_cfg.inputClusters.empty()) {
+    throw std::invalid_argument("The configured calibrator needs clusters");
+  }
+  m_inputClusters.maybeInitialize(m_cfg.inputClusters);
   m_outputTracks.initialize(m_cfg.outputTracks);
 }
 
@@ -367,9 +374,10 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
   auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(
       Acts::Vector3{0., 0., 0.});
 
-  PassThroughCalibrator pcalibrator;
-  MeasurementCalibratorAdapter calibrator(pcalibrator,
-                                          measurements.container());
+  const ClusterContainer* clusters =
+      m_inputClusters.isInitialized() ? &m_inputClusters(ctx) : nullptr;
+  MeasurementCalibratorAdapter calibrator(*m_cfg.calibrator,
+                                          measurements.container(), clusters);
   Acts::GainMatrixUpdater kfUpdater(m_cfg.useJosephFormulation);
 
   using Extensions = Acts::CombinatorialKalmanFilterExtensions<TrackContainer>;
