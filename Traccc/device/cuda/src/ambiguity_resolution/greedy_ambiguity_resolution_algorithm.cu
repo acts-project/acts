@@ -99,30 +99,7 @@ greedy_ambiguity_resolution_algorithm::output_type
 greedy_ambiguity_resolution_algorithm::operator()(
     const edm::track_container<default_algebra>::const_view& tracks_view)
     const {
-  const edm::measurement_collection::const_device measurements(
-      tracks_view.measurements);
-
   auto n_meas_total = m_copy.get().get_size(tracks_view.measurements);
-
-  // Make sure that max_measurement_id = number_of_measurement -1
-  // @TODO: More robust way is to assert that measurement id ranges from 0, 1,
-  // ..., number_of_measurement - 1
-  [[maybe_unused]] auto max_meas_it = thrust::max_element(
-      thrust::device, measurements.identifier().begin(),
-      // We have to use this ugly form here, because if the measurement
-      // collection is resizable (which it often is), the end() function
-      // cannot be used in host code.
-      measurements.identifier().begin() + n_meas_total);
-
-  unsigned int max_meas_id;
-  cudaMemcpy(&max_meas_id, thrust::raw_pointer_cast(&(*max_meas_it)),
-             sizeof(unsigned int), cudaMemcpyDeviceToHost);
-
-  if (max_meas_id != n_meas_total - 1) {
-    throw std::runtime_error(
-        "max measurement id should be equal to (the number of measurements "
-        "- 1)");
-  }
 
   // Get a convenience variable for the stream that we'll be using.
   cudaStream_t stream = details::get_stream(m_stream);
@@ -260,7 +237,7 @@ greedy_ambiguity_resolution_algorithm::operator()(
 
   // Unique measurement ids
   vecmem::data::vector_buffer<measurement_id_type> meas_id_to_unique_id_buffer{
-      max_meas_id + 1, m_mr.main};
+      n_meas_total, m_mr.main};
 
   // Make meas_id to unique_meas_id vector
   {
