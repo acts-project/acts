@@ -197,15 +197,16 @@ struct Tracking final : G4UserTrackingAction {
   void PreUserTrackingAction(const G4Track* t) override {
     const auto* primary = t->GetDynamicParticle()->GetPrimaryParticle();
     const auto* info =
-        primary ? dynamic_cast<const SourceId*>(primary->GetUserInformation())
-                : nullptr;
+        primary != nullptr
+            ? dynamic_cast<const SourceId*>(primary->GetUserInformation())
+            : nullptr;
     BOOST_REQUIRE_MESSAGE(
         info != nullptr,
         "Missing HepMC identity on Geant4 track " << t->GetTrackID());
     Track record{t->GetTrackID(),
                  t->GetParentID(),
                  t->GetDefinition()->GetPDGEncoding(),
-                 t->GetCreatorProcess()
+                 t->GetCreatorProcess() != nullptr
                      ? t->GetCreatorProcess()->GetProcessName()
                      : "primary",
                  t->GetMomentum(),

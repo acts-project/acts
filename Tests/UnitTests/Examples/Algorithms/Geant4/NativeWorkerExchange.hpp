@@ -104,7 +104,7 @@ class Exchange {
   }
 
   /// Fail every unresolved request, including those held by workers.
-  void cancel(std::exception_ptr error) {
+  void cancel(const std::exception_ptr& error) {
     if (!error) {
       throw std::invalid_argument("Cancellation requires an exception");
     }
