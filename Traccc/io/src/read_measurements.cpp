@@ -10,7 +10,6 @@
 #include "traccc/io/read_measurements.hpp"
 
 #include "csv/read_measurements.hpp"
-#include "read_binary.hpp"
 #include "traccc/io/utils.hpp"
 
 // System include(s).
@@ -34,15 +33,6 @@ std::vector<measurement_id_type> read_measurements(
                                 .native()),
           detector, det_desc, det_cond, sort_measurements, format);
     }
-    case data_format::binary: {
-      return read_measurements(
-          measurements,
-          get_absolute_path((std::filesystem::path(directory) /
-                             std::filesystem::path(get_event_filename(
-                                 event, "-measurements.dat")))
-                                .native()),
-          detector, det_desc, det_cond, sort_measurements, format);
-    }
     default:
       throw std::invalid_argument("Unsupported data format");
   }
@@ -58,9 +48,6 @@ std::vector<measurement_id_type> read_measurements(
     case data_format::csv:
       return csv::read_measurements(measurements, filename, detector, det_desc,
                                     det_cond, sort_measurements);
-    case data_format::binary:
-      details::read_binary_soa(measurements, filename);
-      return {};
     default:
       throw std::invalid_argument("Unsupported data format");
   }

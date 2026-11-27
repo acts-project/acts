@@ -10,7 +10,6 @@
 #include "traccc/io/read_spacepoints.hpp"
 
 #include "csv/read_spacepoints.hpp"
-#include "read_binary.hpp"
 #include "traccc/io/utils.hpp"
 
 // System include(s).
@@ -44,20 +43,6 @@ void read_spacepoints(
           detector, det_desc, det_cond, format);
       break;
     }
-    case data_format::binary: {
-      read_spacepoints(
-          spacepoints, measurements,
-          get_absolute_path(
-              (std::filesystem::path(directory) /
-               std::filesystem::path(get_event_filename(event, "-hits.dat")))
-                  .native()),
-          get_absolute_path((std::filesystem::path(directory) /
-                             std::filesystem::path(get_event_filename(
-                                 event, "-measurements.dat")))
-                                .native()),
-          "", detector, det_desc, det_cond, format);
-      break;
-    }
     default:
       throw std::invalid_argument("Unsupported data format");
   }
@@ -77,10 +62,6 @@ void read_spacepoints(
       csv::read_spacepoints(spacepoints, measurements, hit_filename,
                             meas_filename, meas_hit_map_filename, detector,
                             det_desc, det_cond);
-      break;
-    case data_format::binary:
-      details::read_binary_soa(spacepoints, hit_filename);
-      details::read_binary_soa(measurements, meas_filename);
       break;
     default:
       throw std::invalid_argument("Unsupported data format");

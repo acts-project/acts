@@ -51,8 +51,6 @@ traccc_add_library( traccc_io io TYPE SHARED
   "src/read_spacepoints.cpp"
   "src/write.cpp"
   "src/utils.cpp"
-  "src/read_binary.hpp"
-  "src/write_binary.hpp"
   "src/csv/make_surface_reader.cpp"
   "src/csv/make_cell_reader.cpp"
   "src/csv/read_cells.hpp"
