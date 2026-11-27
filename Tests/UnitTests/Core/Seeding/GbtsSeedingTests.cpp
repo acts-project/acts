@@ -26,6 +26,7 @@
 #include <numbers>
 #include <optional>
 #include <ranges>
+#include <span>
 #include <sstream>
 #include <string>
 #include <tuple>
@@ -304,10 +305,12 @@ constexpr float kStripHalfLength = 24.f;
 /// @param detector the toy detector
 /// @param tracks the tracks crossing it
 /// @param walk how far along the strip the beam spot puts the point
+/// @param firstLayer per track, the innermost layer it leaves a hit on; empty
+///        for every layer
 /// @return the space points
-SpacePointContainer makeStripSpacePoints(const ToyDetector& detector,
-                                         const std::vector<Track>& tracks,
-                                         float walk) {
+SpacePointContainer makeStripSpacePoints(
+    const ToyDetector& detector, const std::vector<Track>& tracks, float walk,
+    std::span<const std::size_t> firstLayer = {}) {
   SpacePointContainer container(
       SpacePointColumns::CopiedFromIndex | SpacePointColumns::X |
       SpacePointColumns::Y | SpacePointColumns::Z | SpacePointColumns::R |
@@ -328,7 +331,8 @@ SpacePointContainer makeStripSpacePoints(const ToyDetector& detector,
     // the toy tracks are straight, so this is the direction everywhere on one
     const std::array<float, 3> direction{cosPhi, sinPhi, tracks[track].tau};
 
-    for (std::size_t layer = 0; layer < detector.layers.size(); ++layer) {
+    const std::size_t first = firstLayer.empty() ? 0 : firstLayer[track];
+    for (std::size_t layer = first; layer < detector.layers.size(); ++layer) {
       const auto crossing = intersect(detector.layers[layer], tracks[track]);
       if (!crossing.has_value()) {
         continue;
@@ -452,6 +456,106 @@ SeedContainer runSeeding(const ToyDetector& detector,
                            setup.filter, setup.options, seeds);
 
   return seeds;
+}
+
+/// The toy barrel with its two outer layers made strips.
+ToyDetector hybridDetector() {
+  ToyDetector detector = barrelDetector();
+  detector.layers[2].technology = GbtsLayerTechnology::Strip;
+  detector.layers[3].technology = GbtsLayerTechnology::Strip;
+  return detector;
+}
+
+/// Three pixel and four strip barrel layers, so that a seed can be made of
+/// strips alone.
+ToyDetector deepHybridDetector() {
+  ToyDetector detector{{barrelLayer(80000, 40.f), barrelLayer(81000, 80.f),
+                        barrelLayer(82000, 120.f), barrelLayer(83000, 200.f),
+                        barrelLayer(84000, 260.f), barrelLayer(85000, 320.f),
+                        barrelLayer(86000, 380.f)},
+                       {{81000, 80000},
+                        {82000, 81000},
+                        {83000, 82000},
+                        {84000, 83000},
+                        {85000, 84000},
+                        {86000, 85000}},
+                       450.f};
+  for (std::size_t layer = 3; layer < detector.layers.size(); ++layer) {
+    detector.layers[layer].technology = GbtsLayerTechnology::Strip;
+  }
+  return detector;
+}
+
+/// The seeding options of a pixel and strip graph.
+struct HybridOptions {
+  /// The filter calibrates the strips and searches the pixels inwards, then
+  /// the strips outwards; off, it treats strips as pixels
+  bool hybrid = true;
+  bool pruneShortChains = false;
+  bool addTriplets = false;
+  std::uint8_t minSeedLevel = 3;
+  std::uint32_t mixedMinStrips = 0;
+  std::uint32_t mixedFewPixels = 4;
+};
+
+/// A seeder for a graph of pixels and strips, the doublets' strip ends always
+/// resolved.
+SeederSetup makeHybridSeeder(const ToyDetector& detector,
+                             const HybridOptions& options) {
+  auto geometry = makeGeometry(detector);
+
+  Experimental::GraphBasedTrackSeeder::Config config;
+  config.useClusterWidthCuts = false;
+  config.addTriplets = options.addTriplets;
+  config.minSeedLevel = options.minSeedLevel;
+  config.mixedMinStrips = options.mixedMinStrips;
+  config.mixedFewPixels = options.mixedFewPixels;
+
+  Experimental::GbtsGraphBuilder::Config graphConfig;
+  graphConfig.minPt = 1_GeV;
+  graphConfig.maxOuterRadius = detector.maxOuterRadius;
+  graphConfig.calibrateStrips = true;
+  graphConfig.pruneShortChains = options.pruneShortChains;
+
+  Experimental::GbtsTrackingFilter::Config filterConfig;
+  filterConfig.calibrateStrips = options.hybrid;
+  filterConfig.pixelsInwardStripsOutward = options.hybrid;
+
+  return SeederSetup{
+      .seeder = Experimental::GraphBasedTrackSeeder(
+          Experimental::GraphBasedTrackSeeder::DerivedConfig(config), geometry,
+          getDummyLogger().clone()),
+      .graphBuilder = Experimental::GbtsGraphBuilder(graphConfig, geometry,
+                                                     getDummyLogger().clone()),
+      .filter = Experimental::GbtsTrackingFilter(filterConfig, geometry,
+                                                 getDummyLogger().clone()),
+      .roi = Experimental::GbtsRoiDescriptor(-4.5, 4.5, -kBarrelHalfZ,
+                                             kBarrelHalfZ),
+      .options = Experimental::GraphBasedTrackSeeder::Options{.bFieldInZ = 2_T},
+  };
+}
+
+SeedContainer runHybridSeeding(const ToyDetector& detector,
+                               const SpacePointContainer& spacePoints,
+                               const HybridOptions& options = {}) {
+  const SeederSetup setup = makeHybridSeeder(detector, options);
+  SeedContainer seeds;
+  seeds.assignSpacePointContainer(spacePoints);
+  setup.seeder.createSeeds(spacePoints, setup.roi, setup.graphBuilder,
+                           setup.filter, setup.options, seeds);
+  return seeds;
+}
+
+/// The space points of each seed, the seeds sorted, without the quality.
+std::vector<std::vector<std::uint32_t>> seedSpacePoints(
+    const SeedContainer& seeds) {
+  std::vector<std::vector<std::uint32_t>> result;
+  for (const auto& seed : seeds) {
+    const auto indices = seed.spacePointIndices();
+    result.emplace_back(indices.begin(), indices.end());
+  }
+  std::ranges::sort(result);
+  return result;
 }
 
 /// One line per seed, `quality:sp,sp,...`, sorted by first space point. The
@@ -890,6 +994,82 @@ BOOST_AUTO_TEST_CASE(PruneShortChainsKeepsTheSeeds) {
   }
 }
 
+// The same with pixels and strips in one graph and the hybrid search: the
+// pixels inwards, then the strips outwards along the inverted links, the strip
+// chains on their own, the strips calibrated in the filter and the mixed path
+// cut. Every path it makes is still a chain of linked edges, so the pruning
+// leaves its seeds as they are too.
+BOOST_AUTO_TEST_CASE(PruneShortChainsKeepsTheHybridSeeds) {
+  // tracks leaving the barrel after every layer, dense enough to cross
+  std::vector<Track> spread = makeTracks(40, -0.05f, 0.05f, -1.2f, 1.2f);
+  const std::vector<Track> dense = makeDenseTracks();
+  spread.insert(spread.end(), dense.begin(), dense.end());
+
+  std::size_t nEdgesFull = 0;
+  std::size_t nEdgesPruned = 0;
+  std::size_t nSeeds = 0;
+
+  for (const ToyDetector& detector : {hybridDetector(), deepHybridDetector()}) {
+    for (const auto& tracks :
+         {makeSparseTracks(), makeMixedLengthTracks(), spread}) {
+      for (const float walk : {0.f, 3.f}) {
+        const SpacePointContainer spacePoints =
+            makeStripSpacePoints(detector, tracks, walk);
+        for (const std::uint8_t minSeedLevel :
+             std::array<std::uint8_t, 3>{2, 3, 4}) {
+          for (const bool addTriplets : {false, true}) {
+            for (const std::uint32_t mixedMinStrips : {0u, 2u}) {
+              const auto run = [&](const bool prune) {
+                const HybridOptions options{.pruneShortChains = prune,
+                                            .addTriplets = addTriplets,
+                                            .minSeedLevel = minSeedLevel,
+                                            .mixedMinStrips = mixedMinStrips};
+                const SeederSetup setup = makeHybridSeeder(detector, options);
+
+                // the graph alone, to see that the pruning does something
+                Experimental::GbtsNodeStorage storage =
+                    setup.seeder.makeNodeStorage();
+                storage.extend(spacePoints,
+                               spacePoints.column<Experimental::GbtsLayerIndex>(
+                                   "gbtsLayerIndex"),
+                               spacePoints.column<float>("clusterWidth"),
+                               spacePoints.column<float>("localPositionY"));
+                storage.finalize();
+                const std::uint32_t allowance = addTriplets ? 1 : 0;
+                const std::uint32_t minEdgeLevel =
+                    std::max<std::uint32_t>(minSeedLevel, allowance + 2) -
+                    allowance;
+                (prune ? nEdgesPruned : nEdgesFull) +=
+                    setup.graphBuilder
+                        .buildTheGraph(setup.roi, storage,
+                                       setup.options.bFieldInZ, minEdgeLevel)
+                        .edgeStorage.size();
+
+                return runHybridSeeding(detector, spacePoints, options);
+              };
+              const SeedContainer full = run(false);
+              BOOST_TEST_CONTEXT("detector layers "
+                                 << detector.layers.size() << " tracks "
+                                 << tracks.size() << " walk " << walk
+                                 << " minSeedLevel " << int(minSeedLevel)
+                                 << " addTriplets " << addTriplets
+                                 << " mixedMinStrips " << mixedMinStrips) {
+                BOOST_CHECK_EQUAL(formatSeeds(run(true)), formatSeeds(full));
+              }
+              nSeeds += full.size();
+            }
+          }
+        }
+      }
+    }
+  }
+
+  BOOST_TEST_MESSAGE("hybrid: edges " << nEdgesFull << " -> " << nEdgesPruned
+                                      << ", seeds " << nSeeds);
+  BOOST_CHECK_GT(nSeeds, 0u);
+  BOOST_CHECK_LT(nEdgesPruned, nEdgesFull);
+}
+
 // One seed per track, all four hits, in radial order.
 BOOST_AUTO_TEST_CASE(SeedsFromSeparatedTracks) {
   const ToyDetector detector = barrelDetector();
@@ -1107,6 +1287,128 @@ BOOST_AUTO_TEST_CASE(StripLayersNeedTheirPairResolved) {
   // unresolved, the walk loses every seed; resolved, it loses none
   BOOST_CHECK_EQUAL(seed(kWalk, false), 0u);
   BOOST_CHECK_EQUAL(seed(kWalk, true), tracks.size());
+}
+
+// A stored strip space point is off along its strips by the walk. The doublets
+// resolve it either way, but fitted as stored the filter refuses the path once
+// the walk is a few mm. Calibrated with the path's own direction it keeps every
+// hit at no cost in chi2, and with the pixels searched first the seeds and
+// their quality stay the same however far the strips walk.
+BOOST_AUTO_TEST_CASE(HybridSeedsKeepWalkedStrips) {
+  const ToyDetector detector = deepHybridDetector();
+  // |tau| below 150/380 keeps every hit inside the barrel z bounds
+  const std::vector<Track> tracks = makeTracks(
+      12, -std::numbers::pi_v<float>, std::numbers::pi_v<float>, -0.38f, 0.38f);
+
+  const SpacePointContainer unwalked =
+      makeStripSpacePoints(detector, tracks, 0.f);
+  const SeedContainer reference = runHybridSeeding(detector, unwalked);
+  checkOneSeedPerTrack(reference, unwalked, tracks);
+
+  // the same hits in the same order, so the same space point indices
+  for (const float walk : {3.f, 8.f, 20.f}) {
+    const SpacePointContainer spacePoints =
+        makeStripSpacePoints(detector, tracks, walk);
+    const SeedContainer seeds = runHybridSeeding(detector, spacePoints);
+    BOOST_TEST_CONTEXT("walk " << walk) {
+      checkOneSeedPerTrack(seeds, spacePoints, tracks);
+      BOOST_CHECK_EQUAL(formatSeeds(seeds), formatSeeds(reference));
+    }
+  }
+
+  const SpacePointContainer walked =
+      makeStripSpacePoints(detector, tracks, 8.f);
+  BOOST_CHECK_EQUAL(
+      runHybridSeeding(detector, walked, {.hybrid = false}).size(), 0u);
+}
+
+// Chains of strips alone are searched inwards as before, and do not step into
+// an edge ending on a pixel: a strip chain ends at its innermost strip edge
+// even with a pixel further in, which on its own makes no pixel path.
+BOOST_AUTO_TEST_CASE(HybridSeedsStripChains) {
+  const ToyDetector detector = deepHybridDetector();
+  constexpr std::size_t kFirstStripLayer = 3;
+  const std::vector<Track> tracks = makeTracks(
+      12, -std::numbers::pi_v<float>, std::numbers::pi_v<float>, -0.38f, 0.38f);
+
+  // no pixel hits: one seed of all four strips per track, the same however far
+  // the strips walk, as the path's first edge is calibrated too
+  const std::vector<std::size_t> stripsOnly(tracks.size(), kFirstStripLayer);
+  const SpacePointContainer unwalked =
+      makeStripSpacePoints(detector, tracks, 0.f, stripsOnly);
+  const SeedContainer reference = runHybridSeeding(detector, unwalked);
+  checkOneSeedPerTrack(reference, unwalked, tracks);
+  for (const float walk : {3.f, 8.f, 20.f}) {
+    const SpacePointContainer strips =
+        makeStripSpacePoints(detector, tracks, walk, stripsOnly);
+    BOOST_TEST_CONTEXT("walk " << walk) {
+      BOOST_CHECK_EQUAL(formatSeeds(runHybridSeeding(detector, strips)),
+                        formatSeeds(reference));
+    }
+  }
+
+  // the outermost pixel hit too: still the four strips, without the pixel
+  const std::vector<std::size_t> onePixel(tracks.size(), kFirstStripLayer - 1);
+  const SpacePointContainer spacePoints =
+      makeStripSpacePoints(detector, tracks, 3.f, onePixel);
+  const SeedContainer seeds = runHybridSeeding(detector, spacePoints);
+  checkSeedsAreWellFormed(seeds, spacePoints);
+  BOOST_CHECK_EQUAL(seeds.size(), tracks.size());
+  const auto layerColumn =
+      spacePoints.column<Experimental::GbtsLayerIndex>("gbtsLayerIndex");
+  for (const auto& seed : seeds) {
+    BOOST_CHECK_EQUAL(seed.spacePointIndices().size(), 4u);
+    for (const auto index : seed.spacePointIndices()) {
+      BOOST_CHECK_GE(spacePoints.at(index).extra(layerColumn),
+                     kFirstStripLayer);
+    }
+  }
+}
+
+// A mixed path with fewer than mixedFewPixels pixels needs mixedMinStrips
+// strips; short of them, the pixels make the seed on their own. The same with
+// the strips searched inwards with the pixels.
+BOOST_AUTO_TEST_CASE(HybridMixedPathsNeedTheirStrips) {
+  const ToyDetector detector = deepHybridDetector();
+  // three pixels each, then leaving the barrel after one, two and four strips
+  const std::vector<Track> tracks = {{.phi = 0.5f, .tau = 0.65f},
+                                     {.phi = 1.5f, .tau = 0.5f},
+                                     {.phi = 2.5f, .tau = 0.3f}};
+  const SpacePointContainer spacePoints =
+      makeStripSpacePoints(detector, tracks, 0.f);
+  const auto trackColumn = spacePoints.column<std::uint32_t>("trackId");
+
+  const auto seedSizes = [&](const std::uint32_t mixedMinStrips,
+                             const std::uint32_t mixedFewPixels,
+                             const bool hybrid) {
+    // a pixel path of two edges is a seed of its own
+    const SeedContainer seeds =
+        runHybridSeeding(detector, spacePoints,
+                         {.hybrid = hybrid,
+                          .minSeedLevel = 2,
+                          .mixedMinStrips = mixedMinStrips,
+                          .mixedFewPixels = mixedFewPixels});
+    checkSeedsAreWellFormed(seeds, spacePoints);
+    std::vector<std::size_t> sizes(tracks.size(), 0);
+    for (const auto& seed : seeds) {
+      const auto indices = seed.spacePointIndices();
+      BOOST_CHECK_EQUAL(sizes.at(spacePoints.at(indices[0]).extra(trackColumn)),
+                        0u);
+      sizes.at(spacePoints.at(indices[0]).extra(trackColumn)) = indices.size();
+    }
+    return sizes;
+  };
+
+  using Sizes = std::vector<std::size_t>;
+  for (const bool hybrid : {true, false}) {
+    BOOST_TEST_CONTEXT("hybrid " << hybrid) {
+      BOOST_CHECK(seedSizes(0, 4, hybrid) == (Sizes{4, 5, 7}));
+      BOOST_CHECK(seedSizes(2, 4, hybrid) == (Sizes{3, 5, 7}));
+      BOOST_CHECK(seedSizes(3, 4, hybrid) == (Sizes{3, 3, 7}));
+      // three pixels are not few once mixedFewPixels is three
+      BOOST_CHECK(seedSizes(3, 3, hybrid) == (Sizes{4, 5, 7}));
+    }
+  }
 }
 
 BOOST_AUTO_TEST_CASE(AdaptiveTauRatioCuts) {
