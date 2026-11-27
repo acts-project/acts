@@ -91,15 +91,11 @@ struct transform3 {
 
   /// Local-to-global transformation matrix.
   matrix44 _data;
-  /// Global-to-local transformation matrix.
-  matrix44 _data_inv;
 
   /// @}
   /// Default constructor: identity
   DETRAY_HOST_DEVICE
-  constexpr transform3()
-      : _data{algebra::storage::identity<matrix44>()},
-        _data_inv{algebra::storage::identity<matrix44>()} {}
+  constexpr transform3() : _data{algebra::storage::identity<matrix44>()} {}
 
   /// Constructor with arguments: t, x, y, z
   ///
@@ -110,7 +106,7 @@ struct transform3 {
   DETRAY_HOST_DEVICE
   transform3(const vector3 &t, const vector3 &x, const vector3 &y,
              const vector3 &z)
-      : _data{x, y, z, t}, _data_inv{invert(_data)} {}
+      : _data{x, y, z, t} {}
 
   /// Constructor with arguments: t, z, x
   ///
@@ -133,29 +129,13 @@ struct transform3 {
   DETRAY_HOST_DEVICE
   explicit transform3(const vector3 &t)
       : _data{column_t{1.f, 0.f, 0.f}, column_t{0.f, 1.f, 0.f},
-              column_t{0.f, 0.f, 1.f}, t},
-        _data_inv{invert(_data)} {}
+              column_t{0.f, 0.f, 1.f}, t} {}
 
   /// Constructor with arguments: matrix
   ///
   /// @param m is the full 4x4 matrix with simd-vector elements
   DETRAY_HOST_DEVICE
-  explicit transform3(const matrix44 &m) : _data{m}, _data_inv{invert(_data)} {}
-
-  /// Constructor with arguments: matrix and its inverse
-  ///
-  /// @param m is the full 4x4 matrix
-  /// @param m_inv is the inverse to m
-  DETRAY_HOST_DEVICE
-  transform3(const matrix44 &m, const matrix44 &m_inv)
-      : _data{m}, _data_inv{m_inv} {
-    // The assertion will not hold for (casts to) int
-    if constexpr (std::floating_point<scalar_type>) {
-      [[maybe_unused]] constexpr auto epsilon{
-          std::numeric_limits<float>::epsilon()};
-      assert(algebra::approx_equal(invert(m), m_inv, 16.f * epsilon, 1e-6f));
-    }
-  }
+  explicit transform3(const matrix44 &m) : _data{m} {}
 
   /// Constructor with arguments: matrix as std::array of scalar
   ///
@@ -168,8 +148,6 @@ struct transform3 {
     _data[e_y] = column_t{ma[1], ma[5], ma[9]};
     _data[e_z] = column_t{ma[2], ma[6], ma[10]};
     _data[e_t] = column_t{ma[3], ma[7], ma[11]};
-
-    _data_inv = invert(_data);
   }
 
   /// Copy an existing transform.
@@ -283,6 +261,19 @@ struct transform3 {
     return m[e_x] * v[0] + m[e_y] * v[1] + m[e_z] * v[2];
   }
 
+  /// Rotate a vector into / from a frame, using the transpose of the rotation
+  ///
+  /// @param m is the matrix whose rotation part is transposed
+  /// @param v is the vector to be rotated
+  /// @return the rotated vector
+  template <concepts::vector3D vector3_type>
+  DETRAY_HOST_DEVICE constexpr column_t rotate_inv(
+      const matrix44 &m, const vector3_type &v) const {
+    return column_t{m[e_x][0] * v[0] + m[e_x][1] * v[1] + m[e_x][2] * v[2],
+                    m[e_y][0] * v[0] + m[e_y][1] * v[1] + m[e_y][2] * v[2],
+                    m[e_z][0] * v[0] + m[e_z][1] * v[1] + m[e_z][2] * v[2]};
+  }
+
   /// This method retrieves the rotation of a transform
   /// @return rotation matrix
   DETRAY_HOST_DEVICE
@@ -322,9 +313,21 @@ struct transform3 {
   constexpr const matrix44 &matrix() const { return _data; }
 
   /// This method retrieves the 4x4 matrix of an inverse transform
+  ///
+  /// @note the rotation is assumed to be orthonormal, so that the inverse is
+  /// the transpose of the rotation and @c -R^T*t as the translation.
   /// @return inverse transformation matrix
   DETRAY_HOST_DEVICE
-  constexpr const matrix44 &matrix_inverse() const { return _data_inv; }
+  constexpr matrix44 matrix_inverse() const {
+    matrix44 i;
+
+    i[e_x] = column_t{_data[e_x][0], _data[e_y][0], _data[e_z][0]};
+    i[e_y] = column_t{_data[e_x][1], _data[e_y][1], _data[e_z][1]};
+    i[e_z] = column_t{_data[e_x][2], _data[e_y][2], _data[e_z][2]};
+    i[e_t] = scalar_type(-1.f) * rotate_inv(_data, _data[e_t]);
+
+    return i;
+  }
 
   /// This method transform from a point from the local 2D cartesian frame
   ///  to the global 3D cartesian frame
@@ -364,7 +367,9 @@ struct transform3 {
   /// @return a local point
   template <concepts::point3D point3_type>
   DETRAY_HOST_DEVICE constexpr auto point_to_local(const point3_type &p) const {
-    return rotate(_data_inv, p) + _data_inv[e_t];
+    return rotate_inv(_data,
+                      column_t{p[0] - _data[e_t][0], p[1] - _data[e_t][1],
+                               p[2] - _data[e_t][2]});
   }
 
   /// This method transform from a vector from the local 2D cartesian frame
@@ -406,7 +411,7 @@ struct transform3 {
   template <concepts::vector3D vector3_type>
   DETRAY_HOST_DEVICE constexpr auto vector_to_local(
       const vector3_type &v) const {
-    return rotate(_data_inv, v);
+    return rotate_inv(_data, v);
   }
 };  // struct transform3
 
