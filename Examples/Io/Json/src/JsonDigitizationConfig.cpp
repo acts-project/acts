@@ -23,6 +23,7 @@
 #include <fstream>
 #include <memory>
 #include <stdexcept>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -292,4 +293,68 @@ void ActsExamples::writeDigiConfigToJson(
   outfile << DigiConfigConverter("digitization-configuration")
                  .toJson(cfg, nullptr)
                  .dump(2);
+}
+
+ActsExamples::DigiSensorTypesConfig ActsExamples::digiSensorTypesFromJson(
+    const nlohmann::json& djson) {
+  // Geometry-keyed format: wrap every rule as its own type
+  if (!djson.contains("sensor-types")) {
+    return toSensorTypes(
+        DigiConfigConverter("digitization-configuration").fromJson(djson));
+  }
+
+  constexpr int kFormatVersion = 1;
+  const auto& jversion =
+      djson.at("acts-digitization-config").at("format-version");
+  if (!jversion.is_number_integer() || jversion.get<int>() != kFormatVersion) {
+    throw std::invalid_argument(
+        "Unsupported format version in digitization configuration");
+  }
+
+  if (!djson.at("sensor-types").is_object()) {
+    throw std::invalid_argument(
+        "Digitization configuration: 'sensor-types' must be a JSON object.");
+  }
+
+  DigiSensorTypesConfig out;
+  for (const auto& [name, jcfg] : djson.at("sensor-types").items()) {
+    if (!jcfg.is_object()) {
+      throw std::invalid_argument("Digitization configuration: sensor type '" +
+                                  name + "' must be a JSON object");
+    }
+    out.types.emplace(name, jcfg.get<DigiComponentsConfig>());
+  }
+  out.assignments =
+      Acts::GeometryHierarchyMapJsonConverter<std::string>("sensor-type")
+          .fromJson(djson.at("assignments"));
+
+  std::string unknown;
+  for (std::size_t i = 0; i < out.assignments.size(); ++i) {
+    const std::string& name = out.assignments.valueAt(i);
+    if (!out.types.contains(name)) {
+      const Acts::GeometryIdentifier id = out.assignments.idAt(i);
+      unknown += "\n  vol=" + std::to_string(id.volume()) +
+                 " lay=" + std::to_string(id.layer()) +
+                 " sen=" + std::to_string(id.sensitive()) + " -> '" + name +
+                 "'";
+    }
+  }
+  if (!unknown.empty()) {
+    throw std::invalid_argument(
+        "Digitization configuration assigns undefined sensor types:" + unknown);
+  }
+  return out;
+}
+
+ActsExamples::DigiSensorTypesConfig ActsExamples::readDigiSensorTypesFromJson(
+    const std::string& path) {
+  if (path.empty()) {
+    return {};
+  }
+  nlohmann::json djson;
+  std::ifstream infile(path, std::ifstream::in | std::ifstream::binary);
+  // rely on exception for error handling
+  infile.exceptions(std::ofstream::failbit | std::ofstream::badbit);
+  infile >> djson;
+  return digiSensorTypesFromJson(djson);
 }
