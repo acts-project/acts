@@ -33,7 +33,7 @@ class MaterialSteppingAction final : public G4UserSteppingAction {
  public:
   /// Nested configuration struct
   struct Config {
-    std::shared_ptr<EventStore> eventStore;
+    std::shared_ptr<EventContext> eventContext;
 
     std::vector<std::string> excludeMaterials = {};
     bool recordElementFractions = false;
@@ -64,7 +64,7 @@ class MaterialSteppingAction final : public G4UserSteppingAction {
   const Acts::Logger& logger() const { return *m_logger; }
 
   /// Private access method to the event store
-  EventStore& eventStore() const { return *m_cfg.eventStore; }
+  EventStore& eventStore() const { return m_cfg.eventContext->current(); }
 
   /// The looging instance
   std::unique_ptr<const Acts::Logger> m_logger;

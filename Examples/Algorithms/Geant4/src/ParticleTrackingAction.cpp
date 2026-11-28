@@ -121,7 +121,7 @@ void ParticleTrackingAction::PreUserTrackingAction(const G4Track* trackPtr) {
   if (success) {
     eventStore().trackIdMapping[track.GetTrackID()] = particle.particleId();
   } else {
-    eventStore().particleIdCollisionsInitial++;
+    eventStore().result.particleIdCollisionsInitial++;
     ACTS_WARNING("Particle ID collision with "
                  << particle.particleId()
                  << " detected for initial particles. Skip particle");
@@ -146,7 +146,7 @@ void ParticleTrackingAction::PostUserTrackingAction(const G4Track* trackPtr) {
                        eventStore().particleHitCount.at(barcode) > 0;
   if (!m_cfg.keepParticlesWithoutHits && !hasHits) {
     [[maybe_unused]] const std::size_t n =
-        eventStore().particlesSimulated.erase(
+        eventStore().result.particlesSimulated.erase(
             SimParticle(barcode, Acts::PdgParticle::eInvalid));
     assert(n == 1);
     return;
@@ -163,10 +163,11 @@ void ParticleTrackingAction::PostUserTrackingAction(const G4Track* trackPtr) {
   // set parent id from the initial state so both states carry it consistently
   particle.setParentParticleId(particle.parentParticleId());
 
-  const auto [it, success] = eventStore().particlesSimulated.insert(particle);
+  const auto [it, success] =
+      eventStore().result.particlesSimulated.insert(particle);
 
   if (!success) {
-    eventStore().particleIdCollisionsFinal++;
+    eventStore().result.particleIdCollisionsFinal++;
     ACTS_WARNING("Particle ID collision with "
                  << particle.particleId()
                  << " detected for final particles. Skip particle");
@@ -222,7 +223,7 @@ std::optional<SimBarcode> ParticleTrackingAction::makeParticleId(
   if (!eventStore().trackIdMapping.contains(parentId)) {
     ACTS_DEBUG("Parent particle " << parentId
                                   << " not registered, cannot build barcode");
-    eventStore().parentIdNotFound++;
+    eventStore().result.parentIdNotFound++;
     return std::nullopt;
   }
 

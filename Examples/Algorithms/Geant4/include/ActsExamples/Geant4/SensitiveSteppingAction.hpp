@@ -42,7 +42,7 @@ class SensitiveSteppingAction : public G4UserSteppingAction {
  public:
   /// Configuration of the Stepping action
   struct Config {
-    std::shared_ptr<EventStore> eventStore;
+    std::shared_ptr<EventContext> eventContext;
 
     /// @brief Record charged particles
     bool charged = true;
@@ -88,7 +88,7 @@ class SensitiveSteppingAction : public G4UserSteppingAction {
   const Acts::Logger& logger() const { return *m_logger; }
 
   /// Private access method to the event store
-  EventStore& eventStore() const { return *m_cfg.eventStore; }
+  EventStore& eventStore() const { return m_cfg.eventContext->current(); }
 
   /// The looging instance
   std::unique_ptr<const Acts::Logger> m_logger;

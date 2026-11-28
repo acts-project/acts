@@ -40,9 +40,10 @@ class RunManager : public G4RunManager {
 
   bool isRunActive() const { return m_runActive; }
 
- private:
+  /// Verify thread affinity before accessing Geant4 thread-local services.
   void checkThread() const;
 
+ private:
   bool m_runActive = false;
   bool m_eventLoopInitialized = false;
   bool m_eventCountKnown = false;
