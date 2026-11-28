@@ -118,6 +118,7 @@ def drawResult(
     fname="AlignmentResults",
     title=None,
     xLim=None,
+    extraText=None,
 ):
     # package our dictionary of injections to a vector
     injectedVals = np.zeros(54, dtype=float)
@@ -168,7 +169,7 @@ def drawResult(
             "markersize": 5,
         },
         {
-            "label": "Injected" + ", Projected" if len(constraints) > 0 else "",
+            "label": "Injected" + (", Projected" if len(constraints) > 0 else ""),
             "marker": "s",
             "markeredgecolor": "#f31d1d",
             "markerfacecolor": "none",
@@ -187,6 +188,7 @@ def drawResult(
         fname=fname,
         title=title,
         xLim=xLim,
+        extraText=extraText,
     )
 
 
@@ -440,13 +442,21 @@ def main():
         {9: 0.05},
         xLim=(-0.2, 0.2),
         fname="AlignmentWithConstraints",
+        extraText=[
+            f"ACTS Telescope detector, {args.events} tracks",
+            "Alignment with cpnstraints",
+        ],
     )
     drawResult(
         res_MPII_softMode,
-        constraintsStep1,
+        [],
         {9: 0.05},
-        xLim=(-0.2, 0.2),
+        xLim=(-0.4, 0.4),
         fname="AlignmentWithSoftMode",
+        extraText=[
+            f"ACTS Telescope detector, {args.events} tracks",
+            "Alignment with soft mode cut",
+        ],
     )
 
 
