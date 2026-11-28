@@ -163,8 +163,8 @@ struct intersection_record {
   intersection_type m_intersection{};
   /// Index of the volume the intersection was found in
   dindex m_vol_idx{dindex_invalid};
-  /// Charge hypothesis of the particle (invalid value if not known)
-  scalar_type m_charge{detray::detail::invalid_value<scalar_type>()};
+  /// Charge hypothesis of the particle (zero if not known)
+  scalar_type m_charge{0.};
   /// Current momentum magnitude of the particle
   scalar_type m_p_mag{1. * unit<scalar_type>::GeV};
 };

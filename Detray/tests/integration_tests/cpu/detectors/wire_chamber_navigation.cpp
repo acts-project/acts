@@ -81,6 +81,10 @@ int main(int argc, char **argv) {
       static_cast<float>(cfg_ray_scan.mask_tolerance());
   cfg_str_nav.propagation().navigation.intersection.max_mask_tolerance =
       static_cast<float>(cfg_ray_scan.mask_tolerance());
+  // Single precision cannot resolve grazes at the cell edges
+  if constexpr (std::is_same_v<scalar, float>) {
+    cfg_str_nav.boundary_tolerance(1e-4f * unit<scalar>::mm);
+  }
 
   test::register_checks<test::straight_line_navigation>(det, names, cfg_str_nav,
                                                         ctx, white_board);
@@ -129,6 +133,8 @@ int main(int argc, char **argv) {
   // Reduce tolerance for single precision tests
   if constexpr (std::is_same_v<scalar, float>) {
     mat_val_cfg.relative_error(130.f);
+    // Single precision cannot resolve grazes at the edge of the wire rods
+    mat_val_cfg.absolute_error(1e-3f);
   }
   mat_val_cfg.propagation() = cfg_str_nav.propagation();
   mat_val_cfg.propagation().stepping.min_stepsize = min_stepsize;
