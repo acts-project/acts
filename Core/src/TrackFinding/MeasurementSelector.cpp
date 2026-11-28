@@ -52,15 +52,10 @@ MeasurementSelector::MeasurementSelector(const Config& config) {
   m_config = InternalConfig(std::move(tmp));
 }
 
-namespace {
+namespace detail {
 
-/// Convert the chi2 cut @p cut1D for one-dimensional measurements to the cut
-/// with the same p-value for each measurement dimension. Without
-/// @p perDimension every dimension uses @p cut1D.
-/// @throws std::invalid_argument if @p perDimension is set and @p cut1D is
-///         NaN or negative, because such a cut has no p-value
-std::array<double, kMeasurementSizeMax + 1> convertChi2Cut(double cut1D,
-                                                           bool perDimension) {
+std::array<double, kMeasurementSizeMax + 1> chi2CutPerDimension(
+    double cut1D, bool perDimension) {
   std::array<double, kMeasurementSizeMax + 1> result{};
   result.fill(cut1D);
   if (!perDimension) {
@@ -92,7 +87,7 @@ std::array<double, kMeasurementSizeMax + 1> convertChi2Cut(double cut1D,
   return result;
 }
 
-}  // namespace
+}  // namespace detail
 
 MeasurementSelector::InternalCutBins MeasurementSelector::convertCutBins(
     const MeasurementSelectorCuts& config) {
@@ -117,11 +112,11 @@ MeasurementSelector::InternalCutBins MeasurementSelector::convertCutBins(
     cuts.maxTheta = getEtaOrInf(config.etaBins, bin);
     cuts.maxNumMeasurements =
         getBinOrBackOrMax(config.numMeasurementsCutOff, bin);
-    cuts.maxChi2Measurement = convertChi2Cut(
+    cuts.maxChi2Measurement = detail::chi2CutPerDimension(
         getBinOrBackOrMax(config.chi2CutOff, bin), config.chi2CutPerDimension);
-    cuts.maxChi2Outlier =
-        convertChi2Cut(getBinOrBackOrMax(config.chi2CutOffOutlier, bin),
-                       config.chi2CutPerDimension);
+    cuts.maxChi2Outlier = detail::chi2CutPerDimension(
+        getBinOrBackOrMax(config.chi2CutOffOutlier, bin),
+        config.chi2CutPerDimension);
     cutBins.push_back(cuts);
   }
 

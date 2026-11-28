@@ -32,6 +32,10 @@ namespace Acts {
 /// may become big. Thus, it is advisable to copy selected tracks and their
 /// track states to a separate container after each track finding step.
 ///
+/// @note Prefer a creator derived from @ref CkfTrackStateCreatorBase. This
+///   one runs its selection on temporary track states, so every measurement
+///   on a surface has to pass through the track EDM to be selected on.
+///
 template <typename source_link_iterator_t, typename track_container_t>
 struct TrackStateCreator {
   /// Type alias for result of track states creation operation

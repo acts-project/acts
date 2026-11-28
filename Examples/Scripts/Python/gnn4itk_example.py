@@ -297,9 +297,11 @@ def runGNN4ITk(
             "inputMeasurements": "measurements",
             "inputInitialTrackParameters": parametersAlg.config.outputParameters,
             "outputTracks": "ckf-tracks",
-            # chi2 cut 20, one measurement per surface
-            "measurementSelectorCfg": acts.MeasurementSelector.Config(
-                [(acts.GeometryIdentifier(), ([], [20.0], [], [1]))]
+            # chi2 cut 20, no outlier cut, one measurement per surface
+            "trackStateSelection": acts.examples.TrackStateSelectionCuts(
+                chi2CutOffMeasurement=20.0,
+                chi2CutOffOutlier=float("inf"),
+                maxBranchesPerSurface=1,
             ),
             "trackingGeometry": trackingGeometry,
             "magneticField": field,
