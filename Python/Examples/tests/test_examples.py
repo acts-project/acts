@@ -19,6 +19,9 @@ from helpers import (
     hepmc3Enabled,
     pythia8Enabled,
     gnnEnabled,
+    gnnModuleMapEnabled,
+    gpuAvailable,
+    gpuExpected,
     onnxEnabled,
     hashingSeedingEnabled,
     assert_entries,
@@ -1010,6 +1013,21 @@ def test_bfield_writing(tmp_path, seq, assert_root_hash):
         assert_root_hash(fn, fp)
 
 
+def require_gpu():
+    """Skip a GPU test when there is no GPU, or fail if one was promised.
+
+    Without this the GNN examples fall back to the CPU (they pick the device
+    from CUDA_VISIBLE_DEVICES), so a "gpu" test would pass without ever
+    touching a GPU. A job that means to exercise the GPU sets ACTS_TEST_GPU,
+    which turns the skip into a failure.
+    """
+    if gpuAvailable:
+        return
+    if gpuExpected:
+        pytest.fail("ACTS_TEST_GPU is set, but no GPU is available")
+    pytest.skip("No GPU available")
+
+
 def assert_gnn_output(output_dir: Path):
     """Smoke check for the ROOT files written by the GNN chain.
 
@@ -1019,11 +1037,12 @@ def assert_gnn_output(output_dir: Path):
     hash recorded on one card does not hold on the other.
 
     Both files are opened and both ntuple trees are looked up, so a chain that
-    crashed or a writer that produced nothing still fails here. The entry
-    counts are printed but not asserted on: the metric learning chain currently
-    finds no tracks at all (acts-project/acts#5911), and the reference hashes
-    this replaces pinned exactly that empty output. Assert on the counts again
-    once that is fixed.
+    crashed or a writer that produced nothing fails here, and the track count
+    has to be non-zero. That last part is what the reference hashes could not
+    do: they pinned the empty output the chain produced while
+    acts-project/acts#5911 was open (the ONNX edge classifier was fed
+    millimetres although it expects metres, so every edge scored ~1e-4 and the
+    cut emptied the graph).
     """
     import uproot
 
@@ -1038,15 +1057,17 @@ def assert_gnn_output(output_dir: Path):
 
     with uproot.open(ntuple_file) as rf:
         for tree in ("track_finder_tracks", "track_finder_particles"):
-            print(f"{ntuple_file.name}:{tree} has {rf[tree].num_entries} entries")
+            entries = rf[tree].num_entries
+            print(f"{ntuple_file.name}:{tree} has {entries} entries")
+            assert entries > 0, f"{ntuple_file.name}:{tree} is empty"
 
 
 @pytest.mark.parametrize("hardware", ["cpu", "gpu"])
 @pytest.mark.skipif(not gnnEnabled, reason="Gnn environment not set up")
 def test_gnn_metric_learning(tmp_path, trk_geo, field, assert_root_hash, hardware):
     """Test GNN track finding with metric learning graph construction"""
-    if hardware == "cpu":
-        pytest.skip("CPU not yet supported")
+    if hardware == "gpu":
+        require_gpu()
 
     root_files = ["performance_finding_gnn.root", "ntuple_finding_gnn.root"]
     for f in root_files:
@@ -1094,9 +1115,14 @@ def test_gnn_metric_learning(tmp_path, trk_geo, field, assert_root_hash, hardwar
 
 @pytest.mark.odd
 @pytest.mark.parametrize("hardware", ["gpu"])
-@pytest.mark.skipif(not gnnEnabled, reason="Gnn environment not set up")
+@pytest.mark.skipif(
+    not gnnModuleMapEnabled, reason="Gnn module map environment not set up"
+)
 def test_gnn_shrink_nodes_same_output(tmp_path, hardware):
     """Verify that shrinkNodes=True produces the same tracks as shrinkNodes=False"""
+    if hardware == "gpu":
+        require_gpu()
+
     from helpers.hash_root import hash_root_file
     from gnn_module_map_odd import runGnnModuleMap
     from acts.examples.odd import getOpenDataDetector
@@ -1152,11 +1178,16 @@ def test_gnn_shrink_nodes_same_output(tmp_path, hardware):
 
 
 @pytest.mark.odd
-@pytest.mark.skipif(not gnnEnabled, reason="Gnn environment not set up")
+@pytest.mark.skipif(
+    not gnnModuleMapEnabled, reason="Gnn module map environment not set up"
+)
 @pytest.mark.parametrize("backend", ["torch", "onnx"])
 @pytest.mark.parametrize("hardware", ["gpu"])
 def test_gnn_module_map(tmp_path, assert_root_hash, backend, hardware):
     """Test GNN track finding with module map graph construction on ODD"""
+    if hardware == "gpu":
+        require_gpu()
+
     from gnn_module_map_odd import runGnnModuleMap
     from acts.examples.odd import getOpenDataDetector
 
@@ -1216,7 +1247,9 @@ def test_gnn_module_map(tmp_path, assert_root_hash, backend, hardware):
 
 
 @pytest.mark.odd
-@pytest.mark.skipif(not gnnEnabled, reason="Gnn environment not set up")
+@pytest.mark.skipif(
+    not gnnModuleMapEnabled, reason="Gnn module map environment not set up"
+)
 @pytest.mark.parametrize("useEdgeLayerConnector", [False, True])
 def test_gnn4itk_example(tmp_path, assert_root_hash, useEdgeLayerConnector):
     from gnn4itk_example import runGNN4ITk

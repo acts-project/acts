@@ -121,6 +121,7 @@ def runGnnMetricLearning(
         from acts.gnn import OnnxEdgeClassifier
 
         gnnConfig["device"] = device
+        gnnConfig["featureScales"] = [1000.0, 1.0, 1000.0]
         edgeClassifiers.append(
             OnnxEdgeClassifier(**gnnConfig),
         )
@@ -186,7 +187,12 @@ if "__main__" == __name__:
         Device.Cpu() if os.environ.get("CUDA_VISIBLE_DEVICES") == "" else Device.Cuda()
     )
 
-    s = acts.examples.Sequencer(events=2, numThreads=1)
+    # Torch's vectorized CPU kernels (SLEEF's tanh) raise FLTINV, FLTDIV,
+    # FLTOVF and FLTUND on the padding lanes of the last vector of a tensor.
+    # They are harmless, but they are raised inside torch's own OpenMP worker
+    # threads, whose stack traces carry no symbolized frame at all, so no
+    # fpeMask can be keyed to them: FPE monitoring is switched off here instead.
+    s = acts.examples.Sequencer(events=2, numThreads=1, trackFpes=False)
     s.config.logLevel = acts.logging.INFO
 
     rnd = acts.examples.RandomNumbers()
