@@ -15,6 +15,7 @@
 
 // System include(s).
 #include <array>
+#include <utility>
 
 namespace traccc {
 
@@ -137,28 +138,13 @@ struct subspace {
     auto proj = matrix::zero<matrix_type<D, kFullSize>>();
 
     for (size_type i = 0u; i < D; ++i) {
-      if (get_index(i) < kFullSize) {
-        getter::element(proj, i, get_index(i)) = (get_sign(i) ? -1.f : 1.f);
-      }
+      const size_type j = get_index(i);
+      const detray::dscalar<algebra_t> v = get_sign(i) ? -1.f : 1.f;
+      [&]<size_type... J>(std::integer_sequence<size_type, J...>) {
+        ((j == J ? (void)(getter::element(proj, i, J) = v) : void()), ...);
+      }(std::make_integer_sequence<size_type, kFullSize>());
     }
     return proj;
-  }
-
-  /// Expansion matrix that maps from the subspace into the full space.
-  template <size_type D>
-  TRACCC_HOST_DEVICE auto expander() const -> matrix_type<kFullSize, D> {
-    static_assert(D <= kSize,
-                  "The dimension of projection should be smaller than "
-                  "subspace dimension");
-
-    auto expn = matrix::zero<matrix_type<kFullSize, D>>();
-
-    for (size_type i = 0u; i < kSize; ++i) {
-      if (get_index(i) < kFullSize) {
-        getter::element(expn, get_index(i), i) = (get_sign(i) ? -1.f : 1.f);
-      }
-    }
-    return expn;
   }
 
  private:
