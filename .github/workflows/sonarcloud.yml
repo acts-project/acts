@@ -89,7 +89,7 @@ jobs:
         run: unzip coverage-build.zip -d build
 
       - name: Remap dependency paths in compilation database
-        shell: python
+        shell: python3 {0}
         run: |
           import json
           import os
