@@ -10,10 +10,111 @@
 
 #include "Acts/Vertexing/VertexingError.hpp"
 
+#include <algorithm>
 #include <cmath>
+#include <limits>
 #include <numbers>
+#include <numeric>
+#include <span>
 
 namespace Acts {
+
+namespace {
+// The bounds already truncate each Gaussian. Index their support, rather than
+// testing every track at every trial position. Inserting in input order retains
+// the original floating-point summation order in every bin.
+class DensityIndex {
+ public:
+  using Entry = GaussianTrackDensity::TrackEntry;
+
+  explicit DensityIndex(std::span<const Entry> entries) {
+    if (entries.size() < 32) {
+      return;
+    }
+    m_lower = std::numeric_limits<double>::infinity();
+    m_upper = -std::numeric_limits<double>::infinity();
+    for (const auto& entry : entries) {
+      if (!std::isfinite(entry.lowerBound) ||
+          !std::isfinite(entry.upperBound)) {
+        return;
+      }
+      m_lower = std::min(m_lower, entry.lowerBound);
+      m_upper = std::max(m_upper, entry.upperBound);
+    }
+    const double extent = m_upper - m_lower;
+    if (!(extent > 0.) || !std::isfinite(extent)) {
+      return;
+    }
+    const std::size_t nBins = entries.size();
+    m_scale = static_cast<double>(nBins) / extent;
+    if (!std::isfinite(m_scale)) {
+      return;
+    }
+    m_offsets.resize(nBins + 1);
+    // Wide, overlapping supports can make an index counterproductive. Bound
+    // its memory/work and use the original scan in that case.
+    std::size_t remaining = 32 * entries.size();
+    for (const auto& entry : entries) {
+      if (!(entry.lowerBound < entry.upperBound)) {
+        continue;
+      }
+      const auto first = bin(entry.lowerBound);
+      const auto last = bin(entry.upperBound);
+      const auto count = last - first + 1;
+      if (count > remaining) {
+        m_offsets.clear();
+        return;
+      }
+      remaining -= count;
+      for (std::size_t i = first; i <= last; ++i) {
+        ++m_offsets[i + 1];
+      }
+    }
+    std::partial_sum(m_offsets.begin(), m_offsets.end(), m_offsets.begin());
+    m_entries.resize(m_offsets.back());
+    for (const auto& entry : entries) {
+      if (!(entry.lowerBound < entry.upperBound)) {
+        continue;
+      }
+      const auto first = bin(entry.lowerBound);
+      const auto last = bin(entry.upperBound);
+      for (std::size_t i = first; i <= last; ++i) {
+        m_entries[m_offsets[i]++] = &entry;
+      }
+    }
+    // The insertion cursors now hold the end of each bin. Restore its start.
+    for (std::size_t i = nBins; i > 0; --i) {
+      m_offsets[i] = m_offsets[i - 1];
+    }
+    m_offsets[0] = 0;
+  }
+
+  // nullopt selects the original scan; an empty span means no finite support.
+  std::optional<std::span<const Entry* const>> candidates(double z) const {
+    if (m_offsets.empty()) {
+      return std::nullopt;
+    }
+    if (!std::isfinite(z) || z < m_lower || z > m_upper) {
+      return std::span<const Entry* const>{};
+    }
+    const auto i = bin(z);
+    return std::span<const Entry* const>{m_entries}.subspan(
+        m_offsets[i], m_offsets[i + 1] - m_offsets[i]);
+  }
+
+ private:
+  std::size_t bin(double z) const {
+    return std::min(static_cast<std::size_t>((z - m_lower) * m_scale),
+                    m_offsets.size() - 2);
+  }
+
+  double m_lower = 0.;
+  double m_upper = 0.;
+  double m_scale = 0.;
+  std::vector<std::size_t> m_offsets;
+  std::vector<const Entry*> m_entries;
+};
+}  // namespace
 
 Result<std::optional<std::pair<double, double>>>
 Acts::GaussianTrackDensity::globalMaximumWithWidth(
@@ -23,6 +124,19 @@ Acts::GaussianTrackDensity::globalMaximumWithWidth(
     return result.error();
   }
 
+  const DensityIndex index(state.trackEntries);
+  const auto densityAt = [&](double z) {
+    const auto candidates = index.candidates(z);
+    if (!candidates) {
+      return trackDensityAndDerivatives(state, z);
+    }
+    GaussianTrackDensityStore density(z);
+    for (const auto* entry : *candidates) {
+      density.addTrackToDensity(*entry);
+    }
+    return density.densityAndDerivatives();
+  };
+
   double maxPosition = 0.;
   double maxDensity = 0.;
   double maxSecondDerivative = 0.;
@@ -30,8 +144,7 @@ Acts::GaussianTrackDensity::globalMaximumWithWidth(
   for (const auto& track : state.trackEntries) {
     double trialZ = track.z;
 
-    auto [density, firstDerivative, secondDerivative] =
-        trackDensityAndDerivatives(state, trialZ);
+    auto [density, firstDerivative, secondDerivative] = densityAt(trialZ);
     if (secondDerivative >= 0. || density <= 0.) {
       continue;
     }
@@ -40,8 +153,7 @@ Acts::GaussianTrackDensity::globalMaximumWithWidth(
                       maxDensity, maxSecondDerivative);
 
     trialZ += stepSize(density, firstDerivative, secondDerivative);
-    std::tie(density, firstDerivative, secondDerivative) =
-        trackDensityAndDerivatives(state, trialZ);
+    std::tie(density, firstDerivative, secondDerivative) = densityAt(trialZ);
 
     if (secondDerivative >= 0. || density <= 0.) {
       continue;
@@ -50,8 +162,7 @@ Acts::GaussianTrackDensity::globalMaximumWithWidth(
         updateMaximum(trialZ, density, secondDerivative, maxPosition,
                       maxDensity, maxSecondDerivative);
     trialZ += stepSize(density, firstDerivative, secondDerivative);
-    std::tie(density, firstDerivative, secondDerivative) =
-        trackDensityAndDerivatives(state, trialZ);
+    std::tie(density, firstDerivative, secondDerivative) = densityAt(trialZ);
     if (secondDerivative >= 0. || density <= 0.) {
       continue;
     }
