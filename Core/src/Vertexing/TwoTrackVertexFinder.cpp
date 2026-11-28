@@ -16,8 +16,11 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <optional>
 #include <stdexcept>
 #include <utility>
+
+#include <Eigen/Cholesky>
 
 namespace Acts {
 namespace {
@@ -52,10 +55,22 @@ Result<std::vector<Vertex>> TwoTrackVertexFinder::find(
     const std::vector<InputTrack>& tracks, const VertexingOptions& options,
     IVertexFinder::State& state) const {
   auto& data = state.as<PairFinderState>();
-  if (options.useConstraintInFit ||
-      &options.magFieldContext.get() != &data.field.context()) {
+  if (&options.magFieldContext.get() != &data.field.context()) {
     return VertexingError::InvalidInput;
   }
+  if (options.useConstraintInFit) {
+    // Billoir consumes the full spacetime covariance, including time.
+    const auto& covariance = options.constraint.fullCovariance();
+    if (!options.constraint.fullPosition().allFinite() ||
+        !covariance.allFinite() ||
+        !covariance.isApprox(covariance.transpose()) ||
+        covariance.llt().info() != Eigen::Success) {
+      return VertexingError::InvalidInput;
+    }
+  }
+  const std::optional<Vertex> constraint =
+      options.useConstraintInFit ? std::optional<Vertex>(options.constraint)
+                                 : std::nullopt;
   std::vector<InputTrack> active;
   std::vector<BoundTrackParameters> parameters;
   for (const auto& track : tracks) {
@@ -102,7 +117,7 @@ Result<std::vector<Vertex>> TwoTrackVertexFinder::find(
       position[eTime] = (first.time() + second.time()) / 2.;
       const std::array pair{active[i], active[j]};
       auto vertex =
-          m_cfg.vertexFitter->fit(VertexFitInput{pair, position, std::nullopt},
+          m_cfg.vertexFitter->fit(VertexFitInput{pair, position, constraint},
                                   options.geoContext, data.field);
       if (!vertex.ok()) {
         return vertex.error();

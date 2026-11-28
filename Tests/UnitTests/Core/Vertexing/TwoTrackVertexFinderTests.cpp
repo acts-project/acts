@@ -28,6 +28,7 @@
 #include <limits>
 #include <memory>
 #include <numbers>
+#include <optional>
 #include <random>
 #include <stdexcept>
 #include <vector>
@@ -56,13 +57,16 @@ class TestFitter final : public IVertexFitter {
  public:
   mutable unsigned int calls = 0;
   bool fail = false;
+  mutable std::optional<Vertex> lastConstraint;
+  mutable Vector4 lastSeed = Vector4::Zero();
   Result<Vertex> fit(const VertexFitInput& input, const GeometryContext& geo,
                      MagneticFieldQuery& field) const override {
     ++calls;
     BOOST_CHECK_EQUAL(&geo, &gctx);
     BOOST_CHECK_EQUAL(&field.context(), &mctx);
     BOOST_CHECK_EQUAL(input.tracks.size(), 2u);
-    BOOST_CHECK(!input.constraint.has_value());
+    lastConstraint = input.constraint;
+    lastSeed = input.seedPosition;
     if (fail) {
       return VertexingError::NotConverged;
     }
@@ -198,13 +202,66 @@ BOOST_AUTO_TEST_CASE(two_track_finder_contract) {
   TwoTrackVertexFinder tightFinder(cfg);
   state = tightFinder.makeState(mctx);
   BOOST_CHECK(tightFinder.find(tracks, options, state)->empty());
-  Vertex constraint(truth);
-  constraint.setFullCovariance(SquareMatrix4::Identity());
-  const VertexingOptions constrained(gctx, mctx, constraint);
+  Vertex constraint(Vector4(21., -4., 13., 0.5));
+  SquareMatrix4 constraintCovariance = SquareMatrix4::Identity();
+  constraintCovariance(0, 1) = constraintCovariance(1, 0) = 0.1;
+  constraint.setFullCovariance(constraintCovariance);
+  VertexingOptions constrained(gctx, mctx, constraint);
   state = iface.makeState(mctx);
   result = iface.find(tracks, constrained, state);
-  BOOST_REQUIRE(!result.ok());
-  BOOST_CHECK(result.error() == VertexingError::InvalidInput);
+  BOOST_REQUIRE(result.ok());
+  BOOST_REQUIRE_EQUAL(result->size(), 1u);
+  BOOST_REQUIRE(fitter->lastConstraint.has_value());
+  CHECK_CLOSE_ABS(fitter->lastConstraint->fullPosition(),
+                  constraint.fullPosition(), 1e-12);
+  CHECK_CLOSE_ABS(fitter->lastConstraint->fullCovariance(),
+                  constraintCovariance, 1e-12);
+  CHECK_CLOSE_ABS(fitter->lastSeed.head<3>(), truth, 1e-12);
+
+  // A changed or disabled prior takes effect per call, even with reused state.
+  constrained.constraint.setFullPosition(Vector4(22., -6., 14., 1.));
+  result = iface.find(tracks, constrained, state);
+  BOOST_REQUIRE(result.ok());
+  CHECK_CLOSE_ABS(fitter->lastConstraint->fullPosition(),
+                  constrained.constraint.fullPosition(), 1e-12);
+  CHECK_CLOSE_ABS(fitter->lastSeed.head<3>(), truth, 1e-12);
+  constrained.useConstraintInFit = false;
+  constrained.constraint.setFullCovariance(SquareMatrix4::Zero());
+  result = iface.find(tracks, constrained, state);
+  BOOST_REQUIRE(result.ok());
+  BOOST_REQUIRE_EQUAL(result->size(), 1u);
+  BOOST_CHECK(!fitter->lastConstraint.has_value());
+  CHECK_CLOSE_ABS(fitter->lastSeed.head<3>(), truth, 1e-12);
+
+  // Public options are mutable; validate their full covariance at the call.
+  constrained.useConstraintInFit = true;
+  const auto callsBeforeInvalid = fitter->calls;
+  for (unsigned int invalidCase = 0; invalidCase < 5; ++invalidCase) {
+    constrained.constraint = constraint;
+    auto badCovariance = constraintCovariance;
+    switch (invalidCase) {
+      case 0:
+        badCovariance(3, 3) = 0.;
+        break;  // Spatial-only covariance.
+      case 1:
+        badCovariance(3, 3) = -1.;
+        break;
+      case 2:
+        badCovariance(0, 1) = 0.5;
+        break;  // Asymmetric.
+      case 3:
+        badCovariance(0, 0) = std::numeric_limits<double>::quiet_NaN();
+        break;
+      default:
+        constrained.constraint.setFullPosition(
+            Vector4::Constant(std::numeric_limits<double>::infinity()));
+    }
+    constrained.constraint.setFullCovariance(badCovariance);
+    result = iface.find(tracks, constrained, state);
+    BOOST_REQUIRE(!result.ok());
+    BOOST_CHECK(result.error() == VertexingError::InvalidInput);
+  }
+  BOOST_CHECK_EQUAL(fitter->calls, callsBeforeInvalid);
   cfg.maxChi2 = 25.;
   cfg.field = std::make_shared<ConstantBField>(Vector3(1_T, 0., 0.));
   TwoTrackVertexFinder tiltedFieldFinder(cfg);
@@ -228,6 +285,58 @@ BOOST_AUTO_TEST_CASE(two_track_finder_contract) {
   BOOST_REQUIRE(result.ok());
   BOOST_REQUIRE_EQUAL(result->size(), 1u);
   CHECK_CLOSE_ABS(result->front().position(), truth, 1e-12);
+}
+
+BOOST_AUTO_TEST_CASE(two_track_position_constraint) {
+  auto field = std::make_shared<ConstantBField>(Vector3::Zero());
+  auto propagator =
+      std::make_shared<Propagator<EigenStepper<>>>(EigenStepper<>(field));
+  HelicalTrackLinearizer::Config linearizerCfg;
+  linearizerCfg.propagator = propagator;
+  HelicalTrackLinearizer linearizer(linearizerCfg);
+  FullBilloirVertexFitter::Config fitCfg;
+  fitCfg.extractParameters.connect<&InputTrack::extractParameters>();
+  fitCfg.trackLinearizer.connect<&HelicalTrackLinearizer::linearizeTrack>(
+      &linearizer);
+  TwoTrackVertexFinder::Config cfg;
+  cfg.vertexFitter = std::make_shared<FullBilloirVertexFitter>(fitCfg);
+  cfg.field = field;
+  cfg.extractParameters.connect<&InputTrack::extractParameters>();
+  TwoTrackVertexFinder finder(cfg);
+  auto state = finder.makeState(mctx);
+  const auto first = trackAt(Vector3(20., -5., 12.2), Vector3::UnitX(), 1.);
+  const auto second = trackAt(Vector3(20., -5., 12.), Vector3::UnitY(), -1.);
+  const std::vector<InputTrack> tracks{InputTrack(&first), InputTrack(&second)};
+  const VertexingOptions unconstrainedOptions(gctx, mctx);
+  auto unconstrained = finder.find(tracks, unconstrainedOptions, state);
+  BOOST_REQUIRE(unconstrained.ok());
+  BOOST_REQUIRE_EQUAL(unconstrained->size(), 1u);
+
+  Vertex prior(Vector4(20.2, -4.8, 12.3, 0.));
+  prior.setFullCovariance(0.01 * SquareMatrix4::Identity());
+  const VertexingOptions constrainedOptions(gctx, mctx, prior);
+  auto constrained = finder.find(tracks, constrainedOptions, state);
+  BOOST_REQUIRE(constrained.ok());
+  BOOST_REQUIRE_EQUAL(constrained->size(), 1u);
+  const auto& freeVertex = unconstrained->front();
+  const auto& priorVertex = constrained->front();
+  BOOST_CHECK_LT((priorVertex.position() - prior.position()).norm(),
+                 (freeVertex.position() - prior.position()).norm());
+  BOOST_CHECK_LT(priorVertex.covariance().trace(),
+                 freeVertex.covariance().trace());
+  BOOST_CHECK_GT(priorVertex.fitQuality().first, freeVertex.fitQuality().first);
+
+  // The same total-chi2 cut includes the prior penalty when enabled.
+  cfg.maxChi2 =
+      (priorVertex.fitQuality().first + freeVertex.fitQuality().first) / 2.;
+  TwoTrackVertexFinder tightFinder(cfg);
+  state = tightFinder.makeState(mctx);
+  auto freeAccepted = tightFinder.find(tracks, unconstrainedOptions, state);
+  auto priorRejected = tightFinder.find(tracks, constrainedOptions, state);
+  BOOST_REQUIRE(freeAccepted.ok());
+  BOOST_REQUIRE(priorRejected.ok());
+  BOOST_CHECK_EQUAL(freeAccepted->size(), 1u);
+  BOOST_CHECK(priorRejected->empty());
 }
 
 BOOST_AUTO_TEST_CASE(displaced_two_body_pion_gun) {

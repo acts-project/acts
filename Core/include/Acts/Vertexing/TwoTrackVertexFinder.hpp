@@ -20,9 +20,9 @@ class IVertexFitter;
 
 /// @ingroup vertexing
 /// Minimal pairwise vertex finder for displaced two-track candidates.
-/// Fits each accepted pair independently through IVertexFitter, without a
-/// primary-vertex or mass constraint. This is a reconstruction building block,
-/// not a production secondary-vertex selection.
+/// Fits each accepted pair independently through IVertexFitter, with an
+/// optional per-call position constraint. This is a reconstruction building
+/// block, not a production secondary-vertex selection.
 ///
 /// @par Usage
 /// @code{.cpp}
@@ -53,9 +53,17 @@ class IVertexFitter;
 /// 1 mm, and total fit chi-squared at most 25. These are prototype cuts, not
 /// calibrated physics working points. There is no displacement cut, mass
 /// tagging, overlap resolution or vertex merging. Output vertices may share
-/// tracks. Do not pass a primary vertex as a fit constraint: constrained
-/// options are rejected. Runtime scales quadratically with the input
-/// multiplicity.
+/// tracks. An explicitly enabled VertexingOptions constraint is passed to every
+/// pair's fit without changing its geometric seed or seed-separation
+/// preselection. The total fit chi-squared cut then includes the constraint
+/// contribution. If disabled, the constraint is ignored, including its position
+/// and covariance. A constraint requires a finite position and a finite,
+/// symmetric, positive definite full 4D covariance; a spatial-only covariance
+/// with zero time variance is rejected. It is a Gaussian position/time prior,
+/// not a pointing constraint or a reference PV for selection. A prior
+/// reconstructed from the input tracks is not an independent measurement; this
+/// API does not model such correlations. Runtime scales quadratically with the
+/// input multiplicity.
 ///
 /// @par State and failures
 /// Keep the field context alive and unchanged while using the state, and use
@@ -117,11 +125,11 @@ class TwoTrackVertexFinder final : public IVertexFinder {
 
   /// Fit independent two-track candidates.
   /// @param tracks Input tracks, which must outlive the returned vertices
-  /// @param options Contexts; useConstraintInFit must be false
+  /// @param options Contexts and optional per-call position constraint
   /// @param state State from makeState for options.magFieldContext
   /// @return Accepted vertices or a field, input or fitting error
   /// Seed degeneracies reject the pair; field and fitter errors are propagated.
-  /// Fit constraints are rejected: this finder performs unconstrained fits.
+  /// Malformed enabled constraints are rejected before fitting any pairs.
   Result<std::vector<Vertex>> find(const std::vector<InputTrack>& tracks,
                                    const VertexingOptions& options,
                                    IVertexFinder::State& state) const override;
