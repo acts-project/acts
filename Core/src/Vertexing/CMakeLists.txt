@@ -1,6 +1,8 @@
 target_sources(
     ActsCore
     PRIVATE
+        TwoTrackVertexSeed.cpp
+        TwoTrackVertexFinder.cpp
         AdaptiveGridTrackDensity.cpp
         KalmanVertexUpdater.cpp
         KalmanVertexUpdaterImpl3.cpp
