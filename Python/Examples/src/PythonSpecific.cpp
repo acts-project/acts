@@ -8,6 +8,7 @@
 
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/Index.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/EventData/TruthMatching.hpp"
@@ -24,8 +25,10 @@
 
 #include <limits>
 #include <mutex>
+#include <optional>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 #include <pybind11/functional.h>
 #include <pybind11/pybind11.h>
@@ -263,10 +266,20 @@ class PythonTrackParameterPerformanceWriter final
     std::string inputTrackParticleMatching;
     /// Output filename (optional).
     std::string filePath = "performance_track_parameters.root";
+    /// Simulated hits and their measurement mapping for TrackState/Truth.
+    std::string inputSimHits;
+    std::string inputMeasurementSimHitsMap;
     /// Plot tool configurations.
     ResPlotTool::Config resPlotToolConfig;
     EffPlotTool::Config effPlotToolConfig;
     TrackSummaryPlotTool::Config trackSummaryPlotToolConfig;
+    /// Source and reference for the residuals.
+    TrackParameterSource parameterSource = TrackParameterSource::Track;
+    TrackParameterReference reference = TrackParameterReference::Truth;
+    /// TrackState only; unset selects the best available parameters.
+    std::optional<TrackParameterType> parameterType;
+    /// TrackState only; empty selects all measurement surfaces.
+    std::vector<Acts::GeometryIdentifier> geometrySelection;
     /// The Gaussian fit backend, a Python callable with the matching
     /// signature. Required: there is no sensible default.
     HistogramFitFunction fitFunction;
@@ -284,6 +297,10 @@ class PythonTrackParameterPerformanceWriter final
     collectorCfg.resPlotToolConfig = cfg.resPlotToolConfig;
     collectorCfg.effPlotToolConfig = cfg.effPlotToolConfig;
     collectorCfg.trackSummaryPlotToolConfig = cfg.trackSummaryPlotToolConfig;
+    collectorCfg.parameterSource = cfg.parameterSource;
+    collectorCfg.reference = cfg.reference;
+    collectorCfg.parameterType = cfg.parameterType;
+    collectorCfg.geometrySelection = cfg.geometrySelection;
     collectorCfg.fitFunction = cfg.fitFunction;
     collectorCfg.fitMinEntries = cfg.fitMinEntries;
     collectorCfg.fitSigmaRange = cfg.fitSigmaRange;
@@ -297,15 +314,30 @@ class PythonTrackParameterPerformanceWriter final
       : WriterT(cfg.inputTracks, "PythonTrackParameterPerformanceWriter", lvl),
         m_cfg(std::move(cfg)),
         m_collector(collectorConfig(m_cfg), logger().clone()) {
-    if (m_cfg.inputParticles.empty()) {
-      throw std::invalid_argument("Missing particles input collection");
-    }
-    if (m_cfg.inputTrackParticleMatching.empty()) {
-      throw std::invalid_argument("Missing input track particles matching");
-    }
+    if (m_cfg.reference == TrackParameterReference::Truth) {
+      if (m_cfg.inputParticles.empty()) {
+        throw std::invalid_argument("Missing particles input collection");
+      }
+      if (m_cfg.inputTrackParticleMatching.empty()) {
+        throw std::invalid_argument("Missing input track particles matching");
+      }
+      m_inputParticles.initialize(m_cfg.inputParticles);
+      m_inputTrackParticleMatching.initialize(m_cfg.inputTrackParticleMatching);
 
-    m_inputParticles.initialize(m_cfg.inputParticles);
-    m_inputTrackParticleMatching.initialize(m_cfg.inputTrackParticleMatching);
+      if (m_cfg.parameterSource == TrackParameterSource::TrackState) {
+        if (m_cfg.inputSimHits.empty()) {
+          throw std::invalid_argument(
+              "Missing simulated hits input collection");
+        }
+        if (m_cfg.inputMeasurementSimHitsMap.empty()) {
+          throw std::invalid_argument(
+              "Missing measurement to simulated hits map");
+        }
+        m_inputSimHits.initialize(m_cfg.inputSimHits);
+        m_inputMeasurementSimHitsMap.initialize(
+            m_cfg.inputMeasurementSimHitsMap);
+      }
+    }
   }
 
   ProcessCode finalize() override {
@@ -388,12 +420,23 @@ class PythonTrackParameterPerformanceWriter final
  private:
   ProcessCode writeT(const AlgorithmContext& ctx,
                      const ConstTrackContainer& tracks) override {
+    if (m_cfg.reference == TrackParameterReference::Measurement) {
+      std::lock_guard<std::mutex> lock(m_writeMutex);
+      m_collector.fill(tracks);
+      return ProcessCode::SUCCESS;
+    }
+
     const auto& particles = m_inputParticles(ctx);
     const auto& trackParticleMatching = m_inputTrackParticleMatching(ctx);
-
+    const SimHitContainer* simHits = nullptr;
+    const MeasurementSimHitsMap* measurementSimHitsMap = nullptr;
+    if (m_cfg.parameterSource == TrackParameterSource::TrackState) {
+      simHits = &m_inputSimHits(ctx);
+      measurementSimHitsMap = &m_inputMeasurementSimHitsMap(ctx);
+    }
     std::lock_guard<std::mutex> lock(m_writeMutex);
     m_collector.fill(ctx.recoGeoContext, tracks, particles,
-                     trackParticleMatching);
+                     trackParticleMatching, simHits, measurementSimHitsMap);
     return ProcessCode::SUCCESS;
   }
 
@@ -404,6 +447,9 @@ class PythonTrackParameterPerformanceWriter final
   ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
   ReadDataHandle<TrackParticleMatching> m_inputTrackParticleMatching{
       this, "InputTrackParticleMatching"};
+  ReadDataHandle<SimHitContainer> m_inputSimHits{this, "InputSimHits"};
+  ReadDataHandle<MeasurementSimHitsMap> m_inputMeasurementSimHitsMap{
+      this, "InputMeasurementSimHitsMap"};
 };
 
 namespace ActsPython {
@@ -442,11 +488,13 @@ void addPythonSpecific(py::module_& mex) {
                  .def("histograms", &Writer::histograms);
 
     auto c = py::class_<Config>(w, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, inputTracks, inputParticles,
-                       inputTrackParticleMatching, filePath, resPlotToolConfig,
-                       effPlotToolConfig, trackSummaryPlotToolConfig,
-                       fitFunction, fitMinEntries, fitSigmaRange, fitIterations,
-                       warningThresholdFitFailureFraction);
+    ACTS_PYTHON_STRUCT(
+        c, inputTracks, inputParticles, inputTrackParticleMatching,
+        inputSimHits, inputMeasurementSimHitsMap, parameterSource, reference,
+        parameterType, geometrySelection, filePath, resPlotToolConfig,
+        effPlotToolConfig, trackSummaryPlotToolConfig, fitFunction,
+        fitMinEntries, fitSigmaRange, fitIterations,
+        warningThresholdFitFailureFraction);
   }
 }
 
