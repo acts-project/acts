@@ -8,12 +8,17 @@
 
 #include "Acts/Vertexing/GridDensityVertexFinder.hpp"
 
+#include "Acts/Vertexing/VertexingError.hpp"
+
 namespace Acts {
 
 auto GridDensityVertexFinder::find(const std::vector<InputTrack>& trackVector,
                                    const VertexingOptions& vertexingOptions,
                                    IVertexFinder::State& anyState) const
     -> Result<std::vector<Vertex>> {
+  if (vertexingOptions.fitConstraint) {
+    return VertexingError::InvalidInput;
+  }
   auto& state = anyState.as<State>();
   // Remove density contributions from tracks removed from track collection
   if (m_cfg.cacheGridStateForTrackRemoval && state.isInitialized &&
@@ -84,14 +89,15 @@ auto GridDensityVertexFinder::find(const std::vector<InputTrack>& trackVector,
   }
 
   // Construct output vertex
-  Vector3 seedPos = vertexingOptions.constraint.position() + Vector3(0., 0., z);
+  const Vertex reference = vertexingOptions.seedReference.value_or(Vertex{});
+  Vector3 seedPos = reference.position() + Vector3(0., 0., z);
 
   Vertex returnVertex = Vertex(seedPos);
 
-  SquareMatrix4 seedCov = vertexingOptions.constraint.fullCovariance();
+  SquareMatrix4 seedCov = reference.fullCovariance();
 
   if (width != 0.) {
-    // Use z-constraint from seed width
+    // Use the longitudinal uncertainty from the seed width.
     seedCov(2, 2) = width * width;
   }
 

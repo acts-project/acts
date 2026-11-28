@@ -25,6 +25,7 @@
 #include "Acts/Vertexing/GridDensityVertexFinder.hpp"
 #include "Acts/Vertexing/IVertexFinder.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
+#include "Acts/Vertexing/VertexingError.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
@@ -66,6 +67,66 @@ std::uniform_real_distribution<double> phiDist(-std::numbers::pi,
 std::uniform_real_distribution<double> etaDist(-4., 4.);
 
 BOOST_AUTO_TEST_SUITE(VertexingSuite)
+
+BOOST_AUTO_TEST_CASE(grid_density_reference_covariance) {
+  GaussianGridTrackDensity density(GaussianGridTrackDensity::Config{});
+  GridDensityVertexFinder::Config fixedCfg(density);
+  fixedCfg.extractParameters.connect<&InputTrack::extractParameters>();
+  GridDensityVertexFinder fixedFinder(fixedCfg);
+
+  AdaptiveGridTrackDensity::Config adaptiveDensityCfg;
+  adaptiveDensityCfg.spatialBinExtent = 0.1_mm;
+  AdaptiveGridDensityVertexFinder::Config adaptiveCfg{
+      AdaptiveGridTrackDensity(adaptiveDensityCfg)};
+  adaptiveCfg.extractParameters.connect<&InputTrack::extractParameters>();
+  AdaptiveGridDensityVertexFinder adaptiveFinder(adaptiveCfg);
+
+  auto surface = Surface::makeShared<PerigeeSurface>(Vector3::Zero());
+  BoundVector parameters = BoundVector::Zero();
+  parameters[eBoundLoc1] = 2_mm;
+  parameters[eBoundDir1] = std::numbers::pi / 4.;
+  parameters[eBoundQOverP] = 1. / 1_GeV;
+  BoundTrackParameters track(surface, parameters, BoundMatrix::Identity(),
+                             ParticleHypothesis::pion());
+  std::vector<InputTrack> tracks{InputTrack{&track}};
+  Vertex reference(Vector4(1_mm, 2_mm, 7_mm, 3_ns));
+  SquareMatrix4 covariance = Vector4(10., 20., 30., 40.).asDiagonal();
+  covariance(eX, eZ) = covariance(eZ, eX) = 0.5;
+  covariance(eX, eTime) = covariance(eTime, eX) = 0.25;
+  reference.setFullCovariance(covariance);
+
+  const auto checkReference = [&](const IVertexFinder& finder,
+                                  bool preservesTime) {
+    VertexingOptions options(geoContext, magFieldContext);
+    auto state = finder.makeState(magFieldContext);
+    auto noReference = finder.find(tracks, options, state);
+    BOOST_REQUIRE(noReference.ok());
+    BOOST_REQUIRE_EQUAL(noReference->size(), 1u);
+    BOOST_CHECK(noReference->front().fullCovariance().isZero());
+
+    options.seedReference = reference;
+    state = finder.makeState(magFieldContext);
+    auto result = finder.find(tracks, options, state);
+    BOOST_REQUIRE(result.ok());
+    BOOST_REQUIRE_EQUAL(result->size(), 1u);
+    CHECK_CLOSE_ABS(result->front().position(),
+                    noReference->front().position() + reference.position(),
+                    1e-8_mm);
+    // Preserve the fixed grid finder's existing spatial-only output, and the
+    // adaptive grid finder's reference time even when time seeding is off.
+    BOOST_CHECK_EQUAL(result->front().time(),
+                      preservesTime ? reference.time() : 0.);
+    BOOST_CHECK_EQUAL(result->front().fullCovariance(), covariance);
+
+    options.fitConstraint = reference;
+    auto rejected = finder.find(tracks, options, state);
+    BOOST_REQUIRE(!rejected.ok());
+    BOOST_CHECK(rejected.error() == VertexingError::InvalidInput);
+  };
+  checkReference(fixedFinder, false);
+  checkReference(adaptiveFinder, true);
+}
+
 ///
 /// @brief Unit test for GridDensityVertexFinder without caching
 /// of track density values
@@ -380,8 +441,12 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
 
   VertexingOptions vertexingOptions(geoContext, magFieldContext);
   Vertex constraintVtx;
-  constraintVtx.setCovariance(SquareMatrix3::Identity());
-  vertexingOptions.constraint = constraintVtx;
+  constraintVtx.setFullPosition(Vector4(1_mm, 2_mm, 3_mm, 4_ns));
+  SquareMatrix4 referenceCovariance = Vector4(4., 9., 16., 25.).asDiagonal();
+  referenceCovariance(eX, eZ) = referenceCovariance(eZ, eX) = 0.25;
+  referenceCovariance(eX, eTime) = referenceCovariance(eTime, eX) = 0.5;
+  constraintVtx.setFullCovariance(referenceCovariance);
+  vertexingOptions.seedReference = constraintVtx;
 
   using Finder1 = GridDensityVertexFinder;
   GaussianGridTrackDensity::Config gDensityConfig(100, mainGridSize,
@@ -459,6 +524,8 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
     BOOST_CHECK_NE(constraintVtx.covariance(), cov);
     BOOST_CHECK_NE(cov(eZ, eZ), 0.);
     covZZ1 = cov(eZ, eZ);
+    referenceCovariance(eZ, eZ) = covZZ1;
+    BOOST_CHECK_EQUAL((*res1).back().fullCovariance(), referenceCovariance);
     if (debugMode) {
       std::cout << "Estimated z-seed width 1: " << cov(eZ, eZ) << std::endl;
     }
@@ -477,6 +544,8 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
     BOOST_CHECK_NE(constraintVtx.covariance(), cov);
     BOOST_CHECK_NE(cov(eZ, eZ), 0.);
     covZZ2 = cov(eZ, eZ);
+    referenceCovariance(eZ, eZ) = covZZ2;
+    BOOST_CHECK_EQUAL((*res2).back().fullCovariance(), referenceCovariance);
     if (debugMode) {
       std::cout << "Estimated z-seed width 2: " << cov(eZ, eZ) << std::endl;
     }

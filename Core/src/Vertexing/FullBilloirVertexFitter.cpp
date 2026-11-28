@@ -81,7 +81,8 @@ Acts::FullBilloirVertexFitter::FullBilloirVertexFitter(
 Acts::Result<Acts::Vertex> Acts::FullBilloirVertexFitter::fit(
     const VertexFitInput& input, const GeometryContext& gctx,
     MagneticFieldQuery& field) const {
-  VertexingOptions options(gctx, field.context(), input.constraint);
+  VertexingOptions options(gctx, field.context());
+  options.fitConstraint = input.constraint;
   return fitImpl(input.tracks, options, field, input.seedPosition);
 }
 
@@ -92,14 +93,20 @@ const Acts::Logger& Acts::FullBilloirVertexFitter::logger() const {
 Acts::Result<Acts::Vertex> Acts::FullBilloirVertexFitter::fit(
     const std::vector<InputTrack>& paramVector,
     const VertexingOptions& vertexingOptions, MagneticFieldQuery& field) const {
-  return fitImpl(paramVector, vertexingOptions, field,
-                 vertexingOptions.constraint.fullPosition());
+  return fitImpl(
+      paramVector, vertexingOptions, field,
+      vertexingOptions.seedReference.value_or(Vertex{}).fullPosition());
 }
 
 Acts::Result<Acts::Vertex> Acts::FullBilloirVertexFitter::fitImpl(
     std::span<const InputTrack> paramVector,
     const VertexingOptions& vertexingOptions, MagneticFieldQuery& field,
     const Vector4& seedPosition) const {
+  if (vertexingOptions.fitConstraint &&
+      vertexingOptions.fitConstraint->covariance().determinant() == 0.) {
+    throw std::invalid_argument(
+        "Vertex constraint covariance matrix must be invertible.");
+  }
   unsigned int nTracks = paramVector.size();
   double chi2 = std::numeric_limits<double>::max();
 
@@ -124,7 +131,7 @@ Acts::Result<Acts::Vertex> Acts::FullBilloirVertexFitter::fitImpl(
 
   // Since we add a term to the chi2 when adding a vertex constraint (see Ref.
   // (1)), the number of degrees of freedom increases
-  if (vertexingOptions.useConstraintInFit) {
+  if (vertexingOptions.fitConstraint.has_value()) {
     ndf += 3;
   }
 
@@ -228,21 +235,20 @@ Acts::Result<Acts::Vertex> Acts::FullBilloirVertexFitter::fitImpl(
     // Cov(V) = Cov(deltaV)), see Ref. (1).
     // invCovV = A-sum{Bi*Ci^-1*Bi^T}
     SquareMatrix4 invCovV = billoirVertex.A - billoirVertex.sumBCinvBt;
-    if (vertexingOptions.useConstraintInFit) {
+    if (vertexingOptions.fitConstraint.has_value()) {
       // Position of vertex constraint in Billoir frame (i.e., in coordinate
-      // system with origin at linPoint). This will be 0 for first iteration but
-      // != 0 from second on since our first guess for the vertex position is
-      // the vertex constraint position.
+      // system with origin at linPoint). The initial linearization point and
+      // the constraint position are independent.
       Vector4 posInBilloirFrame =
-          vertexingOptions.constraint.fullPosition() - linPoint;
+          vertexingOptions.fitConstraint->fullPosition() - linPoint;
 
       // For vertex constraint: T -> T + Cb^-1 (b - V0) where Cb is the
       // covariance matrix of the constraint, b is the constraint position, and
       // V0 is the vertex estimate (see Ref. (1)).
-      deltaVFac += vertexingOptions.constraint.fullCovariance().inverse() *
+      deltaVFac += vertexingOptions.fitConstraint->fullCovariance().inverse() *
                    posInBilloirFrame;
       // For vertex constraint: A -> A + Cb^-1
-      invCovV += vertexingOptions.constraint.fullCovariance().inverse();
+      invCovV += vertexingOptions.fitConstraint->fullCovariance().inverse();
     }
 
     // Covariance matrix of the 4D vertex position, see Ref. (3)
@@ -320,15 +326,15 @@ Acts::Result<Acts::Vertex> Acts::FullBilloirVertexFitter::fitImpl(
 
     // Add an additional term to chi2 if there is a vertex constraint (see Ref.
     // (1))
-    if (vertexingOptions.useConstraintInFit) {
+    if (vertexingOptions.fitConstraint.has_value()) {
       // Position of vertex constraint in Billoir frame (i.e., in coordinate
       // system with origin at linPoint).
       Vector4 posInBilloirFrame =
-          vertexingOptions.constraint.fullPosition() - linPoint;
+          vertexingOptions.fitConstraint->fullPosition() - linPoint;
 
       newChi2 +=
           (posInBilloirFrame.transpose())
-              .dot(vertexingOptions.constraint.fullCovariance().inverse() *
+              .dot(vertexingOptions.fitConstraint->fullCovariance().inverse() *
                    posInBilloirFrame);
     }
 

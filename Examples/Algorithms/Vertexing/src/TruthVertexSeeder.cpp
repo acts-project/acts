@@ -8,6 +8,8 @@
 
 #include "TruthVertexSeeder.hpp"
 
+#include "Acts/Vertexing/VertexingError.hpp"
+
 namespace ActsExamples {
 
 TruthVertexSeeder::TruthVertexSeeder(const Config &cfg) : m_cfg(cfg) {}
@@ -16,6 +18,9 @@ Acts::Result<VertexContainer> TruthVertexSeeder::find(
     const std::vector<Acts::InputTrack> & /*trackVector*/,
     const Acts::VertexingOptions &vertexingOptions,
     Acts::IVertexFinder::State &anyState) const {
+  if (vertexingOptions.fitConstraint.has_value()) {
+    return Acts::VertexingError::InvalidInput;
+  }
   auto &state = anyState.template as<State>();
 
   if (state.nextVertexIndex >= state.truthVertices.size()) {
@@ -41,7 +46,9 @@ Acts::Result<VertexContainer> TruthVertexSeeder::find(
       converted.setTime(truthVertex.time());
     }
 
-    Acts::SquareMatrix4 seedCov = vertexingOptions.constraint.fullCovariance();
+    Acts::SquareMatrix4 seedCov =
+        vertexingOptions.seedReference.value_or(Acts::Vertex{})
+            .fullCovariance();
     converted.setFullCovariance(seedCov);
 
     seeds.push_back(converted);

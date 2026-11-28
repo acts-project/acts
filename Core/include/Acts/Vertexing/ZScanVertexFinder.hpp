@@ -26,9 +26,13 @@ namespace Acts {
 ///
 /// @brief Implements a vertex finder based on the mode of z0 values:
 /// 1. Determines the mode value of all input track z0 values
-/// 2. If no constraint is given, returns (0,0, z0_mode) as vertex position
-/// 3. If vertex constraint is given with x=x_constr and y=y_constr,
-///    the returned vertex position will be (x_constr, y_constr, z0_mode).
+/// 2. If no seed reference is given, returns (0,0, z0_mode) as vertex position
+/// 3. If a seed reference is given, takes the returned x, y and time from it.
+///
+/// Config::useReferenceForImpactParameters controls whether the supplied
+/// reference is also used to calculate track z positions and impact-parameter
+/// weights. This is independent of fitting: this seed finder rejects a
+/// VertexingOptions::fitConstraint.
 class ZScanVertexFinder final : public IVertexFinder {
  public:
   /// Configuration struct
@@ -44,6 +48,11 @@ class ZScanVertexFinder final : public IVertexFinder {
     /// Mode finder for 1D z-position determination
     FsmwMode1dFinder mode1dFinder;
 
+    /// Calculate impact parameters relative to the seed reference, when one
+    /// with nonzero x variance is supplied. This changes track z positions
+    /// even when disableAllWeights is true. Disable to use the input track
+    /// positions while retaining the reference x, y and time in the seed.
+    bool useReferenceForImpactParameters = true;
     /// Flag to disable all weights, set all weights to 1
     bool disableAllWeights = false;
     /// Constraint cutoff parameter for vertex fitting
