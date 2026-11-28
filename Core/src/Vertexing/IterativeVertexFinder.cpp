@@ -17,11 +17,11 @@ Acts::Result<Acts::Vertex> fitVertex(
     const Acts::IVertexFitter& fitter,
     const std::vector<Acts::InputTrack>& tracks,
     const Acts::VertexingOptions& options, Acts::MagneticFieldQuery& field) {
+  // Retain the reference-based initial linearization point independently of
+  // the seed used to select tracks and of the external fit prior.
   Acts::VertexFitInput input{
-      tracks, options.constraint.fullPosition(),
-      options.useConstraintInFit
-          ? std::optional<Acts::Vertex>(options.constraint)
-          : std::nullopt};
+      tracks, options.seedReference.value_or(Acts::Vertex{}).fullPosition(),
+      options.fitConstraint};
   return fitter.fit(input, options.geoContext, field);
 }
 
@@ -117,7 +117,7 @@ auto Acts::IterativeVertexFinder::find(
     Vertex currentVertex;
     Vertex currentSplitVertex;
 
-    if (vertexingOptions.useConstraintInFit && !tracksToFit.empty()) {
+    if (vertexingOptions.fitConstraint.has_value() && !tracksToFit.empty()) {
       auto fitResult = fitVertex(*m_cfg.vertexFitter, tracksToFit,
                                  vertexingOptions, state.fieldQuery);
       if (fitResult.ok()) {
@@ -125,7 +125,8 @@ auto Acts::IterativeVertexFinder::find(
       } else {
         return fitResult.error();
       }
-    } else if (!vertexingOptions.useConstraintInFit && tracksToFit.size() > 1) {
+    } else if (!vertexingOptions.fitConstraint.has_value() &&
+               tracksToFit.size() > 1) {
       auto fitResult = fitVertex(*m_cfg.vertexFitter, tracksToFit,
                                  vertexingOptions, state.fieldQuery);
       if (fitResult.ok()) {
@@ -155,10 +156,10 @@ auto Acts::IterativeVertexFinder::find(
     int nTracksAtVertex = countSignificantTracks(currentVertex);
     int nTracksAtSplitVertex = countSignificantTracks(currentSplitVertex);
 
-    bool isGoodVertex = ((!vertexingOptions.useConstraintInFit && ndf > 0 &&
-                          nTracksAtVertex >= 2) ||
-                         (vertexingOptions.useConstraintInFit && ndf > 3 &&
-                          nTracksAtVertex >= 2));
+    bool isGoodVertex = ((!vertexingOptions.fitConstraint.has_value() &&
+                          ndf > 0 && nTracksAtVertex >= 2) ||
+                         (vertexingOptions.fitConstraint.has_value() &&
+                          ndf > 3 && nTracksAtVertex >= 2));
 
     if (!isGoodVertex) {
       removeTracks(tracksToFit, seedTracks);
@@ -226,7 +227,10 @@ auto Acts::IterativeVertexFinder::getVertexSeed(
     const VertexingOptions& vertexingOptions) const
     -> Result<std::optional<Vertex>> {
   auto finderState = m_cfg.seedFinder->makeState(state.magContext);
-  auto res = m_cfg.seedFinder->find(seedTracks, vertexingOptions, finderState);
+  VertexingOptions seedOptions(vertexingOptions.geoContext,
+                               vertexingOptions.magFieldContext);
+  seedOptions.seedReference = vertexingOptions.seedReference;
+  auto res = m_cfg.seedFinder->find(seedTracks, seedOptions, finderState);
 
   if (!res.ok()) {
     ACTS_ERROR("Internal seeding error. Number of input tracks: "
@@ -551,7 +555,7 @@ Acts::Result<bool> Acts::IterativeVertexFinder::reassignTracksToNewVertex(
   // set first to default vertex to be able to check if still good vertex
   // later
   currentVertex = Vertex();
-  if (vertexingOptions.useConstraintInFit && !tracksToFit.empty()) {
+  if (vertexingOptions.fitConstraint.has_value() && !tracksToFit.empty()) {
     auto fitResult = fitVertex(*m_cfg.vertexFitter, tracksToFit,
                                vertexingOptions, state.fieldQuery);
     if (fitResult.ok()) {
@@ -559,7 +563,8 @@ Acts::Result<bool> Acts::IterativeVertexFinder::reassignTracksToNewVertex(
     } else {
       return Result<bool>::success(false);
     }
-  } else if (!vertexingOptions.useConstraintInFit && tracksToFit.size() > 1) {
+  } else if (!vertexingOptions.fitConstraint.has_value() &&
+             tracksToFit.size() > 1) {
     auto fitResult = fitVertex(*m_cfg.vertexFitter, tracksToFit,
                                vertexingOptions, state.fieldQuery);
     if (fitResult.ok()) {
@@ -575,9 +580,9 @@ Acts::Result<bool> Acts::IterativeVertexFinder::reassignTracksToNewVertex(
   // Number of significant tracks
   int nTracksAtVertex = countSignificantTracks(currentVertex);
 
-  bool isGoodVertex = ((!vertexingOptions.useConstraintInFit && ndf > 0 &&
-                        nTracksAtVertex >= 2) ||
-                       (vertexingOptions.useConstraintInFit && ndf > 3 &&
+  bool isGoodVertex = ((!vertexingOptions.fitConstraint.has_value() &&
+                        ndf > 0 && nTracksAtVertex >= 2) ||
+                       (vertexingOptions.fitConstraint.has_value() && ndf > 3 &&
                         nTracksAtVertex >= 2));
 
   if (!isGoodVertex) {

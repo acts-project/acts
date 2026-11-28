@@ -17,6 +17,8 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/AnnealingUtility.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/AdaptiveGridDensityVertexFinder.hpp"
@@ -30,6 +32,7 @@
 #include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/TrackDensityVertexFinder.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
+#include "Acts/Vertexing/VertexingError.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
@@ -39,6 +42,7 @@
 #include <iostream>
 #include <memory>
 #include <numbers>
+#include <optional>
 #include <string>
 #include <system_error>
 #include <tuple>
@@ -71,8 +75,11 @@ class FixedVertexSeedFinder final : public IVertexFinder {
 
   Result<std::vector<Vertex>> find(
       const std::vector<InputTrack>& /*trackVector*/,
-      const VertexingOptions& /*vertexingOptions*/,
+      const VertexingOptions& vertexingOptions,
       IVertexFinder::State& /*state*/) const override {
+    ++calls;
+    lastReference = vertexingOptions.seedReference;
+    receivedFitConstraint = vertexingOptions.fitConstraint.has_value();
     return m_seeds;
   }
 
@@ -85,11 +92,147 @@ class FixedVertexSeedFinder final : public IVertexFinder {
       IVertexFinder::State& /*state*/,
       const std::vector<InputTrack>& /*removedTracks*/) const override {}
 
+  mutable std::size_t calls = 0;
+  mutable std::optional<Vertex> lastReference;
+  mutable bool receivedFitConstraint = false;
+
  private:
   std::vector<Vertex> m_seeds;
 };
 
 BOOST_AUTO_TEST_SUITE(VertexingSuite)
+
+BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_prior_modes) {
+  auto bField = std::make_shared<ConstantBField>(Vector3::Zero());
+  auto propagator = std::make_shared<Propagator>(EigenStepper<>(bField));
+  ImpactPointEstimator ipEstimator(
+      ImpactPointEstimator::Config(bField, propagator));
+  Linearizer::Config linearizerConfig;
+  linearizerConfig.propagator = propagator;
+  Linearizer linearizer(linearizerConfig);
+
+  Vertex seed(Vector3(0.02_mm, 0.03_mm, 0.04_mm));
+  seed.setCovariance(SquareMatrix3::Identity() * 1e-4_mm2);
+  auto seedFinder =
+      std::make_shared<FixedVertexSeedFinder>(std::vector<Vertex>{seed});
+
+  auto makeFinder = [&](bool useSeedConstraint) {
+    AdaptiveMultiVertexFitter::Config fitterConfig(ipEstimator);
+    fitterConfig.extractParameters.connect<&InputTrack::extractParameters>();
+    fitterConfig.trackLinearizer.connect<&Linearizer::linearizeTrack>(
+        &linearizer);
+    AdaptiveMultiVertexFinder::Config finderConfig(
+        AdaptiveMultiVertexFitter(fitterConfig), seedFinder, ipEstimator,
+        bField);
+    finderConfig.extractParameters.connect<&InputTrack::extractParameters>();
+    finderConfig.useSeedConstraint = useSeedConstraint;
+    finderConfig.addSingleTrackVertices = true;
+    finderConfig.maxIterations = 1;
+    return AdaptiveMultiVertexFinder(std::move(finderConfig));
+  };
+
+  auto surface = Surface::makeShared<PerigeeSurface>(Vector3::Zero());
+  BoundMatrix covariance = BoundMatrix::Zero();
+  covariance.diagonal() << 0.01_mm2, 0.01_mm2, 1e-4, 1e-4, 1e-6, 1.;
+  std::vector<BoundTrackParameters> tracks;
+  for (double phi : {0., std::numbers::pi / 2.}) {
+    BoundVector parameters;
+    parameters << 0., 0., phi, std::numbers::pi / 2., 1. / 1_GeV, 0.;
+    tracks.emplace_back(surface, parameters, covariance,
+                        ParticleHypothesis::pion());
+  }
+  std::vector<InputTrack> inputTracks;
+  for (const auto& track : tracks) {
+    inputTracks.emplace_back(&track);
+  }
+
+  // An arbitrary reference is forwarded to the seeder, while its broad
+  // covariance remains independent of the fit's numerical initialization.
+  Vertex reference(Vector3(3_mm, -4_mm, 5_mm));
+  reference.setCovariance(SquareMatrix3::Identity() * 1e8_mm2);
+  VertexingOptions options(geoContext, magFieldContext);
+  options.seedReference = reference;
+  auto finder = makeFinder(false);
+  auto state = finder.makeState(magFieldContext);
+  auto freeResult = finder.find(inputTracks, options, state);
+  BOOST_REQUIRE(freeResult.ok());
+  BOOST_REQUIRE_EQUAL(freeResult->size(), 1u);
+  BOOST_REQUIRE(seedFinder->lastReference.has_value());
+  CHECK_CLOSE_ABS(seedFinder->lastReference->fullPosition(),
+                  reference.fullPosition(), 1e-12);
+  CHECK_CLOSE_ABS(seedFinder->lastReference->fullCovariance(),
+                  reference.fullCovariance(), 1e-12);
+  BOOST_CHECK(!seedFinder->receivedFitConstraint);
+  CHECK_CLOSE_ABS(freeResult->front().position(), Vector3::Zero(), 1e-5_mm);
+
+  // Removing only the reference does not alter the fit of the same seed.
+  options.seedReference.reset();
+  state = finder.makeState(magFieldContext);
+  auto noReferenceResult = finder.find(inputTracks, options, state);
+  BOOST_REQUIRE(noReferenceResult.ok());
+  BOOST_REQUIRE_EQUAL(noReferenceResult->size(), 1u);
+  CHECK_CLOSE_ABS(noReferenceResult->front().position(),
+                  freeResult->front().position(), 1e-12);
+  CHECK_CLOSE_ABS(noReferenceResult->front().covariance(),
+                  freeResult->front().covariance(), 1e-12);
+
+  // The external prior is distinct from both reference and seed. It must
+  // constrain the reconstructed position without being sent to the seeder.
+  Vertex prior(Vector3(0.08_mm, -0.05_mm, 0.1_mm));
+  prior.setCovariance(SquareMatrix3::Identity() * 1e-5_mm2);
+  options.seedReference = reference;
+  options.fitConstraint = prior;
+  state = finder.makeState(magFieldContext);
+  auto constrainedResult = finder.find(inputTracks, options, state);
+  BOOST_REQUIRE(constrainedResult.ok());
+  BOOST_REQUIRE_EQUAL(constrainedResult->size(), 1u);
+  BOOST_CHECK(!seedFinder->receivedFitConstraint);
+  CHECK_CLOSE_ABS(seedFinder->lastReference->fullPosition(),
+                  reference.fullPosition(), 1e-12);
+  CHECK_CLOSE_ABS(constrainedResult->front().position(), prior.position(),
+                  1e-3_mm);
+  BOOST_CHECK_LT(constrainedResult->front().covariance().trace(),
+                 freeResult->front().covariance().trace());
+
+  options.fitConstraint->setCovariance(SquareMatrix3::Zero());
+  auto callsBefore = seedFinder->calls;
+  auto invalidPrior = finder.find(inputTracks, options, state);
+  BOOST_REQUIRE(!invalidPrior.ok());
+  BOOST_CHECK(invalidPrior.error() == VertexingError::InvalidInput);
+  BOOST_CHECK_EQUAL(seedFinder->calls, callsBefore);
+  options.fitConstraint = prior;
+
+  auto seedConstrainedFinder = makeFinder(true);
+  state = seedConstrainedFinder.makeState(magFieldContext);
+  callsBefore = seedFinder->calls;
+  auto conflict = seedConstrainedFinder.find(inputTracks, options, state);
+  BOOST_REQUIRE(!conflict.ok());
+  BOOST_CHECK(conflict.error() == VertexingError::InvalidInput);
+  BOOST_CHECK_EQUAL(seedFinder->calls, callsBefore);
+
+  options.fitConstraint.reset();
+  auto seedConstrainedResult =
+      seedConstrainedFinder.find(inputTracks, options, state);
+  BOOST_REQUIRE(seedConstrainedResult.ok());
+  BOOST_REQUIRE_EQUAL(seedConstrainedResult->size(), 1u);
+  CHECK_CLOSE_ABS(seedConstrainedResult->front().position(), seed.position(),
+                  1e-3_mm);
+  BOOST_CHECK_GT(seedConstrainedResult->front().fitQuality().second,
+                 freeResult->front().fitQuality().second);
+
+  // Single-track acceptance still requires a physical or seed-derived prior;
+  // the broad unconstrained initialization must not enable it.
+  inputTracks.pop_back();
+  state = finder.makeState(magFieldContext);
+  auto freeSingleTrack = finder.find(inputTracks, options, state);
+  BOOST_REQUIRE(freeSingleTrack.ok());
+  BOOST_CHECK(freeSingleTrack->empty());
+  state = seedConstrainedFinder.makeState(magFieldContext);
+  auto seedSingleTrack =
+      seedConstrainedFinder.find(inputTracks, options, state);
+  BOOST_REQUIRE(seedSingleTrack.ok());
+  BOOST_CHECK_EQUAL(seedSingleTrack->size(), 1u);
+}
 
 /// @brief AMVF test with Gaussian seed finder
 BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
@@ -141,6 +284,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
   AdaptiveMultiVertexFinder::Config finderConfig(std::move(fitter), seedFinder,
                                                  ipEstimator, bField);
   finderConfig.extractParameters.connect<&InputTrack::extractParameters>();
+  finderConfig.useSeedConstraint = true;
 
   AdaptiveMultiVertexFinder finder(std::move(finderConfig));
   IVertexFinder::State state = finder.makeState(magFieldContext);
@@ -169,7 +313,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
 
   // TODO: test without using beam spot constraint
   Vertex bsConstr = std::get<BeamSpotData>(csvData);
-  VertexingOptions vertexingOptions(geoContext, magFieldContext, bsConstr);
+  VertexingOptions vertexingOptions(geoContext, magFieldContext);
+  vertexingOptions.seedReference = bsConstr;
 
   auto t1 = std::chrono::system_clock::now();
   auto findResult = finder.find(inputTracks, vertexingOptions, state);
@@ -299,6 +444,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
   AdaptiveMultiVertexFinder::Config finderConfig(
       std::move(fitter), std::move(seedFinder), ipEstimator, bField);
   finderConfig.extractParameters.connect(extractParameters);
+  finderConfig.useSeedConstraint = true;
 
   AdaptiveMultiVertexFinder finder(std::move(finderConfig));
   IVertexFinder::State state = finder.makeState(magFieldContext);
@@ -336,7 +482,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
   constraintVtx.setPosition(std::get<BeamSpotData>(csvData).position());
   constraintVtx.setCovariance(std::get<BeamSpotData>(csvData).covariance());
 
-  VertexingOptions vertexingOptions(geoContext, magFieldContext, constraintVtx);
+  VertexingOptions vertexingOptions(geoContext, magFieldContext);
+  vertexingOptions.seedReference = constraintVtx;
 
   auto findResult = finder.find(userInputTracks, vertexingOptions, state);
 
@@ -446,6 +593,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
   AdaptiveMultiVertexFinder::Config finderConfig(
       std::move(fitter), std::move(seedFinder), ipEst, bField);
   finderConfig.extractParameters.connect<&InputTrack::extractParameters>();
+  finderConfig.useSeedConstraint = true;
 
   AdaptiveMultiVertexFinder finder(std::move(finderConfig));
   IVertexFinder::State state = finder.makeState(magFieldContext);
@@ -474,7 +622,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
 
   // TODO: test using beam spot constraint
   Vertex bsConstr = std::get<BeamSpotData>(csvData);
-  VertexingOptions vertexingOptions(geoContext, magFieldContext, bsConstr);
+  VertexingOptions vertexingOptions(geoContext, magFieldContext);
+  vertexingOptions.seedReference = bsConstr;
 
   auto t1 = std::chrono::system_clock::now();
   auto findResult = finder.find(inputTracks, vertexingOptions, state);
@@ -603,6 +752,7 @@ BOOST_AUTO_TEST_CASE(
   AdaptiveMultiVertexFinder::Config finderConfig(
       std::move(fitter), std::move(seedFinder), ipEst, bField);
   finderConfig.extractParameters.connect<&InputTrack::extractParameters>();
+  finderConfig.useSeedConstraint = true;
 
   AdaptiveMultiVertexFinder finder(std::move(finderConfig));
   IVertexFinder::State state = finder.makeState(magFieldContext);
@@ -630,7 +780,8 @@ BOOST_AUTO_TEST_CASE(
   }
 
   Vertex bsConstr = std::get<BeamSpotData>(csvData);
-  VertexingOptions vertexingOptions(geoContext, magFieldContext, bsConstr);
+  VertexingOptions vertexingOptions(geoContext, magFieldContext);
+  vertexingOptions.seedReference = bsConstr;
 
   auto t1 = std::chrono::system_clock::now();
   auto findResult = finder.find(inputTracks, vertexingOptions, state);
@@ -740,6 +891,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_removes_rejected_seed) {
   AdaptiveMultiVertexFinder::Config finderConfig(
       std::move(fitter), std::move(seedFinder), ipEst, bField);
   finderConfig.extractParameters.connect<&InputTrack::extractParameters>();
+  finderConfig.useSeedConstraint = true;
   finderConfig.maxMergeVertexSignificance = 1e9;
   finderConfig.maxIterations = 1;
 
@@ -751,8 +903,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_removes_rejected_seed) {
     inputTracks.emplace_back(&trk);
   }
 
-  VertexingOptions vertexingOptions(geoContext, magFieldContext,
-                                    std::get<BeamSpotData>(csvData));
+  VertexingOptions vertexingOptions(geoContext, magFieldContext);
+  vertexingOptions.seedReference = std::get<BeamSpotData>(csvData);
 
   auto findResult = finder.find(inputTracks, vertexingOptions, state);
 

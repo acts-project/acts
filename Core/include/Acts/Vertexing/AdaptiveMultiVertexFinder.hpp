@@ -124,8 +124,11 @@ class AdaptiveMultiVertexFinder final : public IVertexFinder {
     /// Maximum vertex contamination value
     double maximumVertexContamination = 0.5;
 
-    /// Use seed vertex as a constraint for the fit
-    bool useSeedConstraint = true;
+    /// Use the seed position and covariance as a fit prior. This is an
+    /// alternative to an external VertexingOptions::fitConstraint; supplying
+    /// both is an error. When disabled and no external prior is supplied,
+    /// initialVariances and defaultConstrFitQuality initialize the fit.
+    bool useSeedConstraint = false;
 
     /// Variances of the 4D vertex position before the vertex fit if no beamspot
     /// constraint is provided
@@ -242,10 +245,10 @@ class AdaptiveMultiVertexFinder final : public IVertexFinder {
   /// @brief Sets constraint vertex after seeding
   ///
   /// @param currentConstraint Vertex constraint
-  /// @param useVertexConstraintInFit Indicates whether constraint is used during vertex fit
+  /// @param hasExternalConstraint Indicates whether an external fit prior was supplied
   /// @param seedVertex Seed vertex
   void setConstraintAfterSeeding(Vertex& currentConstraint,
-                                 bool useVertexConstraintInFit,
+                                 bool hasExternalConstraint,
                                  Vertex& seedVertex) const;
 
   /// @brief Calculates the IP significance of a track to a given vertex

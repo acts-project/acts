@@ -8,11 +8,16 @@
 
 #include "Acts/Vertexing/AdaptiveGridDensityVertexFinder.hpp"
 
+#include "Acts/Vertexing/VertexingError.hpp"
+
 Acts::Result<std::vector<Acts::Vertex>>
 Acts::AdaptiveGridDensityVertexFinder::find(
     const std::vector<InputTrack>& trackVector,
     const VertexingOptions& vertexingOptions,
     IVertexFinder::State& anyState) const {
+  if (vertexingOptions.fitConstraint) {
+    return VertexingError::InvalidInput;
+  }
   auto& state = anyState.as<State>();
   // Remove density contributions from tracks removed from track collection
   if (m_cfg.cacheGridStateForTrackRemoval && state.isInitialized &&
@@ -77,16 +82,16 @@ Acts::AdaptiveGridDensityVertexFinder::find(
     zWidth = (*maxZTResAndWidth).second;
   }
 
-  // Construct output vertex, t will be 0 if temporalTrkGridSize == 1
-  Vector4 seedPos =
-      vertexingOptions.constraint.fullPosition() + Vector4(0., 0., z, t);
+  // The time offset t is zero when time is not used for seeding.
+  const Vertex reference = vertexingOptions.seedReference.value_or(Vertex{});
+  Vector4 seedPos = reference.fullPosition() + Vector4(0., 0., z, t);
 
   Vertex returnVertex = Vertex(seedPos);
 
-  SquareMatrix4 seedCov = vertexingOptions.constraint.fullCovariance();
+  SquareMatrix4 seedCov = reference.fullCovariance();
 
   if (zWidth != 0.) {
-    // Use z-constraint from seed width
+    // Use the longitudinal uncertainty from the seed width.
     seedCov(2, 2) = zWidth * zWidth;
   }
 

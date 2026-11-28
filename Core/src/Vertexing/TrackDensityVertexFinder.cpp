@@ -8,10 +8,15 @@
 
 #include "Acts/Vertexing/TrackDensityVertexFinder.hpp"
 
+#include "Acts/Vertexing/VertexingError.hpp"
+
 Acts::Result<std::vector<Acts::Vertex>> Acts::TrackDensityVertexFinder::find(
     const std::vector<InputTrack>& trackVector,
     const VertexingOptions& vertexingOptions,
     IVertexFinder::State& /*state*/) const {
+  if (vertexingOptions.fitConstraint) {
+    return VertexingError::InvalidInput;
+  }
   GaussianTrackDensity::State densityState(trackVector.size());
 
   // Calculate z seed position
@@ -29,15 +34,15 @@ Acts::Result<std::vector<Acts::Vertex>> Acts::TrackDensityVertexFinder::find(
   double z = zAndWidth.first;
 
   // Calculate seed position
-  // Note: constraint position is (0,0,0) if no constraint provided
-  Vector4 seedPos =
-      vertexingOptions.constraint.fullPosition() + Vector4(0., 0., z, 0.);
+  // The default reference has zero position, time and covariance.
+  const Vertex reference = vertexingOptions.seedReference.value_or(Vertex{});
+  Vector4 seedPos = reference.fullPosition() + Vector4(0., 0., z, 0.);
 
   Vertex returnVertex = Vertex(seedPos);
 
-  SquareMatrix4 seedCov = vertexingOptions.constraint.fullCovariance();
+  SquareMatrix4 seedCov = reference.fullCovariance();
 
-  // Check if a constraint is provided and set the new z position constraint
+  // Update the reference's longitudinal uncertainty from the peak width.
   if (seedCov != SquareMatrix4::Zero() && std::isnormal(zAndWidth.second)) {
     seedCov(eZ, eZ) = zAndWidth.second * zAndWidth.second;
   }

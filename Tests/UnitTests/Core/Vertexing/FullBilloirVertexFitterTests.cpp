@@ -184,7 +184,9 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
   MagneticFieldQuery field(*lookupField, magFieldContext);
   // Vertexing options for default tracks
   VertexingOptions vfOptions(geoContext, magFieldContext);
-  VertexingOptions vfOptionsConstr(geoContext, magFieldContext, constraint);
+  VertexingOptions vfOptionsConstr(geoContext, magFieldContext);
+  vfOptionsConstr.seedReference = constraint;
+  vfOptionsConstr.fitConstraint = constraint;
 
   // Create a custom std::function to extract BoundTrackParameters from
   // user-defined InputTrack
@@ -200,8 +202,9 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
   VertexFitter customBilloirFitter(customVertexFitterCfg);
   // Vertexing options for custom tracks
   VertexingOptions customVfOptions(geoContext, magFieldContext);
-  VertexingOptions customVfOptionsConstr(geoContext, magFieldContext,
-                                         customConstraint);
+  VertexingOptions customVfOptionsConstr(geoContext, magFieldContext);
+  customVfOptionsConstr.seedReference = customConstraint;
+  customVfOptionsConstr.fitConstraint = customConstraint;
 
   BOOST_TEST_CONTEXT(
       "Testing FullBilloirVertexFitter when input track vector is empty.") {
@@ -334,10 +337,9 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
 
       // Both unconstrained and constrained fits agree with the direct API.
       for (const auto* options : {&vfOptions, &vfOptionsConstr}) {
-        input.seedPosition = options->constraint.fullPosition();
-        input.constraint = options->useConstraintInFit
-                               ? std::optional<Vertex>(options->constraint)
-                               : std::nullopt;
+        input.seedPosition =
+            options->seedReference.value_or(Vertex{}).fullPosition();
+        input.constraint = options->fitConstraint;
         auto result = iface.fit(input, geoContext, field);
         auto direct = billoirFitter.fit(inputTracks, *options, field);
         BOOST_REQUIRE(result.ok());
@@ -372,6 +374,42 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
       BOOST_REQUIRE(seeded.ok());
       BOOST_REQUIRE(firstLinearizationPoint.has_value());
       CHECK_CLOSE_ABS(*firstLinearizationPoint, input.seedPosition, 1e-12);
+
+      // The direct API keeps the reference separate from the fit prior too.
+      // Reference covariance is not a fit constraint and may be zero.
+      VertexingOptions seededOptions(geoContext, magFieldContext);
+      seededOptions.seedReference = Vertex(input.seedPosition);
+      seededOptions.fitConstraint = input.constraint;
+      firstLinearizationPoint.reset();
+      auto seededDirect = seedFitter.fit(inputTracks, seededOptions, field);
+      BOOST_REQUIRE(seededDirect.ok());
+      BOOST_REQUIRE(firstLinearizationPoint.has_value());
+      CHECK_CLOSE_ABS(*firstLinearizationPoint, input.seedPosition, 1e-12);
+      CHECK_CLOSE_ABS(seededDirect->fullPosition(), seeded->fullPosition(),
+                      1e-9);
+      CHECK_CLOSE_ABS(seededDirect->fullCovariance(), seeded->fullCovariance(),
+                      1e-9);
+
+      // Removing only the prior preserves the starting point and produces
+      // the same unconstrained fit as the interface request.
+      seededOptions.fitConstraint.reset();
+      VertexFitInput referenceOnlyInput = input;
+      referenceOnlyInput.constraint.reset();
+      firstLinearizationPoint.reset();
+      auto referenceOnlyDirect =
+          seedFitter.fit(inputTracks, seededOptions, field);
+      BOOST_REQUIRE(referenceOnlyDirect.ok());
+      BOOST_REQUIRE(firstLinearizationPoint.has_value());
+      CHECK_CLOSE_ABS(*firstLinearizationPoint, input.seedPosition, 1e-12);
+      auto referenceOnly =
+          seedFitter.fit(referenceOnlyInput, geoContext, field);
+      BOOST_REQUIRE(referenceOnly.ok());
+      CHECK_CLOSE_ABS(referenceOnlyDirect->fullPosition(),
+                      referenceOnly->fullPosition(), 1e-9);
+      CHECK_CLOSE_ABS(referenceOnlyDirect->fullCovariance(),
+                      referenceOnly->fullCovariance(), 1e-9);
+      BOOST_CHECK_EQUAL(seededDirect->fitQuality().second,
+                        referenceOnlyDirect->fitQuality().second + 3);
       BOOST_CHECK_EQUAL(lookupField->cacheCreations, 1);
       BOOST_CHECK_GT(lookupField->lookups, 0);
       lookupField->failLookups = true;

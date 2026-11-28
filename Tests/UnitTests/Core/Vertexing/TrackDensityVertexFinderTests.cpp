@@ -23,6 +23,7 @@
 #include "Acts/Vertexing/GaussianTrackDensity.hpp"
 #include "Acts/Vertexing/TrackDensityVertexFinder.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
+#include "Acts/Vertexing/VertexingError.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
@@ -46,6 +47,57 @@ GeometryContext geoContext = GeometryContext::dangerouslyDefaultConstruct();
 MagneticFieldContext magFieldContext = MagneticFieldContext();
 
 BOOST_AUTO_TEST_SUITE(VertexingSuite)
+
+BOOST_AUTO_TEST_CASE(track_density_reference_covariance) {
+  GaussianTrackDensity::Config densityCfg;
+  densityCfg.extractParameters.connect<&InputTrack::extractParameters>();
+  TrackDensityVertexFinder finder{
+      TrackDensityVertexFinder::Config{GaussianTrackDensity(densityCfg)}};
+  auto state = finder.makeState(magFieldContext);
+
+  auto surface = Surface::makeShared<PerigeeSurface>(Vector3::Zero());
+  BoundVector parameters = BoundVector::Zero();
+  parameters[eBoundLoc1] = 2_mm;
+  parameters[eBoundDir1] = std::numbers::pi / 4.;
+  parameters[eBoundQOverP] = 1. / 1_GeV;
+  BoundMatrix covariance = BoundMatrix::Identity();
+  covariance(eBoundLoc1, eBoundLoc1) = 4_mm * 1_mm;
+  BoundTrackParameters track(surface, parameters, covariance,
+                             ParticleHypothesis::pion());
+  std::vector<InputTrack> tracks{InputTrack{&track}};
+
+  Vertex reference(Vector4(1_mm, 2_mm, 7_mm, 3_ns));
+  SquareMatrix4 referenceCovariance = Vector4(10., 20., 30., 40.).asDiagonal();
+  referenceCovariance(eX, eZ) = referenceCovariance(eZ, eX) = 0.5;
+  referenceCovariance(eX, eTime) = referenceCovariance(eTime, eX) = 0.25;
+  reference.setFullCovariance(referenceCovariance);
+  VertexingOptions options(geoContext, magFieldContext);
+  options.seedReference = reference;
+
+  auto result = finder.find(tracks, options, state);
+  BOOST_REQUIRE(result.ok());
+  BOOST_REQUIRE_EQUAL(result->size(), 1u);
+  CHECK_CLOSE_ABS(result->front().fullPosition(),
+                  Vector4(1_mm, 2_mm, 9_mm, 3_ns), 1e-8_mm);
+  // One track has an analytical Gaussian width: only the reference's zz entry
+  // is replaced; its time uncertainty and correlations survive unchanged.
+  referenceCovariance(eZ, eZ) = covariance(eBoundLoc1, eBoundLoc1);
+  CHECK_CLOSE_ABS(result->front().fullCovariance(), referenceCovariance, 1e-8);
+
+  options.seedReference.reset();
+  auto noReference = finder.find(tracks, options, state);
+  BOOST_REQUIRE(noReference.ok());
+  BOOST_REQUIRE_EQUAL(noReference->size(), 1u);
+  CHECK_CLOSE_ABS(noReference->front().fullPosition(),
+                  Vector4(0., 0., 2_mm, 0.), 1e-8_mm);
+  BOOST_CHECK(noReference->front().fullCovariance().isZero());
+
+  options.fitConstraint = reference;
+  auto rejected = finder.find(tracks, options, state);
+  BOOST_REQUIRE(!rejected.ok());
+  BOOST_CHECK(rejected.error() == VertexingError::InvalidInput);
+}
+
 ///
 /// @brief Unit test for TrackDensityVertexFinder using same configuration
 /// and values as VertexSeedFinderTestAlg in Athena implementation, i.e.
@@ -120,7 +172,7 @@ BOOST_AUTO_TEST_CASE(track_density_finder_test) {
 /// @brief Unit test for TrackDensityVertexFinder using same configuration
 /// and values as VertexSeedFinderTestAlg in Athena implementation
 ///
-BOOST_AUTO_TEST_CASE(track_density_finder_constr_test) {
+BOOST_AUTO_TEST_CASE(track_density_finder_reference_test) {
   // Define some track parameter properties
   Vector3 pos0{0, 0, 0};
   Vector3 pos1a{1.86052_mm, -1.24035_mm, -10_mm};
@@ -133,7 +185,7 @@ BOOST_AUTO_TEST_CASE(track_density_finder_constr_test) {
   // From Athena VertexSeedFinderTestAlg
   double const expectedZResult = -13.013;
 
-  // Create constraint for seed finding
+  // Create a reference for seed finding, without requesting a fit constraint.
   Vector3 constraintPos{1.7_mm, 1.3_mm, -6_mm};
   SquareMatrix3 constrCov = SquareMatrix<3>::Identity();
 
@@ -141,7 +193,8 @@ BOOST_AUTO_TEST_CASE(track_density_finder_constr_test) {
   constraint.setCovariance(constrCov);
 
   // Finder options
-  VertexingOptions vertexingOptions(geoContext, magFieldContext, constraint);
+  VertexingOptions vertexingOptions(geoContext, magFieldContext);
+  vertexingOptions.seedReference = constraint;
   GaussianTrackDensity::Config densityCfg;
   densityCfg.extractParameters.connect<&InputTrack::extractParameters>();
   TrackDensityVertexFinder finder{
@@ -308,7 +361,7 @@ BOOST_AUTO_TEST_CASE(track_density_finder_usertrack_test) {
   // From Athena VertexSeedFinderTestAlg
   double const expectedZResult = -13.013;
 
-  // Create constraint for seed finding
+  // Create a reference for seed finding.
   Vector3 constraintPos{1.7_mm, 1.3_mm, -6_mm};
   SquareMatrix3 constrCov = SquareMatrix3::Identity();
 
@@ -316,7 +369,8 @@ BOOST_AUTO_TEST_CASE(track_density_finder_usertrack_test) {
   constraint.setCovariance(constrCov);
 
   // Finder options
-  VertexingOptions vertexingOptions(geoContext, magFieldContext, constraint);
+  VertexingOptions vertexingOptions(geoContext, magFieldContext);
+  vertexingOptions.seedReference = constraint;
 
   auto extractParameters = [](const InputTrack& params) {
     return params.as<InputTrackStub>()->parameters();

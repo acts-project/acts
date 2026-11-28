@@ -23,6 +23,14 @@ struct InputTrack;
 struct VertexingOptions;
 
 /// Common interface for both vertex finders and vertex seed finders
+///
+/// VertexingOptions::seedReference guides candidate finding independently of
+/// VertexingOptions::fitConstraint. A finder that performs fits must honor an
+/// external fit prior; seed-only finders reject that input with
+/// VertexingError::InvalidInput. A full finder passes only the seeding
+/// reference and contexts to its seed finder. Returned candidates carry the
+/// information produced by the concrete algorithm; a seed need not have fitted
+/// tracks or a fit quality.
 class IVertexFinder {
  public:
   /// Type-erased wrapper for concrete state objects

@@ -20,6 +20,18 @@ Result<std::vector<Vertex>> AdaptiveMultiVertexFinder::find(
     const std::vector<InputTrack>& allTracks,
     const VertexingOptions& vertexingOptions,
     IVertexFinder::State& anyState) const {
+  if (m_cfg.useSeedConstraint && vertexingOptions.fitConstraint) {
+    ACTS_ERROR(
+        "A seed-derived prior cannot be combined with an external fit "
+        "constraint");
+    return VertexingError::InvalidInput;
+  }
+  if (vertexingOptions.fitConstraint &&
+      vertexingOptions.fitConstraint->covariance().determinant() == 0.) {
+    ACTS_ERROR("The external fit constraint covariance must be invertible");
+    return VertexingError::InvalidInput;
+  }
+
   if (allTracks.empty()) {
     ACTS_ERROR("Empty track collection handed to find method");
     return VertexingError::EmptyInput;
@@ -40,7 +52,8 @@ Result<std::vector<Vertex>> AdaptiveMultiVertexFinder::find(
   std::vector<InputTrack> removedSeedTracks;
   while (!seedTracks.empty() && iteration < m_cfg.maxIterations &&
          (m_cfg.addSingleTrackVertices || seedTracks.size() >= 2)) {
-    Vertex currentConstraint = vertexingOptions.constraint;
+    Vertex currentConstraint = vertexingOptions.fitConstraint.value_or(
+        vertexingOptions.seedReference.value_or(Vertex{}));
 
     // Retrieve seed vertex from all remaining seedTracks
     auto seedResult = doSeeding(seedTracks, currentConstraint, vertexingOptions,
@@ -117,9 +130,10 @@ Result<std::vector<Vertex>> AdaptiveMultiVertexFinder::find(
       ACTS_DEBUG("Position of vertex candidate after the fit: "
                  << vtxCandidate.fullPosition().transpose());
       // Check if vertex is good vertex
-      auto [nCompatibleTracks, isGoodVertex] =
-          checkVertexAndCompatibleTracks(vtxCandidate, seedTracks, fitProblem,
-                                         vertexingOptions.useConstraintInFit);
+      auto [nCompatibleTracks, isGoodVertex] = checkVertexAndCompatibleTracks(
+          vtxCandidate, seedTracks, fitProblem,
+          vertexingOptions.fitConstraint.has_value() ||
+              m_cfg.useSeedConstraint);
 
       ACTS_DEBUG("Vertex is good vertex: " << isGoodVertex);
       if (nCompatibleTracks > 0) {
@@ -163,8 +177,9 @@ Result<std::vector<Vertex>> AdaptiveMultiVertexFinder::doSeeding(
     const VertexingOptions& vertexingOptions,
     IVertexFinder::State& seedFinderState,
     const std::vector<InputTrack>& removedSeedTracks) const {
-  VertexingOptions seedOptions = vertexingOptions;
-  seedOptions.constraint = currentConstraint;
+  VertexingOptions seedOptions(vertexingOptions.geoContext,
+                               vertexingOptions.magFieldContext);
+  seedOptions.seedReference = vertexingOptions.seedReference;
 
   m_cfg.seedFinder->setTracksToRemove(seedFinderState, removedSeedTracks);
 
@@ -181,7 +196,8 @@ Result<std::vector<Vertex>> AdaptiveMultiVertexFinder::doSeeding(
 
   for (auto& seedVertex : seedVector) {
     // Update constraints according to seed vertex
-    setConstraintAfterSeeding(currentConstraint, seedOptions.useConstraintInFit,
+    setConstraintAfterSeeding(currentConstraint,
+                              vertexingOptions.fitConstraint.has_value(),
                               seedVertex);
   }
 
@@ -189,17 +205,16 @@ Result<std::vector<Vertex>> AdaptiveMultiVertexFinder::doSeeding(
 }
 
 void AdaptiveMultiVertexFinder::setConstraintAfterSeeding(
-    Vertex& currentConstraint, bool useVertexConstraintInFit,
+    Vertex& currentConstraint, bool hasExternalConstraint,
     Vertex& seedVertex) const {
-  if (useVertexConstraintInFit) {
-    if (!m_cfg.useSeedConstraint) {
-      // Set seed vertex constraint to old constraint before seeding
-      seedVertex.setFullCovariance(currentConstraint.fullCovariance());
-    } else {
-      // Use the constraint provided by the seed finder
-      currentConstraint.setFullPosition(seedVertex.fullPosition());
-      currentConstraint.setFullCovariance(seedVertex.fullCovariance());
-    }
+  if (hasExternalConstraint) {
+    // Keep the external prior unchanged and initialize the seed uncertainty
+    // from it, independently of the reference used to find the seed.
+    seedVertex.setFullCovariance(currentConstraint.fullCovariance());
+  } else if (m_cfg.useSeedConstraint) {
+    // Use the constraint provided by the seed finder.
+    currentConstraint.setFullPosition(seedVertex.fullPosition());
+    currentConstraint.setFullCovariance(seedVertex.fullCovariance());
   } else {
     currentConstraint.setFullPosition(seedVertex.fullPosition());
     currentConstraint.setFullCovariance(m_cfg.initialVariances.asDiagonal());

@@ -69,6 +69,8 @@ class FullBilloirVertexFitter final : public IVertexFitter {
           getDefaultLogger("FullBilloirVertexFitter", Logging::INFO));
 
   /// Fit using a reusable field query.
+  /// The initial linearization point is the seeding reference's position, or
+  /// the origin when absent. The external fit prior is independent of it.
   /// @param paramVector Tracks to fit
   /// @param vertexingOptions Vertex fitting options
   /// @param field Field query, reused across tracks and iterations

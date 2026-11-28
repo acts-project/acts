@@ -74,14 +74,46 @@ class RecordingVertexFitter final : public IVertexFitter {
       BOOST_CHECK_EQUAL(lastQuery, &field);
     }
     lastQuery = &field;
+    seeds.push_back(input.seedPosition);
+    constraints.push_back(input.constraint);
     return m_fitter.fit(input, gctx, field);
   }
 
   mutable unsigned int calls = 0;
   mutable const MagneticFieldQuery* lastQuery = nullptr;
+  mutable std::vector<Vector4> seeds;
+  mutable std::vector<std::optional<Vertex>> constraints;
 
  private:
   FullBilloirVertexFitter m_fitter;
+};
+
+class RecordingSeedFinder final : public IVertexFinder {
+ public:
+  explicit RecordingSeedFinder(const ZScanVertexFinder::Config& config)
+      : m_finder(config) {}
+
+  Result<std::vector<Vertex>> find(const std::vector<InputTrack>& tracks,
+                                   const VertexingOptions& options,
+                                   State& state) const override {
+    BOOST_CHECK(!options.fitConstraint.has_value());
+    references.push_back(options.seedReference);
+    return m_finder.find(tracks, options, state);
+  }
+
+  State makeState(const MagneticFieldContext& mctx) const override {
+    return m_finder.makeState(mctx);
+  }
+
+  void setTracksToRemove(State& state,
+                         const std::vector<InputTrack>& tracks) const override {
+    m_finder.setTracksToRemove(state, tracks);
+  }
+
+  mutable std::vector<std::optional<Vertex>> references;
+
+ private:
+  ZScanVertexFinder m_finder;
 };
 
 }  // namespace
@@ -616,7 +648,8 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_athena_reference) {
   vertexFitterCfg.trackLinearizer.connect<&Linearizer::linearizeTrack>(
       &linearizer);
 
-  auto bFitter = std::make_shared<BilloirFitter>(vertexFitterCfg);
+  auto bFitter = std::make_shared<RecordingVertexFitter>(vertexFitterCfg);
+  const auto recordingFitter = bFitter;
 
   ImpactPointEstimator::Config ipEstimatorCfg(bField, propagator);
   ImpactPointEstimator ipEstimator(ipEstimatorCfg);
@@ -626,7 +659,8 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_athena_reference) {
   ZScanSeedFinder::Config seedFinderCfg(ipEstimator);
   seedFinderCfg.extractParameters.connect<&InputTrack::extractParameters>();
 
-  auto sFinder = std::make_shared<ZScanSeedFinder>(seedFinderCfg);
+  auto sFinder = std::make_shared<RecordingSeedFinder>(seedFinderCfg);
+  const auto recordingSeeder = sFinder;
 
   IterativeVertexFinder::Config cfg(std::move(bFitter), std::move(sFinder),
                                     ipEstimator);
@@ -655,7 +689,9 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_athena_reference) {
   fullCovariance.topLeftCorner<3, 3>() = beamSpot.covariance();
   fullCovariance(eTime, eTime) = 100_ns;
   beamSpot.setFullCovariance(fullCovariance);
-  VertexingOptions vertexingOptions(geoContext, magFieldContext, beamSpot);
+  VertexingOptions vertexingOptions(geoContext, magFieldContext);
+  vertexingOptions.seedReference = beamSpot;
+  vertexingOptions.fitConstraint = beamSpot;
 
   // find vertices
   auto findResult = finder.find(inputTracks, vertexingOptions, state);
@@ -664,6 +700,43 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_athena_reference) {
 
   if (!findResult.ok()) {
     std::cout << findResult.error().message() << std::endl;
+  }
+
+  // Preserve the beamspot reference even when the fit is unconstrained, as
+  // in the Athena ACTS IVF adapter. A distinct prior must not change either
+  // the seeding reference or the initial linearization point.
+  Vertex offsetPrior = beamSpot;
+  offsetPrior.setPosition(beamSpot.position() +
+                          Vector3(0.01_mm, -0.02_mm, 0.1_mm));
+  for (const auto& prior :
+       {std::optional<Vertex>(offsetPrior), std::optional<Vertex>{}}) {
+    vertexingOptions.fitConstraint = prior;
+    recordingFitter->seeds.clear();
+    recordingFitter->constraints.clear();
+    recordingSeeder->references.clear();
+    auto result = finder.find(inputTracks, vertexingOptions, state);
+    BOOST_REQUIRE(result.ok());
+    BOOST_REQUIRE(!recordingSeeder->references.empty());
+    BOOST_REQUIRE(!recordingFitter->seeds.empty());
+    for (const auto& reference : recordingSeeder->references) {
+      BOOST_REQUIRE(reference.has_value());
+      CHECK_CLOSE_ABS(reference->fullPosition(), beamSpot.fullPosition(),
+                      1e-12);
+      CHECK_CLOSE_ABS(reference->fullCovariance(), beamSpot.fullCovariance(),
+                      1e-12);
+    }
+    for (std::size_t i = 0; i < recordingFitter->seeds.size(); ++i) {
+      CHECK_CLOSE_ABS(recordingFitter->seeds[i], beamSpot.fullPosition(),
+                      1e-12);
+      const auto& receivedPrior = recordingFitter->constraints[i];
+      BOOST_REQUIRE_EQUAL(receivedPrior.has_value(), prior.has_value());
+      if (prior) {
+        CHECK_CLOSE_ABS(receivedPrior->fullPosition(), prior->fullPosition(),
+                        1e-12);
+        CHECK_CLOSE_ABS(receivedPrior->fullCovariance(),
+                        prior->fullCovariance(), 1e-12);
+      }
+    }
   }
 
   // Retrieve vertices found by vertex finder

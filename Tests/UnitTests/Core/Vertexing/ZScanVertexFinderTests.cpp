@@ -25,6 +25,7 @@
 #include "Acts/Vertexing/FullBilloirVertexFitter.hpp"
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
 #include "Acts/Vertexing/ImpactPointEstimator.hpp"
+#include "Acts/Vertexing/VertexingError.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
 #include "Acts/Vertexing/ZScanVertexFinder.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
@@ -81,6 +82,86 @@ std::uniform_real_distribution<double> resAngDist(0., 0.1);
 std::uniform_real_distribution<double> resQoPDist(-0.01, 0.01);
 
 BOOST_AUTO_TEST_SUITE(VertexingSuite)
+
+BOOST_AUTO_TEST_CASE(zscan_reference_policy) {
+  // A straight track rises by one millimetre in z per millimetre in x.
+  // Moving the perigee reference from x=0 to x=10 therefore changes its z
+  // coordinate from 2 to 12, independently of any track weighting.
+  auto field = std::make_shared<ConstantBField>(Vector3::Zero());
+  auto propagator = std::make_shared<Propagator>(EigenStepper<>(field));
+  ImpactPointEstimator estimator(
+      ImpactPointEstimator::Config(field, propagator));
+  ZScanVertexFinder::Config cfg(estimator);
+  cfg.extractParameters.connect<&InputTrack::extractParameters>();
+  cfg.useLogPt = false;
+
+  auto surface = Surface::makeShared<PerigeeSurface>(Vector3::Zero());
+  BoundVector parameters = BoundVector::Zero();
+  parameters[eBoundLoc0] = 5_mm;
+  parameters[eBoundLoc1] = 2_mm;
+  parameters[eBoundDir0] = 0.;
+  parameters[eBoundDir1] = std::numbers::pi / 4.;
+  parameters[eBoundQOverP] = 1. / 1_GeV;
+  BoundTrackParameters track(surface, parameters,
+                             BoundMatrix::Identity() * 1e-6,
+                             ParticleHypothesis::pion());
+  std::vector<InputTrack> tracks{InputTrack{&track}};
+
+  Vertex reference(Vector4(10_mm, 5_mm, 6_mm, 3_ns));
+  reference.setFullCovariance(SquareMatrix4::Identity());
+  VertexingOptions options(geoContext, magFieldContext);
+  options.seedReference = reference;
+
+  const auto find = [&](const ZScanVertexFinder::Config& config) {
+    ZScanVertexFinder finder(config);
+    auto state = finder.makeState(magFieldContext);
+    auto result = finder.find(tracks, options, state);
+    BOOST_REQUIRE(result.ok());
+    BOOST_REQUIRE_EQUAL(result->size(), 1u);
+    return result->front();
+  };
+
+  // The default policy uses reference-based impact parameters without a fit
+  // constraint, retaining the reference x, y and time in the output.
+  const Vertex withReference = find(cfg);
+  CHECK_CLOSE_ABS(withReference.fullPosition(),
+                  Vector4(10_mm, 5_mm, 12_mm, 3_ns), 1e-5_mm);
+
+  cfg.useReferenceForImpactParameters = false;
+  const Vertex withoutImpactParameters = find(cfg);
+  CHECK_CLOSE_ABS(withoutImpactParameters.fullPosition(),
+                  Vector4(10_mm, 5_mm, 2_mm, 3_ns), 1e-5_mm);
+
+  // Disabling weights leaves reference-based propagation enabled.
+  cfg.useReferenceForImpactParameters = true;
+  cfg.disableAllWeights = true;
+  const Vertex withoutWeights = find(cfg);
+  CHECK_CLOSE_ABS(withoutWeights.fullPosition(), withReference.fullPosition(),
+                  1e-5_mm);
+
+  // Moving the reference away from the track suppresses its IP weight enough
+  // to remove it from the mode calculation, unless weights are disabled.
+  options.seedReference->setPosition(Vector3(10_mm, 0., 6_mm));
+  cfg.disableAllWeights = false;
+  BOOST_CHECK_EQUAL(find(cfg).position().z(), 0.);
+  cfg.disableAllWeights = true;
+  CHECK_CLOSE_ABS(find(cfg).position().z(), 12_mm, 1e-5_mm);
+
+  // A reference without transverse uncertainty retains the previous fallback.
+  options.seedReference->setFullCovariance(SquareMatrix4::Zero());
+  CHECK_CLOSE_ABS(find(cfg).position().z(), 2_mm, 1e-5_mm);
+
+  options.seedReference.reset();
+  CHECK_CLOSE_ABS(find(cfg).fullPosition(), Vector4(0., 0., 2_mm, 0.), 1e-5_mm);
+
+  ZScanVertexFinder finder(cfg);
+  auto state = finder.makeState(magFieldContext);
+  options.fitConstraint = reference;
+  auto rejected = finder.find(tracks, options, state);
+  BOOST_REQUIRE(!rejected.ok());
+  BOOST_CHECK(rejected.error() == VertexingError::InvalidInput);
+}
+
 ///
 /// @brief Unit test for ZScanVertexFinder
 ///

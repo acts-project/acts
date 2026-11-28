@@ -8,6 +8,8 @@
 
 #include "Acts/Vertexing/ZScanVertexFinder.hpp"
 
+#include "Acts/Vertexing/VertexingError.hpp"
+
 Acts::ZScanVertexFinder::ZScanVertexFinder(const Config& cfg,
                                            std::unique_ptr<const Logger> logger)
     : m_cfg(cfg), m_logger(std::move(logger)) {
@@ -22,6 +24,10 @@ Acts::Result<std::vector<Acts::Vertex>> Acts::ZScanVertexFinder::find(
     const std::vector<InputTrack>& trackVector,
     const VertexingOptions& vertexingOptions,
     IVertexFinder::State& /*state*/) const {
+  if (vertexingOptions.fitConstraint) {
+    return VertexingError::InvalidInput;
+  }
+  const Vertex reference = vertexingOptions.seedReference.value_or(Vertex{});
   double ZResult = 0.;
   // Prepare the vector of points, on which the 3d mode has later to be
   // calculated
@@ -33,10 +39,10 @@ Acts::Result<std::vector<Acts::Vertex>> Acts::ZScanVertexFinder::find(
 
     std::pair<double, double> z0AndWeight;
     ImpactParametersAndSigma ipas;
-    if (vertexingOptions.useConstraintInFit &&
-        vertexingOptions.constraint.covariance()(0, 0) != 0) {
+    if (m_cfg.useReferenceForImpactParameters &&
+        vertexingOptions.seedReference && reference.covariance()(0, 0) != 0) {
       auto estRes = m_cfg.ipEstimator.getImpactParameters(
-          params, vertexingOptions.constraint, vertexingOptions.geoContext,
+          params, reference, vertexingOptions.geoContext,
           vertexingOptions.magFieldContext);
       if (estRes.ok()) {
         ipas = *estRes;
@@ -47,7 +53,7 @@ Acts::Result<std::vector<Acts::Vertex>> Acts::ZScanVertexFinder::find(
 
     if (ipas.sigmaD0 > 0) {
       // calculate z0
-      z0AndWeight.first = ipas.z0 + vertexingOptions.constraint.position().z();
+      z0AndWeight.first = ipas.z0 + reference.position().z();
 
       // calculate chi2 of IP
       double chi2IP = std::pow(ipas.d0 / ipas.sigmaD0, 2);
@@ -101,10 +107,9 @@ Acts::Result<std::vector<Acts::Vertex>> Acts::ZScanVertexFinder::find(
     ACTS_DEBUG("Resulting mean Z position found: " << ZResult);
   }
 
-  // constraint x()/y() equals 0 if no constraint
-  Vector4 output(vertexingOptions.constraint.position().x(),
-                 vertexingOptions.constraint.position().y(), ZResult,
-                 vertexingOptions.constraint.time());
+  // The default reference has zero position and time.
+  Vector4 output(reference.position().x(), reference.position().y(), ZResult,
+                 reference.time());
   Vertex vtxResult = Vertex(output);
 
   return std::vector<Vertex>{vtxResult};
