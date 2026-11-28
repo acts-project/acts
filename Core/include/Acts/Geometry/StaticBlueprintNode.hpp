@@ -72,6 +72,9 @@ class StaticBlueprintNode : public BlueprintNode {
   const VolumeLookupFactory& volumeLookupFactory() const;
 
  protected:
+  /// @copydoc BlueprintNode::visitBuiltVolumes
+  void visitBuiltVolumes(const std::function<void(Volume&)>& visitor) override;
+
   void addToGraphviz(std::ostream& os) const override;
 
   /// Optional factory for the lookup installed after descendant finalization.
