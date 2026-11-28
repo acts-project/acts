@@ -274,6 +274,8 @@ ProcessCode HepMC3Reader::readSingleFile(
                                      vertexPosition[Acts::eFreePos1] / 1_mm,
                                      vertexPosition[Acts::eFreePos2] / 1_mm,
                                      vertexPosition[Acts::eFreeTime] / 1_mm);
+      HepMC3::Units::convert(vtxPosHepMC, HepMC3::Units::MM,
+                             event->length_unit());
       event->shift_position_to(vtxPosHepMC);
     }
   }

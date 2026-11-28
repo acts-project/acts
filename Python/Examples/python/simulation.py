@@ -274,6 +274,8 @@ def addPythia8(
     printListing: bool = False,
     logLevel: Optional[acts.logging.Level] = None,
     searchUpToHeavyFlavourQuark: bool = False,
+    decayPdgCodes: Iterable[int] = (),
+    outputDecayGraph: str = "",
 ) -> None:
     """This function steers the particle generation using Pythia8
 
@@ -305,6 +307,9 @@ def addPythia8(
         None or "short" or "long"
     searchUpToHeavyFlavourQuark: bool
         Search up to the quark in HF tagging
+    decayPdgCodes, outputDecayGraph
+        Signed PDG codes of decaying particles to hand to Geant4 and the
+        collection name to pass as inputDecayGraph to addGeant4.
     """
 
     import acts
@@ -389,6 +394,8 @@ def addPythia8(
         outputVertices="vertices_generated",
         printListing=printListing,
         searchUpToHeavyFlavourQuark=searchUpToHeavyFlavourQuark,
+        decayPdgCodes=list(decayPdgCodes),
+        outputDecayGraph=outputDecayGraph,
     )
     s.addAlgorithm(hepmc3Converter)
     s.addWhiteboardAlias("particles", hepmc3Converter.config.outputParticles)
@@ -564,6 +571,7 @@ def addSimWriters(
     outputDirRoot: Optional[Union[Path, str]] = None,
     outputDirObj: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
+    writeParentBarcodes: bool = False,
 ) -> None:
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
@@ -601,6 +609,7 @@ def addSimWriters(
                 inputParticles=particlesSimulated,
                 bField=field,
                 writeHelixParameters=writeHelixParameters,
+                writeParentBarcodes=writeParentBarcodes,
                 filePath=str(outputDirRoot / "particles_simulation.root"),
             )
         )
@@ -655,6 +664,8 @@ def addGeant4(
     physicsList: str = "FTFP_BERT",
     detectorConstructionOptions=None,
     propagatorLargestAcceptableStep: float = float("inf"),
+    numGeant4Workers: int = 0,
+    inputDecayGraph: str = "",
 ) -> None:
     """This function steers the detector simulation using Geant4
 
@@ -678,6 +689,10 @@ def addGeant4(
         if given, particle are killed after the global time since event creation exceeds the given value
     killSecondaries: bool
         if given, secondary particles are removed from simulation
+    numGeant4Workers: int
+        Native transport workers. Zero selects the serial Geant4 run manager.
+    inputDecayGraph: str
+        Optional collection of prescribed decays from HepMC3InputConverter.
     """
 
     import acts.examples.geant4
@@ -704,7 +719,9 @@ def addGeant4(
 
     alg = Geant4Simulation(
         level=customLogLevel(),
-        geant4Handle=__geant4Handle,
+        geant4Handle=__geant4Handle if numGeant4Workers == 0 else None,
+        numGeant4Workers=numGeant4Workers,
+        inputDecayGraph=inputDecayGraph,
         detector=detector,
         randomNumbers=rnd,
         constructionOptions=detectorConstructionOptions,
@@ -725,7 +742,8 @@ def addGeant4(
         keepParticlesWithoutHits=keepParticlesWithoutHits,
         propagatorLargestAcceptableStep=propagatorLargestAcceptableStep,
     )
-    __geant4Handle = alg.geant4Handle
+    if numGeant4Workers == 0:
+        __geant4Handle = alg.geant4Handle
     s.addAlgorithm(alg)
 
     s.addWhiteboardAlias("particles", outputParticles)
@@ -738,6 +756,7 @@ def addGeant4(
         particlesSimulated=outputParticles,
         field=field,
         writeHelixParameters=writeHelixParameters,
+        writeParentBarcodes=bool(inputDecayGraph),
         outputDirCsv=outputDirCsv,
         outputDirRoot=outputDirRoot,
         outputDirObj=outputDirObj,

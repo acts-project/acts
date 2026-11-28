@@ -14,6 +14,7 @@
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 
+#include <array>
 #include <cstdint>
 #include <mutex>
 #include <string>
@@ -51,6 +52,9 @@ class RootParticleWriter final : public WriterT<SimParticleContainer> {
     std::shared_ptr<Acts::MagneticFieldProvider> bField;
     /// Flag to enable writing of helix parameters.
     bool writeHelixParameters = false;
+    /// Write the five components of the direct parent barcode for each
+    /// particle.
+    bool writeParentBarcodes = false;
   };
 
   /// Construct the particle writer.
@@ -77,6 +81,8 @@ class RootParticleWriter final : public WriterT<SimParticleContainer> {
                      const SimParticleContainer& particles) override;
 
  private:
+  void fillInvalidHelixParameters();
+
   Config m_cfg;
 
   std::mutex m_writeMutex;
@@ -141,6 +147,7 @@ class RootParticleWriter final : public WriterT<SimParticleContainer> {
   std::vector<std::uint32_t> m_particle;
   std::vector<std::uint32_t> m_generation;
   std::vector<std::uint32_t> m_subParticle;
+  std::array<std::vector<std::uint32_t>, 5> m_parentBarcode;
 
   std::vector<std::uint32_t> m_origParticleIdx;
   std::vector<std::uint8_t> m_hfOrigin;

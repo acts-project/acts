@@ -13,6 +13,8 @@
 #include <string>
 #include <unordered_map>
 
+class G4FieldManager;
+class G4MagneticField;
 class G4RunManager;
 class G4VUserPhysicsList;
 
@@ -20,8 +22,10 @@ namespace ActsExamples {
 
 class Geant4Manager;
 namespace Geant4 {
+class EventContext;
 class PhysicsListFactory;
-}
+class SimulationSession;
+}  // namespace Geant4
 
 /// Manages the life time of G4RunManager and G4VUserPhysicsList.
 ///
@@ -54,6 +58,15 @@ struct Geant4Handle {
   ///
   /// Convenience method which calls into Geant4Manager
   void tweakLogging(int level) const;
+
+ private:
+  friend class Geant4::SimulationSession;
+
+  // These belong to the installed geometry even if its algorithm is destroyed.
+  void clearMagneticField();
+  std::shared_ptr<Geant4::EventContext> m_installedContext;
+  std::unique_ptr<G4MagneticField> m_magneticField;
+  std::unique_ptr<G4FieldManager> m_fieldManager;
 };
 
 /// Allows easy instantiation of a Geant4Handle object
@@ -65,6 +78,9 @@ class Geant4Manager {
   static void tweakLogging(G4RunManager &runManager, int level);
 
   std::shared_ptr<Geant4Handle> currentHandle() const;
+
+  /// Claim the process-wide Geant4 kernel before creating a run manager.
+  void reserveRunManager();
 
   /// This can only be called once due to Geant4 limitations
   std::shared_ptr<Geant4Handle> createHandle(const std::string &physicsList);
@@ -91,6 +107,10 @@ class Geant4Manager {
   Geant4Manager();
   ~Geant4Manager();
 
+  std::shared_ptr<Geant4Handle> makeHandle(
+      std::unique_ptr<G4VUserPhysicsList> physicsList,
+      std::string physicsListName);
+  mutable std::mutex m_mutex;
   bool m_created = false;
   std::weak_ptr<Geant4Handle> m_handle;
   std::unordered_map<std::string, std::shared_ptr<Geant4::PhysicsListFactory>>

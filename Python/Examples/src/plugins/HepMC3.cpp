@@ -91,9 +91,10 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsHepMC3, hepmc3) {
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       HepMC3InputConverter, hepmc3, "HepMC3InputConverter", inputEvent,
-      outputParticles, outputVertices, printListing, checkConsistency,
-      mergePrimaries, primaryVertexSpatialThreshold, vertexSpatialThreshold,
-      mergeSecondaries, searchUpToHeavyFlavourQuark);
+      outputParticles, outputVertices, outputDecayGraph, decayPdgCodes,
+      printListing, checkConsistency, mergePrimaries,
+      primaryVertexSpatialThreshold, vertexSpatialThreshold, mergeSecondaries,
+      searchUpToHeavyFlavourQuark);
 
   {
     using enum HepMC3Util::Compression;

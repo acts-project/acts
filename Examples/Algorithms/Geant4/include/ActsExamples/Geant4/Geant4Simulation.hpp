@@ -15,6 +15,7 @@
 #include "ActsExamples/EventData/PropagationSummary.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/EventData/SimParticleDecay.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -23,10 +24,12 @@
 #include "ActsExamples/Geant4/SensitiveSurfaceMapper.hpp"
 
 #include <cstddef>
+#include <functional>
 #include <limits>
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 class G4RunManager;
 class G4VUserPrimaryGeneratorAction;
@@ -35,9 +38,7 @@ class G4UserRunAction;
 class G4UserEventAction;
 class G4UserTrackingAction;
 class G4UserSteppingAction;
-class G4MagneticField;
 class G4VUserPhysicsList;
-class G4FieldManager;
 
 namespace Acts {
 class Volume;
@@ -47,8 +48,10 @@ namespace ActsExamples {
 struct Geant4Handle;
 
 namespace Geant4 {
-struct EventStore;
-class RunManager;
+class EventContext;
+struct EventResult;
+class SimulationSession;
+class NativeSimulationSession;
 }  // namespace Geant4
 
 /// Abstracts common Geant4 Acts algorithm behaviour.
@@ -68,7 +71,9 @@ class Geant4SimulationBase : public IAlgorithm {
     /// Detector instance to access Geant4 geometry construction.
     std::shared_ptr<Detector> detector;
 
-    /// Optional Geant4 instance overwrite using Geant4::RunManager.
+    /// Optional Geant4 handle for sequential reuse with the same physics list.
+    /// Each new configuration replaces the previous geometry and actions.
+    /// Finish the active run before constructing a new configuration.
     std::shared_ptr<Geant4Handle> geant4Handle;
 
     /// Cap the largest acceptable step in the propagator
@@ -83,16 +88,11 @@ class Geant4SimulationBase : public IAlgorithm {
   ~Geant4SimulationBase() override;
 
   /// Open one Geant4 run until finalize(). Geometry, materials, regions and
-  /// cuts must remain fixed. Execute and finalize on the initializing thread.
+  /// cuts must remain fixed. Serial transport requires the initializing thread.
   ProcessCode initialize() final;
 
   /// Close the Geant4 run and invoke the end-of-run action once.
   ProcessCode finalize() final;
-
-  /// Algorithm execute method, called once per event with context
-  ///
-  /// @param ctx the AlgorithmContext for this event
-  ProcessCode execute(const AlgorithmContext& ctx) const override;
 
   /// Readonly access to the configuration
   virtual const Config& config() const = 0;
@@ -104,22 +104,23 @@ class Geant4SimulationBase : public IAlgorithm {
 
   G4RunManager& runManager() const;
 
-  Geant4::EventStore& eventStore() const;
+  std::shared_ptr<Geant4::EventContext> eventContext() const;
 
-  std::shared_ptr<Geant4::EventStore> m_eventStore;
+  /// Transport the framework input and return collections owned by this event.
+  Geant4::EventResult simulateEvent(
+      const AlgorithmContext& ctx,
+      const SimParticleDecayGraph* decays = nullptr) const;
 
   int m_geant4Level{};
 
-  std::shared_ptr<Geant4Handle> m_geant4Instance;
+  std::unique_ptr<Geant4::SimulationSession> m_session;
+  std::unique_ptr<Geant4::NativeSimulationSession> m_nativeSession;
 
   /// Detector construction object.
   /// G4RunManager will take care of deletion
   G4VUserDetectorConstruction* m_detectorConstruction{};
 
   ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
-
- private:
-  Geant4::RunManager* m_persistentRun = nullptr;
 };
 
 /// Algorithm to run Geant4 simulation in the ActsExamples framework
@@ -128,7 +129,21 @@ class Geant4Simulation final : public Geant4SimulationBase {
   using SensitiveCandidates = std::function<std::vector<const Acts::Surface*>(
       const Acts::GeometryContext&, const Acts::Vector3&)>;
 
+  /// Create a stepping action for one simulation instance. During a stepping
+  /// callback the context gives read-only access to the active event.
+  /// Event references are valid only during that event on the session thread.
+  using SteppingActionFactory =
+      std::function<std::unique_ptr<G4UserSteppingAction>(
+          std::shared_ptr<const Geant4::EventContext>)>;
+
   struct Config : public Geant4SimulationBase::Config {
+    /// Number of native Geant4 transport workers. Zero selects the serial
+    /// session.
+    unsigned int numGeant4Workers = 0;
+
+    /// Optional prescribed decays keyed by the barcodes of the input particles.
+    std::string inputDecayGraph;
+
     /// Name of the output collection : hits
     std::string outputSimHits = "simhits";
 
@@ -160,9 +175,16 @@ class Geant4Simulation final : public Geant4SimulationBase {
 
     bool recordHitsOfSecondaries = true;
 
+    /// Prescribed parents are always retained to preserve the decay ancestry.
     bool keepParticlesWithoutHits = true;
 
     bool recordPropagationSummaries = false;
+
+    /// Invoked during initialization, once per native worker or serial session.
+    /// Serial retries may invoke the factories again. Each factory creates
+    /// an independent action. Actions run in configuration
+    /// order after the built-in particle-kill and hit actions.
+    std::vector<SteppingActionFactory> steppingActionFactories;
   };
 
   /// Simulation constructor
@@ -185,12 +207,11 @@ class Geant4Simulation final : public Geant4SimulationBase {
  private:
   Config m_cfg;
 
-  /// The (wrapped) ACTS Magnetic field provider as a Geant4 module
-  std::unique_ptr<G4MagneticField> m_magneticField;
-  std::unique_ptr<G4FieldManager> m_fieldManager;
-
   WriteDataHandle<SimParticleContainer> m_outputParticles{this,
                                                           "OutputParticles"};
+  ReadDataHandle<SimParticleDecayGraph> m_inputDecayGraph{this,
+                                                          "InputDecayGraph"};
+
   WriteDataHandle<SimHitContainer> m_outputSimHits{this, "OutputSimHIts"};
 
   WriteDataHandle<PropagationSummaries> m_outputPropagationSummaries{

@@ -107,8 +107,7 @@ void SensitiveSteppingAction::UserSteppingAction(const G4Step* stepPtr) {
   // The particle after the step
   assert(step.GetTrack() != nullptr);
   const G4Track& track = *step.GetTrack();
-  G4PrimaryParticle* primaryParticle =
-      track.GetDynamicParticle()->GetPrimaryParticle();
+  const bool isPrimary = track.GetParentID() == 0;
 
   // Get PreStepPoint and PostStepPoint
   assert(step.GetPreStepPoint() != nullptr);
@@ -129,12 +128,12 @@ void SensitiveSteppingAction::UserSteppingAction(const G4Step* stepPtr) {
   }
 
   // Bail out if it is a primary & configured to be ignored
-  if (!m_cfg.primary && primaryParticle != nullptr) {
+  if (!m_cfg.primary && isPrimary) {
     return;
   }
 
   // Bail out if it is a secondary & configured to be ignored
-  if (!m_cfg.secondary && primaryParticle == nullptr) {
+  if (!m_cfg.secondary && !isPrimary) {
     return;
   }
 
@@ -158,21 +157,22 @@ void SensitiveSteppingAction::UserSteppingAction(const G4Step* stepPtr) {
   const Acts::Surface* surface = nullptr;
 
   // Find the range of candidate surfaces for the current position in the map
-  const auto surfaceMap_itr = m_surfaceMapping.find(volume);
-  if (surfaceMap_itr != m_surfaceMapping.end()) {
+  const auto surfaceMap_itr = m_surfaceMapping->find(volume);
+  if (surfaceMap_itr != m_surfaceMapping->end()) {
     const auto& surfacesToG4Vol = surfaceMap_itr->second;
     ACTS_VERBOSE("Found " << surfacesToG4Vol.size()
                           << " candidate surfaces for volume " << volumeName);
     const Acts::Vector3 volumePos =
         convertPosition(touchable->GetTranslation());
     const auto lookUp_itr = surfacesToG4Vol.find(volumePos);
-    if (lookUp_itr == surfacesToG4Vol.end() && !m_cfg.stepLogging) {
+    if (lookUp_itr != surfacesToG4Vol.end()) {
+      surface = lookUp_itr->second;
+      geoId = surface->geometryId();
+      ACTS_VERBOSE("Replica assignment successful -> to surface " << geoId);
+    } else if (!m_cfg.stepLogging) {
       ACTS_ERROR("No candidate surfaces found for volume " << volumeName);
       return;
     }
-    surface = lookUp_itr->second;
-    geoId = surface->geometryId();
-    ACTS_VERBOSE("Replica assignment successful -> to surface " << geoId);
   } else if (!m_cfg.stepLogging) {
     ACTS_ERROR("No candidate surfaces found for volume " << volumeName);
     return;
@@ -188,7 +188,7 @@ void SensitiveSteppingAction::UserSteppingAction(const G4Step* stepPtr) {
   if (!m_cfg.stepLogging && surface != nullptr) {
     ACTS_VERBOSE("Step of " << particleId << " in sensitive volume " << geoId);
   } else if (m_cfg.stepLogging) {
-    if (!eventStore().propagationRecords.contains(track.GetTrackID())) {
+    if (!eventStore().result.propagationRecords.contains(track.GetTrackID())) {
       // Create the propagation summary
       const double absMomentum =
           track.GetMomentum().mag() * convertEnergyToActs;
@@ -199,10 +199,11 @@ void SensitiveSteppingAction::UserSteppingAction(const G4Step* stepPtr) {
           absCharge / absMomentum, std::nullopt,
           Acts::ParticleHypothesis::pion()));
 
-      eventStore().propagationRecords.insert({track.GetTrackID(), iSummary});
+      eventStore().result.propagationRecords.insert(
+          {track.GetTrackID(), iSummary});
     }
     PropagationSummary& pSummary =
-        eventStore().propagationRecords.at(track.GetTrackID());
+        eventStore().result.propagationRecords.at(track.GetTrackID());
 
     // Increase the step counter
     pSummary.nSteps += 1;
@@ -266,12 +267,13 @@ void SensitiveSteppingAction::UserSteppingAction(const G4Step* stepPtr) {
   if (preOnBoundary && postOnBoundary) {
     ACTS_VERBOSE("-> merge single step to hit");
     ++eventStore().particleHitCount[particleId];
-    eventStore().hits.push_back(
+    eventStore().result.hits.push_back(
         hitFromStep(step, particleId, geoId,
                     eventStore().particleHitCount.at(particleId) - 1));
 
-    eventStore().numberGeantSteps += 1ul;
-    eventStore().maxStepsForHit = std::max(eventStore().maxStepsForHit, 1ul);
+    eventStore().result.numberGeantSteps += 1ul;
+    eventStore().result.maxStepsForHit =
+        std::max(eventStore().result.maxStepsForHit, 1ul);
     return;
   }
 
@@ -286,7 +288,7 @@ void SensitiveSteppingAction::UserSteppingAction(const G4Step* stepPtr) {
         0.5 * (buffer.front().fourPosition() + buffer.back().fourPosition());
 
     ++eventStore().particleHitCount[particleId];
-    eventStore().hits.emplace_back(
+    eventStore().result.hits.emplace_back(
         geoId, particleId, pos4, buffer.front().momentum4Before(),
         buffer.back().momentum4After(),
         eventStore().particleHitCount.at(particleId) - 1);
@@ -296,9 +298,9 @@ void SensitiveSteppingAction::UserSteppingAction(const G4Step* stepPtr) {
     assert(std::ranges::all_of(
         buffer, [&](const auto& h) { return h.particleId() == particleId; }));
 
-    eventStore().numberGeantSteps += buffer.size();
-    eventStore().maxStepsForHit =
-        std::max(eventStore().maxStepsForHit, buffer.size());
+    eventStore().result.numberGeantSteps += buffer.size();
+    eventStore().result.maxStepsForHit =
+        std::max(eventStore().result.maxStepsForHit, buffer.size());
 
     buffer.clear();
     return;

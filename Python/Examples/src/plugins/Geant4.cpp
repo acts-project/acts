@@ -63,6 +63,12 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsGeant4, mod) {
                        &Geant4ConstructionOptions::enableGdmlValidation);
   }
 
+#ifdef G4MULTITHREADED
+  mod.attr("nativeWorkersAvailable") = true;
+#else
+  mod.attr("nativeWorkersAvailable") = false;
+#endif
+
   {
     using Algorithm = Geant4SimulationBase;
     using Config = Algorithm::Config;
@@ -141,12 +147,13 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsGeant4, mod) {
     auto c = py::class_<Algorithm::Config, Geant4SimulationBase::Config,
                         std::shared_ptr<Algorithm::Config>>(alg, "Config")
                  .def(py::init<>());
-    ACTS_PYTHON_STRUCT(
-        c, outputSimHits, outputParticles, outputPropagationSummaries,
-        sensitiveSurfaceMapper, magneticField, physicsList, killVolume,
-        killAfterTime, killSecondaries, recordHitsOfCharged,
-        recordHitsOfNeutrals, recordHitsOfPrimaries, recordHitsOfSecondaries,
-        keepParticlesWithoutHits, recordPropagationSummaries);
+    ACTS_PYTHON_STRUCT(c, numGeant4Workers, inputDecayGraph, outputSimHits,
+                       outputParticles, outputPropagationSummaries,
+                       sensitiveSurfaceMapper, magneticField, physicsList,
+                       killVolume, killAfterTime, killSecondaries,
+                       recordHitsOfCharged, recordHitsOfNeutrals,
+                       recordHitsOfPrimaries, recordHitsOfSecondaries,
+                       keepParticlesWithoutHits, recordPropagationSummaries);
   }
 
   {

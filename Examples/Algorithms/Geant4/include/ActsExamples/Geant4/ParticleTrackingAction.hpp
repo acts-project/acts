@@ -29,7 +29,7 @@ namespace ActsExamples::Geant4 {
 class ParticleTrackingAction : public G4UserTrackingAction {
  public:
   struct Config {
-    std::shared_ptr<EventStore> eventStore;
+    std::shared_ptr<EventContext> eventContext;
 
     bool keepParticlesWithoutHits = true;
   };
@@ -67,13 +67,13 @@ class ParticleTrackingAction : public G4UserTrackingAction {
   SimParticleState convert(const G4Track& track, SimBarcode particleId) const;
 
   /// Make the particle id
-  std::optional<SimBarcode> makeParticleId(G4int trackId, G4int parentId) const;
+  std::optional<SimBarcode> makeParticleId(G4int parentId) const;
 
   /// Private access method to the logging instance
   const Acts::Logger& logger() const { return *m_logger; }
 
   /// Private access method to the event store
-  EventStore& eventStore() const { return *m_cfg.eventStore; }
+  EventStore& eventStore() const { return m_cfg.eventContext->current(); }
 
   /// The looging instance
   std::unique_ptr<const Acts::Logger> m_logger;

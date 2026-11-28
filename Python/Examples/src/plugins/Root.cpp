@@ -115,7 +115,8 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
 
     ACTS_PYTHON_DECLARE_WRITER(RootParticleWriter, root, "RootParticleWriter",
                                inputParticles, filePath, fileMode, treeName,
-                               referencePoint, bField, writeHelixParameters);
+                               referencePoint, bField, writeHelixParameters,
+                               writeParentBarcodes);
 
     ACTS_PYTHON_DECLARE_WRITER(RootVertexWriter, root, "RootVertexWriter",
                                inputVertices, filePath, fileMode, treeName);
